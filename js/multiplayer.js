@@ -419,7 +419,20 @@ livekitScript.onload = async () => {
                                              // 🌟 SỬA SỐ 0 THÀNH SÁT THƯƠNG THỰC TẾ ĐỂ GÂY ĐAM LAN (AoE) CHO NGƯỜI ĐỨNG GẦN
                                             let dmgBoss = boss.maxHp * 0.05;
                                             window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                        } else {
+                                        }
+                                        // Sếp chèn đoạn này ngay dưới cái ngoặc của: if (data.phai === 'RONG' ...) { ... } 
+else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
+    let bOrigin = boss.mesh.position.clone();
+    let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+    let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+    // Gây dame = 0 vì mạng chỉ cần diễn hình ảnh máu xịt cho đẹp
+    window.tungComboChimCa('CAN_CHIEN', 0, bOrigin, pTarget, bDir, data.bossId, null, true);
+}
+
+
+
+
+                                        else {
                                             if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, new THREE.Vector3(data.target.x, data.target.y, data.target.z), data.phai, data.chieu);
                                         }
                                     }
