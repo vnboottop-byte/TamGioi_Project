@@ -105,7 +105,7 @@ window.TU_DIEN_AI_QUAI['CHIM'].thucHienTanCong = function(quai, playerModel, del
         quai.thoiDiemDam = Date.now(); // Kích hoạt Lui Binh
         if (typeof quai.playAnim === 'function') quai.playAnim('ATTACK');
 
-        let dmgBoss = (quai.maxHp || 4000) * 0.05; 
+        let dmgBoss = quai.dame || quai.damage || 100; 
         let bOrigin = quai.mesh.position.clone();
         let pTarget = playerModel.position.clone();
         let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
