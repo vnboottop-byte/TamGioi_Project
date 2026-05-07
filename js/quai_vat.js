@@ -572,7 +572,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         else if ((quai.classCode === 'CHIM' || quai.classCode === 'CA') && typeof window.tungComboChimCa === 'function') window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, tempId, null, false);
 
 
-                        else if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
+                        
 
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
 
