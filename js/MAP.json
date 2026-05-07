@@ -1,0 +1,136 @@
+{
+    "PROJECT_INFO": {
+        "ten_du_an": "Metaverse Tam Giới",
+        "the_loai": "Web-MMO 3D (Three.js + LiveKit P2P + PHP/MySQL)",
+        "kien_truc_cot_loi": "Data-Driven (100% chỉ số từ SQL), Chunk-based Streaming (Radar quét 140km), Client-Side Prediction (Gom sát thương 300ms), P2P Multiplayer, Real-time PvP.",
+        "luat_vat_ly_doc_quyen": "Trọng lực Hành Tinh Cầu (Sphere-in) kết hợp Lồng Ống (Tube-out). Admin bay x50 tốc độ trên vũ trụ. Chữa Gimbal Lock bằng projectOnPlane."
+    },
+    "1_QUAN_LY_XAC_THUC_BAO_MAT": {
+        "mo_ta": "Cổng Xuyên Không & Hải Quan Kiểm soát Session",
+        "luong_chay": {
+            "auth_gateway.php / auth_and_create.php": "Xử lý BCRYPT & begin_transaction(). Tạo User kèm nhân vật cùng lúc. Phát 'session_token' duy nhất để chống Login đè.",
+            "check_session.php": "Hải quan 10 giây/lần. So khớp Token Local và DB. Nếu phát hiện Token bị đổi do login từ máy khác -> Đá văng (reload) ngay lập tức.",
+            "rom.php (UI)": "Khởi tạo 6 Hologram 3D xoay vòng trình diễn vũ khí cho tân thủ chọn phái."
+        }
+    },
+    "2_DONG_CO_VAT_LY_KHONG_GIAN": {
+        "mo_ta": "Trọng Lực Hành Tinh Cầu, Lõi Vật Lý BVH & Streaming VRAM",
+        "luong_chay": {
+            "engine.js (BVH Physics)": "Tích hợp thư viện three-mesh-bvh@0.5.23. Bơm geometry.computeBoundsTree() vào mặt đất giúp Raycaster quét cực nhanh, chống giật FPS khi tính toán đâm xuyên.",
+            "engine.js (Trọng lực Cầu)": "Tính Vector hướng lên bầu trời bằng cách lấy tọa độ Player trừ đi Tâm Hành Tinh. Ép xương sống nhân vật (quaternion.setFromUnitVectors) mượt mà, chống hụt chân.",
+            "engine.js (Uốn Lưới Hành Tinh)": "Thuật toán Bẻ Cong Vũ Trụ: Uốn cong từng điểm lưới (Vertex) của các Map phẳng áp sát vào bề mặt địa cầu dựa theo rHanhTinh = 80000m.",
+            "engine.js (Streaming)": "Radar quét Chunk mỗi 2s. Đi xa <130km -> Tải Map (GLTFLoader). Đi xa >140km -> xuLyXoaMapChunk() thiêu rụi Mesh, Material, Geo để chống tràn RAM."
+        }
+    },
+    "3_HE_THONG_KHONG_GIAN_TRUYEN_TONG": {
+        "mo_ta": "Truyền Tống Trận & Vùng An Toàn (Safe Zone)",
+        "luong_chay": {
+            "engine.js (Safe Zone)": "Vòng năng lượng màu lục lam. Quét khoảng cách chân người chơi đến Tâm Safe Zone. Nếu nằm trong vùng: Hiện UI thông báo, MIỄN NHIỄM SÁT THƯƠNG, VÀ CẤM TUNG CHIÊU / PK.",
+            "engine.js (Wormhole Teleport)": "Mô hình cổng 3D có Animation xoay liên tục. Người chơi chạm cổng (<3m) -> Bật màn hình Lỗ Giun Không Gian bằng Canvas 2D siêu nhẹ -> Dọn rác Map cũ -> Thả rơi Player từ 15m tại Map đích để chống kẹt lòng đất.",
+            "rom.php / save_teleport.php": "Admin Tool: Lấy bán kính Safe Zone dựa vào độ cao Camera. Bảng Đặt Cổng Dịch Chuyển (Nhập tọa độ đích tự động ép đọc số thập phân)."
+        }
+    },
+    "4_HE_THONG_SINH_THAI_THUC_VAT": {
+        "mo_ta": "Máy Gieo Hạt AI (Procedural Foliage) & Tối ưu GPU",
+        "luong_chay": {
+            "engine.js (Vật Lý Hạt Giống)": "Dùng Raycaster kết hợp BVH bắn 15.000 tia laser từ ngoài vũ trụ hướng thẳng vào Tâm Hành Tinh. Đảm bảo cây mọc vuông góc (Normal Vector) với sườn dốc địa cầu.",
+            "engine.js (AI Lọc Màu & Bom Chùm)": "Trích xuất Pixel UV map. AI tự nhận diện Biển (Bỏ qua), Sa Mạc (Rải xương rồng thưa thớt), Rừng Xanh (Kích hoạt rải Bom Chùm sinh thái đẻ ra 15-24 cây/cụm).",
+            "engine.js (InstancedMesh)": "Đóng gói hàng vạn cái cây vào chung 1 InstancedMesh để DrawCall = 1. Kiểm soát CPU bằng setTimeOut 25ms chống giật lag lúc rải. Cân chỉnh tỷ lệ cây (Scale) thực tế."
+        }
+    },
+    "5_HE_THONG_COMBAT_PVE_PVP": {
+        "mo_ta": "Cân bằng Kỹ Năng, Vật Lý Đạn Đạo & Chống Lạm Phát",
+        "luong_chay": {
+            "Các phái (phai_cungthu.js, phai_tutien.js)": "Vật lý chiêu thức chuẩn Vũ trụ: Dùng Vector Lên Trời (upVector) và Tích có hướng (crossVectors) để tạo quỹ đạo tên lửa Parabol (ICBM) và dàn trận pháp phi kiếm uốn lượn theo sườn hành tinh.",
+            "Auto-Scaling Asset": "Thuật toán Box3 tự động đo chiều dài file vũ khí 3D gốc và ép Scale về chuẩn 1.2m (Cầm tay) hoặc nhân bản khổng lồ x5 x10 khi tung chiêu cuối.",
+            "thang_cap.php (Linear Power Creep)": "Xóa bỏ thuật toán cộng dồn % gây lạm phát. Chuyển sang Tịnh Tiến Tuyến Tính (Máu +30, Dame +3 mỗi cấp) giúp kiểm soát vĩnh viễn sức mạnh.",
+            "Logic TTK (Time-To-Kill)": "Hệ số kỹ năng được ép tổng lượng sát thương 1 Combo (Q+E+R+F) = 2.5 lần Dame Gốc. Đảm bảo quy luật Vàng: 2 người đồng cấp PK luôn mất chuẩn 4 Combo mới chết."
+        }
+    },
+    "6_AI_BOSS_VA_QUAI_VAT": {
+        "mo_ta": "Hành vi Boss, Tuần tra Số 8 và Đồng bộ Mạng",
+        "luong_chay": {
+            "quai_vat.js (AI & Hitbox)": "Rồng bay lượn 150m, Chim/Cá 15m. Tốc độ rượt đuổi tỉ lệ thuận với độ lớn (heSoToLon). Quét Hitbox X-Quang chính xác đến từng centimet của 3D Mesh để khóa mục tiêu Tầm Nhiệt.",
+            "quai_vat.js (Retreat)": "Hit & Run: Boss đánh xong hãm phanh 1m/s, bật ngửa bay lùi chếch lên trời để tránh đâm xuyên mặt / kẹt Camera người chơi.",
+            "Backend & P2P": "Gom sát thương (Hit/Sec) trong 300ms chống Spam API. Bắn publishData sang LiveKit để trừ máu realtime. Vòng lặp PHP tự động hồi sinh Boss sau 600s."
+        }
+    },
+    "7_CONG_CU_QUAN_TRI_GM": {
+        "mo_ta": "Bàn Tay Sáng Thế, Quản lý Bản đồ & Giám Sát Hệ Thống",
+        "luong_chay": {
+            "rom.php (GM Tool)": "Bảng Tha Boss (Có Dropdown tìm kiếm nhanh File Model) & Bảng Rải Map. Nút [NHÂN BẢN] tự động copy thông số quái + Tọa độ đứng hiện tại để rải binh đoàn xoáy ốc (Golden Spiral).",
+            "admin_hephai.php": "Lò Rèn: Upload file .glb trực tiếp lên Server, định giá và buff chỉ số (Dame, Tốc độ, HP) đưa lên kệ Shop.",
+            "engine.js (GM Monitor)": "Nhấn phím Delete/F8 mở Mắt Thần. Tích hợp AI Chẩn đoán: Đo FPS, DrawCalls, Phân tích CPU Logic Time, và chặn bắt hàm LiveKit để đo tốc độ gửi/nhận Byte mạng P2P."
+        }
+    }
+}
+
+
+
+ {   "PROJECT_INFO": {
+        "ten_du_an": "Metaverse Tam Giới",
+        "the_loai": "Web-MMO 3D (Three.js + LiveKit P2P + PHP/MySQL)",
+        "kien_truc_cot_loi": "Data-Driven (100% chỉ số từ SQL), Chunk-based Streaming (Radar quét 140km), Client-Side Prediction (Gom sát thương 300ms), P2P Multiplayer, Real-time PvP.",
+        "luat_vat_ly_doc_quyen": "Trọng lực Hành Tinh Cầu (Sphere-in) kết hợp Lồng Ống (Tube-out). Admin bay x50 tốc độ trên vũ trụ. Chữa Gimbal Lock bằng projectOnPlane."
+    },
+    "1_QUAN_LY_XAC_THUC_BAO_MAT": {
+        "mo_ta": "Cổng Xuyên Không & Hải Quan Kiểm soát Session",
+        "luong_chay": {
+            "auth_gateway.php / auth_and_create.php": "Xử lý BCRYPT & begin_transaction(). Tạo User kèm nhân vật cùng lúc. Phát 'session_token' duy nhất để chống Login đè.",
+            "check_session.php": "Hải quan 10 giây/lần. So khớp Token Local và DB. Nếu phát hiện Token bị đổi do login từ máy khác -> Đá văng (reload) ngay lập tức.",
+            "rom.php (UI)": "Khởi tạo 6 Hologram 3D xoay vòng trình diễn vũ khí cho tân thủ chọn phái."
+        }
+    },
+    "2_DONG_CO_VAT_LY_KHONG_GIAN": {
+        "mo_ta": "Trọng Lực Hành Tinh Cầu, Lõi Vật Lý BVH & Streaming VRAM",
+        "luong_chay": {
+            "engine.js (BVH Physics)": "Tích hợp thư viện three-mesh-bvh@0.5.23. Bơm geometry.computeBoundsTree() vào mặt đất giúp Raycaster quét cực nhanh, chống giật FPS khi tính toán đâm xuyên.",
+            "engine.js (Trọng lực Cầu)": "Tính Vector hướng lên bầu trời bằng cách lấy tọa độ Player trừ đi Tâm Hành Tinh. Ép xương sống nhân vật (quaternion.setFromUnitVectors) mượt mà, chống hụt chân.",
+            "engine.js (Uốn Lưới Hành Tinh)": "Thuật toán Bẻ Cong Vũ Trụ: Uốn cong từng điểm lưới (Vertex) của các Map phẳng áp sát vào bề mặt địa cầu dựa theo rHanhTinh = 80000m.",
+            "engine.js (Streaming)": "Radar quét Chunk mỗi 2s. Đi xa <130km -> Tải Map (GLTFLoader). Đi xa >140km -> xuLyXoaMapChunk() thiêu rụi Mesh, Material, Geo để chống tràn RAM."
+        }
+    },
+    "3_HE_THONG_KHONG_GIAN_TRUYEN_TONG": {
+        "mo_ta": "Truyền Tống Trận & Vùng An Toàn (Safe Zone)",
+        "luong_chay": {
+            "engine.js (Safe Zone)": "Vòng năng lượng màu lục lam. Quét khoảng cách chân người chơi đến Tâm Safe Zone. Nếu nằm trong vùng: Hiện UI thông báo, MIỄN NHIỄM SÁT THƯƠNG, VÀ CẤM TUNG CHIÊU / PK.",
+            "engine.js (Wormhole Teleport)": "Mô hình cổng 3D có Animation xoay liên tục. Người chơi chạm cổng (<3m) -> Bật màn hình Lỗ Giun Không Gian bằng Canvas 2D siêu nhẹ -> Dọn rác Map cũ -> Thả rơi Player từ 15m tại Map đích để chống kẹt lòng đất.",
+            "rom.php / save_teleport.php": "Admin Tool: Lấy bán kính Safe Zone dựa vào độ cao Camera. Bảng Đặt Cổng Dịch Chuyển (Nhập tọa độ đích tự động ép đọc số thập phân)."
+        }
+    },
+    "4_HE_THONG_SINH_THAI_THUC_VAT": {
+        "mo_ta": "Máy Gieo Hạt AI (Procedural Foliage) & Tối ưu GPU",
+        "luong_chay": {
+            "engine.js (Vật Lý Hạt Giống)": "Dùng Raycaster kết hợp BVH bắn 15.000 tia laser từ ngoài vũ trụ hướng thẳng vào Tâm Hành Tinh. Đảm bảo cây mọc vuông góc (Normal Vector) với sườn dốc địa cầu.",
+            "engine.js (AI Lọc Màu & Bom Chùm)": "Trích xuất Pixel UV map. AI tự nhận diện Biển (Bỏ qua), Sa Mạc (Rải xương rồng thưa thớt), Rừng Xanh (Kích hoạt rải Bom Chùm sinh thái đẻ ra 15-24 cây/cụm).",
+            "engine.js (InstancedMesh)": "Đóng gói hàng vạn cái cây vào chung 1 InstancedMesh để DrawCall = 1. Kiểm soát CPU bằng setTimeOut 25ms chống giật lag lúc rải. Cân chỉnh tỷ lệ cây (Scale) thực tế."
+        }
+    },
+    "5_HE_THONG_COMBAT_PVE_PVP": {
+        "mo_ta": "Cân bằng Kỹ Năng, Vật Lý Đạn Đạo & Chống Lạm Phát",
+        "luong_chay": {
+            "Các phái (phai_cungthu.js, phai_tutien.js)": "Vật lý chiêu thức chuẩn Vũ trụ: Dùng Vector Lên Trời (upVector) và Tích có hướng (crossVectors) để tạo quỹ đạo tên lửa Parabol (ICBM) và dàn trận pháp phi kiếm uốn lượn theo sườn hành tinh.",
+            "Auto-Scaling Asset": "Thuật toán Box3 tự động đo chiều dài file vũ khí 3D gốc và ép Scale về chuẩn 1.2m (Cầm tay) hoặc nhân bản khổng lồ x5 x10 khi tung chiêu cuối.",
+            "thang_cap.php (Linear Power Creep)": "Xóa bỏ thuật toán cộng dồn % gây lạm phát. Chuyển sang Tịnh Tiến Tuyến Tính (Máu +30, Dame +3 mỗi cấp) giúp kiểm soát vĩnh viễn sức mạnh.",
+            "Logic TTK (Time-To-Kill)": "Hệ số kỹ năng được ép tổng lượng sát thương 1 Combo (Q+E+R+F) = 2.5 lần Dame Gốc. Đảm bảo quy luật Vàng: 2 người đồng cấp PK luôn mất chuẩn 4 Combo mới chết."
+        }
+    },
+    "6_AI_BOSS_VA_QUAI_VAT": {
+        "mo_ta": "Kiến trúc Data-Driven (Từ điển AI), Tuần tra Vô Cực & Ủy quyền Plugin",
+        "luong_chay": {
+            "quai_vat.js (Bo Mạch Chủ)": "Lõi AI trung tâm được gọt sạch If-Else. Chỉ quản lý Trọng lực, Chống lún (Radar rọi đất), Chẩn đoán Hận thù (Aggro) kết hợp Ranh giới Lãnh thổ, và Cấp phát vòng lặp cho các Plugin hoạt động.",
+            "Từ Điển Bách Thú (Data-Driven)": "Mọi chỉ số cốt lõi (tầm nhìn, tầm đánh, tốc độ, quỹ đạo bay/chạy) được cấu hình tập trung tại window.TU_DIEN_AI_QUAI. Thêm quái mới chỉ cần khai báo ID, không can thiệp Core.",
+            "Toán học Quỹ Đạo (Lemniscate)": "Hệ bay lượn (Rồng, Chim, Cá) tuần tra bằng phương trình hình Vô Cực (Số 8 ngang) siêu mượt. Kết hợp đạo hàm Cosine để tự động nghiêng cánh bám cua chống lật bụng.",
+            "Cơ chế Mượn Dao Giết Người (Delegation)": "Quái Hệ Người: Fake ID (isRemote) để mượn lại 100% Logic tung chiêu của Player. Quái Hệ Thú: Kích hoạt thucHienTanCong() từ các file Plugin rời (phai_rong.js, phai_chimca.js).",
+            "Backend & P2P": "Gom sát thương (Hit/Sec) trong 300ms chống Spam API. Bắn publishData sang LiveKit để trừ máu realtime. Vòng lặp PHP tự động hồi sinh Boss."
+        }
+    },
+    "7_CONG_CU_QUAN_TRI_GM": {
+        "mo_ta": "Bàn Tay Sáng Thế, Quản lý Bản đồ & Giám Sát Hệ Thống",
+        "luong_chay": {
+            "rom.php (GM Tool)": "Bảng Tha Boss (Có Dropdown tìm kiếm nhanh File Model) & Bảng Rải Map. Nút [NHÂN BẢN] tự động copy thông số quái + Tọa độ đứng hiện tại để rải binh đoàn xoáy ốc (Golden Spiral).",
+            "admin_hephai.php": "Lò Rèn: Upload file .glb trực tiếp lên Server, định giá và buff chỉ số (Dame, Tốc độ, HP) đưa lên kệ Shop.",
+            "engine.js (GM Monitor)": "Nhấn phím Delete/F8 mở Mắt Thần. Tích hợp AI Chẩn đoán: Đo FPS, DrawCalls, Phân tích CPU Logic Time, và chặn bắt hàm LiveKit để đo tốc độ gửi/nhận Byte mạng P2P."
+        }
+    }
+}

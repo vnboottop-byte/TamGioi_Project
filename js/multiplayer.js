@@ -1,0 +1,694 @@
+// ==========================================
+// 🌐 LIVEKIT ĐA VŨ TRỤ (BẢN V21 - CÔNG NGHỆ NHÂN BẢN VÔ TÍNH SKELETON UTILS)
+// ==========================================
+const livekitScript = document.createElement('script');
+livekitScript.src = 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js';
+document.head.appendChild(livekitScript);
+
+window.remotePlayers = {}; 
+window.room = null;
+window.khoModelMau = {}; // 🌟 KHO CHỨA MODEL MẪU ĐỂ NHÂN BẢN (CHỐNG GIẬT LAG)
+
+// 🌟 HÀM ÉP KHUÔN (GIỮ NGUYÊN CŨ)
+function epKhuonChuan(mesh, sizeMongMuon) {
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim > 0) {
+        const tyLe = sizeMongMuon / maxDim;
+        mesh.scale.setScalar(tyLe);
+        mesh.position.y -= (box.min.y * tyLe);
+    }
+}
+
+// 🌟 HÀM TẢI HOẶC NHÂN BẢN SIÊU TỐC (CHÌA KHÓA CỦA ĐỘ MƯỢT)
+function taiHoacNhanBan(url, callback) {
+    // Nếu trong kho đã có rồi -> Photocopy ngay lập tức, không tải nữa
+    if (window.khoModelMau[url]) {
+        console.log("⚡ Nhân bản siêu tốc từ kho: " + url);
+        const cloneScene = SkeletonUtils.clone(window.khoModelMau[url].scene);
+        callback(cloneScene, window.khoModelMau[url].animations);
+        return;
+    }
+
+    // Nếu chưa có -> Tải về và cất vào kho
+    const loader = window.loaderSieuToc || new THREE.GLTFLoader();
+    loader.load(url, (gltf) => {
+        window.khoModelMau[url] = { scene: gltf.scene, animations: gltf.animations };
+        console.log("📦 Đã tải và cất vào kho model mẫu: " + url);
+        const cloneScene = SkeletonUtils.clone(gltf.scene);
+        callback(cloneScene, gltf.animations);
+    });
+}
+
+
+
+
+
+// 🌟 TÁI TẠO NGƯỜI CHƠI TỪ TỔNG KHO ASSET (BẢN V22 - FIX CÚ PHÁP VÀ VŨ KHÍ)
+function taoBanSaoNguoiChoi(identity, data) {
+    if (window.remotePlayers[identity]) return;
+    
+    let rp = { status: 'loading', pos: new THREE.Vector3(data.x, data.y, data.z) };
+    window.remotePlayers[identity] = rp;
+
+    const tag = document.createElement('div');
+    tag.innerHTML = `<div style="color:#00ffff; font-weight:bold; font-size:16px; text-shadow:1px 1px 0 #000;">${identity}</div><div style="width:80px; height:5px; background:rgba(0,0,0,0.5); border:1px solid #fff;"><div class="hp-bar" style="width:${(data.hp/data.maxHp)*100}%; height:100%; background:#e74c3c;"></div></div>`;
+    tag.style.cssText = 'position:absolute; pointer-events:none; z-index:9; transform:translate(-50%, -100%); display:none;';
+    document.body.appendChild(tag);
+    rp.tag = tag;
+
+    // TẬN DỤNG TỔNG KHO ASSET
+    const mountUrl = data.mount;
+    const charUrl = data.model || 'uploads/anims/mimi_3d.glb';
+
+    if (mountUrl && mountUrl.trim() !== "") {
+        // 1. TẢI RỒNG
+        window.taiHoacNhanBanAsset(mountUrl, (thuCuoi, animationsMount) => {
+            if (typeof epKhuonChuan === 'function') epKhuonChuan(thuCuoi, 15);
+            thuCuoi.position.copy(rp.pos); 
+            thuCuoi.traverse(c => { if (c.isMesh) { c.frustumCulled = false; c.castShadow = true; } }); 
+            scene.add(thuCuoi);
+
+            const mixer = new THREE.AnimationMixer(thuCuoi); const anims = {};
+            if(animationsMount) animationsMount.forEach(clip => { anims[clip.name.toUpperCase()] = mixer.clipAction(clip); });
+
+            // 2. TẢI NGƯỜI CƯỠI RỒNG
+            window.taiHoacNhanBanAsset(charUrl, (nhanVat, animationsChar) => {
+                if (typeof epKhuonChuan === 'function') epKhuonChuan(nhanVat, 2.5);
+                nhanVat.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
+
+                let mixerChar = new THREE.AnimationMixer(nhanVat); const animsChar = {};
+                if(animationsChar) animationsChar.forEach(clip => { animsChar[clip.name.toUpperCase()] = mixerChar.clipAction(clip); });
+                
+                let xuongYenNgua = null;
+                thuCuoi.traverse(c => { if (c.isBone && c.name.toUpperCase().includes('YENNGUA')) xuongYenNgua = c; });
+                if (xuongYenNgua) { xuongYenNgua.add(nhanVat); nhanVat.position.set(0, 0, 0); } else { thuCuoi.add(nhanVat); nhanVat.position.set(0, 3, 0); }
+
+
+
+
+                // 3. 🌟 TẢI VŨ KHÍ (TRẢ LẠI QUYỀN ĐIỀU KHIỂN CHO CÁC FILE HỆ PHÁI)
+                let isCungThu = data.phai && data.phai.toLowerCase().includes('cungthu');
+                let linkVuKhi = isCungThu ? 'uploads/anims/CUNG.glb' : data.weapon;
+
+                if (linkVuKhi && linkVuKhi.trim() !== "") {
+                    window.taiHoacNhanBanAsset(linkVuKhi, (vuKhi) => {
+                        vuKhi.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
+                        let tayCam = null;
+                        
+                        nhanVat.traverse(c => { 
+                            if (c.isBone) {
+                                let n = c.name.toUpperCase();
+                                if (isCungThu && (n.includes('HAND_L') || n.includes('HAND.L') || n.includes('LEFTHAND'))) {
+                                    tayCam = c;
+                                } else if (!isCungThu && (n.includes('HAND_R') || n.includes('HAND.R') || n.includes('RIGHTHAND'))) {
+                                    tayCam = c;
+                                }
+                            } 
+                        });
+
+                        if (tayCam) { 
+                            tayCam.add(vuKhi); 
+                            vuKhi.position.set(0,0,0); 
+                            vuKhi.rotation.set(0,0,0); 
+                            
+                            // Nắn tỷ lệ và ẨN MẶC ĐỊNH cho Cung, chờ file phai_cungthu.js gọi nó ra!
+                            if (isCungThu) {
+                                vuKhi.updateMatrixWorld(true);
+                                const box = new THREE.Box3().setFromObject(vuKhi);
+                                const size = new THREE.Vector3(); box.getSize(size);
+                                const maxDim = Math.max(size.x, size.y, size.z);
+                                if (maxDim > 0.05) vuKhi.scale.setScalar(1.8 / maxDim);
+                                vuKhi.visible = false; 
+                            }
+                        } 
+                        else { nhanVat.add(vuKhi); vuKhi.position.set(1, 1, 0); }
+                        
+                        // 🌟 CHÌA KHÓA TRAO QUYỀN LỰC CHO SẾP (NÓ SẼ TỰ ĐỘNG LIVE)
+                        rp.vuKhiModel = vuKhi;
+                    });
+                }
+
+
+
+
+
+                rp.mesh = thuCuoi; rp.meshChar = nhanVat; rp.mixer = mixer; rp.mixerChar = mixerChar; rp.anims = anims; rp.animsChar = animsChar; rp.status = 'ready'; rp.currentAnim = '';
+            });
+        });
+    } else {
+        // 1. TẢI NGƯỜI ĐI BỘ
+        window.taiHoacNhanBanAsset(charUrl, (nhanVat, animationsChar) => {
+            if (typeof epKhuonChuan === 'function') epKhuonChuan(nhanVat, 2.5);
+            nhanVat.position.copy(rp.pos); 
+            nhanVat.traverse(c => { if (c.isMesh) { c.frustumCulled = false; c.castShadow = true; } }); 
+            scene.add(nhanVat);
+
+            let mixer = new THREE.AnimationMixer(nhanVat); const anims = {};
+            if(animationsChar) animationsChar.forEach(clip => { anims[clip.name.toUpperCase()] = mixer.clipAction(clip); });
+
+
+
+
+            // 2. 🌟 TẢI VŨ KHÍ CHO NGƯỜI ĐI BỘ (BẢN VÁ ĐỒNG BỘ LIVE 100%)
+            let isCungThu = data.phai && data.phai.toLowerCase().includes('cungthu');
+            let linkVuKhi = isCungThu ? 'uploads/anims/CUNG.glb' : data.weapon;
+
+            if (linkVuKhi && linkVuKhi.trim() !== "") {
+                window.taiHoacNhanBanAsset(linkVuKhi, (vuKhi) => {
+                    vuKhi.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
+                    let tayCam = null;
+                    
+                    nhanVat.traverse(c => { 
+                        if (c.isBone) {
+                            let n = c.name.toUpperCase();
+                            if (isCungThu && (n.includes('HAND_L') || n.includes('HAND.L') || n.includes('LEFTHAND'))) {
+                                tayCam = c;
+                            } else if (!isCungThu && (n.includes('HAND_R') || n.includes('HAND.R') || n.includes('RIGHTHAND'))) {
+                                tayCam = c;
+                            }
+                        } 
+                    });
+
+                    if (tayCam) { 
+                        tayCam.add(vuKhi); 
+                        vuKhi.position.set(0,0,0); 
+                        vuKhi.rotation.set(0,0,0); 
+                        
+                        if (isCungThu) {
+                            vuKhi.updateMatrixWorld(true);
+                            const box = new THREE.Box3().setFromObject(vuKhi);
+                            const size = new THREE.Vector3(); box.getSize(size);
+                            const maxDim = Math.max(size.x, size.y, size.z);
+                            if (maxDim > 0.05) vuKhi.scale.setScalar(1.8 / maxDim);
+                            
+                            // 🌟 ẨN CUNG ĐI (Để phai_cungthu.js tự lo việc mở lên khi bắn)
+                            vuKhi.visible = false; 
+                        }
+                    } 
+                    else { nhanVat.add(vuKhi); vuKhi.position.set(1, 1, 0); }
+
+                    // 🌟 LƯU VÀO RP ĐỂ CÁC FILE HỆ PHÁI CÓ THỂ "LIVE" NÓ
+                    rp.vuKhiModel = vuKhi;
+                });
+            }
+
+
+            
+            rp.mesh = nhanVat; rp.meshChar = nhanVat; rp.mixer = mixer; rp.anims = anims; rp.status = 'ready'; rp.currentAnim = '';
+        });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// 🔴 PHẦN LOGIC MẠNG (GIỮ NGUYÊN 100%)
+// ==========================================
+livekitScript.onload = async () => {
+    const loginGate = document.getElementById('loginGate');
+    const loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', async () => {
+            if (loginBtn.disabled) return; 
+            const userText = document.getElementById('usernameInput').value.trim();
+            if (userText.length < 2) return; 
+            loginBtn.disabled = true;
+            try {
+                const response = await fetch('api/lk_token.php?u=' + encodeURIComponent(userText) + '&nocache=' + Date.now());
+                const authData = await response.json();
+                if (!authData.token) { loginBtn.disabled = false; return; }
+                window.myUsername = authData.username;
+                window.room = new LivekitClient.Room({ adaptiveStream: false, dynacast: false, autoSubscribe: true });
+                await window.room.connect(authData.url, authData.token);
+                console.log("%c🟢 Đã vào Cổng Cực Lạc: " + window.room.name, "color:#2ecc71; font-weight:bold;");
+                if (loginGate) loginGate.style.display = 'none';
+
+                // ==========================================
+                // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME (DỌN RÁC TRIỆT ĐỂ)
+                // ==========================================
+                // ==========================================
+                // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME (BẢN AN TOÀN - KHÔNG PHÁ ĐỒ CHUNG)
+                // ==========================================
+                window.room.on('participantDisconnected', (participant) => {
+                    if (window.remotePlayers && window.remotePlayers[participant.identity]) {
+                        const playerLeaver = window.remotePlayers[participant.identity];
+
+                        if (playerLeaver.mesh) {
+                            // 🌟 THAY VÌ donRac3D, TA CHỈ GỠ KHỎI MÀN HÌNH
+                            // Để giữ lại bộ khung (Geometry) cho những người chơi cùng hệ phái khác đang đứng đó.
+                            if (playerLeaver.mesh.parent) playerLeaver.mesh.parent.remove(playerLeaver.mesh);
+                            scene.remove(playerLeaver.mesh);
+                        }
+
+                        if (playerLeaver.tag) playerLeaver.tag.remove();
+
+                        // Xóa dữ liệu trong mảng quản lý
+                        delete window.remotePlayers[participant.identity];
+                    }
+                });
+
+
+
+
+
+                // ==========================================
+                // 🔊 LẮP LOA: PHÁT ÂM THANH KHI CÓ NGƯỜI NÓI (BẢN PRO)
+                // ==========================================
+                window.room.on('trackSubscribed', (track, publication, participant) => {
+                    if (track.kind === 'audio') {
+                        const audioElement = track.attach();
+                        audioElement.style.display = 'none'; // Giấu cái loa đi
+                        document.body.appendChild(audioElement);
+                        console.log("🔊 Đã gắn Mic của: " + participant.identity);
+
+                        // Cưỡng chế phát âm thanh và báo cáo nếu bị trình duyệt chặn
+                        audioElement.play().catch((error) => {
+                            console.warn("⚠️ Mute: Trình duyệt chặn âm thanh của " + participant.identity + " do bạn chưa click chuột vào Game!", error);
+                        });
+                    }
+                });
+
+                // Gỡ loa ra khi người ta tắt Mic hoặc thoát Game
+                window.room.on('trackUnsubscribed', (track, publication, participant) => {
+                    track.detach().forEach(el => el.remove());
+                });
+
+
+
+
+
+                window.room.on('dataReceived', (payload, participant) => {
+                    try {
+                        let data = JSON.parse(new TextDecoder().decode(payload));
+                        const senderId = participant.identity;
+
+
+
+
+
+
+
+                        // ==========================================
+                        // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
+                        // ==========================================
+                        if (Array.isArray(data) && data[0] === 1) { 
+                            let mappedData = {
+                                type: 'vitri', x: data[1], y: data[2], z: data[3], rx: data[4], ry: data[5], rz: data[6],
+                                size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14],
+                                vuKhiHienThi: data[15] // 🌟 BẮT SÓNG: Hứng lấy biến tàng hình vũ khí từ Engine gửi sang!
+                            };
+                            
+                            let rp = window.remotePlayers[senderId];
+                            // Nếu chưa có nhân vật -> Nặn ra
+                            if (!rp) { 
+                                taoBanSaoNguoiChoi(senderId, mappedData); 
+                            } 
+                            // Nếu có rồi -> Kéo tọa độ đi
+                            else if (rp.status === 'ready') {
+                                rp.targetPos = new THREE.Vector3(mappedData.x, mappedData.y, mappedData.z);
+                                rp.targetRot = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz);
+                                
+                                let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
+                                if (hpBar) hpBar.style.width = Math.max(0, (mappedData.hp / mappedData.maxHp) * 100) + '%';
+                                
+                                // 🌟 THỰC THI ÁN LỆNH: Bật/Tắt vũ khí Live theo đúng ý Sếp!
+                                if (rp.vuKhiModel && mappedData.vuKhiHienThi !== undefined) {
+                                    rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
+                                }
+
+                                if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
+
+
+
+
+
+                                    let upAnim = mappedData.anim.toUpperCase();
+                                    if (rp.anims && Object.keys(rp.anims).length > 0) {
+                                        let action = rp.anims[upAnim] || rp.anims['IDLE'] || Object.values(rp.anims)[0];
+                                        if (action) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = action; rp.activeAction.reset().fadeIn(0.2).play(); }
+                                    }
+                                    if (rp.animsChar && Object.keys(rp.animsChar).length > 0) {
+                                        let actionChar = rp.animsChar[upAnim] || rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
+                                        if (actionChar) { if (rp.activeActionChar) rp.activeActionChar.fadeOut(0.2); rp.activeActionChar = actionChar; rp.activeActionChar.reset().fadeIn(0.2).play(); }
+                                    }
+                                    rp.currentAnim = mappedData.anim;
+                                }
+                            }
+                        }
+                        // ==========================================
+                        // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
+                        // ==========================================
+                        else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+                            // 🌟 CHỈ NHẬN HIỆU ỨNG SÁT THƯƠNG (KHÔNG ÉP MÁU)
+                            if (data.type === 'BOSS_HIT') {
+                                if (typeof window.danhSachQuaiVat !== 'undefined') {
+                                    let boss = window.danhSachQuaiVat.find(q => q.id == data.id);
+                                    if (boss && !boss.isDead) {
+                                        // Hiển thị số sát thương nhảy lên đầu Boss
+                                        if (data.damageDealt > 0) {
+                                            let posNo = new THREE.Vector3(boss.mesh.position.x, boss.mesh.position.y + 10, boss.mesh.position.z);
+                                            if (typeof taoSoSatThuong === 'function') taoSoSatThuong(posNo, data.damageDealt);
+                                        }
+                                        // Khớp animation
+                                        if (typeof boss.playAnim === 'function' && boss.state !== 'ATTACK') boss.playAnim('HIT');
+                                        
+                                        // Trừ máu ảo trên UI cho mượt (Máu thật sẽ do Radar 3s ép)
+                                        boss.hp = Math.max(0, boss.hp - data.damageDealt);
+                                        if (boss.tagEl) {
+                                            let bar = boss.tagEl.querySelector('.hp-bar');
+                                            if (bar) bar.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
+                                        }
+                                    }
+                                }
+                            }
+                            
+
+
+
+                            else if (data.type === 'BOSS_POS') {
+                                if (typeof window.danhSachQuaiVat !== 'undefined') {
+                                    let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
+                                    if (boss && !boss.isDead) { 
+                                        boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z); 
+                                        boss.targetAnimLK = data.anim; 
+                                    }
+                                }
+                            }
+
+
+
+
+                            else if (data.type === 'BOSS_SKILL') {
+                                if (typeof window.danhSachQuaiVat !== 'undefined') {
+                                    let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
+                                    if (boss && !boss.isDead) {
+                                        boss.mesh.lookAt(data.target.x, data.target.y, data.target.z);
+                                        if (typeof boss.playAnim === 'function') boss.playAnim('ATTACK');
+                                        
+                                        // 🌟 HẢI QUAN MẠNG: Kích hoạt Lửa Rồng cho máy người xem
+                                        if (data.phai === 'RONG' && typeof window.tungComboRong === 'function') {
+                                            const box = new THREE.Box3().setFromObject(boss.mesh);
+                                            const size = new THREE.Vector3(); box.getSize(size);
+                                            let bOrigin = boss.mesh.position.clone();
+                                            bOrigin.y += size.y * 0.35; // Tọa độ vàng của Sếp
+                                            let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+                                            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+                                            bOrigin.add(bDir.clone().multiplyScalar(size.z * 0.1));
+                                            
+                                            // Gọi hàm Rồng với cờ isRemote = true ở cuối cùng
+                                             // 🌟 SỬA SỐ 0 THÀNH SÁT THƯƠNG THỰC TẾ ĐỂ GÂY ĐAM LAN (AoE) CHO NGƯỜI ĐỨNG GẦN
+                                            let dmgBoss = boss.maxHp * 0.05;
+                                            window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
+                                        } else {
+                                            if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, new THREE.Vector3(data.target.x, data.target.y, data.target.z), data.phai, data.chieu);
+                                        }
+                                    }
+                                }
+                            }
+
+
+
+
+                            // TẠI FILE: multiplayer.js (Khoảng dòng 230)
+                            // TÁC DỤNG: Nhận lệnh tung chiêu và truyền luôn ĐƯỜNG DẪN VŨ KHÍ (weaponUrl) để gọi đúng model, khỏi xài lộn Phi Kiếm.
+                            else if (data.type === 'TUNG_CHIEU') {
+                                // Tung chiêu của 6 môn phái - Thêm tham số data.weaponUrl vào cuối!
+                                if (data.className === 'TuTien' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                if (data.className === 'PhapSu' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                if (data.className === 'CungThu' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                if (data.className === 'BanSung' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                if (data.className === 'Lazer' && typeof window.tungComboLazer === 'function') window.tungComboLazer(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                if (data.className === 'LuyenThe' && typeof window.tungComboLuyenThe === 'function') window.tungComboLuyenThe(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                            }
+
+
+
+                            
+                            else if (data.type === 'BI_CHEM') {
+                                if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
+                                    window.mauBanThan -= Math.round(data.damage);
+                                    if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
+                                    const uiThanhMau = document.getElementById('thanhMauHienTai'); 
+                                    if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+                                    
+                                    // 🌟 TRUYỀN TÊN KẺ GIẾT VÀO HÀM (senderId)
+                                    if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
+                                }
+                            }
+                            // 🌟 BẢN VÁ: NHẬN THÔNG BÁO "NẠN NHÂN ĐÃ CHẾT, HÚP EXP THÔI!"
+                            else if (data.type === 'XAC_NHAN_GUC_NGA') {
+                                if (data.killerId === window.myUsername) {
+                                    if (typeof window.vinhDanhDoSat === 'function') window.vinhDanhDoSat(senderId, data.victimLevel);
+                                }
+                            }
+
+
+
+
+
+                        }
+                    } catch (e) {
+                        // Bắt lỗi âm thầm, không cho sập vòng lặp
+                    }
+                });
+
+
+
+
+
+
+
+            } catch (err) { loginBtn.disabled = false; }
+        });
+        if (loginGate && loginGate.style.display === 'none') { setTimeout(() => { loginBtn.click(); }, 500); }
+    }
+
+    setInterval(() => {
+        if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers !== null) {
+            for (let id in window.remotePlayers) {
+                let rp = window.remotePlayers[id];
+                if (rp && rp.status === 'ready' && rp.targetPos && rp.mesh) {
+                    rp.mesh.position.lerp(rp.targetPos, 0.15); 
+                    rp.mesh.rotation.x += (rp.targetRot.x - rp.mesh.rotation.x) * 0.15;
+                    rp.mesh.rotation.y += (rp.targetRot.y - rp.mesh.rotation.y) * 0.15;
+                    rp.mesh.rotation.z += (rp.targetRot.z - rp.mesh.rotation.z) * 0.15;
+
+
+
+
+
+
+                    if (rp.tag && typeof camera !== 'undefined') {
+                        // 🌟 CHỈ SOI X-QUANG VÀO NGƯỜI (BỎ QUA RỒNG)
+                        let targetMesh = rp.meshChar || rp.mesh;
+
+                        if (!rp.chieuCaoThuc) {
+                            targetMesh.updateMatrixWorld(true);
+                            const box = new THREE.Box3().setFromObject(targetMesh);
+                            const center = new THREE.Vector3(); box.getCenter(center);
+
+                            rp.tamThucTeLocal = targetMesh.worldToLocal(center);
+                            rp.chieuCaoThuc = box.max.y - box.min.y;
+                            if (rp.chieuCaoThuc < 0.1 || !isFinite(rp.chieuCaoThuc)) rp.chieuCaoThuc = 2.5;
+                        }
+
+                        // Tọa độ vàng: Tâm người + đẩy lên đỉnh đầu kỵ sĩ
+                        const tagPos = rp.tamThucTeLocal.clone().applyMatrix4(targetMesh.matrixWorld);
+                        tagPos.y += (rp.chieuCaoThuc / 2) + 0.5;
+
+
+
+
+                        // 🌟 LƯU TÂM THỰC TẾ (Để Skill/Boss nhắm thẳng vào ngực thằng này mà bắn)
+                        rp.hitCenterWorld = tagPos.clone().sub(new THREE.Vector3(0, 0.5, 0));
+
+
+
+
+
+
+
+                        
+                        tagPos.project(camera);
+                        if (tagPos.z < 1) {
+                            rp.tag.style.left = `${(tagPos.x * 0.5 + 0.5) * window.innerWidth}px`;
+                            rp.tag.style.top = `${(tagPos.y * -0.5 + 0.5) * window.innerHeight}px`;
+                            rp.tag.style.display = 'block';
+                        } else rp.tag.style.display = 'none';
+                    }
+
+
+
+
+                }
+            }
+        }
+    }, 30);
+};
+
+const micBtn = document.getElementById('micButton');
+let isMicOn = false;
+micBtn.addEventListener('click', async () => {
+    if (!window.room || window.room.state !== 'connected') return;
+    try {
+        isMicOn = !isMicOn;
+        await window.room.localParticipant.setMicrophoneEnabled(isMicOn);
+        if (isMicOn) { micBtn.classList.add('active'); } else { micBtn.classList.remove('active'); }
+    } catch (err) { isMicOn = false; micBtn.classList.remove('active'); }
+});
+
+
+
+
+// ==========================================
+// ⚔️ TỔNG PHỄU GOM SÁT THƯƠNG PVP (CHỐNG SPAM DATA KHI PK)
+// ==========================================
+window.dameGomChoNguoi = window.dameGomChoNguoi || {};
+window.nguoiSyncTimer = window.nguoiSyncTimer || {};
+
+window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
+    // Không tự chém mình hoặc chém hư vô
+    if (!victimId || victimId === window.myUsername) return; 
+
+    // Nhỏ giọt sát thương của bất kỳ hệ phái nào vào Phễu của nạn nhân này
+    window.dameGomChoNguoi[victimId] = (window.dameGomChoNguoi[victimId] || 0) + dame;
+
+    // Van xả tự động 300ms một lần
+    if (!window.nguoiSyncTimer[victimId]) {
+        window.nguoiSyncTimer[victimId] = setTimeout(() => {
+            if (window.room && window.room.state === 'connected') {
+                let syncData = { 
+                    type: 'BI_CHEM', 
+                    victimId: victimId, 
+                    damage: window.dameGomChoNguoi[victimId], // Gửi cục Dame chà bá đã gom
+                    posX: hitPos ? parseFloat(hitPos.x.toFixed(2)) : 0, 
+                    posY: hitPos ? parseFloat(hitPos.y.toFixed(2)) : 0, 
+                    posZ: hitPos ? parseFloat(hitPos.z.toFixed(2)) : 0 
+                };
+                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(syncData)), { reliable: true });
+            }
+            
+            // Xả xong thì đóng van, reset Phễu về 0
+            window.dameGomChoNguoi[victimId] = 0;
+            window.nguoiSyncTimer[victimId] = null;
+        }, 300);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// 📡 RADAR TÒA ÁN TỐI CAO V2.1 (Tương thích Mảng & Chống Nhân Bản)
+// ==========================================
+window.radarDongBoThucTe = function () {
+    fetch('api/get_bosses.php?v=' + Date.now()).then(res => res.json()).then(data => {
+        if (data.status === 'success' && window.danhSachQuaiVat) {
+            data.data.forEach(bossSQL => {
+                let id = bossSQL.id;
+                let sqlHp = parseInt(bossSQL.hp);
+                
+                // Tìm boss trong mảng (Bằng ID gốc)
+                let bossLocal = window.danhSachQuaiVat.find(q => q.id == id);
+                
+                // NẾU CHƯA CÓ MÀ MÁU > 0 -> BÀN TAY SÁNG THẾ ĐẺ RA!
+                if (!bossLocal && sqlHp > 0) {
+                    if (typeof window.sinhRaQuaiVat === 'function') {
+                        let scaleTuSQL = parseFloat(bossSQL.scale || 1.0);
+                        let classTuSQL = bossSQL.class_code || 'TU_TIEN';
+                        let levelTuSQL = parseInt(bossSQL.level || 1);
+                        window.sinhRaQuaiVat(parseFloat(bossSQL.pos_x), parseFloat(bossSQL.pos_z), bossSQL.name, levelTuSQL, parseInt(bossSQL.max_hp), scaleTuSQL, parseFloat(bossSQL.pos_y), true, id, bossSQL.model_url, sqlHp, 0, classTuSQL);
+                    }
+                }
+
+
+
+                // NẾU ĐÃ CÓ RỒI -> CẬP NHẬT MÁU CỨNG TỪ SQL
+                else if (bossLocal) {
+                    bossLocal.hp = sqlHp;
+                    if (bossLocal.tagEl) {
+                        let bar = bossLocal.tagEl.querySelector('.hp-bar');
+                        if (bar) bar.style.width = Math.max(0, (bossLocal.hp / bossLocal.maxHp) * 100) + '%';
+                    }
+                    
+                    if (sqlHp <= 0 && !bossLocal.isDead) {
+                        bossLocal.isDead = true; 
+                        bossLocal.tagEl.style.display = 'none';
+                        if (typeof bossLocal.playAnim === 'function') bossLocal.playAnim('DIE');
+                        setTimeout(() => { if (bossLocal.mesh) { scene.remove(bossLocal.mesh); if(typeof window.donRac3D === 'function') window.donRac3D(bossLocal.mesh); } }, 3000);
+                    }
+                    // 🌟 BẢN VÁ CHỐNG HỒI SINH MA (Dán đè đoạn else if trong Radar)
+                    else if (sqlHp > 0 && bossLocal.isDead) {
+                    // CHỈ HỒI SINH NẾU: Con Boss này thực sự không còn trong Scene (đã dọn rác xong sau 3s)
+                    // Điều này ngăn chặn việc Radar "cướp diễn" khi Boss đang chạy Animation DIE
+                    if (bossLocal.mesh && !scene.children.includes(bossLocal.mesh)) {
+                    bossLocal.isDead = false; 
+                    bossLocal.state = 'IDLE';
+                    bossLocal.mesh.visible = true; 
+                    bossLocal.mesh.position.set(bossLocal.spawnX, bossLocal.mesh.position.y, bossLocal.spawnZ); 
+                    scene.add(bossLocal.mesh);
+        
+                   if (typeof bossLocal.playAnim === 'function') bossLocal.playAnim('IDLE');
+                   if (bossLocal.tagEl) bossLocal.tagEl.style.display = 'block'; 
+                   console.log(`♻️ Radar đã hồi sinh Boss: ${bossLocal.id}`);
+                    }
+                  }
+
+
+
+
+                }
+            });
+        }
+    }).catch(e => { });
+};
+setInterval(window.radarDongBoThucTe, 3000);
+
+
+// ==========================================
+// 🩸 HỆ THỐNG AUTO-SAVE MÁU (CHỐNG HACK F5 HỒI MÁU)
+// ==========================================
+(function() {
+    let lastSavedHp = -1;
+    setInterval(() => {
+        if (typeof window.mauBanThan !== 'undefined' && window.mauBanThan !== lastSavedHp) {
+            let fd = new FormData(); fd.append('hp', Math.floor(window.mauBanThan));
+            fetch('api/save_hp.php', { method: 'POST', body: fd }).catch(e => {});
+            lastSavedHp = window.mauBanThan;
+        }
+    }, 10000);
+
+    window.addEventListener('beforeunload', () => {
+        if (typeof window.mauBanThan !== 'undefined') {
+            let fd = new FormData(); fd.append('hp', Math.floor(window.mauBanThan));
+            navigator.sendBeacon('api/save_hp.php', fd);
+        }
+    });
+})();
