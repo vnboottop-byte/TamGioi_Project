@@ -571,7 +571,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         // 🌟 THÊM DÒNG NÀY ĐỂ MỞ ĐƯỜNG CHO CHIM VÀ CÁ CẮN
                         else if ((quai.classCode === 'CHIM' || quai.classCode === 'CA') && typeof window.tungComboChimCa === 'function') window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, tempId, null, false);
 
-
+                        else if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'LUYEN_THE', chieu);
                         
 
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
