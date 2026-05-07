@@ -328,13 +328,18 @@ window.fixHieuUngDenThui = function (model) {
     model.traverse(c => {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
-            mats.forEach(mat => { 
-                // 🌟 PHỤC HỒI ĐỘ BÓNG CHO RỒNG VÀ ÁO GIÁP
-                mat.metalness = 0.25; // Tăng xíu kim loại để bắt sáng lấp lánh (Trước là 0.0)
-                mat.roughness = 0.4;  // Giảm độ nhám để vảy rồng bóng bẩy hơn (Trước là 0.7)
-                
-                if (mat.map && mat.color) mat.color.setHex(0xffffff); 
-                mat.needsUpdate = true; 
+            mats.forEach(mat => {
+                // 🌟 BẢN VÁ UV: Ép các bản đồ về kênh UV0 để tắt cảnh báo Console
+                if (mat.metalnessMap) mat.metalnessMap.channel = 0;
+                if (mat.roughnessMap) mat.roughnessMap.channel = 0;
+                if (mat.normalMap) mat.normalMap.channel = 0;
+                if (mat.aoMap) mat.aoMap.channel = 0;
+
+                mat.metalness = 0.25;
+                mat.roughness = 0.4;
+
+                if (mat.map && mat.color) mat.color.setHex(0xffffff);
+                mat.needsUpdate = true;
             });
         }
     });
