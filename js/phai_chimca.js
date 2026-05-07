@@ -1,7 +1,7 @@
 // ==========================================
 // 🦅🐟 MÔN PHÁI: THÚ CẬN CHIẾN (CHIM & CÁ)
 // ==========================================
-console.log("🦅🐟 Đã load Bí Kíp Chim Cá (Cận Chiến Thần Tốc)!");
+console.log("🦅🐟 Đã load Bí Kíp Chim Cá (Cận Chiến Thần Tốc - Bản Combo 3 Hit)!");
 
 window.hieuUngChimCa = window.hieuUngChimCa || [];
 
@@ -85,13 +85,6 @@ if (!window.loopChimCaRunning) {
     }, 30);
 }
 
-
-
-
-
-
-
-
 // ==========================================
 // 🌟 TIÊM LÕI AI TẤN CÔNG VÀO TỪ ĐIỂN BÁCH THÚ (CHIM/CÁ)
 // ==========================================
@@ -103,37 +96,61 @@ window.TU_DIEN_AI_QUAI['CHIM'].thucHienTanCong = function(quai, playerModel, del
     if(Date.now() - quai.lastAttackTime > 2000) {
         quai.lastAttackTime = Date.now();
         quai.thoiDiemDam = Date.now(); // Kích hoạt Lui Binh
-        if (typeof quai.playAnim === 'function') quai.playAnim('ATTACK');
-
-        let dmgBoss = quai.dame || quai.damage || 100; 
+        
+        // CẬP NHẬT MỚI: Lấy sát thương chuẩn từ API, thay vì 5% máu
+        let tongDame = quai.damage || 100; 
+        let dameMoiNhat = Math.round(tongDame / 3); // Cắn 3 nhát liên tiếp, chia nhỏ dame ra
+        
         let bOrigin = quai.mesh.position.clone();
         let pTarget = playerModel.position.clone();
         let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
 
-        if (typeof window.tungComboChimCa === 'function') {
-            window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, quai.id, null, false);
-        }
-
-        if (!window.IS_IN_SAFE_ZONE) {
-            let role = (window.ROLE || "").toLowerCase();
-            let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
-
-            if (role !== "admin" && name !== "admin") {
-                window.mauBanThan -= Math.round(dmgBoss);
-                if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(dmgBoss));
-
-                const uiThanhMau = document.getElementById('thanhMauHienTai');
-                const uiSoMau = document.getElementById('soMauHienTai');
-                if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-                if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
-
-                if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Xé Xác");
-            }
-        }
-
+        // GỬI LÊN MULTIPLAYER 1 LẦN CHO NHẸ MẠNG
         if (window.room && window.room.state === 'connected') {
             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: 'CAN_CHIEN' })), { reliable: true }); } catch (e) { }
         }
+
+        // TẠO COMBO MỔ 3 PHÁT CỰC NHANH (Mỗi nhát cách nhau 0.3s)
+        for(let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                // Chỉ đánh nếu quái chưa chết hoặc người chưa chết
+                if (window.mauBanThan <= 0) return; 
+
+                if (typeof quai.playAnim === 'function') quai.playAnim('ATTACK');
+
+                if (typeof window.tungComboChimCa === 'function') {
+                    window.tungComboChimCa('CAN_CHIEN', dameMoiNhat, bOrigin, pTarget, bDir, quai.id, null, false);
+                }
+
+                if (!window.IS_IN_SAFE_ZONE) {
+                    let role = (window.ROLE || "").toLowerCase();
+                    let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+
+                    if (role !== "admin" && name !== "admin") {
+                        window.mauBanThan -= dameMoiNhat;
+                        
+                        // Hiện số sát thương bay lộn xộn lên nhìn cho đã
+                        if (typeof window.taoSoSatThuong === 'function') {
+                            let viTriSo = playerModel.position.clone().add(new THREE.Vector3((Math.random()-0.5)*2, 5 + (i * 1.5), (Math.random()-0.5)*2));
+                            window.taoSoSatThuong(viTriSo, dameMoiNhat);
+                        }
+
+                        const uiThanhMau = document.getElementById('thanhMauHienTai');
+                        const uiSoMau = document.getElementById('soMauHienTai');
+                        
+                        if (window.mauBanThan < 0) window.mauBanThan = 0; // Chống âm máu
+                        
+                        if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+                        if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
+
+                        if (window.mauBanThan <= 0) {
+                            if (typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Xé Xác");
+                        }
+                    }
+                }
+            }, i * 300); // i * 300ms = 0ms, 300ms, 600ms
+        }
+
     } else {
         // LƯỢN VÒNG CHỜ HỒI CHIÊU
         let huongVuongGoc = new THREE.Vector3().crossVectors(quai.upVector, quai.mesh.position.clone().sub(playerModel.position)).normalize();
