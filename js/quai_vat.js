@@ -280,7 +280,7 @@ window.bossTungTuyetKieu = function (quai, targetPos, phaiIn, chieuIn) {
     if (!quai || !quai.mesh) return;
     const startPos = quai.mesh.position.clone(); startPos.y += 10;
     const dir = new THREE.Vector3().subVectors(targetPos, startPos).normalize();
-    const dmg = 1000;
+    const dmg = quai.damage || 100;
     const phai = phaiIn || ['TU_TIEN', 'PHAP_SU', 'XA_THU', 'CUNG_THU', 'LAZER'][Math.floor(Math.random() * 5)];
     const chieu = chieuIn || ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
 
