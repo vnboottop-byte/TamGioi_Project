@@ -348,7 +348,8 @@
 
 
 
-     window.updateCombatBanSung = function () {
+
+    window.updateCombatBanSung = function () {
         // ==========================================
         // 🛡️ BỘ LỌC THÉP V5 (LAZY INIT): NẰM BÊN TRONG VÒNG LẶP ĐỂ TÓM GỌN ENGINE.JS
         // ==========================================
@@ -465,6 +466,117 @@
                 }
             }
             
+
+
+
+
+    
+
+
+            else if (s.type === 'E') {
+                s.speed *= 1.05; if (s.speed > 8.0) s.speed = 8.0;
+                if (s.targetPos) {
+                    if (!s.isRemote) {
+                        const fwd = new THREE.Vector3(); s.mesh.getWorldDirection(fwd);
+                        const mucTieuMoi = window.layMucTieuGanNhatBS(s.mesh.position, fwd);
+                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
+                    }
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15);
+                }
+                s.mesh.translateZ(s.speed);
+
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life < 5) {
+                    taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 15);
+                    s.life = 0;
+                }
+            }
+            else if (s.type === 'BAY_VONG_CUNG') {
+                if (s.state === 'CHO_DEN_LUOT') {
+                    s.fireDelay--;
+                    if (s.fireDelay <= 0) {
+                        s.state = 'DANG_BAY';
+                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1500) {
+                            // Tương tự, nếu đang đi thì khỏi múa tay
+                            if (!s.isRemote && typeof window.playAnim === 'function' && !window.isKeyboardMoving) {
+                                window.playAnim('ATTACK');
+                            }
+                            window.lastAnimTimeBS = Date.now();
+                        }
+                        if (!s.isRemote && typeof playerModel !== 'undefined' && playerModel) {
+                            let upV = playerModel.up.clone().normalize();
+                            let fwd = new THREE.Vector3(); playerModel.getWorldDirection(fwd); fwd.normalize();
+                            let right = new THREE.Vector3().crossVectors(fwd, upV).normalize().negate();
+                            s.startPos = playerModel.position.clone().add(upV.multiplyScalar(3)).add(right.multiplyScalar(1));
+                        }
+                    }
+                }
+                else if (s.state === 'DANG_BAY') {
+                    s.speed *= 1.02; s.progress += s.speed;
+                    let curPos = new THREE.Vector3().lerpVectors(s.startPos, s.targetPos, s.progress);
+                    curPos.add(s.upVector.clone().multiplyScalar(Math.sin(s.progress * Math.PI) * s.arcHeight));
+                    let nextProgress = s.progress + 0.05;
+                    let nextPos = new THREE.Vector3().lerpVectors(s.startPos, s.targetPos, nextProgress);
+                    nextPos.add(s.upVector.clone().multiplyScalar(Math.sin(nextProgress * Math.PI) * s.arcHeight));
+                    s.mesh.position.copy(curPos); s.mesh.lookAt(nextPos);
+
+                    if (s.progress >= 1) {
+                        s.life = 0;
+                        taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 30);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 20, 0xff5500);
+                    }
+                }
+            }
+            else if (s.type === 'F_JET') {
+                if (s.state === 'BAY_TOI') {
+                    s.mesh.translateZ(s.speed);
+                    let distXZ = Math.hypot(s.mesh.position.x - s.targetPos.x, s.mesh.position.z - s.targetPos.z);
+                    if (distXZ < 80) { s.state = 'BAY_LEN_CAO'; s.targetAltitude = s.mesh.position.y + 150; }
+                }
+                else if (s.state === 'BAY_LEN_CAO') {
+                    s.speed *= 1.05; s.mesh.translateZ(s.speed);
+                    if (s.mesh.rotation.x > -Math.PI / 2.5) { s.mesh.rotateX(-0.06); }
+                    if (s.mesh.position.y >= s.targetAltitude) { s.state = 'DAM_XUONG'; }
+                }
+                else if (s.state === 'DAM_XUONG') {
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15);
+                    s.speed *= 1.1; if (s.speed > 15.0) s.speed = 15.0;
+                    s.mesh.translateZ(s.speed);
+
+                    if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.mesh.position.y <= s.targetPos.y + 2) {
+                        taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 50);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 25, 0xff5500);
+                        s.life = 0;
+                    }
+                }
+            }
+
+            if (s.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
+                kyNangBanSung.splice(i, 1);
+            }
+        }
+
+        // 🗑️ LÒ ĐỐT RÁC UI (GIỮ NGUYÊN)
+        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { 
+            let s = danhSachSoBayBS[i]; s.life--; s.offsetY += 0.05;
+            let hienThiPos = s.pos.clone(); hienThiPos.y += s.offsetY;
+            if (window.camera) {
+                let screenPos = hienThiPos.clone().project(window.camera);
+                let x = (screenPos.x * .5 + .5) * window.innerWidth;
+                let y = (screenPos.y * -.5 + .5) * window.innerHeight;
+                s.el.style.left = x + 'px'; s.el.style.top = y + 'px'; s.el.style.opacity = s.life / 60;
+            }
+            if (s.life <= 0) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); danhSachSoBayBS.splice(i, 1); }
+        }
+
+        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) { 
+            let h = hieuUngBanSung[i]; h.life--;
+            if (h.mesh) { h.mesh.scale.multiplyScalar(0.9); if (h.mesh.material) h.mesh.material.opacity = h.life / 20; }
+            if (h.life <= 0) { if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); else scene.remove(h.mesh); hieuUngBanSung.splice(i, 1); }
+        }
+    };
 
 
 
