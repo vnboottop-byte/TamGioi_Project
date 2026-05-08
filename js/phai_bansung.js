@@ -155,7 +155,7 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 // 🌟 FIX ĐÚNG GÓC -Y CỦA BLENDER NHƯ SẾP CHỈ ĐẠO
                 // Xoay -90 độ (-Math.PI/2) quanh trục X để nắn cái mỏ -Y chĩa thẳng ra phía trước (+Z)
-                v.rotation.set(-Math.PI / 2, 4, 0);
+                v.rotation.set(-Math.PI / 2, 0, 4);
                 
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
