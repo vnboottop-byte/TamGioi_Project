@@ -131,15 +131,13 @@
 
 
 
+    
+
+
+
     // ==========================================
-    // 🛠️ TẠO VỤ KHÍ & ĐẠN ĐỒNG BỘ MẠNG TỐI ĐA
+    // 🌟 ĐÚC VIÊN ĐẠN (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 1 MÉT)
     // ==========================================
-    // TẠI FILE: phai_bansung.js
-    // TÁC DỤNG: Đúc viên đạn chuẩn xác, có lõi sáng vạch đường đạn (Tracer) bao rõ!
-
-
-
-    // 🌟 ĐÃ ĐỒNG BỘ THEO CHUẨN CUNG THỦ: GIỮ NGUYÊN GÓC -Y CỦA BLENDER
     function taoVienDanXin(scaleSize) {
         const group = new THREE.Group();
 
@@ -154,9 +152,20 @@
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                // 🌟 SỬA TẠI ĐÂY: Để (0,0,0) vì Blender -Y đã là Three.js +Z rồi!
                 v.rotation.set(0, 0, 0); 
                 
+                // 📏 BỘ THƯỚC ĐO THẦN THÁNH CỦA CUNG THỦ
+                v.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(v);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                // Dù đạn to hay nhỏ, ép tất cả về đúng 1 mét
+                if (maxDim > 0.05) {
+                    let tyLe = 1.0 / maxDim; 
+                    v.scale.set(tyLe, tyLe, tyLe);
+                }
+
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
                         try { 
@@ -169,25 +178,37 @@
                 group.add(v);
             });
         }
+        
+        // Phóng to theo chiêu (Ví dụ: Chiêu Q x 1.5, Chiêu R x 3.0)
         group.scale.set(scaleSize, scaleSize, scaleSize);
         return group;
     }
 
-
-
-
-
-
-
+    // ==========================================
+    // 🌟 ĐÚC TÊN LỬA E (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 2 MÉT)
+    // ==========================================
     function taoHoaTienXin(scaleSize) {
         const group = new THREE.Group();
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset('uploads/anims/rocket.glb', (r) => {
-                // 🌟 ĐÃ ĐỒNG BỘ: Trả về (0,0,0) để bay đúng hướng mũi nhọn -Y của Blender
                 r.rotation.set(0, 0, 0);
+
+                // 📏 THƯỚC ĐO TÊN LỬA
+                r.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(r);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                // Tên lửa thì bự hơn đạn, ép về chuẩn gốc 2 mét
+                if (maxDim > 0.05) {
+                    let tyLe = 2.0 / maxDim; 
+                    r.scale.set(tyLe, tyLe, tyLe);
+                }
+
                 group.add(r);
             });
         }
+        // Phóng to theo skill
         group.scale.set(scaleSize, scaleSize, scaleSize);
         return group;
     }
