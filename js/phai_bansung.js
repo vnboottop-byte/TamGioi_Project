@@ -424,6 +424,13 @@
                     let tia = taoTiaDanNhanh();
                     tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
+                    // 🌟 CHÈN THÊM ĐOẠN NÀY: BẮT BUỘC HIỆN SÚNG KHI RADAR HOẠT ĐỘNG
+                    if (window.vuKhiModel) {
+                        window.vuKhiModel.visible = true;
+                    }
+
+                    
+
                     kyNangBanSung.push({
                         mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
                         targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
