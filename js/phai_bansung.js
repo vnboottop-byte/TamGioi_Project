@@ -183,7 +183,8 @@
         const group = new THREE.Group();
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset('uploads/anims/rocket.glb', (r) => {
-                r.rotation.y = Math.PI;
+                // 🌟 ĐÃ ĐỒNG BỘ: Trả về (0,0,0) để bay đúng hướng mũi nhọn -Y của Blender
+                r.rotation.set(0, 0, 0);
                 group.add(r);
             });
         }
