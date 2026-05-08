@@ -228,11 +228,8 @@
             choHoiChieu[phim] = bayGio;
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
 
-            if (window.vuKhiModel) {
-                window.vuKhiModel.visible = true;
-                if (window.vuKhiModel.hideTimeout) clearTimeout(window.vuKhiModel.hideTimeout);
-                window.vuKhiModel.hideTimeout = setTimeout(() => { if (window.vuKhiModel) window.vuKhiModel.visible = false; }, 1500);
-            }
+            // 🌟 ĐỒNG HỒ THỰC: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây!
+            window.thoiGianTatSung = Date.now() + 1500;
         }
 
         let viTriGoc, huongMat, mucTieu;
