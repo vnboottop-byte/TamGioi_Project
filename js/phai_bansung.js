@@ -57,25 +57,16 @@
 
 
 
-
-
-
-
-
+     // 🌟 ĐÃ ĐỒNG BỘ: SÁT THƯƠNG QUÉT HITBOX 3D CHUẨN X-QUANG
     function gaySatThuongBS(tamNo, luongSatThuong, banKinh) {
-        // Vá lỗi: Biến truyền vào là tamNo (3D), phải tự tạo tamNo2D
-        let tamNo2D = new THREE.Vector3(tamNo.x, 0, tamNo.z);
-
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
                 if (rp.status === 'ready' && rp.mesh) {
                     let hit = window.layHitbox(rp.mesh);
-                    let pos2D = new THREE.Vector3(hit.tamNguc.x, 0, hit.tamNguc.z); 
-                    if (tamNo2D.distanceTo(pos2D) <= (banKinh + hit.banKinh)) {
-                        let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                        taoSoSatThuongBS(posHienSo, luongSatThuong, '#ffaa00');
-                        if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
+                    if (tamNo.distanceTo(hit.tamNguc) <= banKinh) {
+                        taoSoSatThuongBS(hit.tamNguc.clone().add(new THREE.Vector3(0,hit.chieuCao/2,0)), luongSatThuong, '#ffaa00');
+                        if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, hit.tamNguc.clone());
                     }
                 }
             }
@@ -84,8 +75,7 @@
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh);
-                    let pos2D = new THREE.Vector3(hit.tamNguc.x, 0, hit.tamNguc.z); 
-                    if (tamNo2D.distanceTo(pos2D) <= (banKinh + hit.banKinh)) {
+                    if (tamNo.distanceTo(hit.tamNguc) <= banKinh) {
                         if (quai.isBoss) {
                             taoSoSatThuongBS(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
                             if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
@@ -104,6 +94,13 @@
             });
         }
     }
+
+
+    
+
+
+
+
 
     function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15) {
         if (isRemote === false) gaySatThuongBS(pos, luongDame, banKinh);
