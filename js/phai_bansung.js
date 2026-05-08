@@ -654,8 +654,7 @@
                                 let scaleCuoiCung = (chieuDaiMongMuon / maxDim) / scaleX; 
                                 window.vuKhiModel.scale.set(scaleCuoiCung, scaleCuoiCung, scaleCuoiCung);
                                 
-                                // Vị trí 0,0,0 sẽ khớp chuẩn với cái chấm cam trong Blender của Sếp
-                                window.vuKhiModel.position.set(0, 0, 0);
+                                
                                 
                                 // Sếp xoay lại góc này cho nòng súng chĩa thẳng ra trước nhé
                                 window.vuKhiModel.rotation.set(0, 7, 0);
