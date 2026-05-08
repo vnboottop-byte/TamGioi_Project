@@ -136,12 +136,15 @@
     // ==========================================
     // TẠI FILE: phai_bansung.js
     // TÁC DỤNG: Đúc viên đạn chuẩn xác, có lõi sáng vạch đường đạn (Tracer) bao rõ!
+
+
+
     function taoVienDanXin(scaleSize) {
         const group = new THREE.Group();
 
         // 🌟 TẠO LÕI SÁNG (VẠCH ĐƯỜNG ĐẠN) CHỐNG TÀNG HÌNH 100%
         const geoLoi = new THREE.CylinderGeometry(0.1, 0.1, 6, 8);
-        geoLoi.rotateX(Math.PI / 2); // Chĩa thẳng về phía trước
+        geoLoi.rotateX(Math.PI / 2); // Chĩa thẳng về phía trước (+Z)
         const matLoi = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
         const loi = new THREE.Mesh(geoLoi, matLoi);
         group.add(loi);
@@ -150,10 +153,13 @@
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                v.rotation.x = Math.PI / 2;
+                // 🌟 FIX ĐÚNG GÓC -Y CỦA BLENDER NHƯ SẾP CHỈ ĐẠO
+                // Xoay -90 độ (-Math.PI/2) quanh trục X để nắn cái mỏ -Y chĩa thẳng ra phía trước (+Z)
+                v.rotation.set(-Math.PI / 2, 0, 0);
+                
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        try { // 🌟 BỌC TRY-CATCH ĐỂ KHÔNG BỊ CRASH MODEL VŨ KHÍ NỮA
+                        try { 
                             if (!Array.isArray(c.material)) {
                                 c.material = c.material.clone();
                                 c.material.emissive = new THREE.Color(0xffff00);
