@@ -228,12 +228,14 @@
             choHoiChieu[phim] = bayGio;
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
 
-            // 🌟 ĐỒNG HỒ THỰC: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây!
+            // 🌟 ĐỒNG BỘ ĐỒNG HỒ: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây! (Xóa sạch setTimeout cũ)
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
         let viTriGoc, huongMat, mucTieu;
         const dameGoc = window.DAME_CUA_TOI || 120;
+
+        
 
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
@@ -351,11 +353,13 @@
 
     window.updateCombatBanSung = function () {
         // ==========================================
-        // 🕒 QUẢN LÝ TÀNG HÌNH SÚNG BẰNG ĐỒNG HỒ THỰC (CHỐNG XUNG ĐỘT 100%)
+        // 🕒 QUẢN LÝ TÀNG HÌNH SÚNG BẰNG 1 ĐỒNG HỒ DUY NHẤT
         // ==========================================
         if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
                 window.vuKhiModel.visible = true;
+                // Bắt buộc hiện toàn bộ lưới bên trong phòng trường hợp bị ẩn nhầm
+                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
             } else {
                 window.vuKhiModel.visible = false;
             }
@@ -417,7 +421,7 @@
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
 
-                    // 🌟 ĐỒNG HỒ THỰC: Auto-radar thấy quái là cộng thêm 1.5s hiện súng!
+                    // 🌟 AUTO-RADAR: Cứ xả đạn là cũng gia hạn súng hiện 1.5 giây!
                     window.thoiGianTatSung = Date.now() + 1500;
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
