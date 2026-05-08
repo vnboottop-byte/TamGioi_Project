@@ -176,6 +176,39 @@
 
 
 
+
+
+
+
+
+    // ==========================================
+    // 🌟 ĐÚC TIA SÁNG ĐẠN TỰ ĐỘNG (SIÊU NHẸ - KHÔNG DÙNG MODEL 3D)
+    // ==========================================
+    function taoTiaDanNhanh() {
+        // Tạo một cái cọc dài 4m, siêu nhỏ, màu vàng phát sáng rực rỡ
+        const geo = new THREE.CylinderGeometry(0.08, 0.08, 4, 8);
+        geo.rotateX(Math.PI / 2); // Chĩa mũi nhọn về trục +Z để bay thẳng
+        const mat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
+        return new THREE.Mesh(geo, mat);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // ==========================================
     // 🌟 ĐÚC TÊN LỬA E (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 2 MÉT)
     // ==========================================
@@ -388,21 +421,89 @@
 
 
 
+
+
+
+
     window.updateCombatBanSung = function () {
+        // ==========================================
+        // 📡 HỆ THỐNG RADAR: SÚNG MÁY TỰ ĐỘNG (AUTO-TURRET)
+        // ==========================================
+        if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
+        if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
+
+        // Nếu còn sống, đang cầm phái Bắn Súng và đã hồi đạn (0.5s = 30 frames)
+        if (window.thoiGianHoiQ_Auto <= 0 && window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
+            let targetMoi = null;
+            let minDist = 35; // 🌟 Tầm quét Radar 35 mét
+            let originPos = playerModel.position.clone();
+
+            // 1. Quét Quái vật
+            if (typeof window.danhSachQuaiVat !== 'undefined') {
+                window.danhSachQuaiVat.forEach(q => {
+                    if (!q.isDead && q.mesh) {
+                        let d = originPos.distanceTo(q.mesh.position);
+                        if (d < minDist) { minDist = d; targetMoi = q.mesh.position.clone(); }
+                    }
+                });
+            }
+            // 2. Quét Người chơi khác (PVP)
+            if (typeof remotePlayers !== 'undefined') {
+                for (let id in remotePlayers) {
+                    let rp = remotePlayers[id];
+                    if (rp.status === 'ready' && rp.mesh) {
+                        let d = originPos.distanceTo(rp.mesh.position);
+                        if (d < minDist) { minDist = d; targetMoi = rp.mesh.position.clone(); }
+                    }
+                }
+            }
+
+            // 💥 NẾU TÓM ĐƯỢC MỤC TIÊU -> TỰ ĐỘNG NÃ ĐẠN!
+            if (targetMoi) {
+                window.thoiGianHoiQ_Auto = 30; // Reset bộ đếm (30 frame = 0.5s nhả 1 viên)
+                
+                let startPos = originPos.clone().add(new THREE.Vector3(0, 3, 0)); // Bắn từ ngực nhân vật
+                let tia = taoTiaDanNhanh();
+                tia.position.copy(startPos);
+                tia.lookAt(targetMoi);
+                scene.add(tia);
+
+                kyNangBanSung.push({
+                    mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY',
+                    speed: 3.5, life: 60, // Đạn la-de bay cực nhanh
+                    targetPos: targetMoi,
+                    damage: (window.DAME_CUA_TOI || 100) * 0.016, // 🌟 ĐÚNG CHUẨN KỊCH BẢN 1: 1.6% DAME GỐC
+                    isRemote: false
+                });
+
+                // Tay tự động giật súng bần bật
+                if (typeof window.playAnim === 'function') window.playAnim('ATTACK');
+
+                // Đồng bộ tiếng súng lên mạng cho người khác nghe
+                if (window.room && window.room.state === 'connected') {
+                    try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
+                }
+            }
+        }
+
+        // ==========================================
+        // 🚀 XỬ LÝ QUỸ ĐẠO CÁC LOẠI ĐẠN
+        // ==========================================
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let skill = kyNangBanSung[i];
             if (skill.delay > 0) { skill.delay--; continue; }
             skill.life--;
 
-            // --- CHIÊU Q ---
-            if (skill.type === 'Q') {
+            // --- CHIÊU Q: SÚNG MÁY AUTO (Tia La-de vàng) ---
+            if (skill.type === 'Q_AUTO' || skill.type === 'Q') {
                 skill.mesh.translateZ(skill.speed);
+                // Đạn chạm mục tiêu
                 if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 3 || skill.life < 5) {
-                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 2);
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 2); // Nổ quy mô nhỏ
                     skill.life = 0;
                 }
             }
-            // --- CHIÊU E ---
+            // --- CHIÊU E: TÊN LỬA ---
             else if (skill.type === 'E') {
                 skill.speed *= 1.05; if (skill.speed > 8.0) skill.speed = 8.0;
                 if (skill.targetPos) {
@@ -421,17 +522,13 @@
                     skill.life = 0;
                 }
             }
-            // --- CHIÊU R: ĐẠI BÁC CẦU VỒNG (PARABOL) ---
+            // --- CHIÊU R: ĐẠI BÁC CẦU VỒNG ---
             else if (skill.type === 'BAY_VONG_CUNG') {
                 if (skill.state === 'CHO_DEN_LUOT') {
                     skill.fireDelay--;
                     if (skill.fireDelay <= 0) {
                         skill.state = 'DANG_BAY';
-
-                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG (GỌI ANIMATION LIÊN TỤC Y NHƯ CUNG THỦ)
-                        if (!skill.isRemote && typeof window.playAnim === 'function') {
-                            window.playAnim('ATTACK');
-                        }
+                        if (!skill.isRemote && typeof window.playAnim === 'function') window.playAnim('ATTACK');
 
                         if (!skill.isRemote && typeof playerModel !== 'undefined' && playerModel) {
                             let upV = playerModel.up.clone().normalize();
@@ -457,37 +554,27 @@
 
                     if (skill.progress >= 1) {
                         skill.life = 0;
-                        // Đã tăng bán kính nổ lên 30 để Boss đi lùi vẫn ăn đủ dame
                         taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 20, 0xff5500);
                     }
                 }
             }
-            // --- CHIÊU F ---
+            // --- CHIÊU F: MÁY BAY KAMIKAZE ---
             else if (skill.type === 'F_JET') {
                 if (skill.state === 'BAY_TOI') {
                     skill.mesh.translateZ(skill.speed);
                     let distXZ = Math.hypot(skill.mesh.position.x - skill.targetPos.x, skill.mesh.position.z - skill.targetPos.z);
-                    if (distXZ < 80) {
-                        skill.state = 'BAY_LEN_CAO';
-                        skill.targetAltitude = skill.mesh.position.y + 150;
-                    }
+                    if (distXZ < 80) { skill.state = 'BAY_LEN_CAO'; skill.targetAltitude = skill.mesh.position.y + 150; }
                 }
                 else if (skill.state === 'BAY_LEN_CAO') {
-                    skill.speed *= 1.05;
-                    skill.mesh.translateZ(skill.speed);
+                    skill.speed *= 1.05; skill.mesh.translateZ(skill.speed);
                     if (skill.mesh.rotation.x > -Math.PI / 2.5) { skill.mesh.rotateX(-0.06); }
                     if (skill.mesh.position.y >= skill.targetAltitude) { skill.state = 'DAM_XUONG'; }
                 }
                 else if (skill.state === 'DAM_XUONG') {
-                    const dummy = new THREE.Object3D();
-                    dummy.position.copy(skill.mesh.position);
-                    dummy.lookAt(skill.targetPos);
+                    const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                     skill.mesh.quaternion.slerp(dummy.quaternion, 0.15);
-
-                    skill.speed *= 1.1;
-                    if (skill.speed > 15.0) skill.speed = 15.0;
-
+                    skill.speed *= 1.1; if (skill.speed > 15.0) skill.speed = 15.0;
                     skill.mesh.translateZ(skill.speed);
 
                     if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
@@ -505,22 +592,18 @@
         }
 
         // =====================================
-        // 🌟 LÕI RENDER SỐ MÁU (LẦN NÀY ĐẦY ĐỦ 100%)
+        // 🗑️ LÒ ĐỐT RÁC VÀ RENDER SỐ MÁU
         // =====================================
         for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) {
             let s = danhSachSoBayBS[i];
-            s.life--;
-            s.offsetY += 0.05;
-            let hienThiPos = s.pos.clone();
-            hienThiPos.y += s.offsetY;
+            s.life--; s.offsetY += 0.05;
+            let hienThiPos = s.pos.clone(); hienThiPos.y += s.offsetY;
 
             if (window.camera) {
                 let screenPos = hienThiPos.clone().project(window.camera);
                 let x = (screenPos.x * .5 + .5) * window.innerWidth;
                 let y = (screenPos.y * -.5 + .5) * window.innerHeight;
-                s.el.style.left = x + 'px';
-                s.el.style.top = y + 'px';
-                s.el.style.opacity = s.life / 60;
+                s.el.style.left = x + 'px'; s.el.style.top = y + 'px'; s.el.style.opacity = s.life / 60;
             }
 
             if (s.life <= 0) {
@@ -530,19 +613,21 @@
         }
 
         for (let i = hieuUngBanSung.length - 1; i >= 0; i--) {
-            let h = hieuUngBanSung[i];
-            h.life--;
+            let h = hieuUngBanSung[i]; h.life--;
             if (h.mesh) {
                 h.mesh.scale.multiplyScalar(0.9);
                 if (h.mesh.material) h.mesh.material.opacity = h.life / 20;
             }
             if (h.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh);
-                else scene.remove(h.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); else scene.remove(h.mesh);
                 hieuUngBanSung.splice(i, 1);
             }
         }
     };
+
+
+
+
 
 
 
