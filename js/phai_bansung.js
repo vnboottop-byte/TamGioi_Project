@@ -300,15 +300,39 @@
                 kyNangBanSung.push({ mesh: hoaTien, type: 'E', speed: 0.5, life: 200, targetPos: mucTieu, damage: dameGoc, delay: i * 5, isRemote: isRemote });
             }
         }
-        // --- CHIÊU R: SẤY ĐẠN LIÊN THANH TỪ TRÊN XUỐNG ---
+
+
+
+        // 🌟 CHIÊU R MỚI: MƯA ĐẠI BÁC CẦU VỒNG (PARABOL)
         else if (phim === 'R') {
-            for (let i = 0; i < 40; i++) {
-                const dan = taoVienDanXin(2.0); // 🌟 ĐÃ GỠ weaponUrl
-                let rx = mucTieu.x + (Math.random() - 0.5) * 40; let rz = mucTieu.z + (Math.random() - 0.5) * 40;
-                let startPos = new THREE.Vector3(rx, mucTieu.y + 80 + Math.random() * 30, rz);
-                let endPos = new THREE.Vector3(rx, mucTieu.y, rz);
-                dan.position.copy(startPos); dan.lookAt(endPos); scene.add(dan);
-                kyNangBanSung.push({ mesh: dan, type: 'R', speed: 6.0, life: 150, targetPos: endPos, damage: dameGoc * 0.8, delay: Math.random() * 30, isRemote: isRemote });
+            const soLuong = 10; // Bắn 10 viên đại bác liên tiếp
+            for (let i = 0; i < soLuong; i++) {
+                // Đúc viên đạn to ra gấp 3 lần cho giống đạn pháo
+                const dan = taoVienDanXin(3.0); 
+                
+                // Tán xạ mục tiêu ngẫu nhiên xung quanh khu vực địch
+                let rX = (Math.random() - 0.5) * 15;
+                let rZ = (Math.random() - 0.5) * 15;
+                
+                // Điểm bắn: Xuất phát từ nòng súng của sếp
+                let startPos = viTriGoc.clone().add(upVector.clone().multiplyScalar(3)).add(rightVector.clone().multiplyScalar(1));
+                // Điểm rơi: Xung quanh mục tiêu
+                let dichRoi = mucTieu.clone().add(rightVector.clone().multiplyScalar(rX)).add(huongMat.clone().multiplyScalar(rZ));
+                
+                dan.position.copy(startPos);
+                dan.lookAt(dichRoi);
+                scene.add(dan);
+                
+                kyNangBanSung.push({
+                    mesh: dan, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT',
+                    speed: 0.015 + (Math.random() * 0.005), // Tốc độ bay (Progress)
+                    life: 400, startPos: startPos.clone(), targetPos: dichRoi,
+                    damage: dameGoc * 0.2, // 10 viên, mỗi viên 20% dame
+                    arcHeight: 40 + Math.random() * 20, // Độ cao của vòng cung (Lên cao 40m - 60m)
+                    fireDelay: i * 6, // Bắn liên tiếp, mỗi viên cách nhau vài frame
+                    progress: 0, isRemote: isRemote,
+                    upVector: upVector.clone() // Gắn trọng lực tâm vào
+                });
             }
         }
 
