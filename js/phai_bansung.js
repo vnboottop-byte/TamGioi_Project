@@ -318,97 +318,120 @@
 
 
     // ==========================================
-    // 🛡️ BỘ LỌC THÉP V2: TRỊ BỆNH 'BAY' ĐÈ 'ATTACK'
+    // 🛡️ BỘ LỌC THÉP V3: TRỊ DỨT ĐIỂM BỆNH 'BAY' ĐÈ 'ATTACK'
     // ==========================================
     if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
-        window.playAnimGocBS = window.playAnim; // Lưu lại não gốc
+        window.playAnimGocBS = window.playAnim; 
         
         window.playAnim = function(tenAnim) {
-            // NẾU ĐANG CẦM BẮN SÚNG & ĐANG TỰ ĐỘNG NHẢ ĐẠN
             if (window.dangBanTuDong) {
                 let ten = tenAnim.toUpperCase();
-                // 🌟 Lần này đã bắt đúng chữ 'BAY' và 'NHANROI' của engine.js
-                let laAnimRanhRoi = (ten === 'BAY' || ten === 'FLY' || ten === 'IDLE' || ten === 'NHANROI');
+                // 🌟 Bắt trọn ổ TẤT CẢ các lệnh mà engine.js có thể gọi khi Sếp đang bay/đứng
+                let laAnimDiChuyen = ['BAY', 'FLY', 'IDLE', 'NHANROI', 'CHAYBO', 'RUN', 'WALK', 'FALL'].includes(ten);
                 
-                // NẾU engine đòi BAY hoặc ĐỨNG IM, mà Sếp LẠI KHÔNG BẤM DI CHUYỂN
-                if (laAnimRanhRoi && !window.isKeyboardMoving && !window.isMoving) {
-                    return; // 🛑 CHẶN ĐỨNG! Trả lại sân khấu cho hành động giơ súng (ATTACK)
+                // Nếu engine đòi BAY/ĐỨNG, mà Sếp LẠI KHÔNG BẤM PHÍM WASD
+                if (laAnimDiChuyen && !window.isKeyboardMoving) {
+                    return; // 🛑 CHẶN ĐỨNG NGAY LẬP TỨC!
                 }
             }
-            // Mọi trường hợp khác (Sếp bấm WASD chạy/bay) thì cho qua bình thường
             window.playAnimGocBS(tenAnim);
         };
     }
 
-    // ==========================================
-    // 🏹 HÀM VẬT LÝ CHIẾN ĐẤU BẮN SÚNG
-    // ==========================================
+
+
+
+
     window.updateCombatBanSung = function () {
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
-        // 📡 MẮT THẦN RADAR 
-        if (window.thoiGianHoiQ_Auto <= 0 && window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
+        // ==========================================
+        // 📡 MẮT THẦN RADAR (QUÉT LIÊN TỤC MỖI FRAME)
+        // ==========================================
+        if (window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
             let minDist = 500;
             let originPos = playerModel.position.clone();
 
+            // Tìm quái/người gần nhất
             [...(window.danhSachQuaiVat || []), ...Object.values(typeof remotePlayers !== 'undefined' ? remotePlayers : {})].forEach(obj => {
                 let mesh = obj.mesh || (obj.status === 'ready' ? obj.mesh : null);
                 if (mesh && !(obj.isDead)) {
                     let hit = window.layHitbox(mesh);
                     let d = originPos.distanceTo(hit.tamNguc);
-                    if (d > 0.1 && d < minDist) { 
-                        minDist = d; 
-                        targetMoi = hit.tamNguc.clone(); 
-                    }
+                    if (d > 0.1 && d < minDist) { minDist = d; targetMoi = hit.tamNguc.clone(); }
                 }
             });
 
+            // 🎯 NẾU CÓ MỤC TIÊU TRONG TẦM MẮT
             if (targetMoi) {
-                window.thoiGianHoiQ_Auto = 30; // 0.5s nhả đạn
-                
-                // 🌟 BẬT CỜ BÁO HIỆU CHO "BỘ LỌC THÉP" Ở TRÊN BIẾT
+                // 🌟 1. Bật cờ khóa chặn Animation
                 window.dangBanTuDong = true;
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // Lấy xương tay trái xuất phát tia Lazer
-                let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
-                let tayTrai = null;
-                playerModel.traverse(c => {
-                    if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('LeftForeArm') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
-                        tayTrai = c;
-                    }
-                });
-                if (tayTrai) {
-                    startPos = new THREE.Vector3();
-                    tayTrai.getWorldPosition(startPos);
+                // 🌟 2. AUTO-AIM: TỰ ĐỘNG XOAY MẶT VỀ PHÍA ĐỊCH
+                if (!window.isKeyboardMoving) {
+                    let upV = playerModel.up.clone().normalize();
+                    let vectorToTarget = targetMoi.clone().sub(playerModel.position);
+                    
+                    // Chiếu vị trí địch xuống mặt phẳng ngang của nhân vật.
+                    // Việc này giúp nhân vật chỉ xoay người qua lại, KHÔNG BỊ NGỬA CỔ HAY CHUỐI ĐẦU XUỐNG ĐẤT!
+                    let khoangCachDoc = vectorToTarget.dot(upV);
+                    let hinhChieuNgang = targetMoi.clone().sub(upV.clone().multiplyScalar(khoangCachDoc));
+                    
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(playerModel.position);
+                    dummy.up.copy(upV);
+                    dummy.lookAt(hinhChieuNgang);
+                    
+                    // Quay mượt mà 20% mỗi khung hình (Slerp)
+                    playerModel.quaternion.slerp(dummy.quaternion, 0.2);
                 }
 
-                let tia = taoTiaDanNhanh();
-                tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
+                // 🌟 3. NÃ ĐẠN (Chỉ nã khi hết thời gian chờ 0.5s)
+                if (window.thoiGianHoiQ_Auto <= 0) {
+                    window.thoiGianHoiQ_Auto = 30; // Reset đếm ngược
+                    
+                    // Lấy xương tay trái xuất phát tia Lazer
+                    let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
+                    let tayTrai = null;
+                    playerModel.traverse(c => {
+                        if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('LeftForeArm') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
+                            tayTrai = c;
+                        }
+                    });
+                    if (tayTrai) { startPos = new THREE.Vector3(); tayTrai.getWorldPosition(startPos); }
 
-                kyNangBanSung.push({
-                    mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
-                    targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
-                });
+                    let tia = taoTiaDanNhanh();
+                    tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
-                // 🌟 CHIẾN THUẬT HIT & RUN ĐỈNH CAO: 
-                // Chỉ gọi Animation giật súng KHI ĐANG ĐỨNG YÊN. 
-                // Nếu đang bấm phím chạy/bay thì kệ cho chân chạy, tay vẫn xả đạn bùm bụp!
-                if (typeof window.playAnim === 'function' && !window.isKeyboardMoving && !window.isMoving) {
-                    if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
-                        window.playAnim('ATTACK');
-                        window.lastAnimTimeBS = Date.now();
+                    kyNangBanSung.push({
+                        mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
+                    });
+
+                    // Giật tay mượt mà (chỉ gọi 1 giây/lần)
+                    if (typeof window.playAnim === 'function' && !window.isKeyboardMoving) {
+                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
+                            window.playAnim('ATTACK');
+                            window.lastAnimTimeBS = Date.now();
+                        }
                     }
-                }
 
-                if (window.room && window.room.state === 'connected') {
-                    try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
+                    if (window.room && window.room.state === 'connected') {
+                        try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
+                    }
                 }
             }
         }
+
+         
+
+
+
+
 
         // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
