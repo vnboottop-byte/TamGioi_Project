@@ -344,11 +344,17 @@
 
 
     window.updateCombatBanSung = function () {
+        // 🌟 1. CẢM BIẾN CHUYỂN ĐỘNG (Để báo cáo cho Bộ Lọc ở trên biết Sếp có đang di chuyển không)
+        if (typeof playerModel !== 'undefined' && playerModel) {
+            if (!window.lastPosBS) window.lastPosBS = playerModel.position.clone();
+            window.isPlayerMovingBS = playerModel.position.distanceTo(window.lastPosBS) > 0.05;
+            window.lastPosBS.copy(playerModel.position);
+        }
+
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
         // 📡 MẮT THẦN RADAR 
-        // 🌟 Đã gỡ bỏ điều kiện !window.dangMuaChieu ở đây để súng vẫn bắn dù đang làm gì đi nữa
         if (window.thoiGianHoiQ_Auto <= 0 && window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
             let minDist = 500;
@@ -369,8 +375,13 @@
             if (targetMoi) {
                 window.thoiGianHoiQ_Auto = 30; // 0.5s nhả đạn
                 
-                // 🌟 FIX 1: TÌM XƯƠNG TAY TRÁI ĐỂ XUẤT PHÁT TIA LA-DE CHUẨN XÁC TỪ TAY
-                let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3)); // Dự phòng nếu lỗi
+                // 🌟 2. BẬT CỜ BÁO HIỆU ĐANG BẮN TỰ ĐỘNG
+                window.dangBanTuDong = true;
+                if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
+                window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 1000); // 1s không thấy quái sẽ tự tắt cờ
+
+                // Xuất đạn từ tay trái
+                let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                 let tayTrai = null;
                 playerModel.traverse(c => {
                     if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('LeftForeArm') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
@@ -379,7 +390,7 @@
                 });
                 if (tayTrai) {
                     startPos = new THREE.Vector3();
-                    tayTrai.getWorldPosition(startPos); // Lấy tọa độ không gian thực của Xương
+                    tayTrai.getWorldPosition(startPos);
                 }
 
                 let tia = taoTiaDanNhanh();
@@ -390,18 +401,11 @@
                     targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
                 });
 
-                // 🌟 FIX 2: CHẶN HỌNG ANIMATION BAY/CHẠY BẰNG CỜ DANGMUACHIEU
+                // 🌟 3. GỌI ATTACK MƯỢT MÀ (KHÔNG KHÓA dangMuaChieu NỮA)
                 if (typeof window.playAnim === 'function') {
-                    if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { // Mỗi 1s mới giật tay 1 lần
+                    if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
                         window.playAnim('ATTACK');
                         window.lastAnimTimeBS = Date.now();
-                        
-                        // Khóa không cho hệ thống gọi anim Bay/Chạy đè lên
-                        window.dangMuaChieu = true;
-                        
-                        // Sau 0.8 giây mới mở khóa thả tự do lại cho hệ thống
-                        if (window.khoaAnimBS) clearTimeout(window.khoaAnimBS);
-                        window.khoaAnimBS = setTimeout(() => { window.dangMuaChieu = false; }, 800);
                     }
                 }
 
@@ -417,7 +421,6 @@
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
 
-            // --- CHIÊU Q ---
             if (s.type === 'Q_AUTO' || s.type === 'Q') {
                 s.mesh.translateZ(s.speed);
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
@@ -425,7 +428,6 @@
                     s.life = 0;
                 }
             }
-            // --- CHIÊU E ---
             else if (s.type === 'E') {
                 s.speed *= 1.05; if (s.speed > 8.0) s.speed = 8.0;
                 if (s.targetPos) {
@@ -444,7 +446,6 @@
                     s.life = 0;
                 }
             }
-            // --- CHIÊU R ---
             else if (s.type === 'BAY_VONG_CUNG') {
                 if (s.state === 'CHO_DEN_LUOT') {
                     s.fireDelay--;
@@ -453,11 +454,6 @@
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1500) {
                             if (!s.isRemote && typeof window.playAnim === 'function') {
                                 window.playAnim('ATTACK');
-                                
-                                // Áp dụng chiêu Khóa Animation cho cả skill R
-                                window.dangMuaChieu = true;
-                                if (window.khoaAnimBS) clearTimeout(window.khoaAnimBS);
-                                window.khoaAnimBS = setTimeout(() => { window.dangMuaChieu = false; }, 800);
                             }
                             window.lastAnimTimeBS = Date.now();
                         }
@@ -485,7 +481,6 @@
                     }
                 }
             }
-            // --- CHIÊU F ---
             else if (s.type === 'F_JET') {
                 if (s.state === 'BAY_TOI') {
                     s.mesh.translateZ(s.speed);
@@ -536,7 +531,6 @@
             if (h.life <= 0) { if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); else scene.remove(h.mesh); hieuUngBanSung.splice(i, 1); }
         }
     };
-
 
 
 
