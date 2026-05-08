@@ -318,39 +318,32 @@
 
 
     // ==========================================
-    // 🛡️ BỘ LỌC ANIMATION: BÍ THUẬT CHỐNG ĐÁ ANIMATION CHO XẠ THỦ
+    // 🛡️ BỘ LỌC THÉP V2: TRỊ BỆNH 'BAY' ĐÈ 'ATTACK'
     // ==========================================
-    if (typeof window.playAnim === 'function' && !window.playAnimGoc) {
-        window.playAnimGoc = window.playAnim; // Lưu lại lõi gốc của Engine
+    if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
+        window.playAnimGocBS = window.playAnim; // Lưu lại não gốc
+        
         window.playAnim = function(tenAnim) {
-            // Nếu đang cầm Bắn Súng, đang xả đạn tự động và KHÔNG di chuyển
-            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Xạ Thủ" && window.dangBanTuDong) {
-                // Sếp bắt mạch cực chuẩn: Chặn đứng lệnh BAY và IDLE nếu đang đứng nhả đạn!
-                if (tenAnim === 'FLY' || tenAnim === 'IDLE') {
-                    if (!window.isPlayerMovingBS) {
-                        return; // 🌟 BỊ CHẶN! Giữ nguyên dáng đứng ATTACK ngầu lòi
-                    }
+            // NẾU ĐANG CẦM BẮN SÚNG & ĐANG TỰ ĐỘNG NHẢ ĐẠN
+            if (window.dangBanTuDong) {
+                let ten = tenAnim.toUpperCase();
+                // 🌟 Lần này đã bắt đúng chữ 'BAY' và 'NHANROI' của engine.js
+                let laAnimRanhRoi = (ten === 'BAY' || ten === 'FLY' || ten === 'IDLE' || ten === 'NHANROI');
+                
+                // NẾU engine đòi BAY hoặc ĐỨNG IM, mà Sếp LẠI KHÔNG BẤM DI CHUYỂN
+                if (laAnimRanhRoi && !window.isKeyboardMoving && !window.isMoving) {
+                    return; // 🛑 CHẶN ĐỨNG! Trả lại sân khấu cho hành động giơ súng (ATTACK)
                 }
             }
-            // Các trường hợp khác (hoặc lúc Sếp bấm WASD di chuyển) thì cho qua bình thường
-            window.playAnimGoc(tenAnim);
+            // Mọi trường hợp khác (Sếp bấm WASD chạy/bay) thì cho qua bình thường
+            window.playAnimGocBS(tenAnim);
         };
     }
 
-
-
-
-
-
-
+    // ==========================================
+    // 🏹 HÀM VẬT LÝ CHIẾN ĐẤU BẮN SÚNG
+    // ==========================================
     window.updateCombatBanSung = function () {
-        // 🌟 1. CẢM BIẾN CHUYỂN ĐỘNG (Để báo cáo cho Bộ Lọc ở trên biết Sếp có đang di chuyển không)
-        if (typeof playerModel !== 'undefined' && playerModel) {
-            if (!window.lastPosBS) window.lastPosBS = playerModel.position.clone();
-            window.isPlayerMovingBS = playerModel.position.distanceTo(window.lastPosBS) > 0.05;
-            window.lastPosBS.copy(playerModel.position);
-        }
-
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
@@ -375,12 +368,12 @@
             if (targetMoi) {
                 window.thoiGianHoiQ_Auto = 30; // 0.5s nhả đạn
                 
-                // 🌟 2. BẬT CỜ BÁO HIỆU ĐANG BẮN TỰ ĐỘNG
+                // 🌟 BẬT CỜ BÁO HIỆU CHO "BỘ LỌC THÉP" Ở TRÊN BIẾT
                 window.dangBanTuDong = true;
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
-                window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 1000); // 1s không thấy quái sẽ tự tắt cờ
+                window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // Xuất đạn từ tay trái
+                // Lấy xương tay trái xuất phát tia Lazer
                 let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                 let tayTrai = null;
                 playerModel.traverse(c => {
@@ -401,8 +394,10 @@
                     targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
                 });
 
-                // 🌟 3. GỌI ATTACK MƯỢT MÀ (KHÔNG KHÓA dangMuaChieu NỮA)
-                if (typeof window.playAnim === 'function') {
+                // 🌟 CHIẾN THUẬT HIT & RUN ĐỈNH CAO: 
+                // Chỉ gọi Animation giật súng KHI ĐANG ĐỨNG YÊN. 
+                // Nếu đang bấm phím chạy/bay thì kệ cho chân chạy, tay vẫn xả đạn bùm bụp!
+                if (typeof window.playAnim === 'function' && !window.isKeyboardMoving && !window.isMoving) {
                     if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
                         window.playAnim('ATTACK');
                         window.lastAnimTimeBS = Date.now();
@@ -415,7 +410,7 @@
             }
         }
 
-        // 🚀 CẬP NHẬT QUỸ ĐẠO & TRỪ MÁU
+        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let s = kyNangBanSung[i];
             if (s.delay > 0) { s.delay--; continue; }
@@ -452,7 +447,8 @@
                     if (s.fireDelay <= 0) {
                         s.state = 'DANG_BAY';
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1500) {
-                            if (!s.isRemote && typeof window.playAnim === 'function') {
+                            // Tương tự, nếu đang đi thì khỏi múa tay
+                            if (!s.isRemote && typeof window.playAnim === 'function' && !window.isKeyboardMoving) {
                                 window.playAnim('ATTACK');
                             }
                             window.lastAnimTimeBS = Date.now();
@@ -512,7 +508,7 @@
             }
         }
 
-        // 🗑️ LÒ ĐỐT RÁC UI
+        // 🗑️ LÒ ĐỐT RÁC UI (GIỮ NGUYÊN)
         for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { 
             let s = danhSachSoBayBS[i]; s.life--; s.offsetY += 0.05;
             let hienThiPos = s.pos.clone(); hienThiPos.y += s.offsetY;
