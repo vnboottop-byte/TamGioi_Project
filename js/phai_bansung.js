@@ -388,7 +388,6 @@
 
 
 
-
     window.updateCombatBanSung = function () {
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let skill = kyNangBanSung[i];
@@ -399,7 +398,7 @@
             if (skill.type === 'Q') {
                 skill.mesh.translateZ(skill.speed);
                 if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 3 || skill.life < 5) {
-                    taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 2);
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 2);
                     skill.life = 0;
                 }
             }
@@ -418,7 +417,7 @@
                 skill.mesh.translateZ(skill.speed);
 
                 if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 4 || skill.life < 5) {
-                    taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 15);
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 15);
                     skill.life = 0;
                 }
             }
@@ -428,6 +427,12 @@
                     skill.fireDelay--;
                     if (skill.fireDelay <= 0) {
                         skill.state = 'DANG_BAY';
+
+                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG (GỌI ANIMATION LIÊN TỤC Y NHƯ CUNG THỦ)
+                        if (!skill.isRemote && typeof window.playAnim === 'function') {
+                            window.playAnim('ATTACK');
+                        }
+
                         if (!skill.isRemote && typeof playerModel !== 'undefined' && playerModel) {
                             let upV = playerModel.up.clone().normalize();
                             let fwd = new THREE.Vector3(); playerModel.getWorldDirection(fwd); fwd.normalize();
@@ -452,8 +457,9 @@
 
                     if (skill.progress >= 1) {
                         skill.life = 0;
-                        taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 15);
-                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 15, 0xff5500);
+                        // Đã tăng bán kính nổ lên 30 để Boss đi lùi vẫn ăn đủ dame
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 20, 0xff5500);
                     }
                 }
             }
@@ -485,7 +491,7 @@
                     skill.mesh.translateZ(skill.speed);
 
                     if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
-                        taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 50);
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
                         skill.life = 0;
                     }
@@ -498,13 +504,45 @@
             }
         }
 
-        // Lò đốt rác bụi lửa giữ nguyên...
-        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) { /* ... */ }
-        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { /* ... */ }
+        // =====================================
+        // 🌟 LÕI RENDER SỐ MÁU (LẦN NÀY ĐẦY ĐỦ 100%)
+        // =====================================
+        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) {
+            let s = danhSachSoBayBS[i];
+            s.life--;
+            s.offsetY += 0.05;
+            let hienThiPos = s.pos.clone();
+            hienThiPos.y += s.offsetY;
+
+            if (window.camera) {
+                let screenPos = hienThiPos.clone().project(window.camera);
+                let x = (screenPos.x * .5 + .5) * window.innerWidth;
+                let y = (screenPos.y * -.5 + .5) * window.innerHeight;
+                s.el.style.left = x + 'px';
+                s.el.style.top = y + 'px';
+                s.el.style.opacity = s.life / 60;
+            }
+
+            if (s.life <= 0) {
+                if (s.el.parentNode) s.el.parentNode.removeChild(s.el);
+                danhSachSoBayBS.splice(i, 1);
+            }
+        }
+
+        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) {
+            let h = hieuUngBanSung[i];
+            h.life--;
+            if (h.mesh) {
+                h.mesh.scale.multiplyScalar(0.9);
+                if (h.mesh.material) h.mesh.material.opacity = h.life / 20;
+            }
+            if (h.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh);
+                else scene.remove(h.mesh);
+                hieuUngBanSung.splice(i, 1);
+            }
+        }
     };
-
-
-
 
 
 
