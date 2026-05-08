@@ -349,22 +349,16 @@
 
 
 
-
-
-
-
-
     window.updateCombatBanSung = function () {
         // ==========================================
-        // 🕒 BỘ QUẢN LÝ TÀNG HÌNH SÚNG (Đếm ngược theo 60FPS)
+        // 🕒 QUẢN LÝ TÀNG HÌNH SÚNG BẰNG ĐỒNG HỒ THỰC (CHỐNG XUNG ĐỘT 100%)
         // ==========================================
-        if (typeof window.thoiGianHienSung === 'undefined') window.thoiGianHienSung = 0;
-
-        if (window.thoiGianHienSung > 0) {
-            window.thoiGianHienSung--; // Giảm dần mỗi khung hình
-            if (window.vuKhiModel) window.vuKhiModel.visible = true; // Đang đếm -> HIỆN SÚNG
-        } else {
-            if (window.vuKhiModel) window.vuKhiModel.visible = false; // Hết giờ -> CẤT SÚNG
+        if (window.vuKhiModel) {
+            if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
+                window.vuKhiModel.visible = true;
+            } else {
+                window.vuKhiModel.visible = false;
+            }
         }
 
         // ==========================================
@@ -423,8 +417,8 @@
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
 
-                    // 🌟 BƠM MÁU CHO ĐỒNG HỒ: Cho phép súng hiện 90 khung hình (~1.5 giây)
-                    window.thoiGianHienSung = 90;
+                    // 🌟 ĐỒNG HỒ THỰC: Auto-radar thấy quái là cộng thêm 1.5s hiện súng!
+                    window.thoiGianTatSung = Date.now() + 1500;
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                     let xuongTayTrai = null;
@@ -461,6 +455,11 @@
                 }
             }
         }
+
+
+
+
+
 
         // ==========================================
         // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU
