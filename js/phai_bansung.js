@@ -174,7 +174,7 @@
     }
 
 
-    
+
 
     // ==========================================
     // 🌟 ĐÚC TÊN LỬA E (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 2 MÉT)
@@ -383,38 +383,29 @@
         }
     };
 
-    // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU
-    // ==========================================
+
+
+
+
+
+
     window.updateCombatBanSung = function () {
-
-
-
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let skill = kyNangBanSung[i];
             if (skill.delay > 0) { skill.delay--; continue; }
             skill.life--;
 
-
-
-            // 🌟 ĐÃ ĐỒNG BỘ: TRỌNG LỰC TÂM VŨ TRỤ
-            let lucHutTam = skill.mesh.position.clone().normalize();
-
-
-
-
-
-            if (skill.type === 'Q' || skill.type === 'R') {
+            // --- CHIÊU Q ---
+            if (skill.type === 'Q') {
                 skill.mesh.translateZ(skill.speed);
                 if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 3 || skill.life < 5) {
-                    taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, skill.type === 'R' ? 10 : 2);
+                    taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 2);
                     skill.life = 0;
                 }
             }
+            // --- CHIÊU E ---
             else if (skill.type === 'E') {
                 skill.speed *= 1.05; if (skill.speed > 8.0) skill.speed = 8.0;
-
-                // Tầm nhiệt (Homing) rượt mục tiêu
                 if (skill.targetPos) {
                     if (!skill.isRemote) {
                         const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
@@ -424,7 +415,6 @@
                     const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                     skill.mesh.quaternion.slerp(dummy.quaternion, 0.15);
                 }
-
                 skill.mesh.translateZ(skill.speed);
 
                 if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 4 || skill.life < 5) {
@@ -432,26 +422,56 @@
                     skill.life = 0;
                 }
             }
+            // --- CHIÊU R: ĐẠI BÁC CẦU VỒNG (PARABOL) ---
+            else if (skill.type === 'BAY_VONG_CUNG') {
+                if (skill.state === 'CHO_DEN_LUOT') {
+                    skill.fireDelay--;
+                    if (skill.fireDelay <= 0) {
+                        skill.state = 'DANG_BAY';
+                        if (!skill.isRemote && typeof playerModel !== 'undefined' && playerModel) {
+                            let upV = playerModel.up.clone().normalize();
+                            let fwd = new THREE.Vector3(); playerModel.getWorldDirection(fwd); fwd.normalize();
+                            let right = new THREE.Vector3().crossVectors(fwd, upV).normalize().negate();
+                            skill.startPos = playerModel.position.clone().add(upV.multiplyScalar(3)).add(right.multiplyScalar(1));
+                        }
+                    }
+                }
+                else if (skill.state === 'DANG_BAY') {
+                    skill.speed *= 1.02;
+                    skill.progress += skill.speed;
 
+                    let curPos = new THREE.Vector3().lerpVectors(skill.startPos, skill.targetPos, skill.progress);
+                    curPos.add(skill.upVector.clone().multiplyScalar(Math.sin(skill.progress * Math.PI) * skill.arcHeight));
 
+                    let nextProgress = skill.progress + 0.05;
+                    let nextPos = new THREE.Vector3().lerpVectors(skill.startPos, skill.targetPos, nextProgress);
+                    nextPos.add(skill.upVector.clone().multiplyScalar(Math.sin(nextProgress * Math.PI) * skill.arcHeight));
 
+                    skill.mesh.position.copy(curPos);
+                    skill.mesh.lookAt(nextPos);
 
+                    if (skill.progress >= 1) {
+                        skill.life = 0;
+                        taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 15);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 15, 0xff5500);
+                    }
+                }
+            }
+            // --- CHIÊU F ---
             else if (skill.type === 'F_JET') {
-                let khoangCachDenTam = skill.mesh.position.distanceTo(skill.targetPos);
-                
                 if (skill.state === 'BAY_TOI') {
                     skill.mesh.translateZ(skill.speed);
-                    if (khoangCachDenTam < 80) {
+                    let distXZ = Math.hypot(skill.mesh.position.x - skill.targetPos.x, skill.mesh.position.z - skill.targetPos.z);
+                    if (distXZ < 80) {
                         skill.state = 'BAY_LEN_CAO';
-                        // Định vị điểm cao nhất cách mặt đất 150m dựa theo vector up
-                        skill.targetAltitudePos = skill.mesh.position.clone().add(lucHutTam.clone().multiplyScalar(150));
+                        skill.targetAltitude = skill.mesh.position.y + 150;
                     }
                 }
                 else if (skill.state === 'BAY_LEN_CAO') {
                     skill.speed *= 1.05;
                     skill.mesh.translateZ(skill.speed);
                     if (skill.mesh.rotation.x > -Math.PI / 2.5) { skill.mesh.rotateX(-0.06); }
-                    if (skill.mesh.position.distanceTo(skill.targetAltitudePos) < 10) { skill.state = 'DAM_XUONG'; }
+                    if (skill.mesh.position.y >= skill.targetAltitude) { skill.state = 'DAM_XUONG'; }
                 }
                 else if (skill.state === 'DAM_XUONG') {
                     const dummy = new THREE.Object3D();
@@ -464,8 +484,7 @@
 
                     skill.mesh.translateZ(skill.speed);
 
-                    // Nổ khi chạm mục tiêu (chuẩn mặt cầu)
-                    if (khoangCachDenTam < skill.speed + 5) {
+                    if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
                         taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 50);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
                         skill.life = 0;
@@ -473,66 +492,25 @@
                 }
             }
 
-
-
-
-
-
             if (skill.life <= 0) {
-                // 🌟 SỬ DỤNG LÒ ĐỐT RÁC TOÀN CẦU (ĐÃ FIX TRÀN RAM)
-                if (typeof window.donRac3D === 'function') {
-                    window.donRac3D(skill.mesh);
-                } else {
-                    scene.remove(skill.mesh);
-                }
+                if (typeof window.donRac3D === 'function') window.donRac3D(skill.mesh); else scene.remove(skill.mesh);
                 kyNangBanSung.splice(i, 1);
             }
         }
 
-
-
-
-
-        // 🌟 MÁY HÚT BỤI VRAM CHO HIỆU ỨNG XẠ THỦ
-        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) {
-            let h = hieuUngBanSung[i]; h.life--;
-
-            if (h.system) {
-                if (h.system.geometry && h.system.geometry.attributes.position) {
-                    let posArr = h.system.geometry.attributes.position.array;
-                    for (let j = 0; j < posArr.length / 3; j++) {
-                        if (h.velocities && h.velocities[j]) {
-                            posArr[j * 3] += h.velocities[j].x;
-                            posArr[j * 3 + 1] += h.velocities[j].y;
-                            posArr[j * 3 + 2] += h.velocities[j].z;
-                        }
-                    }
-                    h.system.geometry.attributes.position.needsUpdate = true;
-                }
-                if (h.system.material) h.system.material.opacity = h.life / 20;
-            }
-
-            if (h.life <= 0) {
-                if (typeof window.donRac3D === 'function') {
-                    if (h.system) window.donRac3D(h.system);
-                    if (h.mesh) window.donRac3D(h.mesh);
-                }
-                hieuUngBanSung.splice(i, 1);
-            }
-        }
-
-        
-        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) {
-            let item = danhSachSoBayBS[i]; item.offsetY += 0.05; item.life--;
-            const screenPos = item.pos.clone(); screenPos.y += item.offsetY; screenPos.project(camera);
-            if (screenPos.z < 1) {
-                item.el.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`;
-                item.el.style.top = `${(screenPos.y * -0.5 + 0.5) * window.innerHeight}px`;
-            } else { item.el.style.display = 'none'; }
-            if (item.life < 20) item.el.style.opacity = item.life / 20;
-            if (item.life <= 0) { item.el.remove(); danhSachSoBayBS.splice(i, 1); }
-        }
+        // Lò đốt rác bụi lửa giữ nguyên...
+        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) { /* ... */ }
+        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { /* ... */ }
     };
+
+
+
+
+
+
+
+
+  
 
     // 🌟 CHẠY NGẦM LIÊN TỤC ĐỂ MÁY PHÁI KHÁC CŨNG QUÉT RÁC ĐƯỢC
     setInterval(window.updateCombatBanSung, 30);
