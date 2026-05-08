@@ -385,20 +385,26 @@
                     skill.life = 0;
                 }
             }
+
+
+
+
             else if (skill.type === 'F_JET') {
+                let khoangCachDenTam = skill.mesh.position.distanceTo(skill.targetPos);
+                
                 if (skill.state === 'BAY_TOI') {
                     skill.mesh.translateZ(skill.speed);
-                    let distXZ = Math.hypot(skill.mesh.position.x - skill.targetPos.x, skill.mesh.position.z - skill.targetPos.z);
-                    if (distXZ < 80) {
+                    if (khoangCachDenTam < 80) {
                         skill.state = 'BAY_LEN_CAO';
-                        skill.targetAltitude = skill.mesh.position.y + 150;
+                        // Định vị điểm cao nhất cách mặt đất 150m dựa theo vector up
+                        skill.targetAltitudePos = skill.mesh.position.clone().add(lucHutTam.clone().multiplyScalar(150));
                     }
                 }
                 else if (skill.state === 'BAY_LEN_CAO') {
                     skill.speed *= 1.05;
                     skill.mesh.translateZ(skill.speed);
                     if (skill.mesh.rotation.x > -Math.PI / 2.5) { skill.mesh.rotateX(-0.06); }
-                    if (skill.mesh.position.y >= skill.targetAltitude) { skill.state = 'DAM_XUONG'; }
+                    if (skill.mesh.position.distanceTo(skill.targetAltitudePos) < 10) { skill.state = 'DAM_XUONG'; }
                 }
                 else if (skill.state === 'DAM_XUONG') {
                     const dummy = new THREE.Object3D();
@@ -411,13 +417,19 @@
 
                     skill.mesh.translateZ(skill.speed);
 
-                    if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
+                    // Nổ khi chạm mục tiêu (chuẩn mặt cầu)
+                    if (khoangCachDenTam < skill.speed + 5) {
                         taoVuNoBS(skill.targetPos, skill.isRemote, skill.damage, 50);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
                         skill.life = 0;
                     }
                 }
             }
+
+
+
+
+
 
             if (skill.life <= 0) {
                 // 🌟 SỬ DỤNG LÒ ĐỐT RÁC TOÀN CẦU (ĐÃ FIX TRÀN RAM)
