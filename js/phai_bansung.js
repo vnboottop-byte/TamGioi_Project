@@ -317,6 +317,31 @@
 
 
 
+    // ==========================================
+    // 🛡️ BỘ LỌC ANIMATION: BÍ THUẬT CHỐNG ĐÁ ANIMATION CHO XẠ THỦ
+    // ==========================================
+    if (typeof window.playAnim === 'function' && !window.playAnimGoc) {
+        window.playAnimGoc = window.playAnim; // Lưu lại lõi gốc của Engine
+        window.playAnim = function(tenAnim) {
+            // Nếu đang cầm Bắn Súng, đang xả đạn tự động và KHÔNG di chuyển
+            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Xạ Thủ" && window.dangBanTuDong) {
+                // Sếp bắt mạch cực chuẩn: Chặn đứng lệnh BAY và IDLE nếu đang đứng nhả đạn!
+                if (tenAnim === 'FLY' || tenAnim === 'IDLE') {
+                    if (!window.isPlayerMovingBS) {
+                        return; // 🌟 BỊ CHẶN! Giữ nguyên dáng đứng ATTACK ngầu lòi
+                    }
+                }
+            }
+            // Các trường hợp khác (hoặc lúc Sếp bấm WASD di chuyển) thì cho qua bình thường
+            window.playAnimGoc(tenAnim);
+        };
+    }
+
+
+
+
+
+
 
     window.updateCombatBanSung = function () {
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
