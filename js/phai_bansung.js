@@ -459,34 +459,50 @@
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung')) {
         window.HePhaiHienTai = {
             tenPhai: "Xạ Thủ",
+
+
+
+            // 🌟 ĐÃ ĐỒNG BỘ: CẦM VŨ KHÍ TAY TRÁI VÀ TỰ ĐỘNG SCALE
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V31)!");
+                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V32 - Đã Đồng Bộ)!");
                 const l = new THREE.GLTFLoader();
                 if (window.loaderSieuToc) l.setDRACOLoader(window.loaderSieuToc);
 
                 l.load(window.WEAPON_URL || 'uploads/anims/GUN.glb', (gltf) => {
                     window.vuKhiModel = gltf.scene;
+                    
+                    // Đo lường kích thước súng tự động
+                    const box = new THREE.Box3().setFromObject(window.vuKhiModel);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scaleFactor = 1.0 / maxDim; // Ép về chuẩn 1 mét
+                    window.vuKhiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
+
                     if (typeof playerModel !== 'undefined' && playerModel) {
-                        let tayPhai = null;
+                        let tayTrai = null;
                         playerModel.traverse(c => {
-                            if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand') || c.name.toLowerCase().includes('hand.r'))) {
-                                tayPhai = c;
+                            // Dò xương tay trái
+                            if (c.isBone && (c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand') || c.name.toLowerCase().includes('hand.l'))) {
+                                tayTrai = c;
                             }
                         });
 
-                        if (tayPhai) {
-                            tayPhai.add(window.vuKhiModel);
+                        if (tayTrai) {
+                            tayTrai.add(window.vuKhiModel);
                             window.vuKhiModel.position.set(0, 0, 0);
                             window.vuKhiModel.rotation.set(0, 0, 0);
-                            window.vuKhiModel.scale.set(10, 10, 10);
                         } else {
                             playerModel.add(window.vuKhiModel);
-                            window.vuKhiModel.position.set(1, 3, 0);
-                            window.vuKhiModel.scale.set(10, 10, 10);
+                            window.vuKhiModel.position.set(-1, 3, 0); 
                         }
                     }
+                    // Mặc định tàng hình súng, chỉ hiện khi bắn
+                    window.vuKhiModel.visible = false;
                 });
             },
+
+
+
             tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) {
                 window.tungComboBanSung(phim, isRemote, origin, target, dir, casterId, weaponUrl);
             },
