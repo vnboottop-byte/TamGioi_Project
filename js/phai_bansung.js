@@ -349,30 +349,47 @@
 
 
 
+
+
+
+
+
+
+
+
     window.updateCombatBanSung = function () {
         // ==========================================
-        // 🛡️ BỘ LỌC THÉP V5 (LAZY INIT): NẰM BÊN TRONG VÒNG LẶP ĐỂ TÓM GỌN ENGINE.JS
+        // 🕒 BỘ QUẢN LÝ TÀNG HÌNH SÚNG (Đếm ngược theo 60FPS)
+        // ==========================================
+        if (typeof window.thoiGianHienSung === 'undefined') window.thoiGianHienSung = 0;
+
+        if (window.thoiGianHienSung > 0) {
+            window.thoiGianHienSung--; // Giảm dần mỗi khung hình
+            if (window.vuKhiModel) window.vuKhiModel.visible = true; // Đang đếm -> HIỆN SÚNG
+        } else {
+            if (window.vuKhiModel) window.vuKhiModel.visible = false; // Hết giờ -> CẤT SÚNG
+        }
+
+        // ==========================================
+        // 🛡️ BỘ LỌC THÉP V5
         // ==========================================
         if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
-            window.playAnimGocBS = window.playAnim; 
-            window.playAnim = function(tenAnim) {
+            window.playAnimGocBS = window.playAnim;
+            window.playAnim = function (tenAnim) {
                 if (window.dangBanTuDong) {
                     let ten = tenAnim.toUpperCase();
-                    // 1. Cấm tuyệt đối Bay và Rớt khi đang nhả đạn
-                    if (ten === 'BAY' || ten === 'FLY' || ten === 'FALL') return; 
-                    // 2. Cấm IDLE nếu đang không bấm phím WASD
-                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving) return; 
+                    if (ten === 'BAY' || ten === 'FLY' || ten === 'FALL') return;
+                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving) return;
                 }
                 window.playAnimGocBS(tenAnim);
             };
-            console.log("🔫 Đã cấy Bộ Lọc Thép V5 thành công!");
         }
 
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
         // ==========================================
-        // 📡 MẮT THẦN RADAR
+        // 📡 RADAR TÌM QUÁI & BẮN
         // ==========================================
         if (window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
@@ -389,52 +406,29 @@
             });
 
             if (targetMoi) {
-                // 🌟 Bật cờ khóa chặn Animation
                 window.dangBanTuDong = true;
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🌟 AUTO-AIM: TỰ ĐỘNG XOAY MẶT VỀ PHÍA ĐỊCH
                 if (!window.isKeyboardMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
                     let khoangCachDoc = vectorToTarget.dot(upV);
                     let hinhChieuNgang = targetMoi.clone().sub(upV.clone().multiplyScalar(khoangCachDoc));
-                    
+
                     const dummy = new THREE.Object3D();
                     dummy.position.copy(playerModel.position);
                     dummy.up.copy(upV);
                     dummy.lookAt(hinhChieuNgang);
-                    playerModel.quaternion.slerp(dummy.quaternion, 0.2); // Quay mượt
+                    playerModel.quaternion.slerp(dummy.quaternion, 0.2);
                 }
 
-
-
-
-
-                // 🌟 NÃ ĐẠN
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
 
-                    // ==========================================
-                    // 🌟 RÚT SÚNG RA SẤY & HẸN GIỜ CẤT VÀO TÚI
-                    // ==========================================
-                    if (window.vuKhiModel) {
-                        window.vuKhiModel.visible = true; // Hiện vỏ bọc
+                    // 🌟 BƠM MÁU CHO ĐỒNG HỒ: Cho phép súng hiện 90 khung hình (~1.5 giây)
+                    window.thoiGianHienSung = 90;
 
-                        // Chắc cú 100%: Quét hiện toàn bộ lưới bên trong lỡ nó bị tàng hình
-                        window.vuKhiModel.traverse(child => {
-                            if (child.isMesh) child.visible = true;
-                        });
-
-                        // Sau 1.5 giây không bắn nữa thì tự động cất súng đi
-                        if (window.vuKhiModel.hideTimeout) clearTimeout(window.vuKhiModel.hideTimeout);
-                        window.vuKhiModel.hideTimeout = setTimeout(() => {
-                            if (window.vuKhiModel) window.vuKhiModel.visible = false;
-                        }, 1500);
-                    }
-
-                    // Tiếp tục logic xuất đạn từ tay trái...
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                     let xuongTayTrai = null;
                     playerModel.traverse(c => {
@@ -468,22 +462,11 @@
                         try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
                     }
                 }
-
-
-
-
-
-
-
-
-
-
-
             }
         }
 
         // ==========================================
-        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU (Phần này sếp giữ nguyên bên dưới nhé)
+        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU
         // ==========================================
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let s = kyNangBanSung[i];
@@ -497,7 +480,20 @@
                     s.life = 0;
                 }
             }
+            // ... (Kéo dài đến hết phần xử lý đạn và rác UI như cũ Sếp nhé)
             
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
