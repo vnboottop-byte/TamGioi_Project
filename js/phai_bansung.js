@@ -658,7 +658,7 @@
                                 // 🌟 KHỚP GÓC XOAY: 
                                 // Nếu sếp đã xuất chuẩn theo "Phần 1" ở trên, thì (0,0,0) sẽ thẳng tắp.
                                 // Nếu vẫn bị ngang, sếp chỉ cần chỉnh ĐÚNG 1 TRỤC dưới đây:
-                                window.vuKhiModel.rotation.set(0, 0, 0);
+                                window.vuKhiModel.rotation.set(Math.PI / 2, 0, 0);
                                 // window.vuKhiModel.rotation.x = Math.PI / 2; // Thử dòng này nếu súng bị chúc xuống
 
                                 console.log("✅ Đã lắp súng vào tay trái Deadpool!");
