@@ -412,41 +412,54 @@
 
 
 
-                // 🌟 NÃ ĐẠN (Chỉ nã khi hết thời gian chờ)
+                // 🌟 NÃ ĐẠN
                 if (window.thoiGianHoiQ_Auto <= 0) {
-                    window.thoiGianHoiQ_Auto = 30; 
-                    
-                    // 🌟 1. RÚT SÚNG RA & HẸN GIỜ CẤT SÚNG SAU 1.5 GIÂY
+                    window.thoiGianHoiQ_Auto = 30;
+
+                    // ==========================================
+                    // 🌟 RÚT SÚNG RA SẤY & HẸN GIỜ CẤT VÀO TÚI
+                    // ==========================================
                     if (window.vuKhiModel) {
-                        window.vuKhiModel.visible = true; // Hiện súng
+                        window.vuKhiModel.visible = true; // Hiện vỏ bọc
+
+                        // Chắc cú 100%: Quét hiện toàn bộ lưới bên trong lỡ nó bị tàng hình
+                        window.vuKhiModel.traverse(child => {
+                            if (child.isMesh) child.visible = true;
+                        });
+
+                        // Sau 1.5 giây không bắn nữa thì tự động cất súng đi
                         if (window.vuKhiModel.hideTimeout) clearTimeout(window.vuKhiModel.hideTimeout);
                         window.vuKhiModel.hideTimeout = setTimeout(() => {
-                            if (window.vuKhiModel) window.vuKhiModel.visible = false; // Tự cất súng
+                            if (window.vuKhiModel) window.vuKhiModel.visible = false;
                         }, 1500);
                     }
 
-                    // 🌟 2. XUẤT ĐẠN TỪ TAY PHẢI CHO KHỚP VỚI NÒNG SÚNG
+                    // Tiếp tục logic xuất đạn từ tay trái...
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
-                    let tayPhai = null;
+                    let xuongTayTrai = null;
                     playerModel.traverse(c => {
-                        if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand') || c.name.toLowerCase().includes('hand.r'))) {
-                            tayPhai = c;
+                        if (c.isBone && (c.name.includes('LeftHand') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
+                            xuongTayTrai = c;
                         }
                     });
-                    if (tayPhai) { startPos = new THREE.Vector3(); tayPhai.getWorldPosition(startPos); }
+                    if (xuongTayTrai) { startPos = new THREE.Vector3(); xuongTayTrai.getWorldPosition(startPos); }
 
                     let tia = taoTiaDanNhanh();
                     tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
                     kyNangBanSung.push({
-                        mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
-                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
+                        mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55,
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false
                     });
 
-                    // 🌟 GỌI ANIMATION ATTACK XUYÊN BỘ LỌC
                     if (typeof window.playAnimGocBS === 'function') {
-                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
-                            window.playAnimGocBS('ATTACK'); 
+                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
+                            window.playAnimGocBS('ATTACK');
+                            window.lastAnimTimeBS = Date.now();
+                        }
+                    } else if (typeof window.playAnim === 'function') {
+                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
+                            window.playAnim('ATTACK');
                             window.lastAnimTimeBS = Date.now();
                         }
                     }
