@@ -281,6 +281,11 @@
 
 
 
+        // 🌟 CHÈN THÊM 2 DÒNG NÀY ĐỂ ĐỊNH VỊ KHÔNG GIAN CHO ĐẠN BẮN PARABOL
+        let upVector = isRemote ? viTriGoc.clone().normalize() : nvc.up.clone().normalize();
+        let rightVector = new THREE.Vector3().crossVectors(huongMat, upVector).normalize().negate();
+
+        
 
 
 
