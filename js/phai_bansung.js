@@ -660,11 +660,38 @@
                             }
                         }
 
-                        // Tạm bật TRUE để sếp ngắm vuốt bẻ góc xoay cho dễ (xoay xong nhớ đổi thành false)
+                        // Tạm bật TRUE để sếp ngắm vuốt bẻ góc xoay
                         window.vuKhiModel.visible = true;
+
+                        // ==========================================
+                        // 🔧 TOOL ĐỘ SÚNG TRỰC TIẾP CHO SẾP (BẤM PHÍM U,J, I,K, O,L ĐỂ XOAY)
+                        // ==========================================
+                        if (!window.daCaiToolXoay) {
+                            window.daCaiToolXoay = true;
+                            window.addEventListener('keydown', (e) => {
+                                if (!window.vuKhiModel) return;
+                                let step = Math.PI / 16; // Nhích từng chút một (11.25 độ)
+
+                                if (e.key === 'u') window.vuKhiModel.rotation.x += step;
+                                if (e.key === 'j') window.vuKhiModel.rotation.x -= step;
+
+                                if (e.key === 'i') window.vuKhiModel.rotation.y += step;
+                                if (e.key === 'k') window.vuKhiModel.rotation.y -= step;
+
+                                if (e.key === 'o') window.vuKhiModel.rotation.z += step;
+                                if (e.key === 'l') window.vuKhiModel.rotation.z -= step;
+
+                                if (['u', 'j', 'i', 'k', 'o', 'l'].includes(e.key)) {
+                                    console.log(`%c🎯 GÓC CHUẨN ĐÂY SẾP ƠI: window.vuKhiModel.rotation.set(${window.vuKhiModel.rotation.x.toFixed(2)}, ${window.vuKhiModel.rotation.y.toFixed(2)}, ${window.vuKhiModel.rotation.z.toFixed(2)});`, 'color: #00ff00; font-size: 14px; font-weight: bold;');
+                                }
+                            });
+                        }
                     });
                 }
             },
+        
+                
+            
 
 
 
