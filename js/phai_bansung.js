@@ -592,44 +592,66 @@
 
 
 
-            // 🌟 ĐÃ ĐỒNG BỘ: CẦM VŨ KHÍ TAY TRÁI VÀ TỰ ĐỘNG SCALE
+
+
+
+
+
+
+            // 🌟 ĐÃ ĐỒNG BỘ: TẢI SÚNG BẰNG HÀM ASSET GỐC CHỐNG LỖI DRACO
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V32 - Đã Đồng Bộ)!");
-                const l = new THREE.GLTFLoader();
-                if (window.loaderSieuToc) l.setDRACOLoader(window.loaderSieuToc);
+                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V40 - Đã Fix Lỗi Tải Súng)!");
+                
+                let urlVuKhi = window.WEAPON_URL || 'uploads/anims/GUN.glb';
 
-                l.load(window.WEAPON_URL || 'uploads/anims/GUN.glb', (gltf) => {
-                    window.vuKhiModel = gltf.scene;
-                    
-                    // Đo lường kích thước súng tự động
-                    const box = new THREE.Box3().setFromObject(window.vuKhiModel);
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    const scaleFactor = 1.0 / maxDim; // Ép về chuẩn 1 mét
-                    window.vuKhiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-
-                    if (typeof playerModel !== 'undefined' && playerModel) {
-                        let tayTrai = null;
-                        playerModel.traverse(c => {
-                            // Dò xương tay trái
-                            if (c.isBone && (c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand') || c.name.toLowerCase().includes('hand.l'))) {
-                                tayTrai = c;
-                            }
-                        });
-
-                        if (tayTrai) {
-                            tayTrai.add(window.vuKhiModel);
-                            window.vuKhiModel.position.set(0, 0, 0);
-                            window.vuKhiModel.rotation.set(0, 0, 0);
-                        } else {
-                            playerModel.add(window.vuKhiModel);
-                            window.vuKhiModel.position.set(-1, 3, 0); 
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset(urlVuKhi, (modelSieuToc) => {
+                        window.vuKhiModel = modelSieuToc;
+                        
+                        // 📏 Bộ thước đo tự động ép súng về chuẩn 1 mét
+                        window.vuKhiModel.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(window.vuKhiModel);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z);
+                        if (maxDim > 0.05) {
+                            const scaleFactor = 1.0 / maxDim; 
+                            window.vuKhiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
                         }
-                    }
-                    // Mặc định tàng hình súng, chỉ hiện khi bắn
-                    window.vuKhiModel.visible = false;
-                });
+
+                        // 🦾 Tìm xương tay trái và gắn súng vào
+                        if (typeof playerModel !== 'undefined' && playerModel) {
+                            let tayTrai = null;
+                            playerModel.traverse(c => {
+                                if (c.isBone && (c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand') || c.name.toLowerCase().includes('hand.l'))) {
+                                    tayTrai = c;
+                                }
+                            });
+
+                            if (tayTrai) {
+                                tayTrai.add(window.vuKhiModel);
+                                // Súng quay chuẩn -Y (Blender) thành +Z (Three.js), để góc 0,0,0
+                                window.vuKhiModel.position.set(0, 0, 0);
+                                window.vuKhiModel.rotation.set(0, 0, 0); 
+                            } else {
+                                playerModel.add(window.vuKhiModel);
+                                window.vuKhiModel.position.set(-1, 3, 0); 
+                            }
+                        }
+                        
+                        // Tàng hình súng lúc mới vào, chỉ hiện khi bắn
+                        window.vuKhiModel.visible = false;
+                    });
+                } else {
+                    console.error("❌ Không tìm thấy hàm window.taiHoacNhanBanAsset!");
+                }
             },
+
+
+
+
+
+            
+
 
 
 
@@ -639,6 +661,8 @@
             phongThu: function () { },
             capNhat: function () { } // Đã chạy ngầm, để rỗng để chống chạy 2 lần
         };
+
+
         window.HePhaiHienTai.khoiTao();
     }
 })();
