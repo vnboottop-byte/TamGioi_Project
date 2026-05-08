@@ -656,7 +656,7 @@
                                 
                                 
                                 
-                                window.vuKhiModel.rotation.set(0, 0, 0);
+                                window.vuKhiModel.rotation.set(0, Math.PI / 2, 0);
 
                             } else {
                                 playerModel.add(window.vuKhiModel);
