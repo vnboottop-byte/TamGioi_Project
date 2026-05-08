@@ -318,7 +318,7 @@
 
 
     // ==========================================
-    // 🛡️ BỘ LỌC THÉP V3: TRỊ DỨT ĐIỂM BỆNH 'BAY' ĐÈ 'ATTACK'
+    // 🛡️ BỘ LỌC THÉP V4: CẤM TUYỆT ĐỐI 'BAY' VÀ 'RƠI' ĐÈ DÁNG SÚNG
     // ==========================================
     if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
         window.playAnimGocBS = window.playAnim; 
@@ -326,12 +326,17 @@
         window.playAnim = function(tenAnim) {
             if (window.dangBanTuDong) {
                 let ten = tenAnim.toUpperCase();
-                // 🌟 Bắt trọn ổ TẤT CẢ các lệnh mà engine.js có thể gọi khi Sếp đang bay/đứng
-                let laAnimDiChuyen = ['BAY', 'FLY', 'IDLE', 'NHANROI', 'CHAYBO', 'RUN', 'WALK', 'FALL'].includes(ten);
                 
-                // Nếu engine đòi BAY/ĐỨNG, mà Sếp LẠI KHÔNG BẤM PHÍM WASD
-                if (laAnimDiChuyen && !window.isKeyboardMoving) {
-                    return; // 🛑 CHẶN ĐỨNG NGAY LẬP TỨC!
+                // 🌟 1. LUÔN LUÔN CHẶN BAY VÀ RƠI (Dù có bấm phím bay hay không)
+                // Nhân vật sẽ dịch chuyển lên trời nhưng vẫn giữ nguyên dáng giơ súng ngầu lòi!
+                if (ten === 'BAY' || ten === 'FLY' || ten === 'FALL') {
+                    return; 
+                }
+                
+                // 🌟 2. VỚI DI CHUYỂN DƯỚI ĐẤT: Chỉ chặn IDLE nếu đứng yên. 
+                // (Nếu Sếp bấm chạy bộ CHAYBO thì vẫn cho phép múa chân)
+                if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving) {
+                    return; 
                 }
             }
             window.playAnimGocBS(tenAnim);
