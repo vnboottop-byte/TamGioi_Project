@@ -617,19 +617,17 @@
 
 
 
-            // 🌟 ĐỒNG BỘ V47: BỌC SÚNG BẰNG WRAPPER ĐỂ PHÁ KHÓA TRỤC TỌA ĐỘ
+            // 🌟 ĐỒNG BỘ V48 (FINAL): CHỐT TỌA ĐỘ VÀNG, AUTO ẨN/HIỆN SÚNG
             khoiTao: function () {
-                console.log("🔫 Khởi tạo Xạ Thủ: Bọc súng vào Wrapper chống khóa trục!");
+                console.log("🔫 Xạ Thủ Đã Hoàn Thiện 100%!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (sungGoc) => {
 
-                        // 🌟 BÍ THUẬT Ở ĐÂY: Tạo cái vỏ bọc (Hộp rỗng)
+                        // Vỏ bọc phá khóa trục
                         window.vuKhiWrapper = new THREE.Group();
-                        window.vuKhiWrapper.add(sungGoc); // Nhét súng vào hộp
-
-                        // Khai báo cho hệ thống biết cây súng chính là cái Hộp này
+                        window.vuKhiWrapper.add(sungGoc);
                         window.vuKhiModel = window.vuKhiWrapper;
 
                         window.vuKhiWrapper.updateMatrixWorld(true);
@@ -646,7 +644,6 @@
                             });
 
                             if (xuongTayTrai) {
-                                // Gắn cái HỘP vào xương tay trái
                                 xuongTayTrai.add(window.vuKhiWrapper);
 
                                 let tiLeThuc = new THREE.Vector3();
@@ -657,62 +654,17 @@
                                 window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
                                 window.vuKhiWrapper.position.set(0, 0, 0);
-                                window.vuKhiWrapper.rotation.set(0, 0, 0);
+
+                                // 🎯 TỌA ĐỘ VÀNG CỦA SẾP ĐÃ ĐƯỢC ĐÓNG ĐINH TẠI ĐÂY!
+                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98);
                             }
                         }
 
-                        // Hiện súng để xoay
-                        window.vuKhiModel.visible = true;
-
-                        // ==========================================
-                        // 🖱️ BẢNG ĐIỀU KHIỂN XOAY SÚNG BẰNG CHUỘT
-                        // ==========================================
-                        if (!document.getElementById('tool-xoay-sung')) {
-                            let panel = document.createElement('div');
-                            panel.id = 'tool-xoay-sung';
-                            panel.style.cssText = 'position:fixed; top:50px; left:50px; background:rgba(0,0,0,0.8); color:white; padding:15px; z-index:999999; border:2px solid #0f0; border-radius:8px; text-align:center; font-family:sans-serif;';
-                            panel.innerHTML = `
-                                <h3 style="margin:0 0 10px 0; color:#0f0; font-size:18px;">🔧 BẢNG XOAY SÚNG</h3>
-                                <div style="margin-bottom:10px;">
-                                    <b style="display:inline-block; width:60px; text-align:left;">Trục X:</b>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('x', 1)">LÊN 🔼</button>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('x', -1)">XUỐNG 🔽</button>
-                                </div>
-                                <div style="margin-bottom:10px;">
-                                    <b style="display:inline-block; width:60px; text-align:left;">Trục Y:</b>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('y', 1)">TRÁI ◀️</button>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('y', -1)">PHẢI ▶️</button>
-                                </div>
-                                <div style="margin-bottom:10px;">
-                                    <b style="display:inline-block; width:60px; text-align:left;">Trục Z:</b>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('z', 1)">LẬT 🔄</button>
-                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('z', -1)">ÚP 🔃</button>
-                                </div>
-                                <div id="goc-hien-tai" style="color:yellow; font-weight:bold; margin-top:15px; font-size:16px;">Copy: (0.00, 0.00, 0.00)</div>
-                            `;
-                            document.body.appendChild(panel);
-
-                            window.xoaySung = function (truc, huong) {
-                                if (!window.vuKhiWrapper) return;
-                                let step = Math.PI / 16;
-
-                                // 🌟 Tác động lực vào HỘP RỖNG chứ không tác động vào SÚNG nữa
-                                window.vuKhiWrapper.rotation[truc] += (step * huong);
-
-                                // Ép Three.js vẽ lại hình lập tức
-                                window.vuKhiWrapper.updateMatrix();
-
-                                let rx = window.vuKhiWrapper.rotation.x.toFixed(2);
-                                let ry = window.vuKhiWrapper.rotation.y.toFixed(2);
-                                let rz = window.vuKhiWrapper.rotation.z.toFixed(2);
-
-                                document.getElementById('goc-hien-tai').innerText = `Copy: (${rx}, ${ry}, ${rz})`;
-                            };
-                        }
+                        // 🌟 Tắt tàng hình mặc định: Chạy tung tăng thì giấu súng, có quái mới rút súng ra sấy!
+                        window.vuKhiModel.visible = false;
                     });
                 }
             },
-            
 
 
 
