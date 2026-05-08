@@ -457,7 +457,7 @@
                 }
 
 
-                
+
 
 
 
@@ -617,26 +617,22 @@
 
 
 
-            // 🌟 ĐÃ ĐỒNG BỘ: CẦM SÚNG TAY PHẢI & MẶC ĐỊNH GIẤU SÚNG
+            // 🌟 ĐÃ ĐỒNG BỘ: TRỊ LỖI TEO NHỎ SÚNG CỦA XƯƠNG MIXAMO
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V41 - Tay Phải & Rút Súng Thông Minh)!");
+                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V42 - Trị Lỗi Teo Nhỏ Súng)!");
                 let urlVuKhi = window.WEAPON_URL || 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (modelSieuToc) => {
                         window.vuKhiModel = modelSieuToc;
                         
-                        // Thước đo tự động
+                        // 📏 1. Đo chiều dài gốc của cây súng trong Blender
                         window.vuKhiModel.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(window.vuKhiModel);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z);
-                        if (maxDim > 0.05) {
-                            const scaleFactor = 1.0 / maxDim; 
-                            window.vuKhiModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                        }
 
-                        // 🌟 TÌM XƯƠNG TAY PHẢI (Right Hand) ĐỂ CẦM CÒ SÚNG
+                        // 🦾 2. Gắn súng vào Tay Phải và bù trừ tỷ lệ
                         if (typeof playerModel !== 'undefined' && playerModel) {
                             let tayPhai = null;
                             playerModel.traverse(c => {
@@ -647,16 +643,35 @@
 
                             if (tayPhai) {
                                 tayPhai.add(window.vuKhiModel);
+                                
+                                // 🌟 BÍ THUẬT: Đọc tỷ lệ thực tế của xương tay (thường là 0.01)
+                                let tiLeXuong = new THREE.Vector3();
+                                tayPhai.getWorldScale(tiLeXuong);
+                                let scaleX = tiLeXuong.x > 0 ? tiLeXuong.x : 1;
+
+                                // Tính tỷ lệ cuối cùng: Ép súng dài đúng 1.2 mét ngoài đời thực!
+                                let chieuDaiMongMuon = 1.2; 
+                                let scaleCuoiCung = (chieuDaiMongMuon / maxDim) / scaleX; 
+                                
+                                window.vuKhiModel.scale.set(scaleCuoiCung, scaleCuoiCung, scaleCuoiCung);
+                                
+                                // Căn chỉnh vị trí tay cầm (0,0,0 là chuẩn vì Sếp đã set origin rất đẹp)
                                 window.vuKhiModel.position.set(0, 0, 0);
+                                
+                                // 💡 LƯU Ý GÓC XOAY: Xương tay phải Mixamo thường ngón tay chỉ xuống trục Y.
+                                // Nếu súng bị chĩa ngược ra sau lưng hoặc chĩa xuống đất, Sếp chỉnh các số này nhé!
+                                // Ví dụ: (Math.PI / 2, 0, 0) hoặc (0, -Math.PI / 2, 0)
                                 window.vuKhiModel.rotation.set(0, 0, 0); 
+
                             } else {
                                 playerModel.add(window.vuKhiModel);
                                 window.vuKhiModel.position.set(1, 3, 0); 
                             }
                         }
                         
-                        // 🌟 GIẤU SÚNG LÚC CHẠY BÌNH THƯỜNG
-                        window.vuKhiModel.visible = false;
+                        // 🌟 TẠM THỜI BẬT HIỆN SÚNG 24/24 ĐỂ SẾP TEST GÓC XOAY CHO DỄ
+                        // Sau khi sếp thấy súng cầm trên tay cầm đẹp rồi thì đổi 'true' thành 'false' nhé!
+                        window.vuKhiModel.visible = true; 
                     });
                 }
             },
