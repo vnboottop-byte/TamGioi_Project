@@ -139,12 +139,13 @@
 
 
 
+    // 🌟 ĐÃ ĐỒNG BỘ THEO CHUẨN CUNG THỦ: GIỮ NGUYÊN GÓC -Y CỦA BLENDER
     function taoVienDanXin(scaleSize) {
         const group = new THREE.Group();
 
-        // 🌟 TẠO LÕI SÁNG (VẠCH ĐƯỜNG ĐẠN) CHỐNG TÀNG HÌNH 100%
+        // Tạo vạch đạn sáng (Trail)
         const geoLoi = new THREE.CylinderGeometry(0.1, 0.1, 6, 8);
-        geoLoi.rotateX(Math.PI / 2); // Chĩa thẳng về phía trước (+Z)
+        geoLoi.rotateX(Math.PI / 2); 
         const matLoi = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
         const loi = new THREE.Mesh(geoLoi, matLoi);
         group.add(loi);
@@ -153,18 +154,15 @@
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                // 🌟 FIX ĐÚNG GÓC -Y CỦA BLENDER NHƯ SẾP CHỈ ĐẠO
-                // Xoay -90 độ (-Math.PI/2) quanh trục X để nắn cái mỏ -Y chĩa thẳng ra phía trước (+Z)
-                v.rotation.set(-Math.PI / 0, -2, 0);
+                // 🌟 SỬA TẠI ĐÂY: Để (0,0,0) vì Blender -Y đã là Three.js +Z rồi!
+                v.rotation.set(0, 0, 0); 
                 
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
                         try { 
-                            if (!Array.isArray(c.material)) {
-                                c.material = c.material.clone();
-                                c.material.emissive = new THREE.Color(0xffff00);
-                                c.material.emissiveIntensity = 2.0;
-                            }
+                            c.material = c.material.clone();
+                            c.material.emissive = new THREE.Color(0xffff00);
+                            c.material.emissiveIntensity = 2.0;
                         } catch (e) { }
                     }
                 });
