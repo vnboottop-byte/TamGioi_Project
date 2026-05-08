@@ -417,13 +417,47 @@
                         targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
                     });
 
-                    // Giật tay mượt mà (chỉ gọi 1 giây/lần)
-                    if (typeof window.playAnim === 'function' && !window.isKeyboardMoving) {
+
+
+
+                    // 🌟 NÃ ĐẠN (Chỉ nã khi hết thời gian chờ 0.5s)
+                if (window.thoiGianHoiQ_Auto <= 0) {
+                    window.thoiGianHoiQ_Auto = 30; // Reset đếm ngược
+                    
+                    // Lấy xương tay trái xuất phát tia Lazer
+                    let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
+                    let tayTrai = null;
+                    playerModel.traverse(c => {
+                        if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('LeftForeArm') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
+                            tayTrai = c;
+                        }
+                    });
+                    if (tayTrai) { startPos = new THREE.Vector3(); tayTrai.getWorldPosition(startPos); }
+
+                    let tia = taoTiaDanNhanh();
+                    tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
+
+                    kyNangBanSung.push({
+                        mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
+                    });
+
+                    // 🌟 FIX TẬN GỐC: ÉP GỌI ATTACK XUYÊN QUA BỘ LỌC KỂ CẢ KHI ĐANG BAY
+                    // Bỏ điều kiện !window.isKeyboardMoving đi, Sếp bay hay chạy nó đều giật súng!
+                    if (typeof window.playAnimGocBS === 'function') {
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
-                            window.playAnim('ATTACK');
+                            window.playAnimGocBS('ATTACK'); // Gọi thẳng hàm GỐC để hệ thống không thể cản!
                             window.lastAnimTimeBS = Date.now();
                         }
                     }
+
+                    if (window.room && window.room.state === 'connected') {
+                        try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
+                    }
+                }
+
+
+
 
                     if (window.room && window.room.state === 'connected') {
                         try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
