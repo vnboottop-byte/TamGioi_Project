@@ -348,7 +348,7 @@
                 const hoaTien = taoHoaTienXin(3.0);
                 let lech = new THREE.Vector3().crossVectors(huongMat, new THREE.Vector3(0, 1, 0)).normalize().multiplyScalar((i - 2) * 2);
                 hoaTien.position.copy(viTriGoc.clone().add(lech)); hoaTien.lookAt(mucTieu); scene.add(hoaTien);
-                kyNangBanSung.push({ mesh: hoaTien, type: 'E', speed: 0.5, life: 200, targetPos: mucTieu, damage: dameGoc, delay: i * 5, isRemote: isRemote });
+                kyNangBanSung.push({ mesh: hoaTien, type: 'E', speed: 0.5, life: 200, targetPos: mucTieu, damage: dameGoc * 0.40, delay: i * 5, isRemote: isRemote });
             }
         }
 
@@ -378,7 +378,7 @@
                     mesh: dan, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT',
                     speed: 0.015 + (Math.random() * 0.005), // Tốc độ bay (Progress)
                     life: 400, startPos: startPos.clone(), targetPos: dichRoi,
-                    damage: dameGoc * 0.2, // 10 viên, mỗi viên 20% dame
+                    damage: dameGoc * 0.06,  
                     arcHeight: 40 + Math.random() * 20, // Độ cao của vòng cung (Lên cao 40m - 60m)
                     fireDelay: i * 6, // Bắn liên tiếp, mỗi viên cách nhau vài frame
                     progress: 0, isRemote: isRemote,
@@ -411,7 +411,7 @@
             kyNangBanSung.push({
                 mesh: jet, type: 'F_JET', state: 'BAY_TOI',
                 speed: 3.5, life: 800, targetPos: tamCumQuai, targetAltitude: 0,
-                damage: dameGoc * 10, isRemote: isRemote
+                damage: dameGoc * 1.00, isRemote: isRemote
             });
         }
     };
