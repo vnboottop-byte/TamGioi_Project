@@ -104,16 +104,21 @@
 
 
 
+
+
+
+
+
+
     function taoVienDanXin(scaleSize) {
         const group = new THREE.Group();
-
         let urlCanTai = window.VIENDAN_URL || 'uploads/anims/VIENDAN.glb';
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.rotation.set(0, 0, 0);
 
-                // 📏 BỘ THƯỚC ĐO TỰ ĐỘNG
+                // 📏 BỘ THƯỚC ĐO TỰ ĐỘNG (Giữ nguyên để bóp đạn về 1m)
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
                 const size = new THREE.Vector3(); box.getSize(size);
@@ -124,16 +129,7 @@
                     v.scale.set(tyLe, tyLe, tyLe);
                 }
 
-                v.traverse(c => {
-                    if (c.isMesh && c.material) {
-                        try {
-                            c.material = c.material.clone();
-                            // Tô màu vàng rực cho chính viên đạn luôn, khỏi cần trụ sáng!
-                            c.material.emissive = new THREE.Color(0xffff00);
-                            c.material.emissiveIntensity = 2.0;
-                        } catch (e) { }
-                    }
-                });
+                // ĐÃ XÓA SẠCH ĐOẠN TÔ MÀU VÀNG Ở ĐÂY 🌟
                 group.add(v);
             });
         }
