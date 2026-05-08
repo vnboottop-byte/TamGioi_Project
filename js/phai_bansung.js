@@ -408,44 +408,45 @@
                     playerModel.quaternion.slerp(dummy.quaternion, 0.2); // Quay mượt
                 }
 
-                // 🌟 NÃ ĐẠN
+
+
+
+
+                // 🌟 NÃ ĐẠN (Chỉ nã khi hết thời gian chờ)
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30; 
                     
+                    // 🌟 1. RÚT SÚNG RA & HẸN GIỜ CẤT SÚNG SAU 1.5 GIÂY
+                    if (window.vuKhiModel) {
+                        window.vuKhiModel.visible = true; // Hiện súng
+                        if (window.vuKhiModel.hideTimeout) clearTimeout(window.vuKhiModel.hideTimeout);
+                        window.vuKhiModel.hideTimeout = setTimeout(() => {
+                            if (window.vuKhiModel) window.vuKhiModel.visible = false; // Tự cất súng
+                        }, 1500);
+                    }
+
+                    // 🌟 2. XUẤT ĐẠN TỪ TAY PHẢI CHO KHỚP VỚI NÒNG SÚNG
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
-                    let tayTrai = null;
+                    let tayPhai = null;
                     playerModel.traverse(c => {
-                        if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('LeftForeArm') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
-                            tayTrai = c;
+                        if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand') || c.name.toLowerCase().includes('hand.r'))) {
+                            tayPhai = c;
                         }
                     });
-                    if (tayTrai) { startPos = new THREE.Vector3(); tayTrai.getWorldPosition(startPos); }
+                    if (tayPhai) { startPos = new THREE.Vector3(); tayPhai.getWorldPosition(startPos); }
 
                     let tia = taoTiaDanNhanh();
                     tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
-
-                    // 🌟 CHÈN THÊM ĐOẠN NÀY: BẮT BUỘC HIỆN SÚNG KHI RADAR HOẠT ĐỘNG
-                    if (window.vuKhiModel) {
-                        window.vuKhiModel.visible = true;
-                    }
-
-                    
 
                     kyNangBanSung.push({
                         mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
                         targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
                     });
 
-                    // 🌟 FIX TẬN GỐC: GỌI THẲNG HÀM GỐC XUYÊN QUA BỘ LỌC
+                    // 🌟 GỌI ANIMATION ATTACK XUYÊN BỘ LỌC
                     if (typeof window.playAnimGocBS === 'function') {
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
                             window.playAnimGocBS('ATTACK'); 
-                            window.lastAnimTimeBS = Date.now();
-                        }
-                    } else if (typeof window.playAnim === 'function') {
-                        // Backup dự phòng
-                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) { 
-                            window.playAnim('ATTACK'); 
                             window.lastAnimTimeBS = Date.now();
                         }
                     }
@@ -454,6 +455,17 @@
                         try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'SKILL', phim: 'Q', phai: 'BAN_SUNG', target: { x: targetMoi.x, y: targetMoi.y, z: targetMoi.z } })), { reliable: true }); } catch (e) { }
                     }
                 }
+
+
+                
+
+
+
+
+
+
+
+
             }
         }
 
