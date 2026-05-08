@@ -666,7 +666,7 @@
                         }
 
                         // Mặc định ẩn, khi bắn mới hiện
-                        window.vuKhiModel.visible = false;
+                        window.vuKhiModel.visible = true;
                     });
                 }
             },
