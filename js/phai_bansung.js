@@ -654,9 +654,7 @@
                                 let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
                                 window.vuKhiModel.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
-                                // 🌟 KHỚP VỊ TRÍ: 0,0,0 là chuẩn theo Origin sếp đặt trong Blender
-                                window.vuKhiModel.position.set(0, 0, 0);
-
+                            
                                 // 🌟 KHỚP GÓC XOAY: 
                                 // Nếu sếp đã xuất chuẩn theo "Phần 1" ở trên, thì (0,0,0) sẽ thẳng tắp.
                                 // Nếu vẫn bị ngang, sếp chỉ cần chỉnh ĐÚNG 1 TRỤC dưới đây:
