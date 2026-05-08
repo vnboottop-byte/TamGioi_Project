@@ -96,7 +96,7 @@
     }
 
 
-    
+
 
 
 
@@ -340,10 +340,22 @@
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU
     // ==========================================
     window.updateCombatBanSung = function () {
+
+
+
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let skill = kyNangBanSung[i];
             if (skill.delay > 0) { skill.delay--; continue; }
             skill.life--;
+
+
+
+            // 🌟 ĐÃ ĐỒNG BỘ: TRỌNG LỰC TÂM VŨ TRỤ
+            let lucHutTam = skill.mesh.position.clone().normalize();
+
+
+
+
 
             if (skill.type === 'Q' || skill.type === 'R') {
                 skill.mesh.translateZ(skill.speed);
@@ -417,6 +429,9 @@
                 kyNangBanSung.splice(i, 1);
             }
         }
+
+
+
 
 
         // 🌟 MÁY HÚT BỤI VRAM CHO HIỆU ỨNG XẠ THỦ
