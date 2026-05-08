@@ -312,9 +312,10 @@
         }
     };
 
-    // ==========================================
-    // 🏹 HÀM 2: VÒNG LẶP VẬT LÝ & AUTO RADAR 500M
-    // ==========================================
+
+
+
+
     window.updateCombatBanSung = function () {
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
@@ -322,7 +323,7 @@
         // 📡 MẮT THẦN RADAR
         if (window.thoiGianHoiQ_Auto <= 0 && window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel && !window.dangMuaChieu) {
             let targetMoi = null;
-            let minDist = 500; // 🌟 QUÉT CHUẨN 500 MÉT
+            let minDist = 500;
             let originPos = playerModel.position.clone();
 
             [...(window.danhSachQuaiVat || []), ...Object.values(typeof remotePlayers !== 'undefined' ? remotePlayers : {})].forEach(obj => {
@@ -332,8 +333,8 @@
                     let d = originPos.distanceTo(hit.tamNguc);
                     if (d > 0.1 && d < minDist) { 
                         minDist = d; 
+                        // 🌟 ĐÃ FIX: Không cộng thêm 3m nữa, hit.tamNguc đã là chuẩn rồi!
                         targetMoi = hit.tamNguc.clone(); 
-                        targetMoi.y += 3; // 🌟 Ngắm chuẩn vào tâm ngực
                     }
                 }
             });
@@ -345,11 +346,10 @@
                 tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
                 kyNangBanSung.push({
-                    mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, // 🌟 Bay 550m rồi tự hủy
+                    mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55, 
                     targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false 
                 });
 
-                // 🌟 HÃM ANIMATION (1.5 giây mới gọi 1 lần)
                 if (typeof window.playAnim === 'function' && !window.dangMuaChieu) {
                     if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1500) {
                         window.playAnim('ATTACK');
@@ -369,14 +369,16 @@
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
 
+            // --- CHIÊU Q ---
             if (s.type === 'Q_AUTO' || s.type === 'Q') {
                 s.mesh.translateZ(s.speed);
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
-                    if (!s.isRemote && typeof window.gaySatThuongBS === 'function') window.gaySatThuongBS(s.targetPos, Math.round(s.damage), 8);
-                    taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 2);
+                    // 🌟 ĐÃ FIX: Chỉ gọi taoVuNoBS với bán kính 5m, số sát thương sẽ tự động nảy lên!
+                    taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 5);
                     s.life = 0;
                 }
             }
+            // --- CHIÊU E ---
             else if (s.type === 'E') {
                 s.speed *= 1.05; if (s.speed > 8.0) s.speed = 8.0;
                 if (s.targetPos) {
@@ -391,11 +393,11 @@
                 s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life < 5) {
-                    if (!s.isRemote && typeof window.gaySatThuongBS === 'function') window.gaySatThuongBS(s.targetPos, Math.round(s.damage), 15);
                     taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 15);
                     s.life = 0;
                 }
             }
+            // --- CHIÊU R ---
             else if (s.type === 'BAY_VONG_CUNG') {
                 if (s.state === 'CHO_DEN_LUOT') {
                     s.fireDelay--;
@@ -424,12 +426,12 @@
 
                     if (s.progress >= 1) {
                         s.life = 0;
-                        if (!s.isRemote && typeof window.gaySatThuongBS === 'function') window.gaySatThuongBS(s.targetPos, Math.round(s.damage), 30);
                         taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 30);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 20, 0xff5500);
                     }
                 }
             }
+            // --- CHIÊU F ---
             else if (s.type === 'F_JET') {
                 if (s.state === 'BAY_TOI') {
                     s.mesh.translateZ(s.speed);
@@ -448,7 +450,6 @@
                     s.mesh.translateZ(s.speed);
 
                     if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.mesh.position.y <= s.targetPos.y + 2) {
-                        if (!s.isRemote && typeof window.gaySatThuongBS === 'function') window.gaySatThuongBS(s.targetPos, Math.round(s.damage), 50);
                         taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 50);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 25, 0xff5500);
                         s.life = 0;
@@ -462,9 +463,7 @@
             }
         }
 
-        // =====================================
-        // 🗑️ LÒ ĐỐT RÁC UI (GIỮ NGUYÊN)
-        // =====================================
+        // 🗑️ LÒ ĐỐT RÁC VÀ RENDER UI
         for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { 
             let s = danhSachSoBayBS[i]; s.life--; s.offsetY += 0.05;
             let hienThiPos = s.pos.clone(); hienThiPos.y += s.offsetY;
@@ -483,7 +482,6 @@
             if (h.life <= 0) { if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); else scene.remove(h.mesh); hieuUngBanSung.splice(i, 1); }
         }
     };
-
 
 
 
