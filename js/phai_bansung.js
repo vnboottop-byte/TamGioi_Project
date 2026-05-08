@@ -664,27 +664,44 @@
                         window.vuKhiModel.visible = true;
 
                         // ==========================================
-                        // 🔧 TOOL ĐỘ SÚNG TRỰC TIẾP CHO SẾP (BẤM PHÍM U,J, I,K, O,L ĐỂ XOAY)
+                        // 🖱️ BẢNG ĐIỀU KHIỂN XOAY SÚNG BẰNG CHUỘT (CHỐNG LỖI BÀN PHÍM 100%)
                         // ==========================================
-                        if (!window.daCaiToolXoay) {
-                            window.daCaiToolXoay = true;
-                            window.addEventListener('keydown', (e) => {
+                        if (!document.getElementById('tool-xoay-sung')) {
+                            let panel = document.createElement('div');
+                            panel.id = 'tool-xoay-sung';
+                            panel.style.cssText = 'position:fixed; top:50px; left:50px; background:rgba(0,0,0,0.8); color:white; padding:15px; z-index:999999; border:2px solid #0f0; border-radius:8px; text-align:center; font-family:sans-serif;';
+                            panel.innerHTML = `
+                                <h3 style="margin:0 0 10px 0; color:#0f0; font-size:18px;">🔧 BẢNG XOAY SÚNG</h3>
+                                <div style="margin-bottom:10px;">
+                                    <b style="display:inline-block; width:60px; text-align:left;">Trục X:</b>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('x', 1)">LÊN 🔼</button>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('x', -1)">XUỐNG 🔽</button>
+                                </div>
+                                <div style="margin-bottom:10px;">
+                                    <b style="display:inline-block; width:60px; text-align:left;">Trục Y:</b>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('y', 1)">TRÁI ◀️</button>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('y', -1)">PHẢI ▶️</button>
+                                </div>
+                                <div style="margin-bottom:10px;">
+                                    <b style="display:inline-block; width:60px; text-align:left;">Trục Z:</b>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('z', 1)">LẬT 🔄</button>
+                                    <button style="padding:5px 15px; cursor:pointer; font-weight:bold;" onclick="window.xoaySung('z', -1)">ÚP 🔃</button>
+                                </div>
+                                <div id="goc-hien-tai" style="color:yellow; font-weight:bold; margin-top:15px; font-size:16px;">Copy: (0.00, 0.00, 0.00)</div>
+                            `;
+                            document.body.appendChild(panel);
+
+                            window.xoaySung = function (truc, huong) {
                                 if (!window.vuKhiModel) return;
-                                let step = Math.PI / 16; // Nhích từng chút một (11.25 độ)
+                                let step = Math.PI / 16; // Nhích 11.25 độ mỗi lần click
+                                window.vuKhiModel.rotation[truc] += (step * huong);
 
-                                if (e.key === 'u') window.vuKhiModel.rotation.x += step;
-                                if (e.key === 'j') window.vuKhiModel.rotation.x -= step;
+                                let rx = window.vuKhiModel.rotation.x.toFixed(2);
+                                let ry = window.vuKhiModel.rotation.y.toFixed(2);
+                                let rz = window.vuKhiModel.rotation.z.toFixed(2);
 
-                                if (e.key === 'i') window.vuKhiModel.rotation.y += step;
-                                if (e.key === 'k') window.vuKhiModel.rotation.y -= step;
-
-                                if (e.key === 'o') window.vuKhiModel.rotation.z += step;
-                                if (e.key === 'l') window.vuKhiModel.rotation.z -= step;
-
-                                if (['u', 'j', 'i', 'k', 'o', 'l'].includes(e.key)) {
-                                    console.log(`%c🎯 GÓC CHUẨN ĐÂY SẾP ƠI: window.vuKhiModel.rotation.set(${window.vuKhiModel.rotation.x.toFixed(2)}, ${window.vuKhiModel.rotation.y.toFixed(2)}, ${window.vuKhiModel.rotation.z.toFixed(2)});`, 'color: #00ff00; font-size: 14px; font-weight: bold;');
-                                }
-                            });
+                                document.getElementById('goc-hien-tai').innerText = `Copy: (${rx}, ${ry}, ${rz})`;
+                            };
                         }
                     });
                 }
