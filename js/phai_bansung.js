@@ -617,57 +617,50 @@
 
 
 
-            // 🌟 ĐỒNG BỘ V44: BẢN CHUẨN HÓA TOÀN DIỆN CHO XẠ THỦ
+            // 🌟 ĐỒNG BỘ V46: DÍNH 0,0,0 CỦA SÚNG VÀO TAY TRÁI NHÂN VẬT
             khoiTao: function () {
-                console.log("🔫 Khởi tạo Xạ Thủ: Đang nạp súng GUN.glb...");
-
-                let urlVuKhi = 'uploads/anims/GUN.glb'; // Ép đúng file súng
+                console.log("🔫 Khởi tạo Xạ Thủ: Bám gốc 0,0,0 vào Tay Trái!");
+                let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (modelSieuToc) => {
                         window.vuKhiModel = modelSieuToc;
 
-                        // 1. Cập nhật ma trận để đo đạc chính xác
                         window.vuKhiModel.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(window.vuKhiModel);
                         const size = box.getSize(new THREE.Vector3());
                         const chieuDaiGoc = Math.max(size.x, size.y, size.z);
 
-                        // 2. Tìm xương tay trái của Deadpool (Mixamo)
                         if (typeof playerModel !== 'undefined' && playerModel) {
-                            let xuongTay = null;
+                            let xuongTayTrai = null;
+
+                            // 🌟 TÌM TAY TRÁI ĐỂ ĐỠ NÒNG SÚNG
                             playerModel.traverse(c => {
-                                if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('hand_l') || c.name.includes('Hand_L'))) {
-                                    xuongTay = c;
+                                if (c.isBone && (c.name.includes('LeftHand') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
+                                    xuongTayTrai = c;
                                 }
                             });
 
-                            if (xuongTay) {
-                                xuongTay.add(window.vuKhiModel);
+                            if (xuongTayTrai) {
+                                xuongTayTrai.add(window.vuKhiModel);
 
-                                // 🌟 TRỊ BỆNH TEO NHỎ (Scale 0.01 của Mixamo)
-                                let tiLeThucCuaXuong = new THREE.Vector3();
-                                xuongTay.getWorldScale(tiLeThucCuaXuong);
-                                let scaleFix = tiLeThucCuaXuong.x > 0 ? tiLeThucCuaXuong.x : 1;
+                                // Bơm scale trị lỗi Mixamo
+                                let tiLeThuc = new THREE.Vector3();
+                                xuongTayTrai.getWorldScale(tiLeThuc);
+                                let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
-                                // Ép súng dài đúng 1.3 mét ngoài đời thực (bất chấp tỷ lệ file gốc)
                                 let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
                                 window.vuKhiModel.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
-                            
-                                // 🌟 KHỚP GÓC XOAY: 
-                                // Nếu sếp đã xuất chuẩn theo "Phần 1" ở trên, thì (0,0,0) sẽ thẳng tắp.
-                                // Nếu vẫn bị ngang, sếp chỉ cần chỉnh ĐÚNG 1 TRỤC dưới đây:
-                                window.vuKhiModel.rotation.set(Math.PI / -4, 0, 0);
-                                window.vuKhiModel.rotation.set(0, Math.PI / 4, 0);
-                                
-                                // window.vuKhiModel.rotation.x = Math.PI / 2; // Thử dòng này nếu súng bị chúc xuống
+                                // 🌟 CHUẨN BÀI: 0,0,0 CỦA SÚNG DÍNH CHẶT VÀO XƯƠNG TAY TRÁI
+                                window.vuKhiModel.position.set(0, 0, 0);
 
-                                console.log("✅ Đã lắp súng vào tay trái Deadpool!");
+                                // 🌟 Sếp bẻ góc xoay ở đây để đuôi súng chĩa về tay phải nhé!
+                                window.vuKhiModel.rotation.set(0, 0, 0);
                             }
                         }
 
-                        // Mặc định ẩn, khi bắn mới hiện
+                        // Tạm bật TRUE để sếp ngắm vuốt bẻ góc xoay cho dễ (xoay xong nhớ đổi thành false)
                         window.vuKhiModel.visible = true;
                     });
                 }
