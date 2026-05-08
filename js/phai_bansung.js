@@ -242,6 +242,16 @@
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
+
+
+            // Bật vũ khí khi bắn
+            if (window.vuKhiModel) {
+                window.vuKhiModel.visible = true;
+                if (window.vuKhiModel.hideTimeout) clearTimeout(window.vuKhiModel.hideTimeout);
+                window.vuKhiModel.hideTimeout = setTimeout(() => {
+                    if (window.vuKhiModel) window.vuKhiModel.visible = false;
+                }, 1500); // 1.5 giây sau tự động cất súng
+            }
         }
 
         let viTriGoc, huongMat, mucTieu;
