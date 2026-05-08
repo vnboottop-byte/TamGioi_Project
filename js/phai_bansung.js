@@ -135,41 +135,31 @@
 
 
 
-    // ==========================================
-    // 🌟 ĐÚC VIÊN ĐẠN (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 1 MÉT)
-    // ==========================================
     function taoVienDanXin(scaleSize) {
         const group = new THREE.Group();
-
-        // Tạo vạch đạn sáng (Trail)
-        const geoLoi = new THREE.CylinderGeometry(0.1, 0.1, 6, 8);
-        geoLoi.rotateX(Math.PI / 2); 
-        const matLoi = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
-        const loi = new THREE.Mesh(geoLoi, matLoi);
-        group.add(loi);
 
         let urlCanTai = window.VIENDAN_URL || 'uploads/anims/VIENDAN.glb';
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                v.rotation.set(0, 0, 0); 
-                
-                // 📏 BỘ THƯỚC ĐO THẦN THÁNH CỦA CUNG THỦ
+                v.rotation.set(0, 0, 0);
+
+                // 📏 BỘ THƯỚC ĐO TỰ ĐỘNG
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
                 const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z);
-                
-                // Dù đạn to hay nhỏ, ép tất cả về đúng 1 mét
+
                 if (maxDim > 0.05) {
-                    let tyLe = 1.0 / maxDim; 
+                    let tyLe = 1.0 / maxDim;
                     v.scale.set(tyLe, tyLe, tyLe);
                 }
 
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        try { 
+                        try {
                             c.material = c.material.clone();
+                            // Tô màu vàng rực cho chính viên đạn luôn, khỏi cần trụ sáng!
                             c.material.emissive = new THREE.Color(0xffff00);
                             c.material.emissiveIntensity = 2.0;
                         } catch (e) { }
@@ -178,11 +168,13 @@
                 group.add(v);
             });
         }
-        
-        // Phóng to theo chiêu (Ví dụ: Chiêu Q x 1.5, Chiêu R x 3.0)
+
         group.scale.set(scaleSize, scaleSize, scaleSize);
         return group;
     }
+
+
+    
 
     // ==========================================
     // 🌟 ĐÚC TÊN LỬA E (CÓ THƯỚC ĐO TỰ ĐỘNG CHUẨN 2 MÉT)
