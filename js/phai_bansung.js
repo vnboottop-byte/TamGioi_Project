@@ -617,55 +617,58 @@
 
 
 
-            // 🌟 ĐÃ ĐỒNG BỘ: ÉP TẢI GUN.GLB & GẮN CHUẨN TAY TRÁI (NÒNG SÚNG)
+            // 🌟 ĐỒNG BỘ V44: BẢN CHUẨN HÓA TOÀN DIỆN CHO XẠ THỦ
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ Sẵn Sàng (Bản V43 - Trị Kiếm Tím & Gắn Tay Trái)!");
-                
-                // 🌟 BẮT BUỘC TẢI GUN.GLB (Bỏ qua cái WEAPON_URL mặc định đang là cây kiếm)
-                let urlVuKhi = 'uploads/anims/GUN.glb';
+                console.log("🔫 Khởi tạo Xạ Thủ: Đang nạp súng GUN.glb...");
+
+                let urlVuKhi = 'uploads/anims/GUN.glb'; // Ép đúng file súng
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (modelSieuToc) => {
                         window.vuKhiModel = modelSieuToc;
-                        
-                        // 📏 Đo kích thước
+
+                        // 1. Cập nhật ma trận để đo đạc chính xác
                         window.vuKhiModel.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(window.vuKhiModel);
                         const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x, size.y, size.z);
+                        const chieuDaiGoc = Math.max(size.x, size.y, size.z);
 
+                        // 2. Tìm xương tay trái của Deadpool (Mixamo)
                         if (typeof playerModel !== 'undefined' && playerModel) {
-                            let tayTrai = null; // 🌟 QUAY LẠI TÌM TAY TRÁI ĐỂ ĐỠ NÒNG SÚNG
+                            let xuongTay = null;
                             playerModel.traverse(c => {
-                                if (c.isBone && (c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand') || c.name.toLowerCase().includes('hand.l'))) {
-                                    tayTrai = c;
+                                if (c.isBone && (c.name.includes('LeftHand') || c.name.includes('hand_l') || c.name.includes('Hand_L'))) {
+                                    xuongTay = c;
                                 }
                             });
 
-                            if (tayTrai) {
-                                tayTrai.add(window.vuKhiModel);
-                                
-                                // Bơm scale trị lỗi xương Mixamo
-                                let tiLeXuong = new THREE.Vector3();
-                                tayTrai.getWorldScale(tiLeXuong);
-                                let scaleX = tiLeXuong.x > 0 ? tiLeXuong.x : 1;
+                            if (xuongTay) {
+                                xuongTay.add(window.vuKhiModel);
 
-                                let chieuDaiMongMuon = 1.2; // Dài 1m2
-                                let scaleCuoiCung = (chieuDaiMongMuon / maxDim) / scaleX; 
-                                window.vuKhiModel.scale.set(scaleCuoiCung, scaleCuoiCung, scaleCuoiCung);
-                                
-                                
-                                
-                                window.vuKhiModel.rotation.set(0, Math.PI / 2, 0);
+                                // 🌟 TRỊ BỆNH TEO NHỎ (Scale 0.01 của Mixamo)
+                                let tiLeThucCuaXuong = new THREE.Vector3();
+                                xuongTay.getWorldScale(tiLeThucCuaXuong);
+                                let scaleFix = tiLeThucCuaXuong.x > 0 ? tiLeThucCuaXuong.x : 1;
 
-                            } else {
-                                playerModel.add(window.vuKhiModel);
-                                window.vuKhiModel.position.set(-1, 3, 0); 
+                                // Ép súng dài đúng 1.3 mét ngoài đời thực (bất chấp tỷ lệ file gốc)
+                                let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
+                                window.vuKhiModel.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
+
+                                // 🌟 KHỚP VỊ TRÍ: 0,0,0 là chuẩn theo Origin sếp đặt trong Blender
+                                window.vuKhiModel.position.set(0, 0, 0);
+
+                                // 🌟 KHỚP GÓC XOAY: 
+                                // Nếu sếp đã xuất chuẩn theo "Phần 1" ở trên, thì (0,0,0) sẽ thẳng tắp.
+                                // Nếu vẫn bị ngang, sếp chỉ cần chỉnh ĐÚNG 1 TRỤC dưới đây:
+                                window.vuKhiModel.rotation.set(0, 0, 0);
+                                // window.vuKhiModel.rotation.x = Math.PI / 2; // Thử dòng này nếu súng bị chúc xuống
+
+                                console.log("✅ Đã lắp súng vào tay trái Deadpool!");
                             }
                         }
-                        
-                        // 🌟 Tạm thời để TRUE cho Sếp dễ ngắm vuốt góc xoay súng
-                        window.vuKhiModel.visible = true; 
+
+                        // Mặc định ẩn, khi bắn mới hiện
+                        window.vuKhiModel.visible = false;
                     });
                 }
             },
