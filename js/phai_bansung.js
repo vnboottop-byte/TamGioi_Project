@@ -26,11 +26,6 @@
     }
 
 
-
-
-
-
-
     window.layMucTieuGanNhatBS = function(viTriGoc) {
         let targetPos = null; let minD = 400; 
         if (typeof remotePlayers !== 'undefined') {
@@ -52,8 +47,6 @@
         }
         return targetPos;
     };
-
-
 
 
 
@@ -96,12 +89,6 @@
     }
 
 
-
-
-
-
-
-
     function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15) {
         if (isRemote === false) gaySatThuongBS(pos, luongDame, banKinh);
         else if (typeof isRemote === 'number' && isRemote > 0) {
@@ -110,28 +97,10 @@
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     function taoSaoBangBS(pos, dir) {
         // Tắt tia lửa bay phía sau để không làm rối mắt
         return;
     }
-
-
-
-
-
-    
 
 
 
@@ -175,12 +144,6 @@
 
 
 
-
-
-
-
-
-
     // ==========================================
     // 🌟 ĐÚC TIA SÁNG ĐẠN TỰ ĐỘNG (SIÊU NHẸ - KHÔNG DÙNG MODEL 3D)
     // ==========================================
@@ -191,21 +154,6 @@
         const mat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 0.9 });
         return new THREE.Mesh(geo, mat);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -240,15 +188,6 @@
 
 
 
-
-
-
-
-
-
-
-
-
     function taoMayBayXin(scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = window.MAYBAY_URL || 'uploads/anims/phico.glb';
@@ -277,10 +216,6 @@
         }
         return bestCenter;
     }
-
-
-
-
 
 
 
@@ -555,9 +490,6 @@
 
 
 
-
-
-  
 
     // 🌟 CHẠY NGẦM LIÊN TỤC ĐỂ MÁY PHÁI KHÁC CŨNG QUÉT RÁC ĐƯỢC
     setInterval(window.updateCombatBanSung, 30);
