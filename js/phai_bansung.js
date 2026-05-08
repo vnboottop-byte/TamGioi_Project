@@ -617,24 +617,28 @@
 
 
 
-            // 🌟 ĐỒNG BỘ V46: DÍNH 0,0,0 CỦA SÚNG VÀO TAY TRÁI NHÂN VẬT
+            // 🌟 ĐỒNG BỘ V47: BỌC SÚNG BẰNG WRAPPER ĐỂ PHÁ KHÓA TRỤC TỌA ĐỘ
             khoiTao: function () {
-                console.log("🔫 Khởi tạo Xạ Thủ: Bám gốc 0,0,0 vào Tay Trái!");
+                console.log("🔫 Khởi tạo Xạ Thủ: Bọc súng vào Wrapper chống khóa trục!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
-                    window.taiHoacNhanBanAsset(urlVuKhi, (modelSieuToc) => {
-                        window.vuKhiModel = modelSieuToc;
+                    window.taiHoacNhanBanAsset(urlVuKhi, (sungGoc) => {
 
-                        window.vuKhiModel.updateMatrixWorld(true);
-                        const box = new THREE.Box3().setFromObject(window.vuKhiModel);
+                        // 🌟 BÍ THUẬT Ở ĐÂY: Tạo cái vỏ bọc (Hộp rỗng)
+                        window.vuKhiWrapper = new THREE.Group();
+                        window.vuKhiWrapper.add(sungGoc); // Nhét súng vào hộp
+
+                        // Khai báo cho hệ thống biết cây súng chính là cái Hộp này
+                        window.vuKhiModel = window.vuKhiWrapper;
+
+                        window.vuKhiWrapper.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(window.vuKhiWrapper);
                         const size = box.getSize(new THREE.Vector3());
                         const chieuDaiGoc = Math.max(size.x, size.y, size.z);
 
                         if (typeof playerModel !== 'undefined' && playerModel) {
                             let xuongTayTrai = null;
-
-                            // 🌟 TÌM TAY TRÁI ĐỂ ĐỠ NÒNG SÚNG
                             playerModel.traverse(c => {
                                 if (c.isBone && (c.name.includes('LeftHand') || c.name.toLowerCase().includes('hand_l') || c.name.toLowerCase().includes('lefthand'))) {
                                     xuongTayTrai = c;
@@ -642,29 +646,26 @@
                             });
 
                             if (xuongTayTrai) {
-                                xuongTayTrai.add(window.vuKhiModel);
+                                // Gắn cái HỘP vào xương tay trái
+                                xuongTayTrai.add(window.vuKhiWrapper);
 
-                                // Bơm scale trị lỗi Mixamo
                                 let tiLeThuc = new THREE.Vector3();
                                 xuongTayTrai.getWorldScale(tiLeThuc);
                                 let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
                                 let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
-                                window.vuKhiModel.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
+                                window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
-                                // 🌟 CHUẨN BÀI: 0,0,0 CỦA SÚNG DÍNH CHẶT VÀO XƯƠNG TAY TRÁI
-                                window.vuKhiModel.position.set(0, 0, 0);
-
-                                // 🌟 Sếp bẻ góc xoay ở đây để đuôi súng chĩa về tay phải nhé!
-                                window.vuKhiModel.rotation.set(0, 0, 0);
+                                window.vuKhiWrapper.position.set(0, 0, 0);
+                                window.vuKhiWrapper.rotation.set(0, 0, 0);
                             }
                         }
 
-                        // Tạm bật TRUE để sếp ngắm vuốt bẻ góc xoay
+                        // Hiện súng để xoay
                         window.vuKhiModel.visible = true;
 
                         // ==========================================
-                        // 🖱️ BẢNG ĐIỀU KHIỂN XOAY SÚNG BẰNG CHUỘT (CHỐNG LỖI BÀN PHÍM 100%)
+                        // 🖱️ BẢNG ĐIỀU KHIỂN XOAY SÚNG BẰNG CHUỘT
                         // ==========================================
                         if (!document.getElementById('tool-xoay-sung')) {
                             let panel = document.createElement('div');
@@ -692,13 +693,18 @@
                             document.body.appendChild(panel);
 
                             window.xoaySung = function (truc, huong) {
-                                if (!window.vuKhiModel) return;
-                                let step = Math.PI / 16; // Nhích 11.25 độ mỗi lần click
-                                window.vuKhiModel.rotation[truc] += (step * huong);
+                                if (!window.vuKhiWrapper) return;
+                                let step = Math.PI / 16;
 
-                                let rx = window.vuKhiModel.rotation.x.toFixed(2);
-                                let ry = window.vuKhiModel.rotation.y.toFixed(2);
-                                let rz = window.vuKhiModel.rotation.z.toFixed(2);
+                                // 🌟 Tác động lực vào HỘP RỖNG chứ không tác động vào SÚNG nữa
+                                window.vuKhiWrapper.rotation[truc] += (step * huong);
+
+                                // Ép Three.js vẽ lại hình lập tức
+                                window.vuKhiWrapper.updateMatrix();
+
+                                let rx = window.vuKhiWrapper.rotation.x.toFixed(2);
+                                let ry = window.vuKhiWrapper.rotation.y.toFixed(2);
+                                let rz = window.vuKhiWrapper.rotation.z.toFixed(2);
 
                                 document.getElementById('goc-hien-tai').innerText = `Copy: (${rx}, ${ry}, ${rz})`;
                             };
@@ -706,8 +712,6 @@
                     });
                 }
             },
-        
-                
             
 
 
