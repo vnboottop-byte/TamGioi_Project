@@ -658,7 +658,7 @@
                                 window.vuKhiModel.position.set(0, 0, 0);
                                 
                                 // Sếp xoay lại góc này cho nòng súng chĩa thẳng ra trước nhé
-                                window.vuKhiModel.rotation.set(-Math.PI / 2, Math.PI / 2, Math.PI / 4);
+                                window.vuKhiModel.rotation.set(-Math.PI / 2, Math.PI / 2, Math.PI / 2);
 
                             } else {
                                 playerModel.add(window.vuKhiModel);
