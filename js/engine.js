@@ -861,24 +861,24 @@ function tienHanhTaiNhanVat() {
                 thuCuoi.traverse(c => { if (c.name.toUpperCase().includes('YENNGUA')) xuongYenNgua = c; });
                 let chaCuaNhanVat = xuongYenNgua ? xuongYenNgua : thuCuoi;
 
-                // 2. CHỤP X-QUANG TỶ LỆ GỐC (Lúc nhân vật đang chuẩn 2.5m ngoài vũ trụ)
-                scene.add(nhanVat);
-                nhanVat.updateMatrixWorld(true);
-                let scaleGoc = new THREE.Vector3();
-                nhanVat.getWorldScale(scaleGoc);
+                // ==========================================
+                // 🛑 BẢN VÁ LỖI "CON KIẾN CƯỠI VŨ KHÍ" (THAY THẾ BƯỚC 2, 3, 4 CŨ)
+                // ==========================================
 
-                // 3. CHÍNH THỨC KÝ SINH VÀO YÊN NGỰA
+                // Ký sinh nhân vật vào yên ngựa (hoặc thân thú cưỡi)
                 chaCuaNhanVat.add(nhanVat);
-                chaCuaNhanVat.updateMatrixWorld(true);
 
-                // 4. BÍ THUẬT BÙ TRỪ TỶ LỆ (Ép nhân vật giữ đúng kích thước 2.5m, chống khổng lồ!)
-                let scaleYen = new THREE.Vector3();
-                chaCuaNhanVat.getWorldScale(scaleYen);
+                // Bơm kháng sinh: Lấy thẳng tỷ lệ gốc của thú cưỡi để tính toán, 
+                // bỏ qua hàm getWorldScale() hay bị lỗi của Three.js
+                let tyLeThuCuoi = thuCuoi.scale.x === 0 ? 1 : thuCuoi.scale.x;
+
+                // Lấy tỷ lệ hiện tại của nhân vật chia ngược lại cho tỷ lệ của thú cưỡi
                 nhanVat.scale.set(
-                    scaleGoc.x / (scaleYen.x === 0 ? 1 : scaleYen.x),
-                    scaleGoc.y / (scaleYen.y === 0 ? 1 : scaleYen.y),
-                    scaleGoc.z / (scaleYen.z === 0 ? 1 : scaleYen.z)
+                    nhanVat.scale.x / tyLeThuCuoi,
+                    nhanVat.scale.y / tyLeThuCuoi,
+                    nhanVat.scale.z / tyLeThuCuoi
                 );
+                // ==========================================
 
                 // 5. BÍ THUẬT QUATERNION: ÉP MẶT NHÌN THEO THÂN RỒNG (Chống nằm sấp)
                 nhanVat.position.set(0, 0, 0);
