@@ -349,19 +349,18 @@
 
 
 
-
-
     window.updateCombatBanSung = function () {
         // ==========================================
-        // 🕒 QUẢN LÝ TÀNG HÌNH SÚNG BẰNG 1 ĐỒNG HỒ DUY NHẤT
+        // 🕒 QUẢN LÝ SÚNG BẰNG TUYỆT KỸ "BƠM TO - THU NHỎ"
         // ==========================================
-        if (window.vuKhiModel) {
+        if (window.vuKhiModel && window.vuKhiModel.userData.scaleChuan) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                window.vuKhiModel.visible = true;
-                // Bắt buộc hiện toàn bộ lưới bên trong phòng trường hợp bị ẩn nhầm
-                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+                // Đang xả đạn -> Bơm to súng về kích thước thật!
+                let sc = window.vuKhiModel.userData.scaleChuan;
+                window.vuKhiModel.scale.set(sc, sc, sc);
             } else {
-                window.vuKhiModel.visible = false;
+                // Hết bắn -> Bóp nhỏ súng thành hạt cát lại!
+                window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
             }
         }
 
@@ -421,7 +420,7 @@
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
 
-                    // 🌟 AUTO-RADAR: Cứ xả đạn là cũng gia hạn súng hiện 1.5 giây!
+                    // 🌟 AUTO-RADAR: Cứ xả đạn là gia hạn súng hiện 1.5 giây!
                     window.thoiGianTatSung = Date.now() + 1500;
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
@@ -459,6 +458,12 @@
                 }
             }
         }
+
+        // ==========================================
+        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU (GIỮ NGUYÊN BÊN DƯỚI)
+        // ==========================================
+
+    
 
 
 
@@ -626,15 +631,13 @@
 
 
 
-            // 🌟 ĐỒNG BỘ V48 (FINAL): CHỐT TỌA ĐỘ VÀNG, AUTO ẨN/HIỆN SÚNG
+            // 🌟 ĐỒNG BỘ V51: TUYỆT KỸ GIẤU SÚNG BẰNG HẠT CÁT (ANTI-BUG ENGINE)
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ Đã Hoàn Thiện 100%!");
+                console.log("🔫 Xạ Thủ V51: Kích hoạt chống tàng hình bằng Hạt Cát!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (sungGoc) => {
-
-                        // Vỏ bọc phá khóa trục
                         window.vuKhiWrapper = new THREE.Group();
                         window.vuKhiWrapper.add(sungGoc);
                         window.vuKhiModel = window.vuKhiWrapper;
@@ -659,22 +662,22 @@
                                 xuongTayTrai.getWorldScale(tiLeThuc);
                                 let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
-                                let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
-                                window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
+                                // 🌟 LƯU LẠI TỶ LỆ CHUẨN ĐỂ LÚC BẮN CÒN BƠM TO LÊN
+                                window.vuKhiModel.userData.scaleChuan = (1.3 / chieuDaiGoc) / scaleFix;
 
                                 window.vuKhiWrapper.position.set(0, 0, 0);
-
-                                // 🎯 TỌA ĐỘ VÀNG CỦA SẾP ĐÃ ĐƯỢC ĐÓNG ĐINH TẠI ĐÂY!
-                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98);
+                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98); // Tọa độ Vàng của Sếp
                             }
                         }
 
-                        // 🌟 Tắt tàng hình mặc định: Chạy tung tăng thì giấu súng, có quái mới rút súng ra sấy!
-                        window.vuKhiModel.visible = false;
+                        // 🌟 BÍ THUẬT: Ép Engine phải nạp đồ họa bằng cách LUÔN BẬT HIỂN THỊ
+                        window.vuKhiModel.visible = true; 
+                        
+                        // Sau đó ngay lập tức "bóp vụn" nó thành kích thước siêu nhỏ 0.0001 để giấu đi!
+                        window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
                     });
                 }
             },
-
 
 
 
