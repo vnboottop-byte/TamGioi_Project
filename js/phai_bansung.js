@@ -304,7 +304,11 @@
     // ==========================================
     // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC + DAME Q 1.5)
     // ==========================================
-    window.updateCombatBanSung = function () {
+    window.updateCombatBanSung = function() {
+    // 🛑 LÁ CHẮN CÁCH LY: Đang chơi phái khác thì cấm Xạ Thủ hoạt động lén!
+    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung')) return;
+
+    // ... (Code cũ giữ nguyên) ...
 
 
          

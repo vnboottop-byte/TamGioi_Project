@@ -301,6 +301,10 @@
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU
     // ==========================================
     window.updateCombatLazer = function() {
+    // 🛑 LÁ CHẮN CÁCH LY: Cấm chạy nhầm code khi không phải Lazer
+    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_lazer')) return;
+
+    // ... (Code cũ giữ nguyên) ...
         // ==========================================
         // 🌟 CẬP NHẬT KỸ NĂNG LAZER (BẢN VÁ LÒ ĐỐT RÁC V37)
         // ==========================================
