@@ -2585,8 +2585,8 @@ setTimeout(() => { window.loadSafeZonesVaTeleports(); }, 4000); // Chờ 4s cho 
 
 window.isAutoAFK = false;
 window.tamQuetMax = 10000;   // Radar quét xa 10km
-window.tamXaXungDot = 200;    // Tầm xả chiêu 80m
-window.tamThaDieu = 100;      // Tầm thả diều 40m
+window.tamXaXungDot = 500;    // Tầm xả chiêu 
+window.tamThaDieu = 300;      // Tầm thả diều 40m
 window.thoiGianSpam = 0;
 
 window.toggleAutoTreoMay = function() {
@@ -2701,8 +2701,8 @@ window.botMucTieuId = null;
 window.botState = 'IDLE';    
 
 // 🌟 ĐÃ NỚI LỎNG CỰ LY CHO HỆ VIỄN CHIẾN
-window.tamXaXungDot = 200; // Khoảng cách đuổi: Boss văng xa hơn 100m thì mới chạy theo
-window.tamDungHinh = 100;   // Khoảng cách phanh: Tới tầm 80m là phanh gấp, nhả đạn từ xa!
+window.tamXaXungDot = 550; // Khoảng cách đuổi: Boss văng xa hơn 100m thì mới chạy theo
+window.tamDungHinh = 500;   // Khoảng cách phanh: Tới tầm 80m là phanh gấp, nhả đạn từ xa!
 
 window.toggleAutoTreoMay = function() {
     window.isAutoAFK = !window.isAutoAFK;
