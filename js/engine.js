@@ -918,8 +918,12 @@ function tienHanhTaiNhanVat() {
 
 
 function loadVuKhiChoNhanVat(nhanVatDich) {
-    // 🛑 TRẢ LẠI LỆNH CẤM: Phái Cung Thủ tự có kịch bản cầm cung riêng (phai_cungthu.js), Engine cấm lo chuyện bao đồng!
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu')) return;
+    // 🛑 LỆNH CẤM: Cung Thủ và Xạ Thủ tự có kịch bản vũ khí riêng, Engine không được can thiệp!
+    if (window.SCRIPT_PHAI_CUA_TOI) {
+        if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung')) {
+            return;
+        }
+    }
 
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
         loader.load(window.WEAPON_URL, function (gltfW) {
