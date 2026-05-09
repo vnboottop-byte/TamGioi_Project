@@ -909,7 +909,11 @@ function tienHanhTaiNhanVat() {
             playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
             scene.add(playerModel);
             mixer = new THREE.AnimationMixer(playerModel); animationsMap = {};
-            gltfChar.animations.forEach((clip) => { animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); });
+            gltfChar.animations.forEach((clip) => { 
+                // 🛑 BẢN VÁ: Tẩy não Tỷ lệ (Scale) chống teo rút
+                clip.tracks = clip.tracks.filter(track => !track.name.includes('.scale'));
+                animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); 
+            });
             cayMatAdmin(playerModel); loadVuKhiChoNhanVat(playerModel); hoanTatTaiModels();
         });
     }
