@@ -358,21 +358,51 @@
                 }
             });
 
+          
+
+
+
             if (targetMoi) {
                 window.dangBanTuDong = true;
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🛑 CHỈ QUAY MẶT VÀO BOSS KHI SẾP ĐỨNG YÊN HOÀN TOÀN
-                if (!window.isKeyboardMoving && !window.isMoving) {
+                // 🛑 FIX LỖI TỰ CHẠY (AUTO-PULL) - BẢN V55 SIÊU CẤP:
+                // Nếu Sếp không bấm phím WASD, chúng ta sẽ quản lý việc đứng yên hay chạy.
+                if (!window.isKeyboardMoving) {
+                    
+                    // Nếu Engine đang "tự kéo" nhân vật đi (isMoving = true)
+                    if (window.isMoving && window.diemDenMoi) {
+                        // KIỂM TRA THÔNG MINH: 
+                        // Nếu cái đích đến đó nằm quá gần Boss (Engine tự tạo để áp sát)
+                        // thì ta mới xóa nó đi để nhân vật đứng yên xả đạn.
+                        // Còn nếu Sếp click chuột ra xa để chạy trốn thì vẫn cho chạy (Hit & Run)!
+                        if (window.diemDenMoi.distanceTo(targetMoi) < 10) {
+                            window.isMoving = false;
+                            window.diemDenMoi = null;
+                        }
+                    }
+
+                    // 🌟 XOAY MẶT: Bỏ check !window.isMoving để luôn hướng súng vào Boss
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
                     let khoangCachDoc = vectorToTarget.dot(upV);
                     let hinhChieuNgang = targetMoi.clone().sub(upV.clone().multiplyScalar(khoangCachDoc));
                     const dummy = new THREE.Object3D();
-                    dummy.position.copy(playerModel.position); dummy.up.copy(upV); dummy.lookAt(hinhChieuNgang);
+                    dummy.position.copy(playerModel.position); 
+                    dummy.up.copy(upV); 
+                    dummy.lookAt(hinhChieuNgang);
+                    
+                    // Xoay mượt mà về phía Boss
                     playerModel.quaternion.slerp(dummy.quaternion, 0.2);
                 }
+
+                // --- PHẦN BẮN AUTO-Q BÊN DƯỚI GIỮ NGUYÊN ---
+
+
+
+
+
 
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
