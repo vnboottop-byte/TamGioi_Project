@@ -27,7 +27,7 @@
 
 
     window.layMucTieuGanNhatBS = function(viTriGoc) {
-        let targetPos = null; let minD = 400; 
+        let targetPos = null; let minD = 500; 
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
