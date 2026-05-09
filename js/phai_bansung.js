@@ -290,7 +290,7 @@
             let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); xuatPhat.y += 50;
             mayBay.position.copy(xuatPhat); mayBay.lookAt(mucTieu); scene.add(mayBay);
             // 💥 TĂNG DAME F LÊN 90.0
-            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 1.5, life: 300, targetPos: mucTieu, damage: dameGoc * 0.9, isRemote: isRemote });
+            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 1.5, life: 1000, targetPos: mucTieu, damage: dameGoc * 0.9, isRemote: isRemote });
         }
     };
 
