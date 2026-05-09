@@ -308,18 +308,18 @@
 
 
          
-        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN MỰC
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (CHUẨN THEO LOGIC TEST V47)
         if (window.vuKhiModel) {
-            if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                // Đang bắn -> Bật súng
-                if (!window.vuKhiModel.visible) {
-                    window.vuKhiModel.visible = true;
-                }
+            let dangBan = (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung);
+            
+            if (dangBan) {
+                // ÉP BẬT TẤT CẢ (Từ vỏ bọc đến từng cái lưới thép bên trong)
+                window.vuKhiModel.visible = true;
+                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
             } else {
-                // Hết bắn -> Tắt súng
-                if (window.vuKhiModel.visible) {
-                    window.vuKhiModel.visible = false;
-                }
+                // ÉP TẮT TẤT CẢ
+                window.vuKhiModel.visible = false;
+                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
             }
         }
 
