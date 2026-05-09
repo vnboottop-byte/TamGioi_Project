@@ -305,21 +305,25 @@
     // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC + DAME Q 1.5)
     // ==========================================
     window.updateCombatBanSung = function () {
+
+
          
-        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (ĐÃ XÓA SẠCH LỆNH VISIBLE=FALSE)
-        if (window.vuKhiModel && window.vuKhiModel.userData.scaleChuan) {
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN MỰC
+        if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                // 🌟 HIỆN RA: Bơm to về kích thước thật và bật chắc cú
-                let sc = window.vuKhiModel.userData.scaleChuan;
-                window.vuKhiModel.scale.set(sc, sc, sc);
-                window.vuKhiModel.visible = true;
-                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+                // Đang bắn -> Bật súng
+                if (!window.vuKhiModel.visible) {
+                    window.vuKhiModel.visible = true;
+                }
             } else {
-                // 🌟 GIẤU ĐI: Bóp vụn thành vi khuẩn (TUYỆT ĐỐI KHÔNG ĐƯỢC TẮT VISIBLE)
-                window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
-                window.vuKhiModel.visible = true;
+                // Hết bắn -> Tắt súng
+                if (window.vuKhiModel.visible) {
+                    window.vuKhiModel.visible = false;
+                }
             }
         }
+
+
 
         // 🛡️ 2. BỘ LỌC THÉP (FIX LỖI KÉO CHẠY - KHÔNG LIỆT CHÂN)
         if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
