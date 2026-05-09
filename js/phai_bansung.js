@@ -393,7 +393,7 @@
                     // 💥 TĂNG DAME AUTO-Q LÊN 1.5
                     kyNangBanSung.push({
                         mesh: tia, type: 'Q', state: 'DANG_BAY', speed: 10.0, life: 50,
-                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 1.5, isRemote: false
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.025, isRemote: false
                     });
 
                     if (typeof window.playAnimGocBS === 'function') {
