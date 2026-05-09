@@ -279,11 +279,14 @@
         // [Các chiêu E, R, F giữ nguyên bên trong hàm này như cũ của Sếp]...
     };
 
-    // ==========================================
-    // 📡 HÀM 2: RADAR AUTO QUÉT QUÁI (ĐÃ FIX LỖI KÉO CHẠY)
-    // ==========================================
-    window.updateCombatBanSung = function () {
-        // 🕒 QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC (KHÔNG DÙNG HẠT CÁT NỮA)
+    
+
+
+
+    
+
+     window.updateCombatBanSung = function () {
+        // 🕒 QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
         if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
                 if (!window.vuKhiModel.visible) {
@@ -298,14 +301,14 @@
             }
         }
 
-        // 🛡️ BỘ LỌC THÉP V5 (GIỮ CHO ATTACK KHÔNG BỊ BAY ĐÈ)
+        // 🛡️ BỘ LỌC THÉP V5
         if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
             window.playAnimGocBS = window.playAnim;
             window.playAnim = function (tenAnim) {
                 if (window.dangBanTuDong) {
                     let ten = tenAnim.toUpperCase();
                     if (ten === 'BAY' || ten === 'FLY' || ten === 'FALL') return;
-                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving) return;
+                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving && !window.isMoving) return;
                 }
                 window.playAnimGocBS(tenAnim);
             };
@@ -333,11 +336,10 @@
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🛑 ANTI-PULL: CẮM RỄ NHÂN VẬT, KHÔNG CHO ENGINE HÚT VỀ BOSS!
-                if (!window.isKeyboardMoving) {
-                    window.isMoving = false; // Ngắt cờ chạy của Engine
-                    if (window.diemDenMoi) window.diemDenMoi = null; // Xóa đường dẫn
-
+                // 🛑 FIX LỖI TỰ CHẠY (AUTO-PULL) CỰC KỲ MƯỢT MÀ
+                // Chỉ quay mặt vào Boss khi Sếp ĐỨNG YÊN HOÀN TOÀN (Không bấm phím WASD, không Click chuột). 
+                // Nếu Sếp đang di chuyển, hệ thống nhả tay lái ra cho Sếp tự do chạy Hit & Run!
+                if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
                     let khoangCachDoc = vectorToTarget.dot(upV);
@@ -349,7 +351,7 @@
 
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
-                    window.thoiGianTatSung = Date.now() + 1500;
+                    window.thoiGianTatSung = Date.now() + 1500; // Nạp lại đồng hồ súng
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                     let xuongTayTrai = null;
@@ -368,7 +370,7 @@
                         targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false
                     });
 
-                    // 🌟 ĐÃ KHÔI PHỤC ANIMATION NGẦU LÒI CHO AUTO-Q
+                    // 🌟 GỌI ANIMATION NGẦU LÒI
                     if (typeof window.playAnimGocBS === 'function') {
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
                             window.playAnimGocBS('ATTACK');
@@ -382,12 +384,6 @@
                 }
             }
         }
-
-
-
-    
-
-
 
 
 
