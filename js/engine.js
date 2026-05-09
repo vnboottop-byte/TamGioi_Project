@@ -2701,8 +2701,8 @@ window.botMucTieuId = null;
 window.botState = 'IDLE';    
 
 // 🌟 ĐÃ NỚI LỎNG CỰ LY CHO HỆ VIỄN CHIẾN
-window.tamXaXungDot = 550; // Khoảng cách đuổi: Boss văng xa hơn 100m thì mới chạy theo
-window.tamDungHinh = 500;   // Khoảng cách phanh: Tới tầm 80m là phanh gấp, nhả đạn từ xa!
+window.tamXaXungDot = 450; // Khoảng cách đuổi: Boss văng xa hơn 100m thì mới chạy theo
+window.tamDungHinh = 450;   // Khoảng cách phanh: Tới tầm 80m là phanh gấp, nhả đạn từ xa!
 
 window.toggleAutoTreoMay = function() {
     window.isAutoAFK = !window.isAutoAFK;
