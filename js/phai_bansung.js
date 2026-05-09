@@ -552,9 +552,9 @@
 
 
 
-        // 🌟 ĐỒNG BỘ V53: KHỞI TẠO SÚNG SẠCH SẼ, CHỐNG BUG TÀNG HÌNH
+        // 🌟 ĐỒNG BỘ V51: TUYỆT KỸ GIẤU SÚNG BẰNG HẠT CÁT (ANTI-BUG ENGINE)
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ V53: Khôi phục súng, dọn dẹp sạch sẽ!");
+                console.log("🔫 Xạ Thủ V51: Kích hoạt chống tàng hình bằng Hạt Cát!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
@@ -566,9 +566,7 @@
                         window.vuKhiWrapper.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(window.vuKhiWrapper);
                         const size = box.getSize(new THREE.Vector3());
-                        
-                        // 🌟 FIX LỖI TÀNG HÌNH CHÍ MẠNG: Ngăn chặn chia cho 0
-                        const chieuDaiGoc = Math.max(size.x, size.y, size.z) || 1; 
+                        const chieuDaiGoc = Math.max(size.x, size.y, size.z);
 
                         if (typeof playerModel !== 'undefined' && playerModel) {
                             let xuongTayTrai = null;
@@ -585,21 +583,22 @@
                                 xuongTayTrai.getWorldScale(tiLeThuc);
                                 let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
-                                let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
-                                window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
+                                // 🌟 LƯU LẠI TỶ LỆ CHUẨN ĐỂ LÚC BẮN CÒN BƠM TO LÊN
+                                window.vuKhiModel.userData.scaleChuan = (1.3 / chieuDaiGoc) / scaleFix;
 
                                 window.vuKhiWrapper.position.set(0, 0, 0);
                                 window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98); // Tọa độ Vàng của Sếp
                             }
                         }
 
-                        // 🌟 TẮT TÀNG HÌNH MẶC ĐỊNH CHUẨN XÁC
-                        window.vuKhiModel.visible = false;
-                        window.vuKhiModel.traverse(c => { if(c.isMesh) c.visible = false; });
+                        // 🌟 BÍ THUẬT: Ép Engine phải nạp đồ họa bằng cách LUÔN BẬT HIỂN THỊ
+                        window.vuKhiModel.visible = true; 
+                        
+                        // Sau đó ngay lập tức "bóp vụn" nó thành kích thước siêu nhỏ 0.0001 để giấu đi!
+                        window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
                     });
                 }
             },
-
 
 
             
