@@ -743,57 +743,58 @@ window.taiHoacNhanBanAsset = function(url, callback) {
 
 
 
-
 window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
 
     mesh.scale.set(1, 1, 1);
     mesh.updateMatrixWorld(true);
 
-    // =========================================================
-    // 🌟 BỘ THƯỚC ĐO X-QUANG: CHỈ ĐO "THỊT" (MESH), BỎ QUA XƯƠNG RÁC
-    // =========================================================
-    const box = new THREE.Box3();
-    let coThit = false;
+    let chieuCaoThucTe = 0;
+    let maxYBone = -Infinity;
+    let minYBone = Infinity;
+    let coXuong = false;
 
+    // =========================================================
+    // 🌟 BỘ THƯỚC ĐO CỘT SỐNG (CHUYÊN TRỊ MIXAMO/BLENDER)
+    // Bỏ qua Box3. Đo trực tiếp từ gót chân đến đỉnh đầu của bộ xương!
+    // =========================================================
     mesh.traverse((child) => {
-        // Chỉ đo những thằng có hình hài vật lý (Mesh hoặc SkinnedMesh)
-        if (child.isMesh || child.isSkinnedMesh) {
-            child.geometry.computeBoundingBox();
-            let childBox = child.geometry.boundingBox.clone();
-            childBox.applyMatrix4(child.matrixWorld);
-            box.union(childBox);
-            coThit = true;
+        if (child.isBone) {
+            coXuong = true;
+            let pos = new THREE.Vector3();
+            child.getWorldPosition(pos);
+            if (pos.y > maxYBone) maxYBone = pos.y;
+            if (pos.y < minYBone) minYBone = pos.y;
         }
     });
 
-    // Nếu lỡ model bị lỗi không có miếng thịt nào, đành xài thước đo cũ chữa cháy
-    if (!coThit || box.isEmpty()) {
-        box.setFromObject(mesh);
+    if (coXuong && (maxYBone - minYBone) > 0.1) {
+        // Chiều cao từ gót chân đến xương mắt/cổ + 15% bù cho đỉnh hộp sọ/tóc
+        chieuCaoThucTe = (maxYBone - minYBone) * 1.15;
+    } else {
+        // Dành cho vũ khí, đá, cây, đồ vật (Không có xương thì xài Box3 như cũ)
+        const box = new THREE.Box3().setFromObject(mesh);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        chieuCaoThucTe = Math.max(size.x, size.y, size.z);
     }
 
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    let maxDim = Math.max(size.x, size.y, size.z);
-
-    // Hạ thấp ngưỡng chống vi khuẩn
-    if (!isFinite(maxDim) || maxDim <= 0.000001) {
-        maxDim = 1;
+    // Chống lỗi chia 0 hoặc vi khuẩn
+    if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.0001) {
+        chieuCaoThucTe = 1;
     }
 
-    // Bơm to chuẩn xác
-    const tyLe = sizeMongMuon / maxDim;
+    // Bơm tỷ lệ chuẩn 2.5m
+    const tyLe = sizeMongMuon / chieuCaoThucTe;
     mesh.scale.setScalar(tyLe);
     mesh.updateMatrixWorld(true);
 
     // =========================================================
-    // Đúc lại tâm thực tế để nảy số máu đúng ngay giữa ngực
+    // 🌟 NẮN LẠI TÂM NGỰC ĐỂ QUÁI CẮN / BẮN LAZER CHO CHUẨN
+    // Tự động tính toán tâm ngực dựa trên tỷ lệ vừa bơm, không xài Box3 nữa!
     // =========================================================
-    const finalBox = new THREE.Box3().setFromObject(mesh);
-    const center = new THREE.Vector3();
-    finalBox.getCenter(center);
-    mesh.userData.tamThucTeLocal = mesh.worldToLocal(center);
-    mesh.userData.chieuCaoThuc = finalBox.max.y - finalBox.min.y;
+    mesh.userData.chieuCaoThuc = sizeMongMuon;
+    mesh.userData.tamThucTeLocal = new THREE.Vector3(0, chieuCaoThucTe / 2, 0);
 };
 
 
