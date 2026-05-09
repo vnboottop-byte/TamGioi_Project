@@ -527,7 +527,7 @@
             else if (skill.type === 'F_JET') {
                 // 1. Gia tốc: Bắt đầu chậm rồi rít ga lao nhanh vào mặt Boss
                 skill.speed *= 1.05; 
-                if (skill.speed > 15.0) skill.speed = 15.0;
+                if (skill.speed > 1.5) skill.speed = 1.5;
 
                 // 2. Khóa cứng mục tiêu: Luôn chĩa mũi máy bay vào Boss dù Boss có bỏ chạy
                 if (skill.targetPos) {
