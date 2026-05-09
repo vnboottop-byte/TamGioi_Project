@@ -362,28 +362,44 @@
 
 
 
-            // --- TRONG PHAI_BANSUNG.JS ---
-if (targetMoi) {
-    window.dangBanTuDong = true;
-    
-    // 🛑 PHANH GẤP: Nếu Engine đang kéo nhân vật đi (isMoving = true)
-    // Mà khoảng cách tới Boss đã < 150m (tầm bắn an toàn) thì HỦY lệnh chạy của Engine.
-    if (window.isMoving && window.targetPosition) {
-        let khoangCachDenBoss = playerModel.position.distanceTo(targetMoi);
-        if (khoangCachDenBoss < 150) { 
-            window.isMoving = false; // Tắt trạng thái chạy của Engine
-            // window.targetPosition.copy(playerModel.position); // Ép đích đến tại chỗ
-        }
-    }
+            if (targetMoi) {
+                window.dangBanTuDong = true;
+                if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
+                window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-    // 🔄 XOAY MẶT: Chỉ ép xoay mặt nhìn Boss khi KHÔNG bấm phím WASD
-    if (!window.isKeyboardMoving && !window.isMoving) {
-        let huongNhin = new THREE.Vector3().subVectors(targetMoi, playerModel.position).projectOnPlane(playerModel.up).normalize();
-        let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongNhin), playerModel.up);
-        playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
-    }
-    
-    
+
+                // ==========================================
+                // 🛑 CHẶN LỖI KÉO CHẠY VÀ LỖI BỊ HÚT NGƯỢC (ĐÃ ĐÚNG TÊN BIẾN)
+                // ==========================================
+                
+                // 1. NGĂN ENGINE TỰ CHẠY ÁP SÁT BOSS:
+                // Dùng ĐÚNG biến window.targetPosition của engine.js để check
+                if (window.isMoving && window.targetPosition) {
+                    let distXZ = Math.hypot(window.targetPosition.x - targetMoi.x, window.targetPosition.z - targetMoi.z);
+                    
+                    // Nếu hệ thống Auto Hunt ép chạy tới gần Boss (đích đến trùng với Boss)
+                    // Xạ thủ thì phải đứng xa xả đạn, nên ta bóp phanh ép đứng im ngay lập tức!
+                    if (distXZ < 30) {
+                        window.isMoving = false;
+                    }
+                }
+
+                // 2. XOAY MẶT THÔNG MINH:
+                // CHỈ ép xoay mặt vào Boss khi Sếp ĐỨNG YÊN HOÀN TOÀN
+                if (!window.isKeyboardMoving && !window.isMoving) {
+                    let upV = playerModel.up.clone().normalize();
+                    let vectorToTarget = targetMoi.clone().sub(playerModel.position);
+                    let khoangCachDoc = vectorToTarget.dot(upV);
+                    let hinhChieuNgang = targetMoi.clone().sub(upV.clone().multiplyScalar(khoangCachDoc));
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(playerModel.position); 
+                    dummy.up.copy(upV); 
+                    dummy.lookAt(hinhChieuNgang);
+                    
+                    playerModel.quaternion.slerp(dummy.quaternion, 0.2);
+                }
+
+                // --- PHẦN BẮN AUTO-Q BÊN DƯỚI GIỮ NGUYÊN ---
 
 
 
