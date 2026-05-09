@@ -238,7 +238,7 @@
             choHoiChieu[phim] = bayGio;
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
 
-            // 🌟 ĐỒNG HỒ THỰC: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây!
+            // 🌟 ĐỒNG BỘ ĐỒNG HỒ: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây! (Xóa sạch setTimeout cũ)
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
