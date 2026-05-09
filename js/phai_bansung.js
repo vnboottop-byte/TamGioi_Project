@@ -305,18 +305,23 @@
     // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC + DAME Q 1.5)
     // ==========================================
     window.updateCombatBanSung = function () {
-        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
+         
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (ĐÃ FIX: BƠM TO TỪ HẠT CÁT)
         if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                if (!window.vuKhiModel.visible) {
-                    window.vuKhiModel.visible = true;
-                    window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+                // 🌟 HIỆN RA VÀ BƠM TO VỀ KÍCH THƯỚC CHUẨN
+                window.vuKhiModel.visible = true;
+                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+
+                if (window.vuKhiModel.userData.scaleChuan) {
+                    let sc = window.vuKhiModel.userData.scaleChuan;
+                    window.vuKhiModel.scale.set(sc, sc, sc);
                 }
             } else {
-                if (window.vuKhiModel.visible) {
-                    window.vuKhiModel.visible = false;
-                    window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
-                }
+                // 🌟 GIẤU ĐI VÀ BÓP VỤN THÀNH HẠT CÁT CHỐNG BUG
+                window.vuKhiModel.visible = false;
+                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
+                window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
             }
         }
 
