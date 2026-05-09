@@ -226,7 +226,7 @@
 
 
     // ==========================================
-    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (FULL COMBO Q, E, R, F)
+    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (CHUẨN GỐC CỦA SẾP + HIỆN SÚNG)
     // ==========================================
     window.tungComboBanSung = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -236,11 +236,9 @@
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            
-            // Khôi phục Animation Attack
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
-            
-            // Nạp đồng hồ súng
+
+            // 🌟 ĐỒNG HỒ SÚNG: Cứ bấm là súng hiện ra 1.5 giây
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
@@ -255,7 +253,7 @@
             viTriGoc = nvc.position.clone(); viTriGoc.y += 3.5;
             huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
             let target = window.layMucTieuGanNhatBS(viTriGoc);
-            mucTieu = target ? target.clone() : viTriGoc.clone().add(huongMat.clone().multiplyScalar(500)); 
+            mucTieu = target ? target.clone() : viTriGoc.clone().add(huongMat.clone().multiplyScalar(500));
 
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
@@ -266,26 +264,20 @@
             }
         }
 
-        // --- 🔵 CHIÊU Q: BẮN ĐẠN THƯỜNG ---
         if (phim === 'Q') {
             const dan = taoVienDanXin(1.5);
             let offset = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 0);
             dan.position.copy(viTriGoc).add(offset); dan.lookAt(mucTieu); scene.add(dan);
             kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.1, isRemote: isRemote });
         }
-        
-        // --- 🟢 CHIÊU E: BẮN TÊN LỬA ĐUỔI ---
         else if (phim === 'E') {
             const tenLua = taoHoaTienXin(1.5);
             tenLua.position.copy(viTriGoc); tenLua.lookAt(mucTieu); scene.add(tenLua);
             kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
         }
-        
-        // --- 🟡 CHIÊU R: MƯA BOM VÒNG CUNG (3 QUẢ) ---
         else if (phim === 'R') {
             for (let i = 0; i < 3; i++) {
-                const bom = taoHoaTienXin(0.8);
-                bom.position.copy(viTriGoc); scene.add(bom);
+                const bom = taoHoaTienXin(0.8); bom.position.copy(viTriGoc); scene.add(bom);
                 let targetLech = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * 15, 0, (Math.random() - 0.5) * 15));
                 kyNangBanSung.push({
                     mesh: bom, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT', fireDelay: i * 15,
@@ -294,30 +286,23 @@
                 });
             }
         }
-        
-        // --- 🔴 CHIÊU F: GỌI MÁY BAY THẢ BOM ---
         else if (phim === 'F') {
             const mayBay = taoMayBayXin(3.0);
-            let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); // Bay từ sau lưng
-            xuatPhat.y += 50; 
+            let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); xuatPhat.y += 50;
             mayBay.position.copy(xuatPhat); mayBay.lookAt(mucTieu); scene.add(mayBay);
-            kyNangBanSung.push({
-                mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 4.0, life: 300,
-                targetPos: mucTieu, damage: dameGoc * 5, isRemote: isRemote
-            });
+            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 4.0, life: 300, targetPos: mucTieu, damage: dameGoc * 5, isRemote: isRemote });
         }
     };
-
     
 
 
 
     
     // ==========================================
-    // 📡 HÀM 2: RADAR AUTO QUÉT QUÁI (ĐÃ FIX LỖI LIỆT CHÂN)
+    // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC)
     // ==========================================
     window.updateCombatBanSung = function () {
-        // 🕒 QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
         if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
                 if (!window.vuKhiModel.visible) {
@@ -332,7 +317,7 @@
             }
         }
 
-        // 🛡️ BỘ LỌC THÉP V5
+        // 🛡️ 2. BỘ LỌC THÉP (FIX LỖI KÉO CHẠY - KHÔNG LIỆT CHÂN)
         if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
             window.playAnimGocBS = window.playAnim;
             window.playAnim = function (tenAnim) {
@@ -348,6 +333,7 @@
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
+        // 📡 3. RADAR AUTO QUÉT QUÁI
         if (window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
             let minDist = 500;
@@ -367,9 +353,7 @@
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🛑 ĐÃ XÓA LỆNH KHÓA CHUỘT (PARALYZER).
-                // Bây giờ Sếp click chuột lùi lại thả diều vẫn ăn bình thường.
-                // Hệ thống chỉ tự bẻ góc nhìn khi Sếp ĐỨNG YÊN HOÀN TOÀN!
+                // 🛑 CHỈ QUAY MẶT VÀO BOSS KHI SẾP ĐỨNG YÊN HOÀN TOÀN (Cứu lỗi tự kéo)
                 if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
@@ -382,7 +366,7 @@
 
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
-                    window.thoiGianTatSung = Date.now() + 1500;
+                    window.thoiGianTatSung = Date.now() + 1500; // Hiện súng
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
                     let xuongTayTrai = null;
@@ -397,8 +381,8 @@
                     tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
                     kyNangBanSung.push({
-                        mesh: tia, type: 'Q_AUTO', state: 'DANG_BAY', speed: 10.0, life: 55,
-                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.016, isRemote: false
+                        mesh: tia, type: 'Q', state: 'DANG_BAY', speed: 10.0, life: 50,
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.1, isRemote: false
                     });
 
                     if (typeof window.playAnimGocBS === 'function') {
@@ -415,154 +399,174 @@
             }
         }
 
-         
-
-
-
-
-
-
-
-        // ==========================================
-        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU
-        // ==========================================
+        // =====================================
+        // 🚀 LÕI RENDER VÀ ĐẠN ĐẠO (ĐÂY LÀ 100% CODE CỦA SẾP)
+        // =====================================
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
-            let s = kyNangBanSung[i];
-            if (s.delay > 0) { s.delay--; continue; }
-            s.life--;
-            
-            if (s.type === 'Q_AUTO' || s.type === 'Q') {
-                s.mesh.translateZ(s.speed);
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
-                    taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 5);
-                    s.life = 0;
+            let skill = kyNangBanSung[i];
+            if (skill.delay > 0) { skill.delay--; continue; }
+            skill.life--;
+
+            // --- CHIÊU Q ---
+            if (skill.type === 'Q') {
+                skill.mesh.translateZ(skill.speed);
+                if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 3 || skill.life < 5) {
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 2);
+                    skill.life = 0;
                 }
             }
-             
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-            else if (s.type === 'E') {
-                s.speed *= 1.05; if (s.speed > 8.0) s.speed = 8.0;
-                if (s.targetPos) {
-                    if (!s.isRemote) {
-                        const fwd = new THREE.Vector3(); s.mesh.getWorldDirection(fwd);
-                        const mucTieuMoi = window.layMucTieuGanNhatBS(s.mesh.position, fwd);
-                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
+            // --- CHIÊU E ---
+            else if (skill.type === 'E') {
+                skill.speed *= 1.05; if (skill.speed > 8.0) skill.speed = 8.0;
+                if (skill.targetPos) {
+                    if (!skill.isRemote) {
+                        const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
+                        const mucTieuMoi = window.layMucTieuGanNhatBS(skill.mesh.position, fwd);
+                        if (mucTieuMoi) skill.targetPos = mucTieuMoi;
                     }
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15);
+                    const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
+                    skill.mesh.quaternion.slerp(dummy.quaternion, 0.15);
                 }
-                s.mesh.translateZ(s.speed);
+                skill.mesh.translateZ(skill.speed);
 
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life < 5) {
-                    taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 15);
-                    s.life = 0;
+                if (skill.targetPos && skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 4 || skill.life < 5) {
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 15);
+                    skill.life = 0;
                 }
             }
-            else if (s.type === 'BAY_VONG_CUNG') {
-                if (s.state === 'CHO_DEN_LUOT') {
-                    s.fireDelay--;
-                    if (s.fireDelay <= 0) {
-                        s.state = 'DANG_BAY';
-                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1500) {
-                            // Tương tự, nếu đang đi thì khỏi múa tay
-                            if (!s.isRemote && typeof window.playAnim === 'function' && !window.isKeyboardMoving) {
-                                window.playAnim('ATTACK');
-                            }
-                            window.lastAnimTimeBS = Date.now();
+            // --- CHIÊU R: ĐẠI BÁC CẦU VỒNG (PARABOL) ---
+            else if (skill.type === 'BAY_VONG_CUNG') {
+                if (skill.state === 'CHO_DEN_LUOT') {
+                    skill.fireDelay--;
+                    if (skill.fireDelay <= 0) {
+                        skill.state = 'DANG_BAY';
+
+                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG (GỌI ANIMATION LIÊN TỤC Y NHƯ CUNG THỦ)
+                        if (!skill.isRemote && typeof window.playAnim === 'function') {
+                            window.playAnim('ATTACK');
                         }
-                        if (!s.isRemote && typeof playerModel !== 'undefined' && playerModel) {
+
+                        if (!skill.isRemote && typeof playerModel !== 'undefined' && playerModel) {
                             let upV = playerModel.up.clone().normalize();
                             let fwd = new THREE.Vector3(); playerModel.getWorldDirection(fwd); fwd.normalize();
                             let right = new THREE.Vector3().crossVectors(fwd, upV).normalize().negate();
-                            s.startPos = playerModel.position.clone().add(upV.multiplyScalar(3)).add(right.multiplyScalar(1));
+                            skill.startPos = playerModel.position.clone().add(upV.multiplyScalar(3)).add(right.multiplyScalar(1));
                         }
                     }
                 }
-                else if (s.state === 'DANG_BAY') {
-                    s.speed *= 1.02; s.progress += s.speed;
-                    let curPos = new THREE.Vector3().lerpVectors(s.startPos, s.targetPos, s.progress);
-                    curPos.add(s.upVector.clone().multiplyScalar(Math.sin(s.progress * Math.PI) * s.arcHeight));
-                    let nextProgress = s.progress + 0.05;
-                    let nextPos = new THREE.Vector3().lerpVectors(s.startPos, s.targetPos, nextProgress);
-                    nextPos.add(s.upVector.clone().multiplyScalar(Math.sin(nextProgress * Math.PI) * s.arcHeight));
-                    s.mesh.position.copy(curPos); s.mesh.lookAt(nextPos);
+                else if (skill.state === 'DANG_BAY') {
+                    skill.speed *= 1.02;
+                    skill.progress += skill.speed;
 
-                    if (s.progress >= 1) {
-                        s.life = 0;
-                        taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 30);
-                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 20, 0xff5500);
+                    let curPos = new THREE.Vector3().lerpVectors(skill.startPos, skill.targetPos, skill.progress);
+                    curPos.add(skill.upVector.clone().multiplyScalar(Math.sin(skill.progress * Math.PI) * skill.arcHeight));
+
+                    let nextProgress = skill.progress + 0.05;
+                    let nextPos = new THREE.Vector3().lerpVectors(skill.startPos, skill.targetPos, nextProgress);
+                    nextPos.add(skill.upVector.clone().multiplyScalar(Math.sin(nextProgress * Math.PI) * skill.arcHeight));
+
+                    skill.mesh.position.copy(curPos);
+                    skill.mesh.lookAt(nextPos);
+
+                    if (skill.progress >= 1) {
+                        skill.life = 0;
+                        // Đã tăng bán kính nổ lên 30 để Boss đi lùi vẫn ăn đủ dame
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 20, 0xff5500);
                     }
                 }
             }
-            else if (s.type === 'F_JET') {
-                if (s.state === 'BAY_TOI') {
-                    s.mesh.translateZ(s.speed);
-                    let distXZ = Math.hypot(s.mesh.position.x - s.targetPos.x, s.mesh.position.z - s.targetPos.z);
-                    if (distXZ < 80) { s.state = 'BAY_LEN_CAO'; s.targetAltitude = s.mesh.position.y + 150; }
+            // --- CHIÊU F ---
+            else if (skill.type === 'F_JET') {
+                if (skill.state === 'BAY_TOI') {
+                    skill.mesh.translateZ(skill.speed);
+                    let distXZ = Math.hypot(skill.mesh.position.x - skill.targetPos.x, skill.mesh.position.z - skill.targetPos.z);
+                    if (distXZ < 80) {
+                        skill.state = 'BAY_LEN_CAO';
+                        skill.targetAltitude = skill.mesh.position.y + 150;
+                    }
                 }
-                else if (s.state === 'BAY_LEN_CAO') {
-                    s.speed *= 1.05; s.mesh.translateZ(s.speed);
-                    if (s.mesh.rotation.x > -Math.PI / 2.5) { s.mesh.rotateX(-0.06); }
-                    if (s.mesh.position.y >= s.targetAltitude) { s.state = 'DAM_XUONG'; }
+                else if (skill.state === 'BAY_LEN_CAO') {
+                    skill.speed *= 1.05;
+                    skill.mesh.translateZ(skill.speed);
+                    if (skill.mesh.rotation.x > -Math.PI / 2.5) { skill.mesh.rotateX(-0.06); }
+                    if (skill.mesh.position.y >= skill.targetAltitude) { skill.state = 'DAM_XUONG'; }
                 }
-                else if (s.state === 'DAM_XUONG') {
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15);
-                    s.speed *= 1.1; if (s.speed > 15.0) s.speed = 15.0;
-                    s.mesh.translateZ(s.speed);
+                else if (skill.state === 'DAM_XUONG') {
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(skill.mesh.position);
+                    dummy.lookAt(skill.targetPos);
+                    skill.mesh.quaternion.slerp(dummy.quaternion, 0.15);
 
-                    if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.mesh.position.y <= s.targetPos.y + 2) {
-                        taoVuNoBS(s.targetPos, s.isRemote, Math.round(s.damage), 50);
-                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(s.targetPos, 25, 0xff5500);
-                        s.life = 0;
+                    skill.speed *= 1.1;
+                    if (skill.speed > 15.0) skill.speed = 15.0;
+
+                    skill.mesh.translateZ(skill.speed);
+
+                    if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50);
+                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
+                        skill.life = 0;
                     }
                 }
             }
 
-            if (s.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
+            if (skill.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(skill.mesh); else scene.remove(skill.mesh);
                 kyNangBanSung.splice(i, 1);
             }
         }
 
-        // 🗑️ LÒ ĐỐT RÁC UI (GIỮ NGUYÊN)
-        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) { 
-            let s = danhSachSoBayBS[i]; s.life--; s.offsetY += 0.05;
-            let hienThiPos = s.pos.clone(); hienThiPos.y += s.offsetY;
+        // =====================================
+        // 🌟 LÕI RENDER SỐ MÁU & HỮU ỨNG (100% GỐC)
+        // =====================================
+        for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) {
+            let s = danhSachSoBayBS[i];
+            s.life--;
+            s.offsetY += 0.05;
+            let hienThiPos = s.pos.clone();
+            hienThiPos.y += s.offsetY;
+
             if (window.camera) {
                 let screenPos = hienThiPos.clone().project(window.camera);
                 let x = (screenPos.x * .5 + .5) * window.innerWidth;
                 let y = (screenPos.y * -.5 + .5) * window.innerHeight;
-                s.el.style.left = x + 'px'; s.el.style.top = y + 'px'; s.el.style.opacity = s.life / 60;
+                s.el.style.left = x + 'px';
+                s.el.style.top = y + 'px';
+                s.el.style.opacity = s.life / 60;
             }
-            if (s.life <= 0) { if (s.el.parentNode) s.el.parentNode.removeChild(s.el); danhSachSoBayBS.splice(i, 1); }
+
+            if (s.life <= 0) {
+                if (s.el.parentNode) s.el.parentNode.removeChild(s.el);
+                danhSachSoBayBS.splice(i, 1);
+            }
         }
 
-        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) { 
-            let h = hieuUngBanSung[i]; h.life--;
-            if (h.mesh) { h.mesh.scale.multiplyScalar(0.9); if (h.mesh.material) h.mesh.material.opacity = h.life / 20; }
-            if (h.life <= 0) { if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); else scene.remove(h.mesh); hieuUngBanSung.splice(i, 1); }
+        for (let i = hieuUngBanSung.length - 1; i >= 0; i--) {
+            let h = hieuUngBanSung[i];
+            h.life--;
+            if (h.mesh) {
+                h.mesh.scale.multiplyScalar(0.9);
+                if (h.mesh.material) h.mesh.material.opacity = h.life / 20;
+            }
+            if (h.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh);
+                else scene.remove(h.mesh);
+                hieuUngBanSung.splice(i, 1);
+            }
         }
     };
+
+
+
+
+
+       
+
+
+
+
+
 
 
 
