@@ -744,29 +744,33 @@ window.taiHoacNhanBanAsset = function(url, callback) {
 
 
 
-
 window.chuanHoaKichThuoc = function(mesh, sizeMongMuon) {
     if (!mesh) return;
     
     mesh.scale.set(1, 1, 1);
     mesh.updateMatrixWorld(true);
 
+    // 🌟 SỬA LẠI CÁCH ĐO: Dùng Box3 đo chính xác từng Mesh bên trong
     const box = new THREE.Box3().setFromObject(mesh);
     const size = new THREE.Vector3();
     box.getSize(size);
     
     let maxDim = Math.max(size.x, size.y, size.z);
-    if (!isFinite(maxDim) || maxDim <= 0.001) maxDim = 1; 
+
+    // 🛑 BẢN VÁ: Hạ thấp ngưỡng tối thiểu xuống mức "Vi khuẩn"
+    // Nếu model có kích thước > 0 là ta phải scale nó lên ngay, không ép về 1 nữa!
+    if (!isFinite(maxDim) || maxDim <= 0.000001) {
+        maxDim = 1; 
+    }
     
     const tyLe = sizeMongMuon / maxDim;
     mesh.scale.setScalar(tyLe);
     mesh.updateMatrixWorld(true);
 
-    // 🌟 BÍ THUẬT ĐÚC LÕI THỊT (Cho cả Người và Thú)
+    // Đúc lại tâm thực tế để nảy số máu đúng chỗ
     const finalBox = new THREE.Box3().setFromObject(mesh);
     const center = new THREE.Vector3(); 
     finalBox.getCenter(center);
-    
     mesh.userData.tamThucTeLocal = mesh.worldToLocal(center); 
     mesh.userData.chieuCaoThuc = finalBox.max.y - finalBox.min.y;
 };
