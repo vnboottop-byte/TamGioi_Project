@@ -375,24 +375,23 @@
 
 
                 // ==========================================
-                // 🛑 CHẶN LỖI KÉO CHẠY VÀ LỖI BỊ HÚT NGƯỢC
+                // 🛑 CHẶN LỖI KÉO CHẠY VÀ LỖI BỊ HÚT NGƯỢC (ĐÃ ĐÚNG TÊN BIẾN)
                 // ==========================================
                 
                 // 1. NGĂN ENGINE TỰ CHẠY ÁP SÁT BOSS:
-                if (window.isMoving && window.diemDenMoi) {
-                    // Dùng Math.hypot đo X và Z để bỏ qua chiều cao của Boss.
-                    // Nếu Engine định chạy áp sát mục tiêu (khoảng cách < 30m), ngắt phanh ngay!
-                    let distXZ = Math.hypot(window.diemDenMoi.x - targetMoi.x, window.diemDenMoi.z - targetMoi.z);
+                // Dùng ĐÚNG biến window.targetPosition của engine.js để check
+                if (window.isMoving && window.targetPosition) {
+                    let distXZ = Math.hypot(window.targetPosition.x - targetMoi.x, window.targetPosition.z - targetMoi.z);
+                    
+                    // Nếu hệ thống Auto Hunt ép chạy tới gần Boss (đích đến trùng với Boss)
+                    // Xạ thủ thì phải đứng xa xả đạn, nên ta bóp phanh ép đứng im ngay lập tức!
                     if (distXZ < 30) {
                         window.isMoving = false;
-                        window.diemDenMoi = null;
                     }
                 }
 
-                // 2. XOAY MẶT THÔNG MINH (CỰC KỲ QUAN TRỌNG):
-                // CHỈ ép xoay mặt vào Boss khi Sếp ĐỨNG YÊN HOÀN TOÀN (!isMoving && !isKeyboardMoving).
-                // Nếu Sếp đang bỏ chạy (Hit & Run), phải nhả tay lái ra để nhân vật nhìn về hướng đang chạy,
-                // nếu ép nhìn Boss thì Engine sẽ đẩy nhân vật chạy ngược đâm vào Boss!
+                // 2. XOAY MẶT THÔNG MINH:
+                // CHỈ ép xoay mặt vào Boss khi Sếp ĐỨNG YÊN HOÀN TOÀN
                 if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
