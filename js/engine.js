@@ -836,6 +836,7 @@ function tienHanhTaiNhanVat() {
                 window.currentAnimNameChar = '';
                 window.currentActionChar = null;
                 gltfChar.animations.forEach(clip => {
+                    clip.tracks = clip.tracks.filter(track => !track.name.includes('.scale'));
                     window.animationsMapChar[clip.name.toUpperCase()] = window.mixerNhanVatPhu.clipAction(clip);
                 });
 
