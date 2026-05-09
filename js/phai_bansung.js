@@ -308,18 +308,20 @@
 
 
          
-        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (CHUẨN THEO LOGIC TEST V47)
-        if (window.vuKhiModel) {
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (DÙNG BIẾN ĐỘC QUYỀN sungXungKich)
+        if (window.sungXungKich) {
             let dangBan = (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung);
             
             if (dangBan) {
-                // ÉP BẬT TẤT CẢ (Từ vỏ bọc đến từng cái lưới thép bên trong)
-                window.vuKhiModel.visible = true;
-                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+                if (!window.sungXungKich.visible) {
+                    window.sungXungKich.visible = true;
+                    window.sungXungKich.traverse(c => { if(c.isMesh) c.visible = true; });
+                }
             } else {
-                // ÉP TẮT TẤT CẢ
-                window.vuKhiModel.visible = false;
-                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
+                if (window.sungXungKich.visible) {
+                    window.sungXungKich.visible = false;
+                    window.sungXungKich.traverse(c => { if(c.isMesh) c.visible = false; });
+                }
             }
         }
 
@@ -596,19 +598,19 @@
 
 
 
-            // 🌟 ĐỒNG BỘ FINAL: KHỞI TẠO SÚNG SẠCH SẼ (GÓC CHUẨN)
+            // 🌟 ĐỒNG BỘ FINAL: ĐỔI TÊN BIẾN THÀNH sungXungKich ĐỂ KHÔNG ĐỤNG HÀNG ENGINE
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, không màu mè tàng hình!");
+                console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, độc lập với Engine!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (sungGoc) => {
-                        window.vuKhiWrapper = new THREE.Group();
-                        window.vuKhiWrapper.add(sungGoc);
-                        window.vuKhiModel = window.vuKhiWrapper;
+                        window.sungWrapper = new THREE.Group();
+                        window.sungWrapper.add(sungGoc);
+                        window.sungXungKich = window.sungWrapper; // 🌟 Tên mới độc quyền!
 
-                        window.vuKhiWrapper.updateMatrixWorld(true);
-                        const box = new THREE.Box3().setFromObject(window.vuKhiWrapper);
+                        window.sungWrapper.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(window.sungWrapper);
                         const size = box.getSize(new THREE.Vector3());
                         const chieuDaiGoc = Math.max(size.x, size.y, size.z) || 1;
 
@@ -621,24 +623,22 @@
                             });
 
                             if (xuongTayTrai) {
-                                xuongTayTrai.add(window.vuKhiWrapper);
+                                xuongTayTrai.add(window.sungWrapper);
 
                                 let tiLeThuc = new THREE.Vector3();
                                 xuongTayTrai.getWorldScale(tiLeThuc);
                                 let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
                                 let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
-                                window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
+                                window.sungWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
-                                window.vuKhiWrapper.position.set(0, 0, 0);
-                                // 🎯 Đóng đinh tọa độ Vàng Sếp đã test
-                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98); 
+                                window.sungWrapper.position.set(0, 0, 0);
+                                window.sungWrapper.rotation.set(1.37, -2.36, 0.98); // Tọa độ Vàng
                             }
                         }
 
-                        // Ép ẩn đi để chờ hàm Radar bật lên lúc bắn
-                        window.vuKhiModel.visible = false; 
-                        window.vuKhiModel.traverse(c => { if(c.isMesh) c.visible = false; });
+                        window.sungXungKich.visible = false; 
+                        window.sungXungKich.traverse(c => { if(c.isMesh) c.visible = false; });
                     });
                 }
             },
