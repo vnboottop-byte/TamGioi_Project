@@ -9,18 +9,7 @@ window.remotePlayers = {};
 window.room = null;
 window.khoModelMau = {}; // 🌟 KHO CHỨA MODEL MẪU ĐỂ NHÂN BẢN (CHỐNG GIẬT LAG)
 
-// 🌟 HÀM ÉP KHUÔN (GIỮ NGUYÊN CŨ)
-function epKhuonChuan(mesh, sizeMongMuon) {
-    const box = new THREE.Box3().setFromObject(mesh);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim > 0) {
-        const tyLe = sizeMongMuon / maxDim;
-        mesh.scale.setScalar(tyLe);
-        mesh.position.y -= (box.min.y * tyLe);
-    }
-}
+
 
 // 🌟 HÀM TẢI HOẶC NHÂN BẢN SIÊU TỐC (CHÌA KHÓA CỦA ĐỘ MƯỢT)
 function taiHoacNhanBan(url, callback) {
@@ -76,16 +65,28 @@ function taoBanSaoNguoiChoi(identity, data) {
 
             // 2. TẢI NGƯỜI CƯỠI RỒNG
             window.taiHoacNhanBanAsset(charUrl, (nhanVat, animationsChar) => {
-                if (typeof epKhuonChuan === 'function') epKhuonChuan(nhanVat, 2.5);
+                // 🛑 VÁ LỖI 1: Dùng thước đo tối tân của Engine
+                if (typeof window.chuanHoaKichThuoc === 'function') window.chuanHoaKichThuoc(nhanVat, 2.5);
                 nhanVat.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
 
                 let mixerChar = new THREE.AnimationMixer(nhanVat); const animsChar = {};
-                if(animationsChar) animationsChar.forEach(clip => { animsChar[clip.name.toUpperCase()] = mixerChar.clipAction(clip); });
-                
+                if (animationsChar) animationsChar.forEach(clip => { animsChar[clip.name.toUpperCase()] = mixerChar.clipAction(clip); });
+
+                // TÌM YÊN NGỰA
                 let xuongYenNgua = null;
                 thuCuoi.traverse(c => { if (c.isBone && c.name.toUpperCase().includes('YENNGUA')) xuongYenNgua = c; });
-                if (xuongYenNgua) { xuongYenNgua.add(nhanVat); nhanVat.position.set(0, 0, 0); } else { thuCuoi.add(nhanVat); nhanVat.position.set(0, 3, 0); }
+                let chaCuaNhanVat = xuongYenNgua ? xuongYenNgua : thuCuoi;
+                chaCuaNhanVat.add(nhanVat);
 
+                // 🛑 VÁ LỖI 2: TIÊM KHÁNG SINH CHỐNG TEO NHỎ (Y hệt engine.js)
+                let tyLeThuCuoi = thuCuoi.scale.x === 0 ? 1 : thuCuoi.scale.x;
+                nhanVat.scale.set(
+                    nhanVat.scale.x / tyLeThuCuoi,
+                    nhanVat.scale.y / tyLeThuCuoi,
+                    nhanVat.scale.z / tyLeThuCuoi
+                );
+
+                nhanVat.position.set(0, (xuongYenNgua ? 0 : 3), 0);
 
 
 
@@ -141,7 +142,7 @@ function taoBanSaoNguoiChoi(identity, data) {
     } else {
         // 1. TẢI NGƯỜI ĐI BỘ
         window.taiHoacNhanBanAsset(charUrl, (nhanVat, animationsChar) => {
-            if (typeof epKhuonChuan === 'function') epKhuonChuan(nhanVat, 2.5);
+            if (typeof window.chuanHoaKichThuoc === 'function') window.chuanHoaKichThuoc(nhanVat, 2.5);
             nhanVat.position.copy(rp.pos); 
             nhanVat.traverse(c => { if (c.isMesh) { c.frustumCulled = false; c.castShadow = true; } }); 
             scene.add(nhanVat);
@@ -327,6 +328,10 @@ livekitScript.onload = async () => {
                             else if (rp.status === 'ready') {
                                 rp.targetPos = new THREE.Vector3(mappedData.x, mappedData.y, mappedData.z);
                                 rp.targetRot = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz);
+                                // 🌟 ÉP SIZE ĐỒNG BỘ TỪ MÁY CHỦ SANG!
+                                if (mappedData.size > 0 && rp.mesh.scale.x !== mappedData.size) {
+                                    rp.mesh.scale.setScalar(mappedData.size);
+                                }
                                 
                                 let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
                                 if (hpBar) hpBar.style.width = Math.max(0, (mappedData.hp / mappedData.maxHp) * 100) + '%';
