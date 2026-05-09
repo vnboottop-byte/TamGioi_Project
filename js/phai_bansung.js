@@ -236,11 +236,9 @@
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            
-            // 🌟 ĐÃ KHÔI PHỤC ANIMATION CHO MỌI PHÍM BẤM
-            if (typeof window.playAnim === 'function') window.playAnim('ATTACK');
+            if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
 
-            // Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây!
+            // 🌟 ĐỒNG HỒ THỰC: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây!
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
