@@ -596,9 +596,9 @@
 
 
 
-            // 🌟 ĐỒNG BỘ FINAL: CHỐNG LỖI CHIA CHO 0 (INFINITY SCALE)
+            // 🌟 ĐỒNG BỘ FINAL: KHỞI TẠO SÚNG SẠCH SẼ (GÓC CHUẨN)
             khoiTao: function () {
-                console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, dẹp bỏ hạt cát!");
+                console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, không màu mè tàng hình!");
                 let urlVuKhi = 'uploads/anims/GUN.glb';
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
@@ -610,8 +610,6 @@
                         window.vuKhiWrapper.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(window.vuKhiWrapper);
                         const size = box.getSize(new THREE.Vector3());
-
-                        // 🛑 BÍ QUYẾT LÀ ĐÂY: Thêm "|| 1" để chống chia cho 0 ra vô cực!
                         const chieuDaiGoc = Math.max(size.x, size.y, size.z) || 1;
 
                         if (typeof playerModel !== 'undefined' && playerModel) {
@@ -629,17 +627,18 @@
                                 xuongTayTrai.getWorldScale(tiLeThuc);
                                 let scaleFix = tiLeThuc.x > 0 ? tiLeThuc.x : 1;
 
-                                // Chốt tỷ lệ 1 lần duy nhất, không có bơm to thu nhỏ gì nữa!
                                 let tiLeCuoi = (1.3 / chieuDaiGoc) / scaleFix;
                                 window.vuKhiWrapper.scale.set(tiLeCuoi, tiLeCuoi, tiLeCuoi);
 
                                 window.vuKhiWrapper.position.set(0, 0, 0);
-                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98); // Tọa độ Vàng
+                                // 🎯 Đóng đinh tọa độ Vàng Sếp đã test
+                                window.vuKhiWrapper.rotation.set(1.37, -2.36, 0.98); 
                             }
                         }
 
-                        // Mặc định khi vừa vào game là giấu súng đi
-                        window.vuKhiModel.visible = false;
+                        // Ép ẩn đi để chờ hàm Radar bật lên lúc bắn
+                        window.vuKhiModel.visible = false; 
+                        window.vuKhiModel.traverse(c => { if(c.isMesh) c.visible = false; });
                     });
                 }
             },
