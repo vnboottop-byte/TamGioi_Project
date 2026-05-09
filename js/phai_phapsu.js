@@ -258,7 +258,11 @@
     // 🚀 VÒNG LẶP VẬT LÝ TOÀN CẦU (ĐÃ THOÁT KHỎI LỒNG)
     // ==========================================
     window.updateCombatPhapSu = function () {
-        if (!isVongPhepSetup && vongPhepModel && window.playerModel) {
+    // 🛑 LÁ CHẮN CÁCH LY: Đang chơi phái khác thì cấm Pháp Sư chạy ngầm!
+    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) return;
+
+    if (!isVongPhepSetup && vongPhepModel && window.playerModel) {
+        // ... (Code cũ giữ nguyên) ...
             window.vongPhepHoThe = vongPhepModel.clone();
             window.vongPhepHoThe.traverse(c => {
                 if (c.isMesh && c.material) {
