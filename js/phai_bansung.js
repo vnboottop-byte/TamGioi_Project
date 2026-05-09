@@ -221,12 +221,8 @@
 
 
 
-
-
-
-
     // ==========================================
-    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (CHUẨN GỐC CỦA SẾP + HIỆN SÚNG)
+    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (CHUẨN GỐC + DAME 1000% / 1 PHÚT)
     // ==========================================
     window.tungComboBanSung = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -238,7 +234,7 @@
             choHoiChieu[phim] = bayGio;
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
 
-            // 🌟 ĐỒNG HỒ SÚNG: Cứ bấm là súng hiện ra 1.5 giây
+            // 🌟 ĐỒNG HỒ SÚNG
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
@@ -268,21 +264,24 @@
             const dan = taoVienDanXin(1.5);
             let offset = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 0);
             dan.position.copy(viTriGoc).add(offset); dan.lookAt(mucTieu); scene.add(dan);
-            kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.1, isRemote: isRemote });
+            // 💥 TĂNG DAME Q LÊN 1.5
+            kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
         }
         else if (phim === 'E') {
             const tenLua = taoHoaTienXin(1.5);
             tenLua.position.copy(viTriGoc); tenLua.lookAt(mucTieu); scene.add(tenLua);
-            kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
+            // 💥 TĂNG DAME E LÊN 40.0
+            kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 40.0, isRemote: isRemote });
         }
         else if (phim === 'R') {
             for (let i = 0; i < 3; i++) {
                 const bom = taoHoaTienXin(0.8); bom.position.copy(viTriGoc); scene.add(bom);
                 let targetLech = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * 15, 0, (Math.random() - 0.5) * 15));
+                // 💥 TĂNG DAME R LÊN 25.0
                 kyNangBanSung.push({
                     mesh: bom, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT', fireDelay: i * 15,
                     startPos: viTriGoc.clone(), targetPos: targetLech, progress: 0, speed: 0.02, arcHeight: 20,
-                    upVector: new THREE.Vector3(0, 1, 0), life: 200, damage: dameGoc * 2, isRemote: isRemote
+                    upVector: new THREE.Vector3(0, 1, 0), life: 200, damage: dameGoc * 25.0, isRemote: isRemote
                 });
             }
         }
@@ -290,9 +289,14 @@
             const mayBay = taoMayBayXin(3.0);
             let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); xuatPhat.y += 50;
             mayBay.position.copy(xuatPhat); mayBay.lookAt(mucTieu); scene.add(mayBay);
-            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 4.0, life: 300, targetPos: mucTieu, damage: dameGoc * 5, isRemote: isRemote });
+            // 💥 TĂNG DAME F LÊN 90.0
+            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 4.0, life: 300, targetPos: mucTieu, damage: dameGoc * 90.0, isRemote: isRemote });
         }
     };
+
+
+
+    
     
 
 
