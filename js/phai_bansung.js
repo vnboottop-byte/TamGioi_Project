@@ -306,22 +306,18 @@
     // ==========================================
     window.updateCombatBanSung = function () {
          
-        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (ĐÃ FIX: BƠM TO TỪ HẠT CÁT)
-        if (window.vuKhiModel) {
+        // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG (ĐÃ XÓA SẠCH LỆNH VISIBLE=FALSE)
+        if (window.vuKhiModel && window.vuKhiModel.userData.scaleChuan) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                // 🌟 HIỆN RA VÀ BƠM TO VỀ KÍCH THƯỚC CHUẨN
+                // 🌟 HIỆN RA: Bơm to về kích thước thật và bật chắc cú
+                let sc = window.vuKhiModel.userData.scaleChuan;
+                window.vuKhiModel.scale.set(sc, sc, sc);
                 window.vuKhiModel.visible = true;
                 window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
-
-                if (window.vuKhiModel.userData.scaleChuan) {
-                    let sc = window.vuKhiModel.userData.scaleChuan;
-                    window.vuKhiModel.scale.set(sc, sc, sc);
-                }
             } else {
-                // 🌟 GIẤU ĐI VÀ BÓP VỤN THÀNH HẠT CÁT CHỐNG BUG
-                window.vuKhiModel.visible = false;
-                window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
+                // 🌟 GIẤU ĐI: Bóp vụn thành vi khuẩn (TUYỆT ĐỐI KHÔNG ĐƯỢC TẮT VISIBLE)
                 window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
+                window.vuKhiModel.visible = true;
             }
         }
 
