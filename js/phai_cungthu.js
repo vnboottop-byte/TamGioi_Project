@@ -400,6 +400,10 @@
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU
     // ==========================================
     window.updateCombatCungThu = function () {
+    // 🛑 LÁ CHẮN CÁCH LY: Đang chơi phái khác thì cấm vòng lặp Cung Thủ chạy ngầm!
+    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu')) return;
+
+        // ... (Code cũ giữ nguyên) ...
         for (let i = kyNangCungThu.length - 1; i >= 0; i--) {
             let skill = kyNangCungThu[i]; skill.life--;
 
