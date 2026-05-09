@@ -518,40 +518,40 @@
                     }
                 }
             }
-            // --- CHIÊU F ---
+
+
+
+
+            
+            // --- CHIÊU F: BAY THẲNG ĐÂM THẲNG  
             else if (skill.type === 'F_JET') {
-                if (skill.state === 'BAY_TOI') {
-                    skill.mesh.translateZ(skill.speed);
-                    let distXZ = Math.hypot(skill.mesh.position.x - skill.targetPos.x, skill.mesh.position.z - skill.targetPos.z);
-                    if (distXZ < 80) {
-                        skill.state = 'BAY_LEN_CAO';
-                        skill.targetAltitude = skill.mesh.position.y + 150;
-                    }
-                }
-                else if (skill.state === 'BAY_LEN_CAO') {
-                    skill.speed *= 1.05;
-                    skill.mesh.translateZ(skill.speed);
-                    if (skill.mesh.rotation.x > -Math.PI / 2.5) { skill.mesh.rotateX(-0.06); }
-                    if (skill.mesh.position.y >= skill.targetAltitude) { skill.state = 'DAM_XUONG'; }
-                }
-                else if (skill.state === 'DAM_XUONG') {
-                    const dummy = new THREE.Object3D();
-                    dummy.position.copy(skill.mesh.position);
+                // 1. Gia tốc: Bắt đầu chậm rồi rít ga lao nhanh vào mặt Boss
+                skill.speed *= 1.05; 
+                if (skill.speed > 15.0) skill.speed = 15.0;
+
+                // 2. Khóa cứng mục tiêu: Luôn chĩa mũi máy bay vào Boss dù Boss có bỏ chạy
+                if (skill.targetPos) {
+                    const dummy = new THREE.Object3D(); 
+                    dummy.position.copy(skill.mesh.position); 
                     dummy.lookAt(skill.targetPos);
                     skill.mesh.quaternion.slerp(dummy.quaternion, 0.15);
+                }
+                
+                // 3. Kéo ga lao thẳng tới trước
+                skill.mesh.translateZ(skill.speed);
 
-                    skill.speed *= 1.1;
-                    if (skill.speed > 15.0) skill.speed = 15.0;
-
-                    skill.mesh.translateZ(skill.speed);
-
-                    if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 5 || skill.mesh.position.y <= skill.targetPos.y + 2) {
-                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50);
-                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
-                        skill.life = 0;
-                    }
+                // 4. Kiểm tra va chạm (Đâm trúng đích hoặc hết xăng)
+                if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 10 || skill.life < 5) {
+                    // Nổ với bán kính 50, dame chuẩn 0.9 như Sếp đã cài
+                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50);
+                    if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
+                    skill.life = 0; // Xóa sổ máy bay
                 }
             }
+
+
+
+
 
             if (skill.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(skill.mesh); else scene.remove(skill.mesh);
