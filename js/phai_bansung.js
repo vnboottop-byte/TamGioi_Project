@@ -367,23 +367,33 @@
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🛑 FIX LỖI TỰ CHẠY (AUTO-PULL) - BẢN V55 SIÊU CẤP:
-                // Nếu Sếp không bấm phím WASD, chúng ta sẽ quản lý việc đứng yên hay chạy.
-                if (!window.isKeyboardMoving) {
-                    
-                    // Nếu Engine đang "tự kéo" nhân vật đi (isMoving = true)
-                    if (window.isMoving && window.diemDenMoi) {
-                        // KIỂM TRA THÔNG MINH: 
-                        // Nếu cái đích đến đó nằm quá gần Boss (Engine tự tạo để áp sát)
-                        // thì ta mới xóa nó đi để nhân vật đứng yên xả đạn.
-                        // Còn nếu Sếp click chuột ra xa để chạy trốn thì vẫn cho chạy (Hit & Run)!
-                        if (window.diemDenMoi.distanceTo(targetMoi) < 10) {
-                            window.isMoving = false;
-                            window.diemDenMoi = null;
-                        }
-                    }
 
-                    // 🌟 XOAY MẶT: Bỏ check !window.isMoving để luôn hướng súng vào Boss
+
+
+
+
+
+
+                // ==========================================
+                // 🛑 CHẶN LỖI KÉO CHẠY VÀ LỖI BỊ HÚT NGƯỢC
+                // ==========================================
+                
+                // 1. NGĂN ENGINE TỰ CHẠY ÁP SÁT BOSS:
+                if (window.isMoving && window.diemDenMoi) {
+                    // Dùng Math.hypot đo X và Z để bỏ qua chiều cao của Boss.
+                    // Nếu Engine định chạy áp sát mục tiêu (khoảng cách < 30m), ngắt phanh ngay!
+                    let distXZ = Math.hypot(window.diemDenMoi.x - targetMoi.x, window.diemDenMoi.z - targetMoi.z);
+                    if (distXZ < 30) {
+                        window.isMoving = false;
+                        window.diemDenMoi = null;
+                    }
+                }
+
+                // 2. XOAY MẶT THÔNG MINH (CỰC KỲ QUAN TRỌNG):
+                // CHỈ ép xoay mặt vào Boss khi Sếp ĐỨNG YÊN HOÀN TOÀN (!isMoving && !isKeyboardMoving).
+                // Nếu Sếp đang bỏ chạy (Hit & Run), phải nhả tay lái ra để nhân vật nhìn về hướng đang chạy,
+                // nếu ép nhìn Boss thì Engine sẽ đẩy nhân vật chạy ngược đâm vào Boss!
+                if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
                     let khoangCachDoc = vectorToTarget.dot(upV);
@@ -393,7 +403,6 @@
                     dummy.up.copy(upV); 
                     dummy.lookAt(hinhChieuNgang);
                     
-                    // Xoay mượt mà về phía Boss
                     playerModel.quaternion.slerp(dummy.quaternion, 0.2);
                 }
 
