@@ -301,9 +301,8 @@
 
 
 
-    
     // ==========================================
-    // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC)
+    // 📡 HÀM 2: AUTO RADAR + VÒNG LẶP ĐẠN (CHUẨN GỐC + DAME Q 1.5)
     // ==========================================
     window.updateCombatBanSung = function () {
         // 🕒 1. QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
@@ -357,7 +356,7 @@
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                // 🛑 CHỈ QUAY MẶT VÀO BOSS KHI SẾP ĐỨNG YÊN HOÀN TOÀN (Cứu lỗi tự kéo)
+                // 🛑 CHỈ QUAY MẶT VÀO BOSS KHI SẾP ĐỨNG YÊN HOÀN TOÀN
                 if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
@@ -384,9 +383,10 @@
                     let tia = taoTiaDanNhanh();
                     tia.position.copy(startPos); tia.lookAt(targetMoi); scene.add(tia);
 
+                    // 💥 TĂNG DAME AUTO-Q LÊN 1.5
                     kyNangBanSung.push({
                         mesh: tia, type: 'Q', state: 'DANG_BAY', speed: 10.0, life: 50,
-                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.1, isRemote: false
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 1.5, isRemote: false
                     });
 
                     if (typeof window.playAnimGocBS === 'function') {
@@ -404,7 +404,7 @@
         }
 
         // =====================================
-        // 🚀 LÕI RENDER VÀ ĐẠN ĐẠO (ĐÂY LÀ 100% CODE CỦA SẾP)
+        // 🚀 LÕI RENDER VÀ ĐẠN ĐẠO
         // =====================================
         for (let i = kyNangBanSung.length - 1; i >= 0; i--) {
             let skill = kyNangBanSung[i];
@@ -445,7 +445,7 @@
                     if (skill.fireDelay <= 0) {
                         skill.state = 'DANG_BAY';
 
-                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG (GỌI ANIMATION LIÊN TỤC Y NHƯ CUNG THỦ)
+                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG
                         if (!skill.isRemote && typeof window.playAnim === 'function') {
                             window.playAnim('ATTACK');
                         }
@@ -474,7 +474,6 @@
 
                     if (skill.progress >= 1) {
                         skill.life = 0;
-                        // Đã tăng bán kính nổ lên 30 để Boss đi lùi vẫn ăn đủ dame
                         taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30);
                         if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 20, 0xff5500);
                     }
@@ -522,7 +521,7 @@
         }
 
         // =====================================
-        // 🌟 LÕI RENDER SỐ MÁU & HỮU ỨNG (100% GỐC)
+        // 🌟 LÕI RENDER SỐ MÁU & HỮU ỨNG
         // =====================================
         for (let i = danhSachSoBayBS.length - 1; i >= 0; i--) {
             let s = danhSachSoBayBS[i];
