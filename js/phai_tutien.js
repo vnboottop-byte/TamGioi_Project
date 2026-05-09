@@ -11,7 +11,7 @@ let isCuoiKiemSetup = false;
 
 
 window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
-    let targetPos = null; let minD = 150;
+    let targetPos = null; let minD = 500;
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             let rp = remotePlayers[id];
@@ -214,6 +214,9 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
+    // 🛑 LÁ CHẮN CÁCH LY: Đang chơi phái khác thì cấm Tu Tiên chạy ngầm!
+    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien')) return;
+
     try {
         if (!isCuoiKiemSetup && typeof window.phiKiemModel !== 'undefined' && window.phiKiemModel) {
             window.kiemHoThe = window.phiKiemModel.clone(); window.kiemHoThe.traverse(c => { if (c.isMesh) c.visible = true; });
