@@ -214,8 +214,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
-    // 🛑 LÁ CHẮN CÁCH LY: Đang chơi phái khác thì cấm Tu Tiên chạy ngầm!
-    if (!window.SCRIPT_PHAI_CUA_TOI || !window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien')) return;
+    
 
     try {
         if (!isCuoiKiemSetup && typeof window.phiKiemModel !== 'undefined' && window.phiKiemModel) {
