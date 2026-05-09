@@ -166,19 +166,30 @@
 
 
 
-      // ==========================================
-    // 🏹 TUNG CHIÊU (ĐỊNH VỊ XƯƠNG ĐẦU & VẬT LÝ HÌNH CẦU)
+    // ==========================================
+    // 🏹 TUNG CHIÊU (ĐÃ FIX LỖI SPAM LIÊN TỤC VÀ KHÓA HỒI CHIÊU)
     // ==========================================
     window.tungComboLazer = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc && !isRemote) return;
 
+        // 🛑 BỘ KHÓA HỒI CHIÊU (Chống Spam lủng Server)
+        if (isRemote === false) {
+            let bayGio = Date.now();
+            if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return; // Chưa hồi xong thì cấm bắn!
+            choHoiChieu[phim] = bayGio; // Chốt thời gian vừa xả skill
+        }
+
         // Chơi Animation chuẩn
         if (!isRemote && typeof window.playAnim === 'function') window.playAnim('ATTACK');
 
         let viTriGoc, huongMat, mucTieu, upVector;
-        // Đã cân bằng sát thương theo mốc 2.5
         const dameGoc = window.DAME_CUA_TOI || 100;
+        
+        // ... (Giữ nguyên toàn bộ phần lấy tọa độ và xuất chiêu Q E R F bên dưới) ...
+
+
+
 
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
