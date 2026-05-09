@@ -344,8 +344,9 @@
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
-        // 📡 3. RADAR AUTO QUÉT QUÁI
-        if (window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
+        
+        // 📡 3. RADAR AUTO QUÉT QUÁI (ĐÃ THÊM LÁ CHẮN CÁCH LY PHÁI)
+        if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') && window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
             let minDist = 500;
             let originPos = playerModel.position.clone();
