@@ -744,37 +744,57 @@ window.taiHoacNhanBanAsset = function(url, callback) {
 
 
 
-window.chuanHoaKichThuoc = function(mesh, sizeMongMuon) {
+window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
-    
+
     mesh.scale.set(1, 1, 1);
     mesh.updateMatrixWorld(true);
 
-    // 🌟 SỬA LẠI CÁCH ĐO: Dùng Box3 đo chính xác từng Mesh bên trong
-    const box = new THREE.Box3().setFromObject(mesh);
+    // =========================================================
+    // 🌟 BỘ THƯỚC ĐO X-QUANG: CHỈ ĐO "THỊT" (MESH), BỎ QUA XƯƠNG RÁC
+    // =========================================================
+    const box = new THREE.Box3();
+    let coThit = false;
+
+    mesh.traverse((child) => {
+        // Chỉ đo những thằng có hình hài vật lý (Mesh hoặc SkinnedMesh)
+        if (child.isMesh || child.isSkinnedMesh) {
+            child.geometry.computeBoundingBox();
+            let childBox = child.geometry.boundingBox.clone();
+            childBox.applyMatrix4(child.matrixWorld);
+            box.union(childBox);
+            coThit = true;
+        }
+    });
+
+    // Nếu lỡ model bị lỗi không có miếng thịt nào, đành xài thước đo cũ chữa cháy
+    if (!coThit || box.isEmpty()) {
+        box.setFromObject(mesh);
+    }
+
     const size = new THREE.Vector3();
     box.getSize(size);
-    
     let maxDim = Math.max(size.x, size.y, size.z);
 
-    // 🛑 BẢN VÁ: Hạ thấp ngưỡng tối thiểu xuống mức "Vi khuẩn"
-    // Nếu model có kích thước > 0 là ta phải scale nó lên ngay, không ép về 1 nữa!
+    // Hạ thấp ngưỡng chống vi khuẩn
     if (!isFinite(maxDim) || maxDim <= 0.000001) {
-        maxDim = 1; 
+        maxDim = 1;
     }
-    
+
+    // Bơm to chuẩn xác
     const tyLe = sizeMongMuon / maxDim;
     mesh.scale.setScalar(tyLe);
     mesh.updateMatrixWorld(true);
 
-    // Đúc lại tâm thực tế để nảy số máu đúng chỗ
+    // =========================================================
+    // Đúc lại tâm thực tế để nảy số máu đúng ngay giữa ngực
+    // =========================================================
     const finalBox = new THREE.Box3().setFromObject(mesh);
-    const center = new THREE.Vector3(); 
+    const center = new THREE.Vector3();
     finalBox.getCenter(center);
-    mesh.userData.tamThucTeLocal = mesh.worldToLocal(center); 
+    mesh.userData.tamThucTeLocal = mesh.worldToLocal(center);
     mesh.userData.chieuCaoThuc = finalBox.max.y - finalBox.min.y;
 };
-
 
 
 
