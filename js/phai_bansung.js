@@ -265,13 +265,13 @@
             let offset = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 0);
             dan.position.copy(viTriGoc).add(offset); dan.lookAt(mucTieu); scene.add(dan);
             // 💥 TĂNG DAME Q LÊN 1.5
-            kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.025, isRemote: isRemote });
+            kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.08, isRemote: isRemote });
         }
         else if (phim === 'E') {
             const tenLua = taoHoaTienXin(1.5);
             tenLua.position.copy(viTriGoc); tenLua.lookAt(mucTieu); scene.add(tenLua);
             // 💥 TĂNG DAME E LÊN 40.0
-            kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 0.25, isRemote: isRemote });
+            kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote });
         }
         else if (phim === 'R') {
             for (let i = 0; i < 3; i++) {
@@ -281,7 +281,7 @@
                 kyNangBanSung.push({
                     mesh: bom, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT', fireDelay: i * 15,
                     startPos: viTriGoc.clone(), targetPos: targetLech, progress: 0, speed: 0.02, arcHeight: 20,
-                    upVector: new THREE.Vector3(0, 1, 0), life: 200, damage: dameGoc * 0.2, isRemote: isRemote
+                    upVector: new THREE.Vector3(0, 1, 0), life: 200, damage: dameGoc * 0.4, isRemote: isRemote
                 });
             }
         }
@@ -290,7 +290,7 @@
             let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); xuatPhat.y += 50;
             mayBay.position.copy(xuatPhat); mayBay.lookAt(mucTieu); scene.add(mayBay);
             // 💥 TĂNG DAME F LÊN 90.0
-            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 1.5, life: 1000, targetPos: mucTieu, damage: dameGoc * 0.9, isRemote: isRemote });
+            kyNangBanSung.push({ mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 1.5, life: 1000, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
         }
     };
 
@@ -425,7 +425,7 @@
                     // 💥  AUTO-Q LÊN 
                     kyNangBanSung.push({
                         mesh: tia, type: 'Q', state: 'DANG_BAY', speed: 10.0, life: 50,
-                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.025, isRemote: false
+                        targetPos: targetMoi, damage: (window.DAME_CUA_TOI || 100) * 0.08, isRemote: false
                     });
 
                     if (typeof window.playAnimGocBS === 'function') {
