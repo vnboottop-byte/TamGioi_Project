@@ -226,7 +226,7 @@
 
 
     // ==========================================
-    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (Q, E, R, F)
+    // 🏹 HÀM 1: TUNG CHIÊU BẰNG TAY (FULL COMBO Q, E, R, F)
     // ==========================================
     window.tungComboBanSung = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -236,9 +236,11 @@
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
+            
+            // Khôi phục Animation Attack
             if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
-
-            // 🌟 ĐỒNG BỘ ĐỒNG HỒ: Cứ bấm bắn là gia hạn súng hiện thêm 1.5 giây! (Xóa sạch setTimeout cũ)
+            
+            // Nạp đồng hồ súng
             window.thoiGianTatSung = Date.now() + 1500;
         }
 
@@ -264,17 +266,46 @@
             }
         }
 
-        let upVector = isRemote ? viTriGoc.clone().normalize() : nvc.up.clone().normalize();
-        let rightVector = new THREE.Vector3().crossVectors(huongMat, upVector).normalize().negate();
-
-        // --- CHIÊU Q: BẮN ĐẠN THƯỜNG ---
+        // --- 🔵 CHIÊU Q: BẮN ĐẠN THƯỜNG ---
         if (phim === 'Q') {
             const dan = taoVienDanXin(1.5);
             let offset = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 0);
             dan.position.copy(viTriGoc).add(offset); dan.lookAt(mucTieu); scene.add(dan);
             kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.1, isRemote: isRemote });
         }
-        // [Các chiêu E, R, F giữ nguyên bên trong hàm này như cũ của Sếp]...
+        
+        // --- 🟢 CHIÊU E: BẮN TÊN LỬA ĐUỔI ---
+        else if (phim === 'E') {
+            const tenLua = taoHoaTienXin(1.5);
+            tenLua.position.copy(viTriGoc); tenLua.lookAt(mucTieu); scene.add(tenLua);
+            kyNangBanSung.push({ mesh: tenLua, type: 'E', speed: 2.0, life: 150, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
+        }
+        
+        // --- 🟡 CHIÊU R: MƯA BOM VÒNG CUNG (3 QUẢ) ---
+        else if (phim === 'R') {
+            for (let i = 0; i < 3; i++) {
+                const bom = taoHoaTienXin(0.8);
+                bom.position.copy(viTriGoc); scene.add(bom);
+                let targetLech = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * 15, 0, (Math.random() - 0.5) * 15));
+                kyNangBanSung.push({
+                    mesh: bom, type: 'BAY_VONG_CUNG', state: 'CHO_DEN_LUOT', fireDelay: i * 15,
+                    startPos: viTriGoc.clone(), targetPos: targetLech, progress: 0, speed: 0.02, arcHeight: 20,
+                    upVector: new THREE.Vector3(0, 1, 0), life: 200, damage: dameGoc * 2, isRemote: isRemote
+                });
+            }
+        }
+        
+        // --- 🔴 CHIÊU F: GỌI MÁY BAY THẢ BOM ---
+        else if (phim === 'F') {
+            const mayBay = taoMayBayXin(3.0);
+            let xuatPhat = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(100)); // Bay từ sau lưng
+            xuatPhat.y += 50; 
+            mayBay.position.copy(xuatPhat); mayBay.lookAt(mucTieu); scene.add(mayBay);
+            kyNangBanSung.push({
+                mesh: mayBay, type: 'F_JET', state: 'BAY_TOI', speed: 4.0, life: 300,
+                targetPos: mucTieu, damage: dameGoc * 5, isRemote: isRemote
+            });
+        }
     };
 
     
@@ -282,31 +313,33 @@
 
 
     
+    // ==========================================
+    // 📡 HÀM 2: RADAR AUTO QUÉT QUÁI (ĐÃ FIX LỖI LIỆT CHÂN)
+    // ==========================================
     window.updateCombatBanSung = function () {
-        // ==========================================
-        // 🕒 QUẢN LÝ SÚNG BẰNG TUYỆT KỸ "BƠM TO - THU NHỎ"
-        // ==========================================
-        if (window.vuKhiModel && window.vuKhiModel.userData.scaleChuan) {
+        // 🕒 QUẢN LÝ ẨN/HIỆN SÚNG CHUẨN XÁC
+        if (window.vuKhiModel) {
             if (window.thoiGianTatSung && Date.now() < window.thoiGianTatSung) {
-                // Đang xả đạn -> Bơm to súng về kích thước thật!
-                let sc = window.vuKhiModel.userData.scaleChuan;
-                window.vuKhiModel.scale.set(sc, sc, sc);
+                if (!window.vuKhiModel.visible) {
+                    window.vuKhiModel.visible = true;
+                    window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = true; });
+                }
             } else {
-                // Hết bắn -> Bóp nhỏ súng thành hạt cát lại!
-                window.vuKhiModel.scale.set(0.0001, 0.0001, 0.0001);
+                if (window.vuKhiModel.visible) {
+                    window.vuKhiModel.visible = false;
+                    window.vuKhiModel.traverse(c => { if (c.isMesh) c.visible = false; });
+                }
             }
         }
 
-        // ==========================================
         // 🛡️ BỘ LỌC THÉP V5
-        // ==========================================
         if (typeof window.playAnim === 'function' && !window.playAnimGocBS) {
             window.playAnimGocBS = window.playAnim;
             window.playAnim = function (tenAnim) {
                 if (window.dangBanTuDong) {
                     let ten = tenAnim.toUpperCase();
                     if (ten === 'BAY' || ten === 'FLY' || ten === 'FALL') return;
-                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving) return;
+                    if ((ten === 'IDLE' || ten === 'NHANROI') && !window.isKeyboardMoving && !window.isMoving) return;
                 }
                 window.playAnimGocBS(tenAnim);
             };
@@ -315,9 +348,6 @@
         if (!window.thoiGianHoiQ_Auto) window.thoiGianHoiQ_Auto = 0;
         if (window.thoiGianHoiQ_Auto > 0) window.thoiGianHoiQ_Auto--;
 
-        // ==========================================
-        // 📡 RADAR TÌM QUÁI & BẮN
-        // ==========================================
         if (window.mauBanThan > 0 && typeof playerModel !== 'undefined' && playerModel) {
             let targetMoi = null;
             let minDist = 500;
@@ -337,23 +367,21 @@
                 if (window.tatAutoBan) clearTimeout(window.tatAutoBan);
                 window.tatAutoBan = setTimeout(() => { window.dangBanTuDong = false; }, 800);
 
-                if (!window.isKeyboardMoving) {
+                // 🛑 ĐÃ XÓA LỆNH KHÓA CHUỘT (PARALYZER).
+                // Bây giờ Sếp click chuột lùi lại thả diều vẫn ăn bình thường.
+                // Hệ thống chỉ tự bẻ góc nhìn khi Sếp ĐỨNG YÊN HOÀN TOÀN!
+                if (!window.isKeyboardMoving && !window.isMoving) {
                     let upV = playerModel.up.clone().normalize();
                     let vectorToTarget = targetMoi.clone().sub(playerModel.position);
                     let khoangCachDoc = vectorToTarget.dot(upV);
                     let hinhChieuNgang = targetMoi.clone().sub(upV.clone().multiplyScalar(khoangCachDoc));
-
                     const dummy = new THREE.Object3D();
-                    dummy.position.copy(playerModel.position);
-                    dummy.up.copy(upV);
-                    dummy.lookAt(hinhChieuNgang);
+                    dummy.position.copy(playerModel.position); dummy.up.copy(upV); dummy.lookAt(hinhChieuNgang);
                     playerModel.quaternion.slerp(dummy.quaternion, 0.2);
                 }
 
                 if (window.thoiGianHoiQ_Auto <= 0) {
                     window.thoiGianHoiQ_Auto = 30;
-
-                    // 🌟 AUTO-RADAR: Cứ xả đạn là gia hạn súng hiện 1.5 giây!
                     window.thoiGianTatSung = Date.now() + 1500;
 
                     let startPos = originPos.clone().add(playerModel.up.clone().multiplyScalar(3));
@@ -378,11 +406,6 @@
                             window.playAnimGocBS('ATTACK');
                             window.lastAnimTimeBS = Date.now();
                         }
-                    } else if (typeof window.playAnim === 'function') {
-                        if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
-                            window.playAnim('ATTACK');
-                            window.lastAnimTimeBS = Date.now();
-                        }
                     }
 
                     if (window.room && window.room.state === 'connected') {
@@ -392,9 +415,7 @@
             }
         }
 
-        // ==========================================
-        // 🚀 VÒNG LẶP CẬP NHẬT ĐẠN BAY & TRỪ MÁU (GIỮ NGUYÊN BÊN DƯỚI)
-        // ==========================================
+         
 
 
 
