@@ -709,16 +709,12 @@ window.taoTenNguoiChoiGia = function() {
     
     let kieuTen = Math.random();
     if (kieuTen < 0.3) {
-        // Tên có dấu: Nguyễn Tuấn, Lê Vy...
         return ho[Math.floor(Math.random() * ho.length)] + " " + ten[Math.floor(Math.random() * ten.length)];
     } else if (kieuTen < 0.7) {
-        // Tên game thủ không dấu: TuanPro, LongGaming, linhcute...
         let t = ten[Math.floor(Math.random() * ten.length)];
-        // Bỏ dấu tiếng việt
         t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
         return t + hauTo[Math.floor(Math.random() * hauTo.length)];
     } else {
-        // Tên dính liền: NguyenNam, TranHuy...
         let h = ho[Math.floor(Math.random() * ho.length)];
         let t = ten[Math.floor(Math.random() * ten.length)];
         let full = (h + t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
@@ -726,74 +722,59 @@ window.taoTenNguoiChoiGia = function() {
     }
 };
 
-// 2. LÕI AI: BỘ NÃO "GIẢ NGƯỜI" THÔNG MINH TUYỆT ĐỈNH
+// 2. LÕI AI: BỘ NÃO "GIẢ NGƯỜI" THUẦN VIỄN CHIẾN
 window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
     he: 'NGUOI',
-    getTamDanh: (classCode) => classCode === 'LUYEN_THE' ? 30 : 400, // Luyện Thể đánh gần, phái khác đánh xa 400m
+    getTamDanh: () => 400, // 100% đánh xa 400m
     getTamNhin: () => 800,
-    getGioiHanLanhTho: () => 1500, // Rượt khá dai
+    getGioiHanLanhTho: () => 1500, 
     khoangCachAnToan: 0,
-    choPhepLuiBinh: false, // Tắt lùi bình mặc định để xài logic Thả Diều xịn bên dưới
+    choPhepLuiBinh: false, 
 
     thucHienTanCong: function (bot, playerModel, delta) {
-        // Khởi tạo các biến nhớ cho Bot nếu chưa có
         if (!bot.comboCount) bot.comboCount = 0;
         if (!bot.lastPhim) bot.lastPhim = 'Q';
 
         let distToPlayer = bot.mesh.position.distanceTo(playerModel.position);
-        let tamDanh = this.getTamDanh(bot.classCode);
-        let %HP = bot.hp / (bot.maxHp || 1);
+        
+        // 🛑 ĐÃ VÁ LỖI CÚ PHÁP Ở ĐÂY (Đổi %HP thành ptHP)
+        let ptHP = bot.hp / (bot.maxHp || 1);
 
         // A. LOGIC SINH TỒN: BỎ CHẠY NẾU MẤT 50% MÁU HOẶC ĐÁNH XONG 2 VÒNG COMBO
-        if (%HP <= 0.5 || bot.comboCount >= 8) { // 8 chiêu = 2 vòng combo (QERF x 2)
+        if (ptHP <= 0.5 || bot.comboCount >= 8) { 
             bot.state = 'FLEE';
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
             
-            // Xoay lưng lại và bỏ chạy thục mạng
             let huongChay = new THREE.Vector3().subVectors(bot.mesh.position, playerModel.position).normalize();
-            
-            // Ép tốc độ chạy thoát thân tối đa là 1.4 (Sếp chạy 1.5, Sếp vẫn có thể đuổi kịp để kết liễu nó)
             let tocDoChay = 1.4; 
             
-            // Ép quỹ đạo chạy ôm theo hành tinh và ĐỒNG BỘ ĐỘ CAO VỚI SẾP
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-                bot.mesh.position.add(huongChay.multiplyScalar(tocDoChay * (delta * 60))); // Tương đương tốc độ Engine
+                bot.mesh.position.add(huongChay.multiplyScalar(tocDoChay * (delta * 60))); 
                 
                 let botDirFromTam = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let doCaoMoi = window.TAM_HANH_TINH_HIEN_TAI.clone().add(botDirFromTam.multiplyScalar(rSep));
-                bot.mesh.position.copy(doCaoMoi); // Bay ngang hàng với Sếp
+                bot.mesh.position.copy(doCaoMoi); 
                 
                 let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().add(huongChay), botDirFromTam);
                 bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
             }
-            return; // Đang chạy thì không đánh đấm gì nữa
+            return; 
         }
 
-        // B. LOGIC THẢ DIỀU (KITING) TINH VI
+        // B. LOGIC THẢ DIỀU (KITING) CHUẨN VIỄN CHIẾN
         let isMoving = false;
-        let tocDoBot = 1.35; // Chậm hơn Sếp một chút xíu (Sếp 1.5)
+        let tocDoBot = 1.35; 
 
-        if (bot.classCode !== 'LUYEN_THE') {
-            // Phái đánh xa: Giữ khoảng cách 200m - 350m
-            if (distToPlayer < 200) {
-                // Sếp lao tới gần quá -> Bot vừa lùi vừa bắn
-                let huongLui = new THREE.Vector3().subVectors(bot.mesh.position, playerModel.position).normalize();
-                bot.mesh.position.add(huongLui.multiplyScalar(tocDoBot * (delta * 60)));
-                isMoving = true;
-            } else if (distToPlayer > 350) {
-                // Sếp chạy xa -> Bot rượt theo
-                let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).normalize();
-                bot.mesh.position.add(huongToi.multiplyScalar(tocDoBot * (delta * 60)));
-                isMoving = true;
-            }
-        } else {
-            // Luyện thể: Phải áp sát < 30m mới đánh
-            if (distToPlayer > 25) {
-                let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).normalize();
-                bot.mesh.position.add(huongToi.multiplyScalar(tocDoBot * (delta * 60)));
-                isMoving = true;
-            }
+        // Luôn giữ khoảng cách 200m - 350m (Bỏ Luyện Thể)
+        if (distToPlayer < 200) {
+            let huongLui = new THREE.Vector3().subVectors(bot.mesh.position, playerModel.position).normalize();
+            bot.mesh.position.add(huongLui.multiplyScalar(tocDoBot * (delta * 60)));
+            isMoving = true;
+        } else if (distToPlayer > 350) {
+            let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).normalize();
+            bot.mesh.position.add(huongToi.multiplyScalar(tocDoBot * (delta * 60)));
+            isMoving = true;
         }
 
         // ĐỒNG BỘ ĐỘ CAO (Altitude Sync) VÀ QUAY MẶT
@@ -801,53 +782,46 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
             let botDirFromTam = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
             
-            // Ép Bot lơ lửng đúng độ cao Sếp đang bay
             let doCaoMoi = window.TAM_HANH_TINH_HIEN_TAI.clone().add(botDirFromTam.multiplyScalar(rSep));
             bot.mesh.position.copy(doCaoMoi); 
             
-            // Luôn xoay mặt nhìn chằm chằm vào Sếp
             let huongNhinSep = playerModel.position.clone().sub(bot.mesh.position).normalize();
             let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().sub(huongNhinSep), botDirFromTam);
             bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.3);
         }
 
-        // C. LOGIC XẢ COMBO KỸ NĂNG NHƯ NGƯỜI THẬT
+        // C. LOGIC XẢ COMBO KỸ NĂNG
         if (isMoving) {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
         } else {
-            // Đứng lại xả skill
-            if (Date.now() - bot.lastAttackTime > 1500) { // Bấm phím mỗi 1.5s
+            if (Date.now() - (bot.lastAttackTime || 0) > 1500) { 
                 bot.lastAttackTime = Date.now();
                 
-                // Chuỗi Combo: Q -> E -> Q -> R -> Q -> F
                 let nextChieu = 'Q';
                 if (bot.lastPhim === 'Q') nextChieu = 'E';
                 if (bot.lastPhim === 'E') nextChieu = 'R';
                 if (bot.lastPhim === 'R') nextChieu = 'F';
                 if (bot.lastPhim === 'F') nextChieu = 'Q';
                 
-                // Thi thoảng ngẫu nhiên xài chiêu
                 if (Math.random() < 0.3) nextChieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
                 
                 bot.lastPhim = nextChieu;
-                bot.comboCount++; // Tăng đếm combo
+                bot.comboCount++; 
 
-                let dmgBot = (bot.maxHp || 1000) * 0.1; // Cân bằng sát thương Bot
+                let dmgBot = (bot.maxHp || 1000) * 0.1; 
                 let bOrigin = bot.mesh.position.clone();
-                let pTarget = playerModel.position.clone(); pTarget.y += 5; // Nhắm vào ngực
+                let pTarget = playerModel.position.clone(); pTarget.y += 5; 
                 let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                 
-                let botFakeId = "PLAYER_" + bot.id; // Giả mạo ID người chơi
+                let botFakeId = "PLAYER_" + bot.id; 
                 if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh };
 
-                // 🌟 MƯỢN DAO GIẾT NGƯỜI: Gọi trực tiếp logic kỹ năng của hệ phái
-                let vuKhiGia = 'uploads/anims/PHIKIEM.glb'; // Mặc định
-                if (bot.classCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, vuKhiGia);
+                // 🌟 GỌI CHIÊU (ĐÃ XÓA LUYỆN THỂ)
+                if (bot.classCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/PHIKIEM.glb');
                 else if (bot.classCode === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/vong_phep.glb');
                 else if (bot.classCode === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/CUNGTEN.glb');
                 else if (bot.classCode === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/GUN.glb');
                 else if (bot.classCode === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, null);
-                else if (bot.classCode === 'LUYEN_THE' && typeof window.tungComboLuyenThe === 'function') window.tungComboLuyenThe(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/BAOTAY.glb');
 
                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 100);
             }
@@ -859,7 +833,6 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 window.mayPhatHanhBotGia = function() {
     if (!window.playerModel || window.isDead) return;
 
-    // A. Đo lường cấp độ trung bình của khu vực
     let tongLevel = window.LEVEL_CUA_TOI || 1;
     let soNguoi = 1;
 
@@ -867,28 +840,24 @@ window.mayPhatHanhBotGia = function() {
         for (let id in window.remotePlayers) {
             let rp = window.remotePlayers[id];
             if (rp && rp.status === 'ready' && rp.mesh && window.playerModel.position.distanceTo(rp.mesh.position) < 5000) {
-                // Trong thực tế cần có biến truyền level qua LiveKit, nhưng nếu ko có ta random quanh cấp của Sếp
                 tongLevel += (window.LEVEL_CUA_TOI || 1) + Math.floor((Math.random() - 0.5) * 5); 
                 soNguoi++;
             }
         }
     }
     
-    // Level Bot = Trung bình cộng cấp độ người chơi quanh đó
     let levelBot = Math.max(1, Math.round(tongLevel / soNguoi));
-    let hpBot = 1000 + ((levelBot - 1) * 30); // Công thức chuẩn của game
+    let hpBot = 1000 + ((levelBot - 1) * 30); 
     
-    // B. Lựa chọn Phái ngẫu nhiên (Không đẻ Rồng/Chim/Cá)
-    const phaiNguoi = ['TU_TIEN', 'PHAP_SU', 'XA_THU', 'CUNG_THU', 'LAZER', 'LUYEN_THE'];
+    // 🌟 CHỈ BỐC PHÁI ĐÁNH XA (Đã xóa LUYEN_THE)
+    const phaiNguoi = ['TU_TIEN', 'PHAP_SU', 'XA_THU', 'CUNG_THU', 'LAZER'];
     let phaiChon = phaiNguoi[Math.floor(Math.random() * phaiNguoi.length)];
     
-    // Lấy Model ngẫu nhiên (Lấy từ kho NPC hoặc mặc định mimi_3d)
     let modelBot = 'uploads/anims/mimi_3d.glb';
     if (window.NPC_MODELS && window.NPC_MODELS.length > 0) {
         modelBot = window.NPC_MODELS[Math.floor(Math.random() * window.NPC_MODELS.length)];
     }
 
-    // C. Tọa độ đẻ Bot: Cách người chơi khoảng 150m - 300m
     let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
     let right = new THREE.Vector3().crossVectors(fwd, window.playerModel.up).normalize();
     
@@ -903,18 +872,15 @@ window.mayPhatHanhBotGia = function() {
 
     console.log(`🤖 AI PHANTOM: Đã sinh ra Clone [${tenBot}] - Phái: ${phaiChon} - Lv: ${levelBot}`);
 
-    // D. ĐẺ RA VÀ CHỈNH SỬA NAME TAG CHO GIỐNG NGƯỜI CHƠI THẬT
     let botId = "PHANTOM_" + Date.now() + "_" + Math.floor(Math.random()*100);
     
     if (typeof window.sinhRaQuaiVat === 'function') {
-        // Tái sử dụng hàm sinhRaQuaiVat, truyền 'FAKE_PLAYER' vào cuối để nó nạp AI của Não Phantom!
         window.sinhRaQuaiVat(posBot.x, posBot.z, tenBot, levelBot, hpBot, 2.5, posBot.y, false, botId, modelBot, hpBot, 0, 'FAKE_PLAYER');
         
-        // Dùng tiểu xảo: Chờ nó sinh ra (khoảng 1 giây sau) rồi Sửa lại cái Tag HTML cho giống người chơi thật (bỏ chữ 👑 đi, đổi màu xanh)
         setTimeout(() => {
             let botHienTai = window.danhSachQuaiVat.find(q => q.id === botId);
             if (botHienTai && botHienTai.tagEl) {
-                botHienTai.classCode = phaiChon; // Gán lại Phái xịn để nó múa skill chuẩn
+                botHienTai.classCode = phaiChon; 
                 let htmlMoi = `<div style="color:#2ecc71; font-weight:bold; font-size:16px; text-shadow:1px 1px 0 #000; text-align:center;">${tenBot}</div>
                                <div style="width:80px; height:5px; background:rgba(0,0,0,0.5); border:1px solid #fff; border-radius:3px; margin:0 auto; margin-top:3px;">
                                    <div class="hp-bar" style="width:100%; height:100%; background:#e74c3c;"></div>
@@ -925,15 +891,13 @@ window.mayPhatHanhBotGia = function() {
     }
 };
 
-// 4. KÍCH HOẠT MÁY PHÁT HÀNH (Cứ 45 giây đẻ 1 con Bot, tối đa có 3 con Bot quanh người chơi để tránh lag)
+// 4. KÍCH HOẠT MÁY PHÁT HÀNH
 setInterval(() => {
-    // Đếm xem xung quanh có bao nhiêu Phantom rồi
     let soBotHienTai = 0;
     if (window.danhSachQuaiVat) {
         soBotHienTai = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead).length;
     }
     
-    // Nếu vắng vẻ (< 3 con) thì đẻ thêm cho xôm tụ
     if (soBotHienTai < 3) {
         window.mayPhatHanhBotGia();
     }
