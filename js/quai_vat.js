@@ -1107,4 +1107,4 @@ setInterval(() => {
     }
     // Giai đoạn test: 15 giây đẻ 1 lần, 60% cơ hội đẻ
     if (botGanToi < 3 && Math.random() < 0.6) window.mayPhatHanhBotGia();
-}, 15000);
+}, 10000);
