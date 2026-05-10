@@ -811,7 +811,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             }
 
             // Bay tới đích (sang hông bên kia) hoặc đi quá xa thì tự xóa sổ nhẹ nhàng
-            if (bot.mesh.position.distanceTo(bot.diemCuoi) < 100 || distToPlayer > 3500) {
+            if (bot.mesh.position.distanceTo(bot.diemCuoi) < 100 || distToPlayer > 11000) {
                 window.xoaPhantomLocal(bot.id);
                 if (window.room && window.room.state === 'connected') {
                     window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'DESPAWN_PHANTOM', id: bot.id })), { reliable: true });
@@ -1060,7 +1060,7 @@ window.mayPhatHanhBotGia = function () {
         // Đẻ từ cách Sếp 2000m bên hông trái/phải, và 600m trước mặt để tránh bị Sếp vô tình va quệt
         let laBenTrai = Math.random() > 0.5;
         let khoangCachTruocMat = 200 + Math.random() * 100;
-        let khoangCachNgang = 600;
+        let khoangCachNgang = 10000;
 
         posBot.add(fwd.clone().multiplyScalar(khoangCachTruocMat));
         posBot.add(right.clone().multiplyScalar(laBenTrai ? -khoangCachNgang : khoangCachNgang));
