@@ -753,10 +753,10 @@ setInterval(() => {
 
 
 // =====================================================================
-// 👤 MODULE ĐẶC BIỆT: HỆ THỐNG "PHANTOM" - GIẢ LẬP NGƯỜI CHƠI (BẢN V11 - CHUẨN AAA)
+// 👤 MODULE ĐẶC BIỆT: HỆ THỐNG "PHANTOM" - GIẢ LẬP NGƯỜI CHƠI (BẢN V12 - CHUẨN AAA)
 // =====================================================================
 
-window.taoTenNguoiChoiGia = function() {
+window.taoTenNguoiChoiGia = function () {
     const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Bạch", "Diệp"];
     const ten = ["Phong", "Linh", "Hải", "Tuấn", "Nam", "Long", "Vy", "Trang", "Anh", "Minh", "Khang", "Hùng", "Bảo", "Nhi", "Hân", "Thành", "Đạt", "Thịnh", "Huy", "Phúc", "Kiwii", "Ken", "Bo", "Bin"];
     const hauTo = ["", "", "", "9x", "8x", "Pro", "VIP", "2k", "Gaming", "_VN", "deptrai", "cute", "123", "999"];
@@ -767,124 +767,118 @@ window.taoTenNguoiChoiGia = function() {
 };
 
 window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
-    he: 'BAY', 
-    getTamDanh: () => 20000, 
-    getTamNhin: () => 20000, 
-    getGioiHanLanhTho: () => 30000, 
-    khoangCachAnToan: 5, 
-    choPhepLuiBinh: false, 
+    he: 'BAY',
+    getTamDanh: () => 20000,
+    getTamNhin: () => 20000,
+    getGioiHanLanhTho: () => 30000,
+    khoangCachAnToan: 5,
+    choPhepLuiBinh: false,
 
     thucHienTanCong: function (bot, playerModel, delta) {
-        // 🌟 BẢN V11: Cho phép tất cả các máy cùng chạy AI để không máy nào bị Đứng Im!
         if (!bot.soLanDaDanh) bot.soLanDaDanh = 0;
-        if (!bot.trangThaiHanhDong) bot.trangThaiHanhDong = 'APPROACH';
+        if (!bot.altOffset) bot.altOffset = (Math.random() * 15 + 15); // Cố định độ cao bay 15-30m
 
         let distToPlayer = bot.mesh.position.distanceTo(playerModel.position);
         let ptHP = bot.hp / (bot.maxHp || 1);
-        let botUp = window.TAM_HANH_TINH_HIEN_TAI ? bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize() : new THREE.Vector3(0,1,0);
+        let botUp = window.TAM_HANH_TINH_HIEN_TAI ? bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize() : new THREE.Vector3(0, 1, 0);
 
-        // Báo tử
         if (bot.hp <= 0 && !bot.daBaoTu) {
             bot.daBaoTu = true;
             if (typeof window.hienThiThongBao === 'function') window.hienThiThongBao("⚔️ Bạn đã hạ gục [" + bot.name + "]!", "#f1c40f");
             return;
         }
 
-        // 🌟 CẬP NHẬT TỌA ĐỘ VÀO HỘ KHẨU MỖI FRAME (Giúp đạn bay chuẩn xác)
-        let botFakeId = "PLAYER_" + bot.id; 
+        // 🌟 FIX LỖI TÀNG HÌNH ĐẠN: Ghi đè hộ khẩu liên tục để đạn có mốc sát thương
+        let botFakeId = "PLAYER_" + bot.id;
         if (window.remotePlayers && window.remotePlayers[botFakeId]) {
             window.remotePlayers[botFakeId].mesh = bot.mesh;
         }
 
-        // 🌟 1. TẨU THOÁT XUYÊN THỦNG (FLEE)
-        if (bot.soLanDaDanh >= 4 || ptHP <= 0.4 || bot.trangThaiHanhDong === 'FLEE') { 
+        // 🌟 BỘ NÃO MỚI (XÓA BỎ HOÀN TOÀN BỆNH ĐỨNG IM)
+        // Check trạng thái LẬP TỨC ở mỗi frame! Sếp chạy đi là nó tự quay lại rượt!
+        if (bot.soLanDaDanh >= 4 || ptHP <= 0.4 || bot.trangThaiHanhDong === 'FLEE') {
             bot.trangThaiHanhDong = 'FLEE';
+        } else if (distToPlayer > 180) {
+            bot.trangThaiHanhDong = 'APPROACH';
+        } else {
+            bot.trangThaiHanhDong = 'ATTACK';
+        }
+
+        // 1. TẨU THOÁT
+        if (bot.trangThaiHanhDong === 'FLEE') {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
-            
-            // 🚀 TOÁN HỌC ĐÃ ĐƯỢC VÁ LỖI: Lấy Vector nhắm thẳng XUYÊN QUA người Sếp
+
+            // Lấy vector đâm xuyên qua Sếp để bay thẳng về phía trước
             if (!bot.huongTauThoat) {
                 bot.huongTauThoat = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
             }
 
-            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(4.0 * (delta * 60))); // Phóng qua cực nhanh
-            
+            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(4.0 * (delta * 60))); // Phóng xé gió
+
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-                bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + (bot.altOffset || 20)))); 
-                
+                bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
+
                 let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().add(bot.huongTauThoat), newBotUp);
-                bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2); 
+                bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
             }
 
-            // Bay xa > 1200m thì TỰ ĐỘNG XÓA SỔ (Cả Sếp và Nick phụ đều tự xóa cục bộ, không ai bị tàng hình giật cục)
-            if (distToPlayer > 1200) { 
-                console.log(`👻 [${bot.name}] đã bay khuất bóng!`);
-                window.xoaPhantomLocal(bot.id);
-            }
-            return; 
+            if (distToPlayer > 1500) window.xoaPhantomLocal(bot.id);
         }
-
-        // 🌟 2. LAO TỚI MỤC TIÊU (APPROACH)
-        if (distToPlayer > 150 && bot.trangThaiHanhDong === 'APPROACH') {
+        // 2. RƯỢT ĐUỔI
+        else if (bot.trangThaiHanhDong === 'APPROACH') {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
             let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
-            bot.mesh.position.add(huongToi.multiplyScalar(2.5 * (delta * 60))); 
+            bot.mesh.position.add(huongToi.multiplyScalar(2.5 * (delta * 60)));
 
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-                bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + (bot.altOffset || 20)))); 
-                
+                bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
+
                 let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().add(huongToi), newBotUp);
                 bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.3);
             }
-            return;
         }
+        // 3. ĐỨNG LẠI XẢ SÚNG
+        else if (bot.trangThaiHanhDong === 'ATTACK') {
+            if (typeof bot.playAnim === 'function') bot.playAnim('IDLE');
+            let huongNhinSep = playerModel.position.clone().sub(bot.mesh.position).projectOnPlane(botUp).normalize();
 
-        // 🌟 3. PHANH GẤP & XẢ SKILL (Cắm cọc đứng im)
-        bot.trangThaiHanhDong = 'ATTACK'; 
-        if (typeof bot.playAnim === 'function') bot.playAnim('IDLE'); 
-        
-        let huongNhinSep = playerModel.position.clone().sub(bot.mesh.position).projectOnPlane(botUp).normalize();
-        
-        if (window.TAM_HANH_TINH_HIEN_TAI) {
-            let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-            let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-            
-            // Giữ chặt độ cao, không bập bênh
-            bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + (bot.altOffset || 20)))); 
-            
-            let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().sub(huongNhinSep), newBotUp);
-            bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.5); 
-        }
+            if (window.TAM_HANH_TINH_HIEN_TAI) {
+                let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
+                bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
 
-        // Xả 4 chiêu (Mỗi máy tự xả đạn của mình để thấy hiệu ứng mượt 100%, không cần gửi mạng)
-        if (Date.now() - (bot.lastAttackTime || 0) > 1200) { 
-            bot.lastAttackTime = Date.now();
-            
-            let comboArr = ['Q', 'E', 'R', 'F'];
-            let nextChieu = comboArr[bot.soLanDaDanh % 4]; 
-            bot.soLanDaDanh++; 
-            
-            if (typeof bot.playAnim === 'function') bot.playAnim('ATTACK');
-            
-            let bOrigin = bot.mesh.position.clone();
-            let pTarget = playerModel.position.clone(); pTarget.y += 5; 
-            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-            
-            let phaiDung = bot.fakePhai || 'TU_TIEN';
-            if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/PHIKIEM.glb');
-            else if (phaiDung === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/vong_phep.glb');
-            else if (phaiDung === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/CUNGTEN.glb');
-            else if (phaiDung === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/GUN.glb');
-            else if (phaiDung === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, null);
+                let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().sub(huongNhinSep), newBotUp);
+                bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.5);
+            }
+
+            if (Date.now() - (bot.lastAttackTime || 0) > 1200) {
+                bot.lastAttackTime = Date.now();
+                let nextChieu = ['Q', 'E', 'R', 'F'][bot.soLanDaDanh % 4];
+                bot.soLanDaDanh++;
+
+                if (typeof bot.playAnim === 'function') bot.playAnim('ATTACK');
+
+                let bOrigin = bot.mesh.position.clone();
+                let pTarget = playerModel.position.clone(); pTarget.y += 5;
+                let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+
+                let phaiDung = bot.fakePhai || 'TU_TIEN';
+                if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/PHIKIEM.glb');
+                else if (phaiDung === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/vong_phep.glb');
+                else if (phaiDung === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/CUNGTEN.glb');
+                else if (phaiDung === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, 'uploads/anims/GUN.glb');
+                else if (phaiDung === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, null);
+            }
         }
     }
 };
 
 // =====================================================================
-// 📡 MÁY PHÁT SÓNG ĐỒNG BỘ CHỈ DÙNG KHI SPAWN (KHÔNG CẦN CHẠY ĐẠN QUA MẠNG NỮA)
+// 📡 MÁY PHÁT SÓNG ĐỒNG BỘ: SỬA LỖI MÁU KHÔNG ĐỒNG BỘ NICK PHỤ
 // =====================================================================
 if (!window.daCaiLiveKitPhantom) {
     window.daCaiLiveKitPhantom = true;
@@ -895,66 +889,76 @@ if (!window.daCaiLiveKitPhantom) {
                     let data = JSON.parse(new TextDecoder().decode(payload));
                     if (data.type === 'SPAWN_PHANTOM') {
                         let pos = new THREE.Vector3(data.x, data.y, data.z);
-                        // Truyền altOffset sang để cả Sếp và Nick phụ đều thấy nó bay đúng ở cùng 1 độ cao
                         window.spawnPhantomLocal(data.id, pos, data.name, data.level, data.hp, data.phai, data.model, data.altOffset);
                     }
-                } catch(e) {}
+                    // 🌟 BÍ MẬT Ở ĐÂY: Can thiệp thủ công vào luồng Máu của LiveKit!
+                    else if (data.type === 'BOSS_HIT') {
+                        let bot = window.danhSachQuaiVat ? window.danhSachQuaiVat.find(q => q.id === data.id) : null;
+                        if (bot && bot.classCode === 'FAKE_PLAYER') {
+                            bot.hp -= data.damageDealt;
+                            if (bot.hp < 0) bot.hp = 0;
+                            if (bot.tagEl) {
+                                let bar = bot.tagEl.querySelector('.hp-bar');
+                                if (bar) bar.style.width = Math.max(0, (bot.hp / bot.maxHp) * 100) + '%';
+                            }
+                        }
+                    }
+                } catch (e) { }
             });
             clearInterval(checkRoom);
         }
     }, 1000);
 }
 
-// 🛠️ HÀM ĐẺ LOCAL (ĐĂNG KÝ HỘ KHẨU VĨNH VIỄN CHO BOT ĐỂ ĐẠN GÂY MẤT MÁU)
-window.spawnPhantomLocal = function(botId, posBot, tenBot, levelBot, hpBot, phaiChon, modelBot, altOffset) {
+// 🛠️ HÀM ĐẺ LOCAL (GÁN QUYỀN VÀ XÓA TÊN NHANH CHÓNG)
+window.spawnPhantomLocal = function (botId, posBot, tenBot, levelBot, hpBot, phaiChon, modelBot, altOffset) {
     if (window.danhSachQuaiVat && window.danhSachQuaiVat.find(q => q.id === botId)) return;
-    
+
     if (typeof window.sinhRaQuaiVat === 'function') {
         window.sinhRaQuaiVat(posBot.x, posBot.z, tenBot, levelBot, hpBot, 2.5, posBot.y, true, botId, modelBot, hpBot, 0, 'FAKE_PLAYER');
-        
+
         let vongLapGiauTen = setInterval(() => {
             let botHienTai = window.danhSachQuaiVat && window.danhSachQuaiVat.find(q => q.id === botId);
             if (botHienTai && botHienTai.tagEl) {
-                botHienTai.altOffset = altOffset || 20; // Đồng bộ độ cao tuyệt đối
-                botHienTai.fakePhai = phaiChon; 
-                botHienTai.name = tenBot; 
-                botHienTai.exp = 20; 
-                
-                // 🌟 FIX LỖI 0 DAMAGE: Đăng ký nó vào danh sách "Người chơi" ngay lúc đẻ ra, và KHÔNG XÓA SỚM!
-                let botFakeId = "PLAYER_" + botId; 
+                botHienTai.altOffset = altOffset || (Math.random() * 15 + 15);
+                botHienTai.fakePhai = phaiChon;
+                botHienTai.name = tenBot;
+                botHienTai.exp = 20;
+
+                // Cấp hộ khẩu liên tục cho Mạng 
+                let botFakeId = "PLAYER_" + botId;
                 if (typeof window.remotePlayers !== 'undefined') {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: botHienTai.mesh, name: tenBot, damage: (levelBot || 1) * 3, classCode: phaiChon };
                 }
-                
+
                 let htmlMoi = `<div style="color:#2ecc71; font-weight:bold; font-size:16px; text-shadow:1px 1px 0 #000; text-align:center;">${tenBot}</div>
                                <div style="width:80px; height:5px; background:rgba(0,0,0,0.5); border:1px solid #fff; border-radius:3px; margin:0 auto; margin-top:3px; overflow:hidden;">
                                    <div class="hp-bar" style="width:100%; height:100%; background:#e74c3c; transform-origin: left center; transition: width 0.2s, transform 0.2s;"></div>
                                </div>`;
                 botHienTai.tagEl.innerHTML = htmlMoi;
-                clearInterval(vongLapGiauTen); 
+                clearInterval(vongLapGiauTen);
             }
-        }, 10); 
-        setTimeout(() => clearInterval(vongLapGiauTen), 3000); 
+        }, 10);
+        setTimeout(() => clearInterval(vongLapGiauTen), 3000);
     }
 };
 
 // 🛠️ HÀM XÓA LOCAL
-window.xoaPhantomLocal = function(id) {
-    if(!window.danhSachQuaiVat) return;
+window.xoaPhantomLocal = function (id) {
+    if (!window.danhSachQuaiVat) return;
     let bot = window.danhSachQuaiVat.find(q => q.id === id);
     if (bot) {
         if (bot.tagEl && bot.tagEl.parentNode) bot.tagEl.parentNode.removeChild(bot.tagEl);
-        if (typeof window.donRac3D === 'function') window.donRac3D(bot.mesh); else if(typeof scene !== 'undefined') scene.remove(bot.mesh);
+        if (typeof window.donRac3D === 'function') window.donRac3D(bot.mesh); else if (typeof scene !== 'undefined') scene.remove(bot.mesh);
         window.danhSachQuaiVat = window.danhSachQuaiVat.filter(q => q.id !== id);
     }
-    // Xóa hộ khẩu "Người chơi giả" khỏi danh sách mạng để dọn dẹp RAM
     if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers["PLAYER_" + id]) {
         delete window.remotePlayers["PLAYER_" + id];
     }
 };
 
-// 3. MÁY PHÁT HÀNH BOT
-window.mayPhatHanhBotGia = function() {
+// 3. MÁY PHÁT HÀNH LÒ ĐẺ (GỬI ĐỒNG BỘ SANG MÁY KHÁC)
+window.mayPhatHanhBotGia = function () {
     if (!window.playerModel || window.isDead) return;
 
     let tongLevel = window.LEVEL_CUA_TOI || 1; let soNguoi = 1;
@@ -967,36 +971,35 @@ window.mayPhatHanhBotGia = function() {
         }
     }
     let levelBot = Math.max(1, Math.round(tongLevel / soNguoi));
-    let hpBot = 500 + ((levelBot - 1) * 20); 
-    
+    let hpBot = 500 + ((levelBot - 1) * 20);
+
     const phaiNguoi = ['TU_TIEN', 'PHAP_SU', 'XA_THU', 'CUNG_THU', 'LAZER'];
     let phaiChon = phaiNguoi[Math.floor(Math.random() * phaiNguoi.length)];
-    
-    let modelBot = 'uploads/anims/mimi_3d.glb'; 
-    if (typeof window.MODEL_MAC_DINH_CAC_PHAI !== 'undefined' && window.MODEL_MAC_DINH_CAC_PHAI[phaiChon]) { 
-        modelBot = window.MODEL_MAC_DINH_CAC_PHAI[phaiChon]; 
+
+    let modelBot = 'uploads/anims/mimi_3d.glb';
+    if (typeof window.MODEL_MAC_DINH_CAC_PHAI !== 'undefined' && window.MODEL_MAC_DINH_CAC_PHAI[phaiChon]) {
+        modelBot = window.MODEL_MAC_DINH_CAC_PHAI[phaiChon];
     }
 
     let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
     let upV = window.playerModel.up.clone().normalize();
     let right = new THREE.Vector3().crossVectors(fwd, upV).normalize();
-    
-    let khoangCachDe = 300 + Math.random() * 100; 
+
+    let khoangCachDe = 300 + Math.random() * 100;
     let laTruocMat = Math.random() > 0.5;
-    let gocDe = (laTruocMat ? 0 : Math.PI) + (Math.random() * 0.4 - 0.2); 
-    let altOffset = Math.random() * 10 + 15; // Chốt cứng độ cao ngay lúc đẻ
-    
+    let gocDe = (laTruocMat ? 0 : Math.PI) + (Math.random() * 0.4 - 0.2);
+    let altOffset = Math.random() * 15 + 15;
+
     let posBot = window.playerModel.position.clone();
     posBot.add(fwd.multiplyScalar(Math.cos(gocDe) * khoangCachDe));
     posBot.add(right.multiplyScalar(Math.sin(gocDe) * khoangCachDe));
-    posBot.add(upV.multiplyScalar(altOffset)); 
+    posBot.add(upV.multiplyScalar(altOffset));
 
     let tenBot = window.taoTenNguoiChoiGia();
-    let botId = "PHANTOM_" + Date.now() + "_" + Math.floor(Math.random()*100);
+    let botId = "PHANTOM_" + Date.now() + "_" + Math.floor(Math.random() * 100);
 
     window.spawnPhantomLocal(botId, posBot, tenBot, levelBot, hpBot, phaiChon, modelBot, altOffset);
-    
-    // Gửi lệnh cho Nick Phụ cũng đẻ ra ở đúng tọa độ đó
+
     if (window.room && window.room.state === 'connected') {
         let data = { type: 'SPAWN_PHANTOM', id: botId, x: posBot.x, y: posBot.y, z: posBot.z, name: tenBot, level: levelBot, hp: hpBot, phai: phaiChon, model: modelBot, altOffset: altOffset };
         window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
@@ -1010,5 +1013,5 @@ setInterval(() => {
     if (window.danhSachQuaiVat) {
         botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 2000).length;
     }
-    if (botGanToi < 2 && Math.random() < 0.6) window.mayPhatHanhBotGia(); 
+    if (botGanToi < 2 && Math.random() < 0.6) window.mayPhatHanhBotGia();
 }, 10000);
