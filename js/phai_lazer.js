@@ -180,8 +180,20 @@
             choHoiChieu[phim] = bayGio; // Chốt thời gian vừa xả skill
         }
 
-        // Chơi Animation chuẩn theo phím bấm (CHIEUQ, CHIEUE, CHIEUR, CHIEUF)
-        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('CHIEU' + phim);
+        // 🌟 LẬP TRÌNH PHÒNG THỦ: Kiểm tra xem có Animation chuẩn không, không có thì xài Hàng Chợ
+        if (!isRemote && typeof window.playAnim === 'function') {
+            let tenAnim = 'CHIEU' + phim;
+            
+            // Lục lọi trong kho trí nhớ của hệ thống xem có lưu tên chiêu này chưa
+            let coChieuNayKhong = (window.animationsMapChar && window.animationsMapChar[tenAnim]) || 
+                                  (window.animationsMap && window.animationsMap[tenAnim]);
+            
+            if (coChieuNayKhong) {
+                window.playAnim(tenAnim); // Có thì xài hàng xịn
+            } else {
+                window.playAnim('ATTACK'); // Không có thì xài xài hàng mặc định chống cháy
+            }
+        }
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
