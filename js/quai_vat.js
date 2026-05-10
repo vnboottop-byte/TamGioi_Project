@@ -1098,13 +1098,17 @@ window.mayPhatHanhBotGia = function () {
     }
 };
 
-// 4. KIỂM SOÁT DÂN SỐ
+// 4. KIỂM SOÁT DÂN SỐ (10 PHÚT ĐẺ 1 LẦN)
 setInterval(() => {
     if (!window.playerModel || window.isDead) return;
+
+    // Tìm xem xung quanh có thằng Phantom nào đang bay không
     let botGanToi = 0;
     if (window.danhSachQuaiVat) {
-        botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 2000).length;
+        botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 5000).length;
     }
-    // Giai đoạn test: 15 giây đẻ 1 lần, 60% cơ hội đẻ
-    if (botGanToi < 3 && Math.random() < 0.6) window.mayPhatHanhBotGia();
-}, 10000);
+
+    // Nếu vắng bóng Phantom (dưới 1 con) thì chắc chắn 100% đẻ ra 1 con!
+    if (botGanToi < 1) window.mayPhatHanhBotGia();
+
+}, 600000); // 600.000 mili-giây = 10 phút!
