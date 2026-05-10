@@ -183,20 +183,8 @@
 
 
    
-        // 🌟 LẬP TRÌNH PHÒNG THỦ: Kiểm tra xem có Animation chuẩn không, không có thì xài Hàng Chợ
-        if (!isRemote && typeof window.playAnim === 'function') {
-            let tenAnim = 'CHIEU' + phim;
-            
-            // Lục lọi trong kho trí nhớ của hệ thống xem có lưu tên chiêu này chưa
-            let coChieuNayKhong = (window.animationsMapChar && window.animationsMapChar[tenAnim]) || 
-                                  (window.animationsMap && window.animationsMap[tenAnim]);
-            
-            if (coChieuNayKhong) {
-                window.playAnim(tenAnim); // Có thì xài hàng xịn
-            } else {
-                window.playAnim('ATTACK'); // Không có thì xài xài hàng mặc định chống cháy
-            }
-        }
+        // Gọi thẳng tên chiêu, Engine sẽ tự biết cách tìm hoặc dùng hàng dự phòng!
+        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('CHIEU' + phim);
 
 
 
