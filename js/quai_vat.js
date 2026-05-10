@@ -806,7 +806,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 bot.huongTauThoat = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
             }
 
-            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(4.0 * (delta * 60)));
+            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(1.5 * (delta * 60)));
 
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -827,7 +827,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
         else if (bot.trangThaiHanhDong === 'APPROACH') {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
             let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
-            bot.mesh.position.add(huongToi.multiplyScalar(2.5 * (delta * 60)));
+            bot.mesh.position.add(huongToi.multiplyScalar(1.5 * (delta * 60)));
 
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -882,7 +882,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 // 🌟 FIX V15 (DAMAGE): DÙNG HÀM TRỪ MÁU TỪ ENGINE.JS
                 // Đo đạn bay: 150m/s
                 let khoangCachDenSep = bOrigin.distanceTo(playerModel.position);
-                let thoiGianDanBay = (khoangCachDenSep / 150) * 1000;
+                let thoiGianDanBay = (khoangCachDenSep / 60) * 1000;
                 if (thoiGianDanBay < 200) thoiGianDanBay = 200;
 
                 let tamNo = pTarget.clone(); // Điểm đạn rớt
@@ -1059,4 +1059,4 @@ setInterval(() => {
         botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 2000).length;
     }
     if (botGanToi < 2 && Math.random() < 0.6) window.mayPhatHanhBotGia();
-}, 15000);
+}, 600000);
