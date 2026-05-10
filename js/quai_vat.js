@@ -1059,4 +1059,4 @@ setInterval(() => {
         botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 2000).length;
     }
     if (botGanToi < 2 && Math.random() < 0.6) window.mayPhatHanhBotGia();
-}, 600000);
+}, 300000);
