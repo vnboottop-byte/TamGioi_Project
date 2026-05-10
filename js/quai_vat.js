@@ -1059,8 +1059,8 @@ window.mayPhatHanhBotGia = function () {
     if (kieuBot === 'PASSERBY') {
         // Đẻ từ cách Sếp 2000m bên hông trái/phải, và 600m trước mặt để tránh bị Sếp vô tình va quệt
         let laBenTrai = Math.random() > 0.5;
-        let khoangCachTruocMat = 600 + Math.random() * 200;
-        let khoangCachNgang = 2000;
+        let khoangCachTruocMat = 400 + Math.random() * 100;
+        let khoangCachNgang = 10000;
 
         posBot.add(fwd.clone().multiplyScalar(khoangCachTruocMat));
         posBot.add(right.clone().multiplyScalar(laBenTrai ? -khoangCachNgang : khoangCachNgang));
@@ -1075,7 +1075,7 @@ window.mayPhatHanhBotGia = function () {
         console.log(`🕊️ PHANTOM: [Người qua đường] đang bay lướt ngang qua!`);
     } else {
         // Hunter thì đẻ gần hơn để rượt (như cũ)
-        let khoangCachDe = 300 + Math.random() * 100;
+        let khoangCachDe = 500 + Math.random() * 100;
         let laTruocMat = Math.random() > 0.5;
         let gocDe = (laTruocMat ? 0 : Math.PI) + (Math.random() * 0.4 - 0.2);
 
