@@ -853,9 +853,11 @@ window.mayPhatHanhBotGia = function() {
     const phaiNguoi = ['TU_TIEN', 'PHAP_SU', 'XA_THU', 'CUNG_THU', 'LAZER'];
     let phaiChon = phaiNguoi[Math.floor(Math.random() * phaiNguoi.length)];
     
-    let modelBot = 'uploads/anims/mimi_3d.glb';
-    if (window.NPC_MODELS && window.NPC_MODELS.length > 0) {
-        modelBot = window.NPC_MODELS[Math.floor(Math.random() * window.NPC_MODELS.length)];
+    let modelBot = 'uploads/anims/mimi_3d.glb'; // Dự phòng
+    
+    // 🌟 Kéo trực tiếp Model mặc định của Phái từ Database (Đã truyền qua rom.php)
+    if (window.MODEL_MAC_DINH_CAC_PHAI && window.MODEL_MAC_DINH_CAC_PHAI[phaiChon]) {
+        modelBot = window.MODEL_MAC_DINH_CAC_PHAI[phaiChon];
     }
 
     let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
