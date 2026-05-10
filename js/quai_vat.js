@@ -1059,8 +1059,8 @@ window.mayPhatHanhBotGia = function () {
     if (kieuBot === 'PASSERBY') {
         // Đẻ từ cách Sếp 2000m bên hông trái/phải, và 600m trước mặt để tránh bị Sếp vô tình va quệt
         let laBenTrai = Math.random() > 0.5;
-        let khoangCachTruocMat = 400 + Math.random() * 100;
-        let khoangCachNgang = 10000;
+        let khoangCachTruocMat = 200 + Math.random() * 100;
+        let khoangCachNgang = 600;
 
         posBot.add(fwd.clone().multiplyScalar(khoangCachTruocMat));
         posBot.add(right.clone().multiplyScalar(laBenTrai ? -khoangCachNgang : khoangCachNgang));
