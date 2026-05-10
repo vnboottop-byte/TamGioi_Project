@@ -832,7 +832,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
         if (bot.trangThaiHanhDong === 'FLEE') {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
             if (!bot.huongTauThoat) bot.huongTauThoat = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
-            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(4.0 * (delta * 60)));
+            bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(1.0 * (delta * 60)));
 
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -852,7 +852,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
         else if (bot.trangThaiHanhDong === 'APPROACH') {
             if (typeof bot.playAnim === 'function') bot.playAnim('RUN');
             let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
-            bot.mesh.position.add(huongToi.multiplyScalar(2.5 * (delta * 60)));
+            bot.mesh.position.add(huongToi.multiplyScalar(1.5 * (delta * 60)));
 
             if (window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
