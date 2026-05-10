@@ -180,6 +180,9 @@
             choHoiChieu[phim] = bayGio; // Chốt thời gian vừa xả skill
         }
 
+
+
+   
         // 🌟 LẬP TRÌNH PHÒNG THỦ: Kiểm tra xem có Animation chuẩn không, không có thì xài Hàng Chợ
         if (!isRemote && typeof window.playAnim === 'function') {
             let tenAnim = 'CHIEU' + phim;
@@ -194,6 +197,10 @@
                 window.playAnim('ATTACK'); // Không có thì xài xài hàng mặc định chống cháy
             }
         }
+
+
+
+
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
