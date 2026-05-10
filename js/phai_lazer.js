@@ -180,8 +180,8 @@
             choHoiChieu[phim] = bayGio; // Chốt thời gian vừa xả skill
         }
 
-        // Chơi Animation chuẩn
-        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('ATTACK');
+        // Chơi Animation chuẩn theo phím bấm (CHIEUQ, CHIEUE, CHIEUR, CHIEUF)
+        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('CHIEU' + phim);
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
