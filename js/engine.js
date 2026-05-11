@@ -211,30 +211,17 @@ if (!scene.children.includes(camera)) scene.add(camera);
 
 
 
-
-
-
-
-
-
 window.bocHDRI_NhanVat = function (model) {
-    if (!model || !window.anhMoiTruongHDRI) return;
+    if (!model) return; // 🌟 ĐÃ XÓA KIỂM TRA HDRI: Vì ta sẽ dùng thẳng scene.environment
     model.traverse(c => {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
             mats.forEach(mat => {
-                mat.envMap = window.anhMoiTruongHDRI;
-                
-                // 🌟 1. TĂNG CƯỜNG ĐỘ PHẢN CHIẾU HDRI (Từ 0.01 lên 0.8)
-                // Giúp nhân vật sáng lên nhờ ánh sáng phản chiếu của bầu trời xung quanh
+                // Xóa gán mat.envMap tĩnh, để ThreeJS tự động lấy từ scene.environment
                 mat.envMapIntensity = 1.2; 
                 
-                // 🌟 2. PHỤC HỒI ĐỘ BÓNG KIM LOẠI (Từ 0.01 lên 0.3)
-                // Phù hợp cho áo giáp, vũ khí và vảy rồng. Bắt sáng cực đẹp!
-                if (mat.metalness !== undefined) mat.metalness = 1.5;
-                
-                // 🌟 3. GIẢM ĐỘ NHÁM (Từ 0.8 xuống 0.35)
-                // Bề mặt sẽ trơn láng hơn, tạo ra các điểm nhấn lấp lánh khi đèn Camera rọi vào
+                // 🌟 CHUẨN HÓA LẠI KIM LOẠI (Metalness tối đa chỉ là 1.0, để 1.5 sẽ bị lỗi đen)
+                if (mat.metalness !== undefined) mat.metalness = 0.8;
                 if (mat.roughness !== undefined) mat.roughness = 0.15;
                 
                 mat.needsUpdate = true;
@@ -242,6 +229,12 @@ window.bocHDRI_NhanVat = function (model) {
         }
     });
 };
+
+
+
+
+
+
 
 
 
@@ -698,13 +691,23 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 child.renderOrder = -1; // Đẩy ra xa nhất
 
                 if (child.material) {
+
+
                     // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
                     if (child.material.map && !window.anhMoiTruongHDRI) {
                         window.anhMoiTruongHDRI = child.material.map;
                         window.anhMoiTruongHDRI.mapping = THREE.EquirectangularReflectionMapping;
                         scene.environment = window.anhMoiTruongHDRI; // Gắn nguồn sáng lấp lánh cho nhân vật
                         console.log("🌌 Đã trích xuất HDRI thành công từ: " + child.name);
-
+                        
+                        // 🌟 BẢN VÁ BỆNH ĐEN THUI: Gọi tất cả vũ khí, Rồng, Nhân vật cập nhật lại da để nhận ánh sáng mới!
+                        scene.traverse((obj) => {
+                            if (obj.isMesh && obj.material) {
+                                let mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+                                mats.forEach(m => m.needsUpdate = true);
+                            }
+                        });
+                        
                         // Kích sáng chính cái bầu trời lên cho rực rỡ
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
