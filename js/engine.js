@@ -688,14 +688,27 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 if (child.material) {
 
 
+
+
+
+
+
+
+
                     // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
                     if (child.material.map && !window.anhMoiTruongHDRI) {
-                        window.anhMoiTruongHDRI = child.material.map;
-                        window.anhMoiTruongHDRI.mapping = THREE.EquirectangularReflectionMapping;
-                        scene.environment = window.anhMoiTruongHDRI; // Gắn nguồn sáng lấp lánh cho nhân vật
-                        console.log("🌌 Đã trích xuất HDRI thành công từ: " + child.name);
                         
-                        // 🌟 BẢN VÁ BỆNH ĐEN THUI: Gọi tất cả vũ khí, Rồng, Nhân vật cập nhật lại da để nhận ánh sáng mới!
+                        // 🌟 BÍ THUẬT PMREM: XỬ LÝ ẢNH CHUẨN PBR CHO KIM LOẠI
+                        let pmremGenerator = new THREE.PMREMGenerator(window.renderer);
+                        pmremGenerator.compileEquirectangularShader();
+                        
+                        // Lọc ảnh và gán vào môi trường
+                        window.anhMoiTruongHDRI = pmremGenerator.fromEquirectangular(child.material.map).texture;
+                        scene.environment = window.anhMoiTruongHDRI; 
+                        
+                        console.log("🌌 Đã trích xuất HDRI chuẩn PMREM thành công!");
+                        
+                        // Gọi tất cả cập nhật lại da dẻ
                         scene.traverse((obj) => {
                             if (obj.isMesh && obj.material) {
                                 let mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -703,7 +716,7 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                             }
                         });
                         
-                        // Kích sáng chính cái bầu trời lên cho rực rỡ
+                        // Kích sáng chính cái bầu trời
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
