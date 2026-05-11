@@ -1299,10 +1299,9 @@ function animate() {
 
             // 🌟 VẪN ÉP XUNG CPU: Chỉ tính toán nặng 3 khung hình/lần để chống giật lag
             if (window.khungHinhRadar % 3 === 0 || window.khungHinhRadar < 20) {
-                
-                // 🛑 CHỮA BỆNH KẸT TRÊN TRỜI: Bắn tia Laser từ không gian (500.000m) xuống
-                // Đảm bảo dù Sếp bay cao cỡ nào cũng không bao giờ mất dấu mặt đất!
-                let tiaXuatPhat = tamHanhTinh.clone().add(huongLenTroiMoi.clone().multiplyScalar(500000));
+                // Đổi 500000 thành 50000 (Tia laser không cần bắn từ quá xa nữa)
+                let tiaXuatPhat = tamHanhTinh.clone().add(huongLenTroiMoi.clone().multiplyScalar(50000));
+                window.radarTrongLuc.set(tiaXuatPhat, huongLenTroiMoi.clone().negate());
 
                 window.radarTrongLuc.set(tiaXuatPhat, huongLenTroiMoi.clone().negate());
                 
@@ -1318,9 +1317,17 @@ function animate() {
                 }
             }
 
-            var rHanhTinh = window.mucTieuBanKinhDat || 82576.0;
+
+
+
+
+            // Sửa 82576.0 thành 10000.0
+            var rHanhTinh = window.mucTieuBanKinhDat || 10000.0;
             window.TAM_HANH_TINH_HIEN_TAI = tamHanhTinh.clone();
             window.BAN_KINH_HANH_TINH_HIEN_TAI = rHanhTinh;
+
+
+
 
             // --- 2. ĐO ĐỘ CAO THỰC TẾ ---
             var doCao = playerModel.position.distanceTo(tamHanhTinh) - rHanhTinh;
