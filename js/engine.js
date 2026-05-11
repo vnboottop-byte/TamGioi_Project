@@ -230,17 +230,25 @@ window.bocHDRI_NhanVat = function (model) {
     });
 };
 
+
+
+
+
+
+
 window.fixHieuUngDenThui = function (model) {
     if (!model) return;
     model.traverse(c => {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
             mats.forEach(mat => {
-                // CHỈ FIX KÊNH UV, TUYỆT ĐỐI KHÔNG ĐỤNG CHẠM ĐẾN MÀU SƠN VÀ ĐỘ BÓNG CỦA 3D ARTIST NỮA!
+                // 🌟 BẮT BUỘC PHẢI CÓ ĐOẠN NÀY ĐỂ FIX LỖI XUẤT UV TỪ BLENDER
                 if (mat.metalnessMap) mat.metalnessMap.channel = 0;
                 if (mat.roughnessMap) mat.roughnessMap.channel = 0;
                 if (mat.normalMap) mat.normalMap.channel = 0;
                 if (mat.aoMap) mat.aoMap.channel = 0;
+                
+                // TUYỆT ĐỐI KHÔNG SET CỨNG mat.metalness HAY mat.roughness Ở ĐÂY NỮA
                 mat.needsUpdate = true;
             });
         }
