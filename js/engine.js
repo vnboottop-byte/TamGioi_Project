@@ -2052,40 +2052,39 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
                     if (laMatNuoc) {
-                        // 🌊 ĐẶC TRỊ MẶT BIỂN V2: CHỮA GƯƠNG PHẢN CHIẾU & LÀM NHỎ GỢN SÓNG
+                        // 🌊 ĐẶC TRỊ MẶT BIỂN V3: CẮT ĐỨT PHẢN CHIẾU BẦU TRỜI
                         mat.transparent = true;
-                        mat.opacity = 0.9; 
+                        mat.opacity = 0.85; // Trong vắt vừa đủ nhìn thấy đáy cạn
                         
-                        // Nước không phải kim loại! Tắt metalness và tăng nhám để làm mờ hình phản chiếu bầu trời
-                        mat.roughness = 0.65; 
-                        mat.metalness = 0.05; 
-                        mat.envMapIntensity = 0.25; // Hút ít HDRI lại cho đỡ chói
+                        // 1. Tắt hoàn toàn phản chiếu bầu trời để nó không đi theo Sếp nữa!
+                        mat.envMapIntensity = 0.0; 
+                        mat.metalness = 0.0; 
+                        mat.roughness = 0.8; // Nhám cao để ra chất nước
+                        
+                        // 2. Nhuộm màu xanh đại dương thẳm (Chống việc nước bị nhợt nhạt khi tắt HDRI)
+                        if (mat.color) mat.color.setHex(0x0a1e3f); 
 
                         // 🌟 CHUẨN BỊ CHO CUỘN SÓNG (UV SCROLLING)
                         if (mat.map) {
                             mat.map.wrapS = THREE.RepeatWrapping; 
                             mat.map.wrapT = THREE.RepeatWrapping;
                             
-                            // 🌟 BÍ THUẬT TỐC ĐỘ: Ép tấm ảnh chia nhỏ và lặp lại 15 lần
-                            // Điều này làm gợn sóng nhỏ lại, khi cuộn sẽ tạo cảm giác bay xé gió cực nhanh!
-                            mat.map.repeat.set(15, 15); 
+                            // Lặp lại 20 lần để sóng siêu nhỏ, bay qua thấy vù vù!
+                            mat.map.repeat.set(20, 20); 
 
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
                             window.danhSachMatNuoc.push(mat.map);
                         }
-
-
-
-
-
-
-                        if (mat.normalMap) { // Nếu Sếp có gắn Normal Map trong Blender
-                            mat.normalMap.wrapS = THREE.RepeatWrapping; mat.normalMap.wrapT = THREE.RepeatWrapping;
-                            if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
-                            window.danhSachMatNuoc.push(mat.normalMap);
-                        }
                         mat.needsUpdate = true;
-                    } 
+                    }
+
+
+
+
+
+                    
+
+
                     else {
                         // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
                         if (mat.emissive) mat.emissive.setHex(0x000000);
