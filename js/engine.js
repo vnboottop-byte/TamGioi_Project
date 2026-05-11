@@ -208,6 +208,15 @@ window.donRac3D = function (obj) {
 };
 
 
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
+hemiLight.position.set(0, 50, 0);
+scene.add(hemiLight);
+
+const denCamera = new THREE.DirectionalLight(0xffffff, 1.2);
+denCamera.position.set(0, 5, 15);
+camera.add(denCamera);
+if (!scene.children.includes(camera)) scene.add(camera);
+
 
 
 
@@ -298,24 +307,6 @@ setInterval(() => {
 
 
 
-
-const lightNhe = new THREE.AmbientLight(0xffffff, 0.0);
-scene.add(lightNhe);
-
-window.ganHaoQuangThanThanh = function (model) {
-    return; // 🌟 CHẶN HỌNG TẠI ĐÂY: Hàm sẽ tự hủy, cái vòng vàng bốc hơi vĩnh viễn!
-
-    if (!model || model.daCoHaoQuang) return;
-    const denHaoQuang = new THREE.PointLight(0xfff0dd, 2.5, 40);
-    const geo = new THREE.TorusGeometry(1.5, 0.05, 16, 100);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
-    const vòngHàoQuang = new THREE.Mesh(geo, mat); vòngHàoQuang.add(denHaoQuang);
-    let xuongLung = null;
-    model.traverse(c => { if (c.isBone && (c.name.toLowerCase().includes('spine') || c.name.toLowerCase().includes('chest'))) xuongLung = c; });
-    if (xuongLung) { xuongLung.add(vòngHàoQuang); vòngHàoQuang.position.set(0, 10, -5); vòngHàoQuang.rotation.y = Math.PI; }
-    else { model.add(vòngHàoQuang); vòngHàoQuang.position.set(0, 5, -2); }
-    model.daCoHaoQuang = true; window.vongHaoQuangCuaToi = vòngHàoQuang;
-};
 
 
 
