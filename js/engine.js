@@ -670,46 +670,26 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
             if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao')) laMayKhyQuyen = true;
 
+
+
+
+
+
             if (laMayKhyQuyen) {
                 // 🌟 XỬ LÝ KHÍ QUYỂN / NGÂN HÀ / MÂY
                 child.frustumCulled = false;
                 child.renderOrder = -1; // Đẩy ra xa nhất
 
                 if (child.material) {
-
-
-
-
-
-                    // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
-                    if (child.material.map && !window.anhMoiTruongHDRI) {
-
-                        // Hủy bỏ PMREM (bộ lọc làm đen ảnh), gán trực tiếp ảnh làm nguồn sáng!
-                        window.anhMoiTruongHDRI = child.material.map;
-                        window.anhMoiTruongHDRI.mapping = THREE.EquirectangularReflectionMapping;
-                        scene.environment = window.anhMoiTruongHDRI;
-
-                        console.log("🌌 Đã trích xuất HDRI thành công!");
-
-                        // Đánh thức vật liệu của Boss để nhận ánh sáng mới
-                        scene.traverse((obj) => {
-                            if (obj.isMesh && obj.material) {
-                                let mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-                                mats.forEach(m => m.needsUpdate = true);
-                            }
-                        });
-
-                        // Kích sáng chính cái bầu trời
+                    
+                    // 🛑 ĐÃ TẮT BỘ HÚT HDRI: Không lấy vũ trụ làm ánh sáng nữa vì nó gây đen kim loại!
+                    
+                    // Chỉ kích sáng chính cái bầu trời lên cho đẹp
+                    if (child.material.map) {
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
                     }
-
-
-
-
-
-
 
                     // Ép mây thành dạng xuyên thấu
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
@@ -722,6 +702,13 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 }
                 child.userData.isCloud = true;
             }
+
+
+
+
+
+
+
             else {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
                 child.frustumCulled = false;
