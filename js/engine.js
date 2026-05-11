@@ -2241,32 +2241,29 @@ setInterval(() => {
         let khoangCach = pPos.distanceTo(mPos);
 
         // ==========================================
-        // 🟢 TẦNG 1: LOAD ĐẤT ĐAI (LÁT CẮT 15.000m)
-        // Dư sức bao trọn tầm nhìn khi Sếp bay cao 1000m
+        // 🟢 TẦNG 1: LOAD ĐẤT ĐAI (LÁT CẮT 10.000m)
         // ==========================================
-        if (khoangCach < 30000 && !mapData.isLoaded && !mapData.isLoading) {
+        if (khoangCach < 10000 && !mapData.isLoaded && !mapData.isLoading) {
             window.xuLyLoadMapChunk(mapData);
         }
 
         // ==========================================
-        // 🟢 TẦNG 2: LOAD SINH THÁI & BOSS (LÁT CẮT 3.000m)
-        // Chỉ khi tới gần làng mới bắt đầu thả quái ra chạy lăng xăng
+        // 🟢 TẦNG 2: LOAD SINH THÁI & BOSS (LÁT CẮT 5.000m)
         // ==========================================
-        if (khoangCach < 6000 && mapData.isLoaded && !mapData.daLoadBoss) {
+        if (khoangCach < 5000 && mapData.isLoaded && !mapData.daLoadBoss) {
             if (typeof window.taiBossTheoMap === 'function') {
                 window.taiBossTheoMap(mapData.id);
-                mapData.daLoadBoss = true; // Đóng dấu đã load quái
+                mapData.daLoadBoss = true;
             }
         }
 
         // ==========================================
-        // 🔴 TẦNG 3: LÒ ĐỐT RÁC VRAM (VƯỢT LÁT CẮT 18.000m)
-        // Đi khỏi khu vực là thiêu rụi toàn bộ Đất và Quái!
+        // 🔴 TẦNG 3: LÒ ĐỐT RÁC VRAM (VƯỢT LÁT CẮT 12.000m)
         // ==========================================
-        if (khoangCach > 32000 && mapData.isLoaded) {
+        if (khoangCach > 12000 && mapData.isLoaded) {
             window.xuLyXoaMapChunk(mapData);
             window.xuLyXoaBossTheoMap(mapData.id);
-            mapData.daLoadBoss = false; // Reset lại trạng thái
+            mapData.daLoadBoss = false;
         }
     });
 }, 2000);
