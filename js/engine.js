@@ -311,16 +311,6 @@ setInterval(() => {
 
 
 
-setInterval(() => {
-    if (typeof playerModel !== 'undefined' && playerModel) {
-        if (!playerModel.daFixInox) { window.fixHieuUngDenThui(playerModel); playerModel.daFixInox = true; }
-       // if (!playerModel.daCoHaoQuang) window.ganHaoQuangThanThanh(playerModel);
-    }
-   // if (window.vongHaoQuangCuaToi) window.vongHaoQuangCuaToi.rotation.z += 0.02;
-}, 1000);
-
-
-
 const renderScene = new THREE.RenderPass(scene, camera);
 
 // 🌟 THÔNG SỐ CHUẨN CHỐNG CHÓI LÓA TẠI ĐÂY:
