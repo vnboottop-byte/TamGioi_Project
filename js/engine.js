@@ -1879,11 +1879,15 @@ window.xuLyLoadMapChunk = function (mapData) {
     if (mapData.isLoaded || mapData.isLoading || typeof window.loaderSieuToc === 'undefined') return;
     mapData.isLoading = true;
 
-    // 🌟 1. THÊM CHỮ "async" ĐỂ KÍCH HOẠT CHẾ ĐỘ NHAI TỪ TỪ
     window.loaderSieuToc.load(mapData.model_url, async function (gltf) {
         let mapMesh = gltf.scene;
-        let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 80000;
+        // 🌟 CẬP NHẬT BÁN KÍNH MỚI: 10.000m
+        let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000.0;
         let tamHanhTinh = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
+
+
+
+
 
         // Đặt vị trí và bẻ hướng lên trời
         mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
