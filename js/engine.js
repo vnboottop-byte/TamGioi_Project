@@ -2017,23 +2017,69 @@ window.xuLyLoadMapChunk = function (mapData) {
                 child.geometry.computeVertexNormals();
             }
 
+
+
+
+
+
+
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
+                let tenMesh = child.name.toLowerCase();
+                // Nhận diện nếu tên khối chứa chữ "nước", "biển", "water", "ocean"
+                let laMatNuoc = tenMesh.includes('water') || tenMesh.includes('nuoc') || tenMesh.includes('bien') || tenMesh.includes('ocean');
+
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
                 mats.forEach(mat => {
-                    if (mat.emissive) mat.emissive.setHex(0x000000);
-                    if (mat.roughness !== undefined) mat.roughness = 1.0;
-                    if (mat.metalness !== undefined) mat.metalness = 0.0;
-                    if (mat.color) {
-                        let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
-                        if (doSang > 0.8) { mat.color.r *= 0.25; mat.color.g *= 0.25; mat.color.b *= 0.25; }
-                        else if (doSang > 0.5) { mat.color.r *= 0.8; mat.color.g *= 0.8; mat.color.b *= 0.8; }
-                        else { mat.color.r *= 0.95; mat.color.g *= 0.95; mat.color.b *= 0.95; }
+                    if (laMatNuoc) {
+                        // 🌊 ĐẶC TRỊ MẶT BIỂN: CHỮA BỆNH KÍNH TRONG SUỐT VÀ GƯƠNG PHẲNG
+                        mat.transparent = true;
+                        mat.opacity = 0.95; // Giảm độ trong suốt để thấy rõ màu nước biển sâu
+                        mat.roughness = 0.25; // Trả lại độ nhám, tạo cảm giác gợn sóng lăn tăn
+                        mat.metalness = 0.6; // Giảm độ bóng kim loại xuống để bớt chói HDRI
+                        mat.envMapIntensity = 0.5; // Giảm cường độ phản chiếu bầu trời
+
+                        // 🌟 CHUẨN BỊ CHO CUỘN SÓNG (UV SCROLLING)
+                        if (mat.map) {
+                            mat.map.wrapS = THREE.RepeatWrapping; mat.map.wrapT = THREE.RepeatWrapping;
+                            if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
+                            window.danhSachMatNuoc.push(mat.map);
+                        }
+                        if (mat.normalMap) { // Nếu Sếp có gắn Normal Map trong Blender
+                            mat.normalMap.wrapS = THREE.RepeatWrapping; mat.normalMap.wrapT = THREE.RepeatWrapping;
+                            if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
+                            window.danhSachMatNuoc.push(mat.normalMap);
+                        }
+                        mat.needsUpdate = true;
+                    } 
+                    else {
+                        // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
+                        if (mat.emissive) mat.emissive.setHex(0x000000);
+                        if (mat.roughness !== undefined) mat.roughness = 1.0;
+                        if (mat.metalness !== undefined) mat.metalness = 0.0;
+                        if (mat.color) {
+                            let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
+                            if (doSang > 0.8) { mat.color.r *= 0.25; mat.color.g *= 0.25; mat.color.b *= 0.25; }
+                            else if (doSang > 0.5) { mat.color.r *= 0.8; mat.color.g *= 0.8; mat.color.b *= 0.8; }
+                            else { mat.color.r *= 0.95; mat.color.g *= 0.95; mat.color.b *= 0.95; }
+                        }
+                        mat.needsUpdate = true;
+                        mat.side = THREE.DoubleSide;
                     }
-                    mat.needsUpdate = true;
-                    mat.side = THREE.DoubleSide;
                 });
             }
+
+
+
+
+
+
+
+
+
+
+
+
 
             if (child.geometry) {
                 child.geometry.computeBoundingBox();
