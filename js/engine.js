@@ -8,18 +8,25 @@ window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.inner
 // 🌟 NHẬN DIỆN ĐIỆN THOẠI
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+
+
+
+
 // 🌟 THIẾT LẬP RENDERER LITE CHO ĐIỆN THOẠI
 window.renderer = new THREE.WebGLRenderer({ 
-    antialias: !window.isMobile, // Điện thoại thì tắt khử răng cưa cho nhẹ máy
-    logarithmicDepthBuffer: false // Điện thoại tắt cái này chống lỗi shader
+    antialias: !window.isMobile, 
+    logarithmicDepthBuffer: false 
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-// Điện thoại ép PixelRatio = 1 để tránh màn hình Retina (iPhone) render 4K gây cháy máy
 renderer.setPixelRatio(window.isMobile ? 1 : window.devicePixelRatio); 
 renderer.outputEncoding = THREE.sRGBEncoding;
+
+// 🌟 BẢN VÁ AAA: BẬT TONE MAPPING CHUẨN ĐIỆN ẢNH (BÍ QUYẾT CỦA GLTF-VIEWER)
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1; // Chỉnh độ rực sáng (1.0 đến 1.5)
+
 document.body.appendChild(renderer.domElement);
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-
 
 
 
@@ -208,29 +215,37 @@ if (!scene.children.includes(camera)) scene.add(camera);
 
 
 
-
-
-
 window.bocHDRI_NhanVat = function (model) {
-    if (!model) return; // 🌟 ĐÃ XÓA KIỂM TRA HDRI: Vì ta sẽ dùng thẳng scene.environment
+    // 🌟 ĐÃ XÓA KHỚP: Không cưỡng chế áp đặt Metalness/Roughness nữa! 
+    // Hệ thống Scene.Environment sẽ tự động phản chiếu lên các bề mặt kim loại gốc của GLTF.
+    if (!model) return;
     model.traverse(c => {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
             mats.forEach(mat => {
-                // Xóa gán mat.envMap tĩnh, để ThreeJS tự động lấy từ scene.environment
-                mat.envMapIntensity = 1.2; 
-                
-                // 🌟 CHUẨN HÓA LẠI KIM LOẠI (Metalness tối đa chỉ là 1.0, để 1.5 sẽ bị lỗi đen)
-                if (mat.metalness !== undefined) mat.metalness = 0.8;
-                if (mat.roughness !== undefined) mat.roughness = 0.15;
-                
+                mat.envMapIntensity = 1.0; 
                 mat.needsUpdate = true;
             });
         }
     });
 };
 
-
+window.fixHieuUngDenThui = function (model) {
+    if (!model) return;
+    model.traverse(c => {
+        if (c.isMesh && c.material) {
+            let mats = Array.isArray(c.material) ? c.material : [c.material];
+            mats.forEach(mat => {
+                // CHỈ FIX KÊNH UV, TUYỆT ĐỐI KHÔNG ĐỤNG CHẠM ĐẾN MÀU SƠN VÀ ĐỘ BÓNG CỦA 3D ARTIST NỮA!
+                if (mat.metalnessMap) mat.metalnessMap.channel = 0;
+                if (mat.roughnessMap) mat.roughnessMap.channel = 0;
+                if (mat.normalMap) mat.normalMap.channel = 0;
+                if (mat.aoMap) mat.aoMap.channel = 0;
+                mat.needsUpdate = true;
+            });
+        }
+    });
+};
 
 
 
@@ -316,27 +331,7 @@ window.ganHaoQuangThanThanh = function (model) {
 };
 
 
-window.fixHieuUngDenThui = function (model) {
-    if (!model) return;
-    model.traverse(c => {
-        if (c.isMesh && c.material) {
-            let mats = Array.isArray(c.material) ? c.material : [c.material];
-            mats.forEach(mat => {
-                // 🌟 BẢN VÁ UV: Ép các bản đồ về kênh UV0 để tắt cảnh báo Console
-                if (mat.metalnessMap) mat.metalnessMap.channel = 0;
-                if (mat.roughnessMap) mat.roughnessMap.channel = 0;
-                if (mat.normalMap) mat.normalMap.channel = 0;
-                if (mat.aoMap) mat.aoMap.channel = 0;
 
-                mat.metalness = 0.25;
-                mat.roughness = 0.4;
-
-                if (mat.map && mat.color) mat.color.setHex(0xffffff);
-                mat.needsUpdate = true;
-            });
-        }
-    });
-};
 
 setInterval(() => {
     if (typeof playerModel !== 'undefined' && playerModel) {
@@ -2043,7 +2038,6 @@ window.xuLyLoadMapChunk = function (mapData) {
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
                 let tenMesh = child.name.toLowerCase();
-                // Nhận diện nếu tên khối chứa chữ "nước", "biển", "water", "ocean"
                 let laMatNuoc = tenMesh.includes('water') || tenMesh.includes('nuoc') || tenMesh.includes('bien') || tenMesh.includes('ocean');
 
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
@@ -2054,7 +2048,7 @@ window.xuLyLoadMapChunk = function (mapData) {
                     let newMats = mats.map(mat => {
                         let basicMat = new THREE.MeshBasicMaterial({
                             map: mat.map,
-                            color: mat.color || 0x3498db, // Kích màu xanh nước biển cho tươi sáng
+                            color: mat.color || 0x1e90ff, // Màu xanh biển tươi
                             transparent: true,
                             opacity: 0.8,
                             side: THREE.DoubleSide
@@ -2063,10 +2057,7 @@ window.xuLyLoadMapChunk = function (mapData) {
                         if (basicMat.map) {
                             basicMat.map.wrapS = THREE.RepeatWrapping; 
                             basicMat.map.wrapT = THREE.RepeatWrapping;
-                            
-                            // Lặp lại 15 lần để vân sóng nhỏ đi, cảm giác bay sẽ xé gió cực nhanh!
-                            basicMat.map.repeat.set(15, 15); 
-
+                            basicMat.map.repeat.set(15, 15); // Lặp vân 15 lần để tạo sóng li ti
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
                             window.danhSachMatNuoc.push(basicMat.map);
                         }
@@ -2080,8 +2071,7 @@ window.xuLyLoadMapChunk = function (mapData) {
                     // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
                     mats.forEach(mat => {
                         if (mat.emissive) mat.emissive.setHex(0x000000);
-                        if (mat.roughness !== undefined) mat.roughness = 1.0;
-                        if (mat.metalness !== undefined) mat.metalness = 0.0;
+                        // Xóa các lệnh ép metalness/roughness ở đây để giữ nguyên chất liệu của đá/cây
                         if (mat.color) {
                             let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
                             if (doSang > 0.8) { mat.color.r *= 0.25; mat.color.g *= 0.25; mat.color.b *= 0.25; }
