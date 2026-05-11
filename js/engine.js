@@ -2037,6 +2037,9 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
 
+
+
+
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
                 let tenMesh = child.name.toLowerCase();
@@ -2044,52 +2047,38 @@ window.xuLyLoadMapChunk = function (mapData) {
                 let laMatNuoc = tenMesh.includes('water') || tenMesh.includes('nuoc') || tenMesh.includes('bien') || tenMesh.includes('ocean');
 
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
-                mats.forEach(mat => {
+                
+                if (laMatNuoc) {
+                    // 🌊 GIẢI PHÁP TỐI THƯỢNG: ÉP MẶT NƯỚC THÀNH VẬT LIỆU "BASIC" 
+                    // (Miễn nhiễm 100% với bóng tối, HDRI, tự phát sáng rực rỡ)
+                    let newMats = mats.map(mat => {
+                        let basicMat = new THREE.MeshBasicMaterial({
+                            map: mat.map,
+                            color: mat.color || 0x3498db, // Kích màu xanh nước biển cho tươi sáng
+                            transparent: true,
+                            opacity: 0.8,
+                            side: THREE.DoubleSide
+                        });
 
-
-
-
-
-
-                    if (laMatNuoc) {
-                        // 🌊 TRẢ LẠI MẶT NƯỚC CŨ (TẮT HDR - GIỮ TỐC ĐỘ)
-                        mat.transparent = true;
-                        mat.opacity = 0.8; // Độ trong suốt vừa phải như bản gốc
-                        
-                        // 🌟 BÍ THUẬT: CẮT ĐỨT KẾT NỐI VỚI VŨ TRỤ
-                        mat.envMap = null; // Gỡ bỏ hoàn toàn ảnh phản chiếu HDRI
-                        mat.envMapIntensity = 0; 
-                        
-                        // Trả về thông số vật liệu cơ bản (Dielectric)
-                        mat.metalness = 0.0; 
-                        mat.roughness = 1.0; // Tăng nhám tối đa để không bắt bóng
-                        
-                        // Giữ lại màu gốc từ Blender hoặc set màu xanh nhẹ
-                        if (mat.map) {
-                            mat.map.wrapS = THREE.RepeatWrapping; 
-                            mat.map.wrapT = THREE.RepeatWrapping;
+                        if (basicMat.map) {
+                            basicMat.map.wrapS = THREE.RepeatWrapping; 
+                            basicMat.map.wrapT = THREE.RepeatWrapping;
                             
-                            // 🌟 GIỮ LẠI CÁI NÀY ĐỂ CÓ CẢM GIÁC DI CHUYỂN:
-                            // Sếp để lặp lại tầm 10-15 lần để vân nước nhỏ lại cho đẹp
-                            mat.map.repeat.set(15, 15); 
+                            // Lặp lại 15 lần để vân sóng nhỏ đi, cảm giác bay sẽ xé gió cực nhanh!
+                            basicMat.map.repeat.set(15, 15); 
 
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
-                            window.danhSachMatNuoc.push(mat.map);
+                            window.danhSachMatNuoc.push(basicMat.map);
                         }
-                        
-                        mat.needsUpdate = true;
-                        console.log("🌊 Đã trả lại mặt nước nguyên thủy cho: " + child.name);
-                    }
-
-
-
-
-
-
-
-
-                    else {
-                        // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
+                        return basicMat;
+                    });
+                    
+                    child.material = newMats.length === 1 ? newMats[0] : newMats;
+                    console.log("🌊 Đã ÉP KIỂU mặt nước thành BasicMaterial cho: " + child.name);
+                } 
+                else {
+                    // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
+                    mats.forEach(mat => {
                         if (mat.emissive) mat.emissive.setHex(0x000000);
                         if (mat.roughness !== undefined) mat.roughness = 1.0;
                         if (mat.metalness !== undefined) mat.metalness = 0.0;
@@ -2101,8 +2090,8 @@ window.xuLyLoadMapChunk = function (mapData) {
                         }
                         mat.needsUpdate = true;
                         mat.side = THREE.DoubleSide;
-                    }
-                });
+                    });
+                }
             }
 
 
