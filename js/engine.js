@@ -370,17 +370,31 @@ const bloomPass = new THREE.UnrealBloomPass(
 
 
 
+
+
+
+
 window.composer = new THREE.EffectComposer(renderer);
 composer.addPass(renderScene);
 composer.addPass(bloomPass);
 
-// 🌟 BẢN VÁ AAA: LỚP KHỬ RĂNG CƯA CAO CẤP SMAA (Bỏ qua nếu là Điện Thoại để chống giật)
+// Lớp Khử Răng Cưa
 if (!window.isMobile && typeof THREE.SMAAPass !== 'undefined') {
     const smaaPass = new THREE.SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
     composer.addPass(smaaPass);
 }
 
+// 🌟 BẢN VÁ AAA: PHỤC HỒI ÁNH SÁNG THỰC (BẮT BUỘC PHẢI NẰM CUỐI CÙNG)
+if (typeof THREE.GammaCorrectionShader !== 'undefined') {
+    const gammaPass = new THREE.ShaderPass(THREE.GammaCorrectionShader);
+    composer.addPass(gammaPass);
+}
+
 let mixer, playerModel, currentAction;
+
+
+
+
 
 
 
