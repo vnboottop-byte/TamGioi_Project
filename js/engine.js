@@ -208,15 +208,6 @@ window.donRac3D = function (obj) {
 };
 
 
-const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
-hemiLight.position.set(0, 50, 0);
-scene.add(hemiLight);
-
-const denCamera = new THREE.DirectionalLight(0xffffff, 1.2);
-denCamera.position.set(0, 5, 15);
-camera.add(denCamera);
-if (!scene.children.includes(camera)) scene.add(camera);
-
 
 
 
