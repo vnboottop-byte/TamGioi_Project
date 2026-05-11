@@ -12,10 +12,10 @@ window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini
 
 
 
-// 🌟 THIẾT LẬP RENDERER LITE CHO ĐIỆN THOẠI
-window.renderer = new THREE.WebGLRenderer({ 
-    antialias: !window.isMobile, 
-    logarithmicDepthBuffer: false 
+window.renderer = new THREE.WebGLRenderer({
+    antialias: !window.isMobile,
+    // 🌟 BẬT LOGARITHMIC CHO PC ĐỂ CHỐNG LỖI XƯỚC ĐEN MÔ HÌNH Ở MAP RỘNG
+    logarithmicDepthBuffer: !window.isMobile
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.isMobile ? 1 : window.devicePixelRatio); 
