@@ -213,30 +213,29 @@ if (!scene.children.includes(camera)) scene.add(camera);
 
 
 
-
-
 window.bocHDRI_NhanVat = function (model) {
-    // 🛑 ĐÃ KHÓA: Không làm gì cả để Three.js tự động dùng HDRI của môi trường
-    return; 
-};
-
-window.fixHieuUngDenThui = function (model) {
     if (!model) return;
     model.traverse(c => {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
             mats.forEach(mat => {
-                // 🌟 CHỈ FIX LỖI KÊNH UV TỪ BLENDER, KHÔNG ĐỤNG ĐẾN ĐỘ BÓNG KIM LOẠI
-                if (mat.metalnessMap) mat.metalnessMap.channel = 0;
-                if (mat.roughnessMap) mat.roughnessMap.channel = 0;
-                if (mat.normalMap) mat.normalMap.channel = 0;
-                if (mat.aoMap) mat.aoMap.channel = 0;
+                // 🌟 BÍ QUYẾT TỐI THƯỢNG:
+                // Vì ảnh vũ trụ là ảnh thường (LDR) nên qua bộ lọc phim rạp nó bị tối.
+                // Ta phải ÉP cường độ soi gương nhân lên 4 lần thì Kim loại mới sáng chói được!
+                if (window.anhMoiTruongHDRI) {
+                    mat.envMap = window.anhMoiTruongHDRI;
+                }
+                mat.envMapIntensity = 4.0; // Bơm ánh sáng lên x4
                 mat.needsUpdate = true;
             });
         }
     });
 };
 
+window.fixHieuUngDenThui = function (model) {
+    // 🛑 ĐÃ KHÓA HOÀN TOÀN: Để nguyên vẹn 100% lớp sơn UV gốc của 3D Artist
+    return;
+};
 
 
 
@@ -670,16 +669,21 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 child.renderOrder = -1; // Đẩy ra xa nhất
 
                 if (child.material) {
-                    // 🌟 BÍ THUẬT PMREM: LÀM PHẲNG ÁNH SÁNG ĐỂ BOSS KHÔNG BỊ ĐEN THUI
+
+
+
+
+
+                    // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
                     if (child.material.map && !window.anhMoiTruongHDRI) {
-                        let pmremGenerator = new THREE.PMREMGenerator(window.renderer);
-                        pmremGenerator.compileEquirectangularShader();
-                        
-                        window.anhMoiTruongHDRI = pmremGenerator.fromEquirectangular(child.material.map).texture;
-                        scene.environment = window.anhMoiTruongHDRI; 
-                        
-                        console.log("🌌 Đã trích xuất HDRI chuẩn PMREM thành công!");
-                        
+
+                        // Hủy bỏ PMREM (bộ lọc làm đen ảnh), gán trực tiếp ảnh làm nguồn sáng!
+                        window.anhMoiTruongHDRI = child.material.map;
+                        window.anhMoiTruongHDRI.mapping = THREE.EquirectangularReflectionMapping;
+                        scene.environment = window.anhMoiTruongHDRI;
+
+                        console.log("🌌 Đã trích xuất HDRI thành công!");
+
                         // Đánh thức vật liệu của Boss để nhận ánh sáng mới
                         scene.traverse((obj) => {
                             if (obj.isMesh && obj.material) {
@@ -687,11 +691,18 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                                 mats.forEach(m => m.needsUpdate = true);
                             }
                         });
-                        
+
+                        // Kích sáng chính cái bầu trời
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
                     }
+
+
+
+
+
+
 
                     // Ép mây thành dạng xuyên thấu
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
