@@ -365,11 +365,29 @@ const bloomPass = new THREE.UnrealBloomPass(
     0.98   // 3. THRESHOLD (Ngưỡng): TĂNG LÊN 0.85 hoặc 0.9. (Cái này cực quan trọng: Nó giúp mặt đất không bị phát sáng, chỉ có Lazer/Skill mới có hào quang!)
 );
 
+
+
+
+
+
 window.composer = new THREE.EffectComposer(renderer);
 composer.addPass(renderScene);
 composer.addPass(bloomPass);
 
-let mixer, playerModel, currentAction; 
+// 🌟 BẢN VÁ AAA: LỚP KHỬ RĂNG CƯA CAO CẤP SMAA (Bỏ qua nếu là Điện Thoại để chống giật)
+if (!window.isMobile && typeof THREE.SMAAPass !== 'undefined') {
+    const smaaPass = new THREE.SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
+    composer.addPass(smaaPass);
+}
+
+let mixer, playerModel, currentAction;
+
+
+
+
+
+
+
 let currentAnimName = ''; 
 let animationsMap = {}; 
 window.isMoving = false;
@@ -656,14 +674,35 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 laMayKhyQuyen = true;
             }
 
+
+
+
+
             if (laMayKhyQuyen) {
                 // 🌟 XỬ LÝ KHÍ QUYỂN / NGÂN HÀ / MÂY
                 child.frustumCulled = false;
                 child.renderOrder = -1; // Đẩy ra xa nhất
 
-                 
-
                 if (child.material) {
+                    // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
+                    if (child.material.map && !window.anhMoiTruongHDRI) {
+                        window.anhMoiTruongHDRI = child.material.map;
+                        window.anhMoiTruongHDRI.mapping = THREE.EquirectangularReflectionMapping;
+                        scene.environment = window.anhMoiTruongHDRI; // Gắn nguồn sáng lấp lánh cho nhân vật
+                        console.log("🌌 Đã trích xuất HDRI thành công từ: " + child.name);
+
+                        // Kích sáng chính cái bầu trời lên cho rực rỡ
+                        child.material.emissiveMap = child.material.map;
+                        child.material.emissive = new THREE.Color(0xffffff);
+                        child.material.emissiveIntensity = 1.2;
+                    }
+
+
+
+
+
+
+
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
                         map: mat.map, color: mat.color || 0xffffff, transparent: true,
@@ -677,6 +716,10 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 child.userData.isCloud = true;
                 console.log("☁️ Đã biến thành khí (xuyên thấu):", child.name);
             }
+
+
+
+
             else {
                 // 🌟 XỬ LÝ MẶT ĐẤT CỨNG (Có BVH)
                 child.frustumCulled = false;
@@ -686,9 +729,19 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     mats.forEach(mat => {
                         // 🛑 CHỮA BỆNH LƠ LỬNG: Bắt Radar đâm xuyên cả mặt trong và mặt ngoài của núi!
                         mat.side = THREE.DoubleSide;
+
+                        // 🌟 BẢN VÁ AAA: ÉP GPU LỌC NÉT TEXTURE MẶT ĐẤT ĐẾN TẬN CHÂN TRỜI
+                        if (mat.map && window.renderer) {
+                            mat.map.anisotropy = window.renderer.capabilities.getMaxAnisotropy();
+                        }
+
                         mat.needsUpdate = true;
                     });
                 }
+
+
+
+
 
                 if (child.geometry && typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
