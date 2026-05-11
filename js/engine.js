@@ -21,11 +21,18 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.isMobile ? 1 : window.devicePixelRatio); 
 renderer.outputEncoding = THREE.sRGBEncoding;
 
-// 🌟 BẢN VÁ AAA: BẬT TONE MAPPING CHUẨN ĐIỆN ẢNH (BÍ QUYẾT CỦA GLTF-VIEWER)
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1; // Chỉnh độ rực sáng (1.0 đến 1.5)
+// 🌟 BÍ QUYẾT GLTF-VIEWER: ĐỔI VỀ LINEAR TONE MAPPING
+renderer.toneMapping = THREE.LinearToneMapping; 
+renderer.toneMappingExposure = 1.0; 
 
 document.body.appendChild(renderer.domElement);
+
+// 🌟 TẠO PHÒNG STUDIO VÔ HÌNH ĐỂ CHIẾU SÁNG KIM LOẠI TỨ PHÍA
+if (typeof THREE.RoomEnvironment !== 'undefined') {
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+}
+
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 
 
