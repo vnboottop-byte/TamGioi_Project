@@ -648,27 +648,21 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
 
     // 2. PHẪU THUẬT TÁCH LỚP DỰA THEO TÊN NODE VÀ TÊN THƯ MỤC CHA
+
+
+
+    // 2. PHẪU THUẬT TÁCH LỚP DỰA THEO TÊN NODE VÀ TÊN THƯ MỤC CHA
     mapHanhTinh.traverse((child) => {
         if (child.isMesh) {
             let tenMesh = child.name.toLowerCase();
             let laMayKhyQuyen = false;
 
-            // 🛑 BÍ THUẬT QUÉT GIA PHẢ: Kiểm tra xem cha, ông nội của Mesh này có tên là Mây không?
             child.traverseAncestors(p => {
                 let pName = p.name.toLowerCase();
-                if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao')) {
-                    laMayKhyQuyen = true;
-                }
+                if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao')) laMayKhyQuyen = true;
             });
 
-            // Kiểm tra luôn tên của chính nó
-            if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao')) {
-                laMayKhyQuyen = true;
-            }
-
-
-
-
+            if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao')) laMayKhyQuyen = true;
 
             if (laMayKhyQuyen) {
                 // 🌟 XỬ LÝ KHÍ QUYỂN / NGÂN HÀ / MÂY
@@ -676,29 +670,17 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 child.renderOrder = -1; // Đẩy ra xa nhất
 
                 if (child.material) {
-
-
-
-
-
-
-
-
-
-                    // 🌟 BẢN VÁ AAA: HÚT TEXTURE BẦU TRỜI LÀM NGUỒN SÁNG MÔI TRƯỜNG (HDRI)
+                    // 🌟 BÍ THUẬT PMREM: LÀM PHẲNG ÁNH SÁNG ĐỂ BOSS KHÔNG BỊ ĐEN THUI
                     if (child.material.map && !window.anhMoiTruongHDRI) {
-                        
-                        // 🌟 BÍ THUẬT PMREM: XỬ LÝ ẢNH CHUẨN PBR CHO KIM LOẠI
                         let pmremGenerator = new THREE.PMREMGenerator(window.renderer);
                         pmremGenerator.compileEquirectangularShader();
                         
-                        // Lọc ảnh và gán vào môi trường
                         window.anhMoiTruongHDRI = pmremGenerator.fromEquirectangular(child.material.map).texture;
                         scene.environment = window.anhMoiTruongHDRI; 
                         
                         console.log("🌌 Đã trích xuất HDRI chuẩn PMREM thành công!");
                         
-                        // Gọi tất cả cập nhật lại da dẻ
+                        // Đánh thức vật liệu của Boss để nhận ánh sáng mới
                         scene.traverse((obj) => {
                             if (obj.isMesh && obj.material) {
                                 let mats = Array.isArray(obj.material) ? obj.material : [obj.material];
@@ -706,66 +688,54 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                             }
                         });
                         
-                        // Kích sáng chính cái bầu trời
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
                     }
 
-
-
-
-
-
-
+                    // Ép mây thành dạng xuyên thấu
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
                         map: mat.map, color: mat.color || 0xffffff, transparent: true,
                         opacity: mat.opacity !== undefined ? mat.opacity : 0.8,
-                        side: THREE.DoubleSide,
-                        depthWrite: false,
-                        blending: THREE.AdditiveBlending
+                        side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
                     }));
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
-                console.log("☁️ Đã biến thành khí (xuyên thấu):", child.name);
             }
-
-
-
-
             else {
-                // 🌟 XỬ LÝ MẶT ĐẤT CỨNG (Có BVH)
+                // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
                 child.frustumCulled = false;
 
                 if (child.material) {
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(mat => {
-                        // 🛑 CHỮA BỆNH LƠ LỬNG: Bắt Radar đâm xuyên cả mặt trong và mặt ngoài của núi!
                         mat.side = THREE.DoubleSide;
+                        
+                        // 🛑 TRỊ BỆNH NƯỚC ĐỨNG YÊN: Tắt bóng HDRI cho khối Trái Đất
+                        mat.envMapIntensity = 0.0;
 
-                        // 🌟 BẢN VÁ AAA: ÉP GPU LỌC NÉT TEXTURE MẶT ĐẤT ĐẾN TẬN CHÂN TRỜI
+                        // Lọc nét bề mặt
                         if (mat.map && window.renderer) {
                             mat.map.anisotropy = window.renderer.capabilities.getMaxAnisotropy();
                         }
-
                         mat.needsUpdate = true;
                     });
                 }
 
-
-
-
-
                 if (child.geometry && typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
                 }
+                if (!window.danhSachMap) window.danhSachMap = [];
                 window.danhSachMap.push(child);
-                console.log("🟢 ĐÃ NẠP MẶT ĐẤT CỨNG CHO RADAR:", child.name);
             }
         }
     });
+
+
+
+
 
     scene.add(mapHanhTinh);
     
