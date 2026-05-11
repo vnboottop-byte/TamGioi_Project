@@ -232,7 +232,7 @@ window.bocHDRI_NhanVat = function (model) {
                 if (window.anhMoiTruongHDRI) {
                     mat.envMap = window.anhMoiTruongHDRI;
                 }
-                mat.envMapIntensity = 4.0; // Bơm ánh sáng lên x4
+                mat.envMapIntensity = 2.0; // Bơm ánh sáng lên x4
                 mat.needsUpdate = true;
             });
         }
