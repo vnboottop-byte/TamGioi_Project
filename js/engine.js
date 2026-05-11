@@ -2603,10 +2603,10 @@ window.thucHienTruyenTong = function (congData) {
                 let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
                 let khoangCach = playerModel.position.distanceTo(mPos);
 
-                if (khoangCach < 100000 && !mapData.isLoaded && !mapData.isLoading) {
+                if (khoangCach < 10000 && !mapData.isLoaded && !mapData.isLoading) {
                     if (typeof window.xuLyLoadMapChunk === 'function') window.xuLyLoadMapChunk(mapData);
                     if (typeof window.taiBossTheoMap === 'function') window.taiBossTheoMap(mapData.id);
-                } else if (khoangCach > 110000 && mapData.isLoaded) {
+                } else if (khoangCach > 12000 && mapData.isLoaded) {
                     if (typeof window.xuLyXoaMapChunk === 'function') window.xuLyXoaMapChunk(mapData);
                     if (typeof window.xuLyXoaBossTheoMap === 'function') window.xuLyXoaBossTheoMap(mapData.id);
                 }
