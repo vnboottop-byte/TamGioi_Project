@@ -8,16 +8,34 @@ $buffer_garbage = ob_get_clean(); // Hút sạch rác đi
 // BƯỚC 2: Định dạng chuẩn API
 header('Content-Type: application/json; charset=utf-8');
 
+if (!isset($_SESSION['user'])) {
+    echo json_encode(['status' => 'error', 'msg' => 'Chưa đăng nhập!']);
+    exit;
+}
+
+$username = $_SESSION['user'];
+
 try {
-    // Vét sạch kho (Thị trường Sandbox tự do)
-    $sql = "SELECT * FROM shop_items ORDER BY item_type DESC, price ASC";
-    $res = $conn->query($sql);
+    // 🌟 1. TRA CỨU MÔN PHÁI CỦA NGƯỜI CHƠI (Nối bảng cực chuẩn)
+    $stmt_phai = $conn->prepare("SELECT c.faction_code FROM game_characters gc JOIN game_classes c ON gc.class_id = c.id WHERE gc.username = ?");
+    $stmt_phai->bind_param("s", $username);
+    $stmt_phai->execute();
+    $res_phai = $stmt_phai->get_result()->fetch_assoc();
+    
+    // Lấy ra mã phái (VD: TU_TIEN, CUNG_TEN...). Nếu lỗi thì để rỗng.
+    $phai_cua_toi = $res_phai ? $res_phai['faction_code'] : '';
+
+    // 🌟 2. QUÉT KHO HÀNG (Chỉ lấy đồ Dùng chung 'ALL' hoặc đồ ĐÚNG PHÁI)
+    $sql = "SELECT * FROM shop_items WHERE required_class = 'ALL' OR required_class = ? ORDER BY item_type DESC, price ASC";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $phai_cua_toi);
+    $stmt->execute();
+    $res = $stmt->get_result();
 
     if (!$res) throw new Exception("Lỗi Database: " . $conn->error);
 
     $items = [];
     while ($row = $res->fetch_assoc()) {
-        // Cạo sạch khoảng trắng thừa trong Database nếu Sếp lỡ gõ nhầm
         $row['item_type'] = trim(strtolower($row['item_type']));
         $items[] = $row;
     }
@@ -26,7 +44,8 @@ try {
         'status' => 'success', 
         'total' => count($items), 
         'data' => $items,
-        'debug_garbage' => $buffer_garbage // In rác ra để Sếp biết db.php có lỗi không
+        'phai_cua_toi' => $phai_cua_toi, // Trả về UI để Debug nếu cần
+        'debug_garbage' => $buffer_garbage 
     ]);
 
 } catch (Exception $e) {
