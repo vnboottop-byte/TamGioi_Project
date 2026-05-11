@@ -19,7 +19,7 @@
     function taoSoSatThuongPS(pos3D, satThuong, mauSac = '#00ffff') {
         if (satThuong <= 0) return;
         const div = document.createElement('div');
-        div.innerText = "-" + satThuong;
+        div.innerText = "-" + Math.round(satThuong);
         div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000; pointer-events:none; z-index:9999;`;
         document.body.appendChild(div);
         danhSachSoBayPS.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
