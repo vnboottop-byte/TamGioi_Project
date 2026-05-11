@@ -2052,37 +2052,40 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
                     if (laMatNuoc) {
-                        // 🌊 ĐẶC TRỊ MẶT BIỂN V3: CẮT ĐỨT PHẢN CHIẾU BẦU TRỜI
+                        // 🌊 TRẢ LẠI MẶT NƯỚC CŨ (TẮT HDR - GIỮ TỐC ĐỘ)
                         mat.transparent = true;
-                        mat.opacity = 0.85; // Trong vắt vừa đủ nhìn thấy đáy cạn
+                        mat.opacity = 0.8; // Độ trong suốt vừa phải như bản gốc
                         
-                        // 1. Tắt hoàn toàn phản chiếu bầu trời để nó không đi theo Sếp nữa!
-                        mat.envMapIntensity = 0.0; 
+                        // 🌟 BÍ THUẬT: CẮT ĐỨT KẾT NỐI VỚI VŨ TRỤ
+                        mat.envMap = null; // Gỡ bỏ hoàn toàn ảnh phản chiếu HDRI
+                        mat.envMapIntensity = 0; 
+                        
+                        // Trả về thông số vật liệu cơ bản (Dielectric)
                         mat.metalness = 0.0; 
-                        mat.roughness = 0.8; // Nhám cao để ra chất nước
+                        mat.roughness = 1.0; // Tăng nhám tối đa để không bắt bóng
                         
-                        // 2. Nhuộm màu xanh đại dương thẳm (Chống việc nước bị nhợt nhạt khi tắt HDRI)
-                        if (mat.color) mat.color.setHex(0x0a1e3f); 
-
-                        // 🌟 CHUẨN BỊ CHO CUỘN SÓNG (UV SCROLLING)
+                        // Giữ lại màu gốc từ Blender hoặc set màu xanh nhẹ
                         if (mat.map) {
                             mat.map.wrapS = THREE.RepeatWrapping; 
                             mat.map.wrapT = THREE.RepeatWrapping;
                             
-                            // Lặp lại 20 lần để sóng siêu nhỏ, bay qua thấy vù vù!
-                            mat.map.repeat.set(20, 20); 
+                            // 🌟 GIỮ LẠI CÁI NÀY ĐỂ CÓ CẢM GIÁC DI CHUYỂN:
+                            // Sếp để lặp lại tầm 10-15 lần để vân nước nhỏ lại cho đẹp
+                            mat.map.repeat.set(15, 15); 
 
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
                             window.danhSachMatNuoc.push(mat.map);
                         }
+                        
                         mat.needsUpdate = true;
+                        console.log("🌊 Đã trả lại mặt nước nguyên thủy cho: " + child.name);
                     }
 
 
 
 
 
-                    
+
 
 
                     else {
