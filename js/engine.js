@@ -1243,8 +1243,22 @@ function animate() {
 
 
 
-        
-    requestAnimationFrame(animate);
+      requestAnimationFrame(animate);
+
+    // 🌊 CUỘN SÓNG BIỂN (TẠO CẢM GIÁC TỐC ĐỘ CAO CHO NGƯỜI CƯỠI RỒNG)
+    if (window.danhSachMatNuoc && window.danhSachMatNuoc.length > 0) {
+        window.danhSachMatNuoc.forEach(map => {
+            // Cho bề mặt nước trôi nhẹ theo 2 hướng, khi Sếp bay ngang sẽ thấy nó xé gió chạy lùi lại!
+            map.offset.x -= 0.0015;
+            map.offset.y -= 0.0025;
+        });
+    }
+
+
+
+
+
+
     try {
         if (typeof playerModel !== 'undefined' && playerModel && window.ROLE === "admin") { window.mauBanThan = window.MAU_TOI_DA = 999999999; window.isDead = false; }
         const delta = typeof clock !== 'undefined' ? clock.getDelta() : 0.016;
