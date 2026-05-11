@@ -677,6 +677,10 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 child.userData.isCloud = true;
                 console.log("☁️ Đã biến thành khí (xuyên thấu):", child.name);
             }
+
+
+
+
             else {
                 // 🌟 XỬ LÝ MẶT ĐẤT CỨNG (Có BVH)
                 child.frustumCulled = false;
@@ -686,9 +690,19 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     mats.forEach(mat => {
                         // 🛑 CHỮA BỆNH LƠ LỬNG: Bắt Radar đâm xuyên cả mặt trong và mặt ngoài của núi!
                         mat.side = THREE.DoubleSide;
+
+                        // 🌟 BẢN VÁ AAA: ÉP GPU LỌC NÉT TEXTURE MẶT ĐẤT ĐẾN TẬN CHÂN TRỜI
+                        if (mat.map && window.renderer) {
+                            mat.map.anisotropy = window.renderer.capabilities.getMaxAnisotropy();
+                        }
+
                         mat.needsUpdate = true;
                     });
                 }
+
+
+
+
 
                 if (child.geometry && typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
