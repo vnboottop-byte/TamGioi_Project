@@ -221,26 +221,13 @@ if (!scene.children.includes(camera)) scene.add(camera);
 
 
 window.bocHDRI_NhanVat = function (model) {
-    if (!model) return;
-    model.traverse(c => {
-        if (c.isMesh && c.material) {
-            let mats = Array.isArray(c.material) ? c.material : [c.material];
-            mats.forEach(mat => {
-                // 🌟 BÍ QUYẾT TỐI THƯỢNG:
-                // Vì ảnh vũ trụ là ảnh thường (LDR) nên qua bộ lọc phim rạp nó bị tối.
-                // Ta phải ÉP cường độ soi gương nhân lên 4 lần thì Kim loại mới sáng chói được!
-                if (window.anhMoiTruongHDRI) {
-                    mat.envMap = window.anhMoiTruongHDRI;
-                }
-                mat.envMapIntensity = 2.0; // Bơm ánh sáng lên x4
-                mat.needsUpdate = true;
-            });
-        }
-    });
+    // 🛑 ĐÃ KHÓA: Ánh sáng Studio (RoomEnvironment) đã tự động bao phủ toàn map.
+    // Không cần gán tay thủ công và tuyệt đối không bơm x4 sáng nữa để tránh cháy hình!
+    return;
 };
 
 window.fixHieuUngDenThui = function (model) {
-    // 🛑 ĐÃ KHÓA HOÀN TOÀN: Để nguyên vẹn 100% lớp sơn UV gốc của 3D Artist
+    // 🛑 ĐÃ KHÓA: Tôn trọng 100% chất liệu gốc của 3D Artist.
     return;
 };
 
