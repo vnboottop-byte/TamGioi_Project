@@ -1025,12 +1025,35 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
         }
     }
 
+
+
+
+
+
+
+
+
+
+
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
         loader.load(window.WEAPON_URL, function (gltfW) {
             let vuKhi = gltfW.scene; 
             window.vuKhiModel = vuKhi;
+
+            // 🌟 BẢN VÁ: KÍCH SÁNG KIM LOẠI CHO VŨ KHÍ
+            if (typeof window.bocHDRI_NhanVat === 'function') {
+                window.bocHDRI_NhanVat(vuKhi);
+            }
             
             let tayCam = null;
+
+
+
+
+
+
+
+
             nhanVatDich.traverse(c => { 
                 if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
                     tayCam = c; 
