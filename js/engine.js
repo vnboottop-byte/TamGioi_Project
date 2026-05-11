@@ -216,25 +216,9 @@ if (!scene.children.includes(camera)) scene.add(camera);
 
 
 window.bocHDRI_NhanVat = function (model) {
-    // 🌟 ĐÃ XÓA KHỚP: Không cưỡng chế áp đặt Metalness/Roughness nữa! 
-    // Hệ thống Scene.Environment sẽ tự động phản chiếu lên các bề mặt kim loại gốc của GLTF.
-    if (!model) return;
-    model.traverse(c => {
-        if (c.isMesh && c.material) {
-            let mats = Array.isArray(c.material) ? c.material : [c.material];
-            mats.forEach(mat => {
-                mat.envMapIntensity = 1.0; 
-                mat.needsUpdate = true;
-            });
-        }
-    });
+    // 🛑 ĐÃ KHÓA: Không làm gì cả để Three.js tự động dùng HDRI của môi trường
+    return; 
 };
-
-
-
-
-
-
 
 window.fixHieuUngDenThui = function (model) {
     if (!model) return;
@@ -242,13 +226,11 @@ window.fixHieuUngDenThui = function (model) {
         if (c.isMesh && c.material) {
             let mats = Array.isArray(c.material) ? c.material : [c.material];
             mats.forEach(mat => {
-                // 🌟 BẮT BUỘC PHẢI CÓ ĐOẠN NÀY ĐỂ FIX LỖI XUẤT UV TỪ BLENDER
+                // 🌟 CHỈ FIX LỖI KÊNH UV TỪ BLENDER, KHÔNG ĐỤNG ĐẾN ĐỘ BÓNG KIM LOẠI
                 if (mat.metalnessMap) mat.metalnessMap.channel = 0;
                 if (mat.roughnessMap) mat.roughnessMap.channel = 0;
                 if (mat.normalMap) mat.normalMap.channel = 0;
                 if (mat.aoMap) mat.aoMap.channel = 0;
-                
-                // TUYỆT ĐỐI KHÔNG SET CỨNG mat.metalness HAY mat.roughness Ở ĐÂY NỮA
                 mat.needsUpdate = true;
             });
         }
@@ -1261,14 +1243,11 @@ function animate() {
 
       requestAnimationFrame(animate);
 
-    // 🌊 CUỘN SÓNG BIỂN V2: TĂNG TỐC XÉ GIÓ
-    if (window.danhSachMatNuoc && window.danhSachMatNuoc.length > 0) {
-        window.danhSachMatNuoc.forEach(map => {
-            // Sóng nhỏ lặp nhiều lần + Tốc độ cuộn cao = Cảm giác bay siêu nhanh!
-            map.offset.x -= 0.008; 
-            map.offset.y -= 0.015; 
-        });
-    }
+
+
+
+
+    
 
 
 
