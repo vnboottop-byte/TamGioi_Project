@@ -2045,20 +2045,40 @@ window.xuLyLoadMapChunk = function (mapData) {
 
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
                 mats.forEach(mat => {
+
+
+
+
+
+
                     if (laMatNuoc) {
-                        // 🌊 ĐẶC TRỊ MẶT BIỂN: CHỮA BỆNH KÍNH TRONG SUỐT VÀ GƯƠNG PHẲNG
+                        // 🌊 ĐẶC TRỊ MẶT BIỂN V2: CHỮA GƯƠNG PHẢN CHIẾU & LÀM NHỎ GỢN SÓNG
                         mat.transparent = true;
-                        mat.opacity = 0.95; // Giảm độ trong suốt để thấy rõ màu nước biển sâu
-                        mat.roughness = 0.25; // Trả lại độ nhám, tạo cảm giác gợn sóng lăn tăn
-                        mat.metalness = 0.6; // Giảm độ bóng kim loại xuống để bớt chói HDRI
-                        mat.envMapIntensity = 0.5; // Giảm cường độ phản chiếu bầu trời
+                        mat.opacity = 0.9; 
+                        
+                        // Nước không phải kim loại! Tắt metalness và tăng nhám để làm mờ hình phản chiếu bầu trời
+                        mat.roughness = 0.65; 
+                        mat.metalness = 0.05; 
+                        mat.envMapIntensity = 0.25; // Hút ít HDRI lại cho đỡ chói
 
                         // 🌟 CHUẨN BỊ CHO CUỘN SÓNG (UV SCROLLING)
                         if (mat.map) {
-                            mat.map.wrapS = THREE.RepeatWrapping; mat.map.wrapT = THREE.RepeatWrapping;
+                            mat.map.wrapS = THREE.RepeatWrapping; 
+                            mat.map.wrapT = THREE.RepeatWrapping;
+                            
+                            // 🌟 BÍ THUẬT TỐC ĐỘ: Ép tấm ảnh chia nhỏ và lặp lại 15 lần
+                            // Điều này làm gợn sóng nhỏ lại, khi cuộn sẽ tạo cảm giác bay xé gió cực nhanh!
+                            mat.map.repeat.set(15, 15); 
+
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
                             window.danhSachMatNuoc.push(mat.map);
                         }
+
+
+
+
+
+
                         if (mat.normalMap) { // Nếu Sếp có gắn Normal Map trong Blender
                             mat.normalMap.wrapS = THREE.RepeatWrapping; mat.normalMap.wrapT = THREE.RepeatWrapping;
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
