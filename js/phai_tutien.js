@@ -438,7 +438,7 @@ window.addEventListener('click', () => {
 const danhSachSoBay = [];
 window.taoSoSatThuong = function (pos3D, satThuong) {
     if (satThuong <= 0) return;
-    const div = document.createElement('div'); div.innerText = "-" + satThuong;
+    const div = document.createElement('div'); div.innerText = "-" + Math.round(satThuong);
     div.style.cssText = 'position:absolute; color:#ff2222; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000; pointer-events:none; z-index:9999;';
     document.body.appendChild(div); danhSachSoBay.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
 };
