@@ -1245,12 +1245,12 @@ function animate() {
 
       requestAnimationFrame(animate);
 
-    // 🌊 CUỘN SÓNG BIỂN (TẠO CẢM GIÁC TỐC ĐỘ CAO CHO NGƯỜI CƯỠI RỒNG)
+    // 🌊 CUỘN SÓNG BIỂN V2: TĂNG TỐC XÉ GIÓ
     if (window.danhSachMatNuoc && window.danhSachMatNuoc.length > 0) {
         window.danhSachMatNuoc.forEach(map => {
-            // Cho bề mặt nước trôi nhẹ theo 2 hướng, khi Sếp bay ngang sẽ thấy nó xé gió chạy lùi lại!
-            map.offset.x -= 0.0015;
-            map.offset.y -= 0.0025;
+            // Sóng nhỏ lặp nhiều lần + Tốc độ cuộn cao = Cảm giác bay siêu nhanh!
+            map.offset.x -= 0.008; 
+            map.offset.y -= 0.015; 
         });
     }
 
