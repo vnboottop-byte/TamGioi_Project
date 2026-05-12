@@ -1254,7 +1254,7 @@ function animate() {
 
 
 
-        
+
 
 
         if (typeof window.MAP_MIXERS !== 'undefined') window.MAP_MIXERS.forEach(m => m.update(delta));
@@ -1307,7 +1307,7 @@ function animate() {
 
 
 
-        var viTriCu = playerModel.position.clone();
+            var viTriCu = playerModel.position.clone();
 
 
 
@@ -1319,7 +1319,7 @@ function animate() {
 
 
 
-         
+
 
 
             // ===============================================
@@ -1368,21 +1368,21 @@ function animate() {
 
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
-                    
+
                     // 🌟 BẢN VÁ: QUÉT TRẦN NHÀ TRƯỚC KHI BAY LÊN
                     if (!window.radarBauTroi) { window.radarBauTroi = new THREE.Raycaster(); window.radarBauTroi.far = 10; }
                     // Bắn tia từ đầu nhân vật hướng lên trời
                     window.radarBauTroi.set(playerModel.position, new THREE.Vector3(0, 1, 0));
                     let chamTran = window.radarBauTroi.intersectObjects(window.danhSachBauTroi || [], true);
-                    
+
                     if (chamTran.length === 0) {
                         playerModel.position.y += currentSprint; // Đường thông hè thoáng thì bay!
                     } else {
                         // Đã chạm vào lồng bầu trời, khóa độ cao lại!
                         if (typeof window.hienThongBaoBoGoc === 'function' && !window.dangBaoBauTroi) {
-                             window.hienThongBaoBoGoc("☁️ Bạn đã chạm đến giới hạn Bầu Trời!", "#3498db");
-                             window.dangBaoBauTroi = true;
-                             setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                            window.hienThongBaoBoGoc("☁️ Bạn đã chạm đến giới hạn Bầu Trời!", "#3498db");
+                            window.dangBaoBauTroi = true;
+                            setTimeout(() => window.dangBaoBauTroi = false, 2000);
                         }
                     }
                     if (typeof playAnim === 'function') playAnim('BAY');
@@ -1390,58 +1390,59 @@ function animate() {
 
 
 
-                } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
-                    dangChuDongDoiDoCao = true; window.isMoving = false;
-                    if (doCao > 0) { playerModel.position.y -= currentSprint; if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; }
-                    if (typeof playAnim === 'function') playAnim('BAY');
-                }
-
-                var huongDiChuyen = new THREE.Vector3(0, 0, 0); var tocDoHienTaiThucTe = 0;
-                window.isKeyboardMoving = window.keys && (window.keys.w || window.keys.a || window.keys.s || window.keys.d);
-
-                if (window.isKeyboardMoving) {
-                    window.isMoving = false;
-                    if (typeof playAnim === 'function') playAnim(isFlying ? 'BAY' : 'CHAYBO');
-                    const forward = new THREE.Vector3(); if (typeof camera !== 'undefined') camera.getWorldDirection(forward);
-                    forward.y = 0; forward.normalize();
-                    if (forward.lengthSq() === 0) forward.set(0, 0, -1).applyQuaternion(playerModel.quaternion).setY(0).normalize();
-                    const right = new THREE.Vector3().crossVectors(forward, huongLenTroi).normalize();
-
-                    if (window.keys.w) huongDiChuyen.add(forward); if (window.keys.s) huongDiChuyen.sub(forward);
-                    if (window.keys.a) huongDiChuyen.sub(right); if (window.keys.d) huongDiChuyen.add(right); huongDiChuyen.normalize();
-
-                    if (huongDiChuyen.length() > 0) {
-                        let yTruoc = playerModel.position.y;
-                        playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
-                        if (!dangChuDongDoiDoCao) {
-                            if (yTruoc - matDatY < 3.0) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
-                            else playerModel.position.y = yTruoc;
-                        }
-                        let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongDiChuyen), huongLenTroi);
-                        playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
-                        tocDoHienTaiThucTe = currentSprint;
-                    }
-                } else if (window.isMoving && typeof window.targetPosition !== 'undefined') {
-                    let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, playerModel.position);
-                    if (vecToTarget.length() > 2.0) {
-                        let huongBayThang = vecToTarget.clone().normalize();
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
-                        playerModel.position.add(huongBayThang.multiplyScalar(currentSprint)); tocDoHienTaiThucTe = currentSprint;
-                        let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongBayThang), huongLenTroi);
-                        playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
-                        if (playerModel.position.y - matDatY < 0.1) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
-                    } else {
-                        window.isMoving = false; if (typeof playIdle === 'function') playIdle();
-                        if (window.vongMucTieu) window.vongMucTieu.visible = false;
-                    }
-                } else {
-                    if (window.keys && !window.keys.space) {
-                        if (isFlying) { if (typeof playAnim === 'function') playAnim('BAY'); } else { if (typeof playIdle === 'function') playIdle(); }
-                    }
-                    if (!dangChuDongDoiDoCao && doCao < 0.05) playerModel.position.y = matDatY; // Chống lún cỏ
-                }
+            } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
+                dangChuDongDoiDoCao = true; window.isMoving = false;
+                if (doCao > 0) { playerModel.position.y -= currentSprint; if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; }
+                if (typeof playAnim === 'function') playAnim('BAY');
             }
-            else {
+
+            var huongDiChuyen = new THREE.Vector3(0, 0, 0); var tocDoHienTaiThucTe = 0;
+            window.isKeyboardMoving = window.keys && (window.keys.w || window.keys.a || window.keys.s || window.keys.d);
+
+            if (window.isKeyboardMoving) {
+                window.isMoving = false;
+                if (typeof playAnim === 'function') playAnim(isFlying ? 'BAY' : 'CHAYBO');
+                const forward = new THREE.Vector3(); if (typeof camera !== 'undefined') camera.getWorldDirection(forward);
+                forward.y = 0; forward.normalize();
+                if (forward.lengthSq() === 0) forward.set(0, 0, -1).applyQuaternion(playerModel.quaternion).setY(0).normalize();
+                const right = new THREE.Vector3().crossVectors(forward, huongLenTroi).normalize();
+
+                if (window.keys.w) huongDiChuyen.add(forward); if (window.keys.s) huongDiChuyen.sub(forward);
+                if (window.keys.a) huongDiChuyen.sub(right); if (window.keys.d) huongDiChuyen.add(right); huongDiChuyen.normalize();
+
+                if (huongDiChuyen.length() > 0) {
+                    let yTruoc = playerModel.position.y;
+                    playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
+                    if (!dangChuDongDoiDoCao) {
+                        if (yTruoc - matDatY < 3.0) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
+                        else playerModel.position.y = yTruoc;
+                    }
+                    let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongDiChuyen), huongLenTroi);
+                    playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
+                    tocDoHienTaiThucTe = currentSprint;
+                }
+            } else if (window.isMoving && typeof window.targetPosition !== 'undefined') {
+                let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, playerModel.position);
+                if (vecToTarget.length() > 2.0) {
+                    let huongBayThang = vecToTarget.clone().normalize();
+                    if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
+                    playerModel.position.add(huongBayThang.multiplyScalar(currentSprint)); tocDoHienTaiThucTe = currentSprint;
+                    let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongBayThang), huongLenTroi);
+                    playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
+                    if (playerModel.position.y - matDatY < 0.1) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
+                } else {
+                    window.isMoving = false; if (typeof playIdle === 'function') playIdle();
+                    if (window.vongMucTieu) window.vongMucTieu.visible = false;
+                }
+            } else {
+                if (window.keys && !window.keys.space) {
+                    if (isFlying) { if (typeof playAnim === 'function') playAnim('BAY'); } else { if (typeof playIdle === 'function') playIdle(); }
+                }
+                if (!dangChuDongDoiDoCao && doCao < 0.05) playerModel.position.y = matDatY; // Chống lún cỏ
+            }
+        }
+
+    }else{
                 // ----------------------------------------------------
                 // 🌎 NHÁNH 2: XỬ LÝ VẬT LÝ CHO HÀNH TINH CẦU (BẢN GỐC CỦA SẾP GIỮ NGUYÊN)
                 // ----------------------------------------------------
