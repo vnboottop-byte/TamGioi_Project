@@ -1062,7 +1062,7 @@ function hoanTatTaiModels() {
         // Đã load xong ít nhất 1 map VÀ không còn map nào dang dở HOẶC Map trống trơn HOẶC Kẹt mạng quá 10s
         if ((window.daNhanDanhSachMap && !coMapDangLoad && coMapDaLoad) || 
             (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP.length === 0) || 
-            thoiGianChoInit >= 10000) {
+            thoiGianChoInit >= 30000) {
             
             clearInterval(vongLapChoVaoGame);
             
