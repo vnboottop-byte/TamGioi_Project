@@ -20,6 +20,8 @@ $z = isset($_POST['z']) ? floatval($_POST['z']) : 0;
 $scale = isset($_POST['scale']) ? floatval($_POST['scale']) : 1;
 $rot_y = isset($_POST['rot_y']) ? floatval($_POST['rot_y']) : 0;
 
+$zone_id = isset($_POST['zone_id']) ? $_POST['zone_id'] : 'TRUNG_CHAU';
+
 // Tạo thư mục MAP riêng biệt
 $upload_dir = '../uploads/maps/';
 if (!is_dir($upload_dir)) mkdir($upload_dir, 0777, true);
@@ -29,10 +31,13 @@ $target_file = $upload_dir . $file_name;
 $db_url = 'uploads/maps/' . $file_name; // Đường dẫn lưu vào SQL
 
 if (move_uploaded_file($_FILES['map_file']['tmp_name'], $target_file)) {
-    $stmt = $conn->prepare("INSERT INTO map_chunks (name, model_url, pos_x, pos_y, pos_z, rot_y, scale) VALUES (?, ?, ?, ?, ?, ?, ?)");
+  
+  
+    $stmt = $conn->prepare("INSERT INTO map_chunks (name, model_url, pos_x, pos_y, pos_z, rot_y, scale, zone_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
     $name = "Map_" . time();
-    $stmt->bind_param("ssddddd", $name, $db_url, $x, $y, $z, $rot_y, $scale);
-    
+    $stmt->bind_param("ssddddds", $name, $db_url, $x, $y, $z, $rot_y, $scale, $zone_id);
+ 
+ 
     if ($stmt->execute()) {
         echo json_encode(['status' => 'success', 'msg' => '🌍 Đã rải Map thành công tại tọa độ Sếp đứng!', 'url' => $db_url]);
     } else {
