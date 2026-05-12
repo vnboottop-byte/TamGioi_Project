@@ -240,13 +240,28 @@ livekitScript.onload = async () => {
                 if (!authData.token) { loginBtn.disabled = false; return; }
                 window.myUsername = authData.username;
                 window.room = new LivekitClient.Room({ adaptiveStream: false, dynacast: false, autoSubscribe: true });
+
                 await window.room.connect(authData.url, authData.token);
                 console.log("%c🟢 Đã vào Cổng Cực Lạc: " + window.room.name, "color:#2ecc71; font-weight:bold;");
                 if (loginGate) loginGate.style.display = 'none';
-
                 // ==========================================
-                // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME (DỌN RÁC TRIỆT ĐỂ)
+                // 🌟 BỘ PHẬN ĐÓNG DẤU HẢI QUAN TỰ ĐỘNG (CHỐNG CHIÊU THỨC BAY XUYÊN VŨ TRỤ)
                 // ==========================================
+                const publishGoc = window.room.localParticipant.publishData;
+                window.room.localParticipant.publishData = function(payload, options) {
+                    try {
+                        let textStr = new TextDecoder().decode(payload);
+                        // Nếu Sếp xả Skill, gọi Đệ tử, hay Báo Máu (Gói tin dạng JSON Object)
+                        if (textStr.startsWith('{')) { 
+                            let dataObj = JSON.parse(textStr);
+                            // Tự động đóng dấu Hộ chiếu Map vào gói tin
+                            if (!dataObj.zone_id) dataObj.zone_id = window.ZONE_ID || 'TRUNG_CHAU';
+                            payload = new TextEncoder().encode(JSON.stringify(dataObj));
+                        }
+                    } catch(e) {}
+                    return publishGoc.call(this, payload, options); // Gửi đi
+                };
+                
                 // ==========================================
                 // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME (BẢN AN TOÀN - KHÔNG PHÁ ĐỒ CHUNG)
                 // ==========================================
@@ -376,6 +391,11 @@ livekitScript.onload = async () => {
                         // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
                         // ==========================================
                         else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+                            
+                            // 🌟 HẢI QUAN CHẶN KHÁC MAP (BẢN VÁ: CHỐNG TÀNG HÌNH CHIÊU THỨC VÀ PHANTOM)
+                            if (data.zone_id && window.ZONE_ID && data.zone_id !== window.ZONE_ID) {
+                                return; // Nếu chiêu thức bay từ Map khác tới -> Tịch thu, hủy ngay lập tức!
+                            }
                             // 🌟 CHỈ NHẬN HIỆU ỨNG SÁT THƯƠNG (KHÔNG ÉP MÁU)
                             if (data.type === 'BOSS_HIT') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
