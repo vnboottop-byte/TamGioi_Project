@@ -95,6 +95,9 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
                 // ==========================================
                 let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
                 let huongLenTroiMoi = playerModel.position.clone().sub(tam).normalize();
+
+
+
                 playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
                 playerModel.up.copy(huongLenTroiMoi);
                 window.mucTieuBanKinhDat = playerModel.position.distanceTo(tam);
@@ -2627,26 +2630,49 @@ window.thucHienTruyenTong = function (congData) {
         let viTriAnToan = congData.dest.clone().add(huongLenTroiMoi.clone().multiplyScalar(15.0));
         playerModel.position.copy(viTriAnToan);
 
-        // Nắn xương
+
+
+
+
+        // ========================================================
+        // 🧨 THIÊU RỤI HOÀN TOÀN THẾ GIỚI CŨ (Rút ống thở VRAM)
+        // ========================================================
+        if (window.THONG_TIN_CAC_MAP) {
+            window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                if (typeof window.xuLyXoaMapChunk === 'function') window.xuLyXoaMapChunk(mapData);
+            });
+        }
+        window.THONG_TIN_CAC_MAP = []; // Xóa trắng data Radar Đất
+
+        if (window.danhSachQuaiVat) {
+            for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
+                let quai = window.danhSachQuaiVat[i];
+                if (quai.tagEl) quai.tagEl.remove();
+                if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh);
+            }
+            window.danhSachQuaiVat = []; // Xóa trắng data Quái vật
+        }
+
+        // ========================================================
+        // 🌍 CẬP NHẬT KHU VỰC VÀ NẮN XƯƠNG SƠ BỘ
+        // ========================================================
+        window.ZONE_ID = congData.zone_dich_den || 'TRUNG_CHAU'; 
+        
+        // Xoay xương sống sơ bộ theo hướng rớt xuống (Chống lật hình nếu Map đích là Tròn)
         playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
         playerModel.up.copy(huongLenTroiMoi);
         window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
 
-        // Quét lại toàn cầu
-        if (typeof window.THONG_TIN_CAC_MAP !== 'undefined') {
-            window.THONG_TIN_CAC_MAP.forEach(mapData => {
-                let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-                let khoangCach = playerModel.position.distanceTo(mPos);
+        // ========================================================
+        // 📥 NẠP THẾ GIỚI MỚI (Sẽ tự động kích hoạt lại Công tắc Trọng Lực)
+        // ========================================================
+        window.loadTatCaMapTuSQL(window.ZONE_ID);
 
-                if (khoangCach < 10000 && !mapData.isLoaded && !mapData.isLoading) {
-                    if (typeof window.xuLyLoadMapChunk === 'function') window.xuLyLoadMapChunk(mapData);
-                    if (typeof window.taiBossTheoMap === 'function') window.taiBossTheoMap(mapData.id);
-                } else if (khoangCach > 12000 && mapData.isLoaded) {
-                    if (typeof window.xuLyXoaMapChunk === 'function') window.xuLyXoaMapChunk(mapData);
-                    if (typeof window.xuLyXoaBossTheoMap === 'function') window.xuLyXoaBossTheoMap(mapData.id);
-                }
-            });
-        }
+
+
+
+
+
 
         // Mở mắt ra
         setTimeout(() => {
