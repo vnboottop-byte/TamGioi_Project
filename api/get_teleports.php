@@ -2,6 +2,7 @@
 header('Content-Type: application/json');
 require_once '../db.php';
 
+// Chỉ bốc Cổng của Zone hiện tại (Tránh tải nhầm cổng của Map khác)
 $zone = isset($_GET['zone']) ? $_GET['zone'] : 'TRUNG_CHAU';
 $stmt = $conn->prepare("SELECT * FROM truyen_tong_tran WHERE zone_id = ?");
 $stmt->bind_param("s", $zone);
