@@ -1872,7 +1872,12 @@ animate();
 setInterval(() => {
     if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
         let fd = new FormData();
-        fd.append('x', playerModel.position.x.toFixed(2)); fd.append('y', playerModel.position.y.toFixed(2)); fd.append('z', playerModel.position.z.toFixed(2));
+        fd.append('x', playerModel.position.x.toFixed(2)); 
+        fd.append('y', playerModel.position.y.toFixed(2)); 
+        fd.append('z', playerModel.position.z.toFixed(2));
+        // 🌟 BÁO CÁO LUÔN KHU VỰC ĐANG ĐỨNG ĐỂ CHỐNG KẸT MAP KHI F5
+        fd.append('zone_id', window.ZONE_ID || 'TRUNG_CHAU'); 
+        
         fetch('api/save_pos.php', { method: 'POST', body: fd }).catch(err => { });
     }
 }, 5000);
