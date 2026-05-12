@@ -1714,9 +1714,22 @@ function animate() {
                 let textHienThi = document.getElementById('szRadiusDisplay');
                 if (textHienThi) textHienThi.innerText = Math.floor(window.banKinhĐangĐo);
 
+
+
+
+
                 // Bắn 1 tia thẳng từ chân Sếp xuống mặt đất để làm tâm
-                let groundDir = pPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-                window.toaDoTamĐangĐo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(groundDir.multiplyScalar(rHanhTinh + 1.0)); // Nổi lên 1m cho dễ nhìn
+                let groundDir = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC !== 'PHANG') {
+                    groundDir = pPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    window.toaDoTamĐangĐo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(groundDir.multiplyScalar(rHanhTinh + 1.0)); // Nổi lên 1m cho dễ nhìn
+                } else {
+                    window.toaDoTamĐangĐo = new THREE.Vector3(pPos.x, (window.toaDoMatDat || 0) + 1.0, pPos.z);
+                }
+
+
+
+
 
                 // Ép vòng tròn bám sát mặt đất và phình to
                 window.vongTronSafeZone.position.copy(window.toaDoTamĐangĐo);
@@ -2609,8 +2622,23 @@ window.taoBienNeonSafeZone = function(x, y, z) {
     // Treo bảng lên cao cách mặt đất 300 mét
     let pos = new THREE.Vector3(x, y, z);
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
-    let groundDir = pos.clone().sub(tam);
-    if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); else groundDir.normalize();
+   
+   
+   
+   
+
+
+    let groundDir = new THREE.Vector3(0, 1, 0);
+    if (window.KIEU_TRONG_LUC !== 'PHANG') {
+        groundDir = pos.clone().sub(tam);
+        if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); else groundDir.normalize();
+    }
+
+
+
+
+
+
     sprite.position.copy(pos).add(groundDir.multiplyScalar(300)); 
     sprite.scale.set(800, 400, 1); // Kích thước khổng lồ để nhìn từ xa
     scene.add(sprite);
@@ -2853,9 +2881,12 @@ window.loadSafeZonesVaTeleports = function() {
 
 
 
-                        let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
-                        let upDir = congGroup.position.clone().sub(tam);
-                        if (upDir.lengthSq() < 0.001) upDir.set(0, 1, 0); else upDir.normalize();
+                        let upDir = new THREE.Vector3(0, 1, 0);
+                        if (window.KIEU_TRONG_LUC !== 'PHANG') {
+                            let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
+                            upDir = congGroup.position.clone().sub(tam);
+                            if (upDir.lengthSq() < 0.001) upDir.set(0, 1, 0); else upDir.normalize();
+                        }
                         congGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
 
 
