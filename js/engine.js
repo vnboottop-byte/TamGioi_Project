@@ -1320,11 +1320,17 @@ function animate() {
 
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
-                    if (!kiemTraVaChamKetGioi(new THREE.Vector3(0, 1, 0), currentSprint + 2.0)) {
+                    let huongBayLen = new THREE.Vector3(0, 1, 0);
+
+                    // 🌟 BẢN VÁ AAA: KIỂM TRA ĐỒNG THỜI CẢ TRẦN HẦM NGỤC (ĐÁ) LẪN LỒNG BẦU TRỜI (MÂY)
+                    if (!kiemTraVaChamKetGioi(huongBayLen, currentSprint + 2.0) && !kiemTraVaChamTuong(huongBayLen, currentSprint)) {
                         playerModel.position.y += currentSprint;
-                    } else { canhBaoKetGioi(); }
+                    } else {
+                        canhBaoKetGioi();
+                    }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
+
                     dangChuDongDoiDoCao = true; window.isMoving = false;
                     if (doCao > 0) { playerModel.position.y -= currentSprint; if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; }
                     if (typeof playAnim === 'function') playAnim('BAY');
@@ -1447,9 +1453,14 @@ function animate() {
                 let dangChuDongDoiDoCao = false;
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
-                    playerModel.position.add(huongLenTroi.clone().multiplyScalar(currentSprint));
+
+                    // 🌟 BẢN VÁ AAA: BẬT RADAR QUÉT NÓC TRƯỚC KHI BAY LÊN (HÀNH TINH CẦU)
+                    if (!kiemTraVaChamTuong(huongLenTroi, currentSprint)) {
+                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(currentSprint));
+                    }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
+
                     dangChuDongDoiDoCao = true; window.isMoving = false;
                     if (doCao > 0) {
                         playerModel.position.add(huongLenTroi.clone().multiplyScalar(-currentSprint));
