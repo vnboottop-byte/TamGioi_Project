@@ -7,7 +7,14 @@ window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.inner
 
 // 🌟 NHẬN DIỆN ĐIỆN THOẠI
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-window.KIEU_TRONG_LUC = 'CAU';
+
+// 🌟 BẢN VÁ: Vừa vào game phải nhìn ZONE_ID để gạt cần số vật lý ngay lập tức, không để nó tự nhận là CAU gây lỗi đẩy 10.000m!
+if (window.ZONE_ID && window.ZONE_ID !== 'TRUNG_CHAU') {
+    window.KIEU_TRONG_LUC = 'PHANG';
+    window.toaDoMatDat = window.SPAWN_Y || 0; // Chống rơi tự do trước khi nạp Map
+} else {
+    window.KIEU_TRONG_LUC = 'CAU';
+}
 
 
 
@@ -500,8 +507,12 @@ window.addEventListener('pointerdown', (event) => {
     
 });
 
-// Quăng Sếp lên độ cao 5000m (hoặc tọa độ lưu trong SQL) để Sếp rơi tự do xuống hành tinh bên dưới
-const TOA_DO_SPAWN = { x: window.SPAWN_X || 0, y: window.SPAWN_Y || 0, z: window.SPAWN_Z || 0 };
+// 🌟 BẢN VÁ: Nhận diện chính xác số 0, tránh bị quăng lên 5000m oan uổng
+const TOA_DO_SPAWN = { 
+    x: (typeof window.SPAWN_X !== 'undefined') ? window.SPAWN_X : 0, 
+    y: (typeof window.SPAWN_Y !== 'undefined') ? window.SPAWN_Y : 500, 
+    z: (typeof window.SPAWN_Z !== 'undefined') ? window.SPAWN_Z : 0 
+};
 
 camera.far = 30000; 
 camera.updateProjectionMatrix();
