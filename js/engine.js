@@ -2052,7 +2052,7 @@ window.xuLyLoadMapChunk = function (mapData) {
         let laMatDatKhongLo = Math.max(kichThuoc.x, kichThuoc.z) > 200;
 
         mapData.matDatMeshes = [];
-
+        mapData.mayMeshes = []; // 🌟 Lưu riêng meshes mây để dọn rác
         // ==========================================
         // 🌟 BÍ THUẬT AAA: PHÂN MẢNH XỬ LÝ (TIME-SLICING)
         // ==========================================
@@ -2089,28 +2089,34 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao') || tenMesh.includes('sky')) laMayKhyQuyen = true;
 
+
+
+
+
+
+
+
             if (laMayKhyQuyen) {
-                // Xử lý Lồng Bầu Trời: Tàng hình vật lý, đẩy ra xa
                 child.frustumCulled = false;
-                child.renderOrder = -1; 
+                child.renderOrder = -1; // Đẩy ra xa nhất
+
                 if (child.material) {
-                    if (child.material.map) {
-                        child.material.emissiveMap = child.material.map;
-                        child.material.emissive = new THREE.Color(0xffffff);
-                        child.material.emissiveIntensity = 1.2;
-                    }
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
                         map: mat.map, color: mat.color || 0xffffff, transparent: true,
                         opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
-                        side: THREE.BackSide, // 🌟 Ép nhìn từ trong ra ngoài để đứng dưới đất vẫn thấy bầu trời
-                        depthWrite: false
+                        side: THREE.DoubleSide, // 🌟 SỬA: Dùng DoubleSide để chắc chắn nhìn thấy từ mọi hướng
+                        depthWrite: true // 🌟 SỬA: Bật lại để không bị các vật thể khác đè lên sai cách
                     }));
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
                 
-                // 🛑 QUAN TRỌNG NHẤT: Bỏ qua hoàn toàn, không đúc BVH, không cho vào Radar quét đất!
+                // 🌟 ĐĂNG KÝ VÀO DANH SÁCH BẦU TRỜI ĐỂ CHỐNG BAY XUYÊN
+                if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
+                window.danhSachBauTroi.push(child);
+                mapData.mayMeshes.push(child);
+
                 continue; 
             }
             // ==========================================
