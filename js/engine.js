@@ -2703,10 +2703,22 @@ window.thucHienTruyenTong = function (congData) {
         playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
         playerModel.up.copy(huongLenTroiMoi);
         window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
+
+
+
+
+
         
         // 🌟 KHÓA VẬN TỐC CHỐNG VĂNG
         window.isMoving = false;
         window.isKeyboardMoving = false;
+
+        // 🌟 BÍ THUẬT ĐÓNG BĂNG KHÔNG GIAN: Ép tạm thời thành Không Trọng Lực để chống văng tọa độ khi tải Map!
+        window.KIEU_TRONG_LUC = 'PHANG';
+        window.toaDoMatDat = viTriAnToan.y;
+        if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
+
+        
 
 
 
