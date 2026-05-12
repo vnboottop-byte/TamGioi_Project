@@ -2628,12 +2628,32 @@ window.thucHienTruyenTong = function (congData) {
     }
 
     setTimeout(() => {
+
+
+
+
         let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
-        let huongLenTroiMoi = congData.dest.clone().sub(tam).normalize();
+        let huongLenTroiMoi = congData.dest.clone().sub(tam);
+
+        // 🌟 LÁ CHẮN TOÁN HỌC: Nếu đích đến là 0,0,0 thì Vector sẽ bị rỗng. Phải ép nó đứng thẳng lên!
+        if (huongLenTroiMoi.lengthSq() < 0.001) {
+            huongLenTroiMoi.set(0, 1, 0); // Mặc định hướng lên trời là trục Y
+        } else {
+            huongLenTroiMoi.normalize();
+        }
 
         // Thả rơi từ độ cao 15 mét
         let viTriAnToan = congData.dest.clone().add(huongLenTroiMoi.clone().multiplyScalar(15.0));
         playerModel.position.copy(viTriAnToan);
+
+        // Nắn xương an toàn
+        playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
+        playerModel.up.copy(huongLenTroiMoi);
+        window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
+        
+        // 🌟 KHÓA VẬN TỐC CHỐNG VĂNG
+        window.isMoving = false;
+        window.isKeyboardMoving = false;
 
 
 
