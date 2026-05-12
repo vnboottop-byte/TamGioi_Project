@@ -1396,7 +1396,14 @@ function animate() {
                 var hanhTinhGanNhat = null;
                 var tamHanhTinh = new THREE.Vector3(0, 0, 0);
 
-                huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh).normalize();
+                // 🌟 LÁ CHẮN TOÁN HỌC: BẢO VỆ KHUNG XƯƠNG NHÂN VẬT KHỎI LỖI NaN
+                huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh);
+                if (huongLenTroiMoi.lengthSq() < 0.001) {
+                    huongLenTroiMoi.set(0, 1, 0); 
+                } else {
+                    huongLenTroiMoi.normalize();
+                }
+
                 timThayDat = true; hanhTinhGanNhat = true;
 
                 if (typeof window.khungHinhRadar === 'undefined') window.khungHinhRadar = 0; window.khungHinhRadar++;
