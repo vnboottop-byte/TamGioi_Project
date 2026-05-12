@@ -1674,8 +1674,14 @@ window.MAP_MIXERS = [];
 window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
+
+
+
+
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
+    window.daNhanDanhSachMap = false; // 🌟 BẢN VÁ: ĐÁNH DẤU ĐANG KÉO DỮ LIỆU TỪ SQL
+    
     // Gọi API kèm theo Tên Khu Vực
     fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
@@ -1683,9 +1689,6 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
             }));
             
-
-
-
             // 🌟 CÔNG TẮC ĐA VŨ TRỤ: Nhìn vào Data SQL xem Map này là Tròn hay Phẳng để gạt cần số!
             if (data.data.length > 0 && data.data[0].gravity_type) {
                 window.KIEU_TRONG_LUC = data.data[0].gravity_type;
@@ -1695,22 +1698,16 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
                 window.toaDoMatDat = 0; // Set sẵn mặt cỏ ở 0 để Sếp đáp xuống từ độ cao 15m
             }
 
-
-
-
-
-
-
-
-
            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
             
             // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
             if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
-
         }
-    }).catch(err => console.error(err));
+        window.daNhanDanhSachMap = true; // 🌟 XÁC NHẬN ĐÃ KÉO XONG
+    }).catch(err => { console.error(err); window.daNhanDanhSachMap = true; });
 };
+
+
 
 
 
@@ -2540,17 +2537,46 @@ window.thucHienTruyenTong = function (congData) {
         playerModel.up.copy(huongLenTroiMoi);
         window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
 
+
+
         // ========================================================
         // 📥 NẠP THẾ GIỚI MỚI (Sẽ tự động kích hoạt lại Công tắc Trọng Lực)
         // ========================================================
         window.loadTatCaMapTuSQL(window.ZONE_ID);
         window.loadSafeZonesVaTeleports(); // Nạp lại cửa của thế giới mới
 
-        // Mở mắt ra
-        setTimeout(() => {
-            if (manHinhDichChuyen) manHinhDichChuyen.style.display = 'none';
-            window.dangDichChuyen = false;
-        }, 1500);
+        // 🌟 BẢN VÁ AAA: CHỜ ĐÚC XONG MAP 100% MỚI CHO MỞ MẮT
+        let thoiGianCho = 0;
+        let vongLapChoMap = setInterval(() => {
+            thoiGianCho += 500;
+            
+            // 1. ÉP BẮT ĐẦU ĐÚC MAP LẬP TỨC (Bỏ qua chu kỳ 2s lề mề của Radar)
+            if (window.daNhanDanhSachMap && typeof playerModel !== 'undefined') {
+                window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                    let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+                    if (playerModel.position.distanceTo(mPos) < 10000 && !mapData.isLoaded && !mapData.isLoading) {
+                        window.xuLyLoadMapChunk(mapData);
+                    }
+                });
+            }
+
+            let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
+            let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
+            
+            // 2. ĐIỀU KIỆN MỞ MẮT THÔNG MINH:
+            // - Đã kéo xong Data + Đã đúc xong ít nhất 1 Map + Không còn Map nào dang dở.
+            // - HOẶC Bí Cảnh rỗng hoàn toàn (Chưa có Map nào).
+            // - HOẶC quá 10 giây bị kẹt mạng (Fallback an toàn).
+            if ((window.daNhanDanhSachMap && !coMapDangLoad && coMapDaLoad) || 
+                (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP.length === 0) || 
+                thoiGianCho >= 10000) {
+                
+                clearInterval(vongLapChoMap);
+                if (manHinhDichChuyen) manHinhDichChuyen.style.display = 'none'; // Thu hồi lỗ giun
+                window.dangDichChuyen = false; // Mở khóa di chuyển
+                console.log("👁️ ĐÃ MỞ MẮT: Toàn bộ Map khu vực đã đúc xong, sãn sàng chiến đấu!");
+            }
+        }, 500);
 
     }, 500);
 };
