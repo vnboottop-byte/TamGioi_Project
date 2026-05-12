@@ -7,7 +7,7 @@ window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.inner
 
 // 🌟 NHẬN DIỆN ĐIỆN THOẠI
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
+window.KIEU_TRONG_LUC = 'CAU';
 
 
 
@@ -1936,7 +1936,9 @@ window.xuLyLoadMapChunk = function (mapData) {
             let laDatSatMatGround = doCaoCuaMesh < 15.0;
 
             // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
-            if (laMatDatKhongLo && laDatSatMatGround && child.geometry && child.geometry.attributes.position) {
+            // 🌟 KIỂM TRA ĐA VŨ TRỤ: Chỉ bẻ cong lưới nếu đang ở Hành Tinh Cầu!
+            if (window.KIEU_TRONG_LUC !== 'PHANG' && laMatDatKhongLo && laDatSatMatGround && child.geometry && child.geometry.attributes.position) {
+
                 let posAttr = child.geometry.attributes.position;
                 let v_local = new THREE.Vector3(); let v_world = new THREE.Vector3(); let v_root = new THREE.Vector3();
                 let meshInverseMat = new THREE.Matrix4().copy(child.matrixWorld).invert();
