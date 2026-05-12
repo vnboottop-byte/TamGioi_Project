@@ -1895,24 +1895,8 @@ function animate() {
 
 
 
-
-
-
-
-
-
         
 animate();
-
-
-
-
-
-
-            
-
-
-
 
 
 
@@ -1927,54 +1911,37 @@ setInterval(() => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ==========================================
 // 🌍 ĐỘNG CƠ STREAMING BẢN ĐỒ AAA (BÁN KÍNH 140.000M)
 // ==========================================
 window.MAP_MIXERS = [];
 window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
+
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
-window.loadTatCaMapTuSQL = function () {
-    fetch('api/get_maps.php').then(res => res.json()).then(data => {
+window.ZONE_ID = 'TRUNG_CHAU'; // Mặc định khi mới đăng nhập vào game
+window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
+    // Gọi API kèm theo Tên Khu Vực
+    fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.THONG_TIN_CAC_MAP = data.data.map(m => ({
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
             }));
-            console.log(`🗺️ RADAR CHUNK: Đã nhận tọa độ ${window.THONG_TIN_CAC_MAP.length} hòn đảo!`);
+            
+            // 🌟 CÔNG TẮC ĐA VŨ TRỤ: Nhìn vào Data SQL xem Map này là Tròn hay Phẳng để gạt cần số!
+            if (data.data.length > 0 && data.data[0].gravity_type) {
+                window.KIEU_TRONG_LUC = data.data[0].gravity_type;
+            }
+            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
         }
     }).catch(err => console.error(err));
 };
+
+
+
+
+
+
 setTimeout(() => { window.loadTatCaMapTuSQL(); }, 3000);
 
 
