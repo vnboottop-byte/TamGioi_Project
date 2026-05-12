@@ -1900,11 +1900,21 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
             }));
             
+
+
+
             // 🌟 CÔNG TẮC ĐA VŨ TRỤ: Nhìn vào Data SQL xem Map này là Tròn hay Phẳng để gạt cần số!
             if (data.data.length > 0 && data.data[0].gravity_type) {
                 window.KIEU_TRONG_LUC = data.data[0].gravity_type;
+            } else {
+                // 🌟 LÁ CHẮN HƯ KHÔNG: Nếu khu vực này chưa có Map nào, Mặc định gạt sang PHẲNG để người chơi lơ lửng an toàn!
+                window.KIEU_TRONG_LUC = 'PHANG';
+                window.toaDoMatDat = 0; // Set sẵn mặt cỏ ở 0 để Sếp đáp xuống từ độ cao 15m
             }
             console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
+
+      
+
         }
     }).catch(err => console.error(err));
 };
