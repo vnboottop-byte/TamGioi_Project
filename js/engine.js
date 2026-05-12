@@ -1817,30 +1817,23 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
 
+
         // 2. Xử lý TỪ TỪ từng cục đất, từng cái cây...
         for (let i = 0; i < danhSachMesh.length; i++) {
             let child = danhSachMesh[i];
 
             // ==========================================
-            // 🌟 LÁ CHẮN BẦU TRỜI: NGĂN CHẶN LỖI ĐỨNG TRÊN NÓC MAP VÀ LÚP LOAD/UNLOAD
+            // 🌟 LÁ CHẮN BẦU TRỜI: XỬ LÝ MÂY/TRỜI ĐỂ HIỆN RA VÀ CHỐNG BAY XUYÊN
             // ==========================================
             let tenMesh = child.name.toLowerCase();
             let laMayKhyQuyen = false;
 
             child.traverseAncestors(p => {
                 let pName = p.name.toLowerCase();
-                // 🌟 Bơm thêm từ khóa 'sky' để quét triệt để
                 if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao') || pName.includes('sky')) laMayKhyQuyen = true;
             });
 
             if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao') || tenMesh.includes('sky')) laMayKhyQuyen = true;
-
-
-
-
-
-
-
 
             if (laMayKhyQuyen) {
                 child.frustumCulled = false;
@@ -1851,18 +1844,18 @@ window.xuLyLoadMapChunk = function (mapData) {
                     let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
                         map: mat.map, color: mat.color || 0xffffff, transparent: true,
                         opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
-                        side: THREE.DoubleSide, // 🌟 SỬA: Dùng DoubleSide để chắc chắn nhìn thấy từ mọi hướng
-                        depthWrite: true // 🌟 SỬA: Bật lại để không bị các vật thể khác đè lên sai cách
+                        side: THREE.DoubleSide, 
+                        depthWrite: true // 🌟 ĐỂ SKY KHÔNG BỊ TÀNG HÌNH
                     }));
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
                 
-                // 🌟 ĐĂNG KÝ VÀO DANH SÁCH BẦU TRỜI ĐỂ CHỐNG BAY XUYÊN
+                // 🌟 ĐĂNG KÝ VÀO LƯỚI ĐIỆN BẢO VỆ CHỐNG XUYÊN THẤU
                 if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
                 window.danhSachBauTroi.push(child);
-                mapData.mayMeshes.push(child);
 
+                // 🛑 QUAN TRỌNG: BỎ QUA KHÔNG ĐÚC VẬT LÝ MẶT ĐẤT CHO BẦU TRỜI (CHỐNG LẶP 5 PHÚT)
                 continue; 
             }
             // ==========================================
@@ -1873,29 +1866,16 @@ window.xuLyLoadMapChunk = function (mapData) {
             let laDatSatMatGround = doCaoCuaMesh < 15.0;
 
             // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
-
-
-
-
-
-
-
-
-            // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
-            // 🌟 KIỂM TRA ĐA VŨ TRỤ: Chỉ bẻ cong lưới nếu đang ở Hành Tinh Cầu!
-            if (window.KIEU_TRONG_LUC !== 'PHANG' && laMatDatKhongLo && laDatSatMatGround && child.geometry && child.geometry.attributes.position) {
+            if (window.KIEU_TRONG_LUC !== 'PHANG' && laMatDatKhongLo && laDatSatMatGround && child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
 
                 let posAttr = child.geometry.attributes.position;
                 let v_local = new THREE.Vector3(); let v_world = new THREE.Vector3(); let v_root = new THREE.Vector3();
                 let meshInverseMat = new THREE.Matrix4().copy(child.matrixWorld).invert();
 
-                let DO_LUN = 0.0; // Thông số Sếp đã căn chỉnh
-                
-                // 🌟 BÍ THUẬT CỨU RỖI CPU: CHIA NHỎ VÒNG LẶP (CHUNK PROCESSING)
-                let BATCH_SIZE = 15000; // Mỗi lần chỉ xử lý 15.000 đỉnh rồi nghỉ!
+                let DO_LUN = 0.0; 
+                let BATCH_SIZE = 15000; 
                 
                 for (let j = 0; j < posAttr.count; j += BATCH_SIZE) {
-                    
                     for (let k = j; k < j + BATCH_SIZE && k < posAttr.count; k++) {
                         v_local.fromBufferAttribute(posAttr, k);
                         v_world.copy(v_local).applyMatrix4(child.matrixWorld);
@@ -1910,38 +1890,24 @@ window.xuLyLoadMapChunk = function (mapData) {
                         v_local.copy(v_world).applyMatrix4(meshInverseMat);
                         posAttr.setXYZ(k, v_local.x, v_local.y, v_local.z);
                     }
-                    
-                    // 🛑 BẮT CPU NGHỈ GIẢI LAO NGAY GIỮA LÚC ĐANG BẺ CONG (Siêu mượt)
                     await new Promise(resolve => setTimeout(resolve, 5));
                 }
-                
                 posAttr.needsUpdate = true;
                 child.geometry.computeVertexNormals();
             }
 
-
-
-
-
-
-
-
-
-
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
-                let tenMesh = child.name.toLowerCase();
-                let laMatNuoc = tenMesh.includes('water') || tenMesh.includes('nuoc') || tenMesh.includes('bien') || tenMesh.includes('ocean');
+                let tenMesh2 = child.name.toLowerCase();
+                let laMatNuoc = tenMesh2.includes('water') || tenMesh2.includes('nuoc') || tenMesh2.includes('bien') || tenMesh2.includes('ocean');
 
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
                 
                 if (laMatNuoc) {
-                    // 🌊 GIẢI PHÁP TỐI THƯỢNG: ÉP MẶT NƯỚC THÀNH VẬT LIỆU "BASIC" 
-                    // (Miễn nhiễm 100% với bóng tối, HDRI, tự phát sáng rực rỡ)
                     let newMats = mats.map(mat => {
                         let basicMat = new THREE.MeshBasicMaterial({
                             map: mat.map,
-                            color: mat.color || 0x1e90ff, // Màu xanh biển tươi
+                            color: mat.color || 0x1e90ff, 
                             transparent: true,
                             opacity: 0.8,
                             side: THREE.DoubleSide
@@ -1950,21 +1916,17 @@ window.xuLyLoadMapChunk = function (mapData) {
                         if (basicMat.map) {
                             basicMat.map.wrapS = THREE.RepeatWrapping; 
                             basicMat.map.wrapT = THREE.RepeatWrapping;
-                            basicMat.map.repeat.set(15, 15); // Lặp vân 15 lần để tạo sóng li ti
+                            basicMat.map.repeat.set(15, 15); 
                             if (!window.danhSachMatNuoc) window.danhSachMatNuoc = [];
                             window.danhSachMatNuoc.push(basicMat.map);
                         }
                         return basicMat;
                     });
-                    
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
-                    console.log("🌊 Đã ÉP KIỂU mặt nước thành BasicMaterial cho: " + child.name);
                 } 
                 else {
-                    // 🌍 MẶT ĐẤT CỨNG / ĐÁ / CÂY CỎ BÌNH THƯỜNG
                     mats.forEach(mat => {
                         if (mat.emissive) mat.emissive.setHex(0x000000);
-                        // Xóa các lệnh ép metalness/roughness ở đây để giữ nguyên chất liệu của đá/cây
                         if (mat.color) {
                             let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
                             if (doSang > 0.8) { mat.color.r *= 0.25; mat.color.g *= 0.25; mat.color.b *= 0.25; }
@@ -1977,116 +1939,68 @@ window.xuLyLoadMapChunk = function (mapData) {
                 }
             }
 
-
-
-
-
-
-
-
-
-
-
-
-
             if (child.geometry) {
                 child.geometry.computeBoundingBox();
                 child.geometry.computeBoundingSphere();
             }
             child.updateMatrixWorld(true);
 
-
-
-
-
             // --- C. ĐÚC KHUÔN VẬT LÝ BVH (ỦY QUYỀN CHO NHÂN CPU ẢO) ---
-            // 🌟 BẢN VÁ AAA: LỌC MESH RỖNG BỊ LỖI CỦA 3D ARTIST (CHỐNG SẬP GAME)
+            // 🌟 ĐÃ LỌC BẦU TRỜI (Ở MỤC TRÊN) NÊN KHÔNG LO BỊ LỖI CHẶN BVH NỮA
             if (child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
-
-
                 if (window.myBvhWorker) {
                     let timeStart = performance.now();
-                    
-                    // 1. Rút trích mảng dữ liệu thô để ném cho Worker
                     let positions = child.geometry.attributes.position.array;
                     let indices = child.geometry.index ? child.geometry.index.array : null;
-                    
                     let jobId = window.jobIdCounter++;
                     
-                    // 2. Tạo Lệnh Đợi (Promise)
                     let p = new Promise((resolve, reject) => {
                         window.bvhJobs[jobId] = { resolve, reject };
                     });
                     
-                    // 3. Quăng cục Map cho Core 2 xử lý
                     window.myBvhWorker.postMessage({ 
                         id: jobId, 
                         positions: positions, 
                         indices: indices 
                     });
                     
-                    // 4. LỆNH 'await' THẦN THÁNH:
-                    // Main Thread tạm nghỉ việc đúc Map, quay lại xuất hình 60FPS cho game mượt mà!
-                    // Khi nào Core 2 tính xong, code mới chạy tiếp xuống dòng dưới.
                     let serializedBVH = await p;
-                    
-                    // 5. Core 2 đã trả hàng! Ráp cái khuôn vào cục Đất
                     child.geometry.boundsTree = MeshBVHLib.MeshBVH.deserialize(serializedBVH, child.geometry);
-                    
                     let timeEnd = performance.now();
-                    console.log(`👷 WORKER BVH: Đúc ngầm vật lý cho [${child.name}] mất ${(timeEnd - timeStart).toFixed(2)} ms!`);
-                    
                 } else if (typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
                 }
             }
 
-
-
-
-            
-
-            // 🌟 BẢN VÁ: Luôn đưa mọi Map (Lớn/Nhỏ) vào Radar để người chơi có thể giẫm lên được
             if (!window.danhSachMap) window.danhSachMap = [];
             window.danhSachMap.push(child);
-
-
-
-
             mapData.matDatMeshes.push(child);
 
-            // ==========================================
-            // 🌟 BẢN VÁ: ÉP GPU BIÊN DỊCH SHADER TỪ TỪ
-            // ==========================================
             if (window.renderer && typeof scene !== 'undefined') {
                 window.renderer.compile(child, camera, scene);
             }
 
-            // ==========================================
-            // 🛑 LÕI CHỐNG GIẬT THÍCH ỨNG AI (Ý TƯỞNG CỦA SẾP!)
-            // Tự động đo FPS: Tụt dưới 50 thì nghỉ, trên 50 thì quất tiếp!
-            // ==========================================
             await new Promise(resolve => {
                 requestAnimationFrame(() => {
                     let thoiGianHienTai = performance.now();
                     let thoiGian1Frame = thoiGianHienTai - thoiGianĐoFPS;
-                    thoiGianĐoFPS = thoiGianHienTai; // Reset đồng hồ cho vòng lặp sau
+                    thoiGianĐoFPS = thoiGianHienTai; 
                     
                     let fpsThucTe = 1000 / (thoiGian1Frame || 16);
-
-                    if (fpsThucTe < 55) {
-                        // 🔴 BÁO ĐỘNG: FPS đang tụt (GPU đang gánh tạ)
-                        // Bắt tiến trình Load Map ngủ đông 500 mili-giây để game mượt trở lại!
-                        setTimeout(resolve, 500);
-                    } else {
-                        // 🟢 AN TOÀN: FPS đang trên 50 (Mượt mà)
-                        // Bật đèn xanh, thả phanh cho nhai tiếp cục Map tiếp theo ngay lập tức!
-                        resolve();
-                    }
+                    if (fpsThucTe < 55) { setTimeout(resolve, 500); } else { resolve(); }
                 });
             });
 
-        } // <--- ĐÂY LÀ DẤU NGOẶC ĐÓNG CỦA VÒNG LẶP FOR
+        } // <--- KẾT THÚC VÒNG LẶP FOR
+
+
+
+
+
+
+
+
+        
 
 
 
