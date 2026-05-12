@@ -1268,7 +1268,8 @@ function animate() {
                 var rHanhTinh = 0;
 
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
-                window.radarTrongLuc.firstHitOnly = false; // Xuyên hầm
+                // 🌟 BẢN VÁ HẦM NGỤC: Tắt firstHitOnly để Radar có thể nhìn xuyên qua nóc hầm xuống tận đáy hầm!
+                window.radarTrongLuc.firstHitOnly = false;
 
                 if (typeof window.khungHinhRadar === 'undefined') window.khungHinhRadar = 0; window.khungHinhRadar++;
 
@@ -1279,10 +1280,12 @@ function animate() {
                     window.radarTrongLuc.set(tiaXuatPhat, new THREE.Vector3(0, -1, 0));
                     window.radarTrongLuc.far = Infinity;
                     window.danhSachMap = window.danhSachMap.filter(obj => obj && typeof obj.raycast === 'function');
+                    
                     var intersects = window.radarTrongLuc.intersectObjects(window.danhSachMap, true);
                     if (intersects.length > 0) {
+                        // 🌟 THUẬT TOÁN XUYÊN HẦM: Lấy mặt đất cao nhất nằm NGAY DƯỚI CHÂN nhân vật (bù 3m để leo dốc)
                         let chieuCaoToiDa = playerModel.position.y + 3.0;
-                        let diemChamDat = intersects.find(hit => hit.point.y <= chieuCaoToiDa && (!hit.object.userData || !hit.object.userData.isCloud));
+                        let diemChamDat = intersects.find(hit => hit.point.y <= chieuCaoToiDa);
                         if (diemChamDat) window.toaDoMatDat = diemChamDat.point.y;
                     }
                 }
@@ -1401,13 +1404,19 @@ function animate() {
                 var timThayDat = false;
 
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
-                window.radarTrongLuc.firstHitOnly = false; // Xuyên hầm
+                // 🌟 BẢN VÁ HẦM NGỤC: Tắt firstHitOnly cho Hành Tinh Cầu
+                window.radarTrongLuc.firstHitOnly = false;
 
                 var hanhTinhGanNhat = null;
                 var tamHanhTinh = new THREE.Vector3(0, 0, 0);
 
+                // 🌟 LÁ CHẮN TOÁN HỌC: BẢO VỆ KHUNG XƯƠNG NHÂN VẬT KHỎI LỖI NaN
                 huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh);
-                if (huongLenTroiMoi.lengthSq() < 0.001) { huongLenTroiMoi.set(0, 1, 0); } else { huongLenTroiMoi.normalize(); }
+                if (huongLenTroiMoi.lengthSq() < 0.001) {
+                    huongLenTroiMoi.set(0, 1, 0); 
+                } else {
+                    huongLenTroiMoi.normalize();
+                }
 
                 timThayDat = true; hanhTinhGanNhat = true;
 
@@ -1422,9 +1431,10 @@ function animate() {
                     
                     var intersects = window.radarTrongLuc.intersectObjects(window.danhSachMap, true);
                     if (intersects.length > 0) { 
+                        // 🌟 THUẬT TOÁN XUYÊN HẦM: Lấy mặt đất nằm ngay dưới gót chân (bù 3m để leo dốc)
                         let banKinhHienTai = playerModel.position.distanceTo(tamHanhTinh);
                         let banKinhToiDa = banKinhHienTai + 3.0; 
-                        let diemChamDat = intersects.find(hit => tamHanhTinh.distanceTo(hit.point) <= banKinhToiDa && (!hit.object.userData || !hit.object.userData.isCloud));
+                        let diemChamDat = intersects.find(hit => tamHanhTinh.distanceTo(hit.point) <= banKinhToiDa);
                         if (diemChamDat) window.mucTieuBanKinhDat = tamHanhTinh.distanceTo(diemChamDat.point); 
                     }
                 }
