@@ -394,21 +394,42 @@ window.capNhatAIQuaiVat = function (delta) {
             quai.upVector = new THREE.Vector3(0, 1, 0);
         }
 
+        // ==========================================
+        // 🌟 BẢN VÁ: RADAR CHỐNG LÚN & CHUI HẦM CHO QUÁI VẬT
+        // ==========================================
         if (quai.frameQuetDat === undefined) quai.frameQuetDat = Math.floor(Math.random() * 30);
         quai.frameQuetDat++;
 
         if (quai.frameQuetDat > 15) {
             quai.frameQuetDat = 0;
-            if (!window.radarQuaiVat) window.radarQuaiVat = new THREE.Raycaster();
+            if (!window.radarQuaiVat) { window.radarQuaiVat = new THREE.Raycaster(); window.radarQuaiVat.firstHitOnly = false; }
+            
             let tiaBatDau = quai.mesh.position.clone().add(quai.upVector.clone().multiplyScalar(2000));
             let huongXuongDat = quai.upVector.clone().negate();
             window.radarQuaiVat.set(tiaBatDau, huongXuongDat);
 
-            if (window.DANH_SACH_MAT_DAT && window.DANH_SACH_MAT_DAT.length > 0) {
-                let vaCham = window.radarQuaiVat.intersectObjects(window.DANH_SACH_MAT_DAT, true);
-                if (vaCham.length > 0) quai.mucTieuY = vaCham[0].point;
+            // Sửa thành danhSachMap của Engine!
+            if (window.danhSachMap && window.danhSachMap.length > 0) {
+                let mapChoRaycast = window.danhSachMap.filter(obj => obj && typeof obj.raycast === 'function');
+                let vaCham = window.radarQuaiVat.intersectObjects(mapChoRaycast, true);
+                
+                // Thuật toán chui hầm cho Boss: Bỏ qua mây trời, lấy mặt đất ngay dưới chân
+                if (vaCham.length > 0) {
+                    let chieuCaoToiDa = (window.KIEU_TRONG_LUC === 'PHANG') ? (quai.mesh.position.y + 10.0) : (window.TAM_HANH_TINH_HIEN_TAI ? window.TAM_HANH_TINH_HIEN_TAI.distanceTo(quai.mesh.position) + 10.0 : 0);
+                    
+                    let diemChamDat = vaCham.find(hit => {
+                        let isCloud = hit.object.userData && hit.object.userData.isCloud;
+                        if (isCloud) return false;
+                        let h = (window.KIEU_TRONG_LUC === 'PHANG') ? hit.point.y : (window.TAM_HANH_TINH_HIEN_TAI ? window.TAM_HANH_TINH_HIEN_TAI.distanceTo(hit.point) : 0);
+                        return h <= chieuCaoToiDa;
+                    });
+                    
+                    if (diemChamDat) quai.mucTieuY = diemChamDat.point;
+                }
             }
         }
+
+
 
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
             if (quai.tFlying === undefined) {
@@ -639,14 +660,26 @@ window.capNhatAIQuaiVat = function (delta) {
             if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
         }
 
-        if (quai.mucTieuY && window.TAM_HANH_TINH_HIEN_TAI) {
-            let kcQuai = quai.mesh.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-            let kcDat = quai.mucTieuY.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
+        // ==========================================
+        // 🌟 BẢN VÁ: VẬT LÝ TRỌNG LỰC ĐA VŨ TRỤ CHO BOSS
+        // ==========================================
+        if (quai.mucTieuY) {
             let khoangCachAnToan = boNao ? boNao.khoangCachAnToan : 0;
+            
+            if (window.KIEU_TRONG_LUC === 'PHANG') {
+                // Nhánh Map Phẳng (Bí Cảnh): So sánh độ cao trục Y
+                if (quai.mesh.position.y < quai.mucTieuY.y + khoangCachAnToan) {
+                    quai.mesh.position.y = THREE.MathUtils.lerp(quai.mesh.position.y, quai.mucTieuY.y + khoangCachAnToan, 0.5);
+                }
+            } else if (window.TAM_HANH_TINH_HIEN_TAI) {
+                // Nhánh Map Cầu (Trái Đất): So sánh khoảng cách đến tâm lõi
+                let kcQuai = quai.mesh.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
+                let kcDat = quai.mucTieuY.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
 
-            if (kcQuai < kcDat + khoangCachAnToan) {
-                let viTriCuuHo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + khoangCachAnToan));
-                quai.mesh.position.lerp(viTriCuuHo, 0.5);
+                if (kcQuai < kcDat + khoangCachAnToan) {
+                    let viTriCuuHo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + khoangCachAnToan));
+                    quai.mesh.position.lerp(viTriCuuHo, 0.5);
+                }
             }
         }
 
