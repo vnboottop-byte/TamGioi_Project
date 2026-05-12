@@ -598,117 +598,81 @@ if (typeof MeshBVHLib !== 'undefined') {
 
 
 
-loader.load('uploads/anims/map_san_dinh.glb', function (gltf) { 
+
+
+
+loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
     const mapHanhTinh = gltf.scene;
-    
+
     // 🌟 LƯU LẠI BẢN GỐC ĐỂ TẮT/MỞ KHI XUYÊN KHÔNG
-    window.HANH_TINH_GOC = mapHanhTinh; 
-    window.matDatHanhTinhGoc = []; 
+    window.HANH_TINH_GOC = mapHanhTinh;
+    window.matDatHanhTinhGoc = [];
 
     if (gltf.animations && gltf.animations.length > 0) {
-
-
-
-
-
         window.mixerTraiDat = new THREE.AnimationMixer(mapHanhTinh);
         gltf.animations.forEach((clip) => {
             let action = window.mixerTraiDat.clipAction(clip);
-
-            // 🌟 BỘ GIẢM TỐC VŨ TRỤ: 
-            // Số 1.0 là tốc độ gốc của Blender. 
-            // Giảm xuống 0.05 hoặc 0.02 để mây bay lững lờ cực kỳ chậm và hùng vĩ!
+            // 🌟 BỘ GIẢM TỐC VŨ TRỤ: Giảm xuống 0.05 để mây bay lững lờ
             action.timeScale = 0.05;
-
             action.play();
         });
     }
 
-
-
-
-
     if (!window.danhSachMap) window.danhSachMap = [];
-
-
-
-
-
-
-
-
-
-
-
-    // 2. PHẪU THUẬT TÁCH LỚP DỰA THEO TÊN NODE VÀ TÊN THƯ MỤC CHA
-
-
 
     // 2. PHẪU THUẬT TÁCH LỚP DỰA THEO TÊN NODE VÀ TÊN THƯ MỤC CHA
     mapHanhTinh.traverse((child) => {
         if (child.isMesh) {
-            let tenMesh = child.name.toLowerCase();
+            // 🌟 BẢN VÁ: CHỐNG LỖI UNDEFINED ĐÁNH SẬP GAME CHO MAP GỐC
+            let tenMesh = (child.name || "").toLowerCase();
             let laMayKhyQuyen = false;
 
             child.traverseAncestors(p => {
-                let pName = p.name.toLowerCase();
-                if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao')) laMayKhyQuyen = true;
+                let pName = (p.name || "").toLowerCase();
+                if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao') || pName.includes('sky')) laMayKhyQuyen = true;
             });
 
-            if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao')) laMayKhyQuyen = true;
-
-
-
-
-
+            if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao') || tenMesh.includes('sky')) laMayKhyQuyen = true;
 
             if (laMayKhyQuyen) {
-                // Xử lý Lồng Bầu Trời: Tàng hình vật lý, đẩy ra xa
+                // 🌟 XỬ LÝ KHÍ QUYỂN / NGÂN HÀ / MÂY
                 child.frustumCulled = false;
-                child.renderOrder = -1; 
+                child.renderOrder = -1; // Đẩy ra xa nhất
+
                 if (child.material) {
                     if (child.material.map) {
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
                     }
+
+                    // Ép mây thành dạng xuyên thấu (Bọc thép Array Material)
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
-                    let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
-                        map: mat.map, color: mat.color || 0xffffff, transparent: true,
-                        opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
-                        side: THREE.DoubleSide, // 🌟 PHẢI LÀ DOUBLESIDE THÌ RADAR MỚI ĐO ĐƯỢC CHUẨN KHOẢNG CÁCH!
-                        depthWrite: false
-                    }));
+                    let newMats = mats.map(mat => {
+                        if (!mat) return new THREE.MeshBasicMaterial({ color: 0xffffff });
+                        return new THREE.MeshBasicMaterial({
+                            map: mat.map || null,
+                            color: mat.color || 0xffffff,
+                            transparent: true,
+                            opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
+                            side: THREE.DoubleSide,
+                            depthWrite: false, // Mây của Map gốc chỉ để ngắm, không cần bắt va chạm
+                            blending: THREE.AdditiveBlending
+                        });
+                    });
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
-                
-                // 🌟 LƯU VÀO DANH SÁCH BẦU TRỜI ĐỂ LÀM LƯỚI ĐIỆN BẢO VỆ
-                if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
-                window.danhSachBauTroi.push(child);
-                
-                continue; 
-            }
-
-
-
-
-
-
-
-            else {
+            } else {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
                 child.frustumCulled = false;
 
                 if (child.material) {
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(mat => {
+                        if (!mat) return;
                         mat.side = THREE.DoubleSide;
-                        
-                        // 🛑 TRỊ BỆNH NƯỚC ĐỨNG YÊN: Tắt bóng HDRI cho khối Trái Đất
                         mat.envMapIntensity = 0.0;
-
-                        // Lọc nét bề mặt
                         if (mat.map && window.renderer) {
                             mat.map.anisotropy = window.renderer.capabilities.getMaxAnisotropy();
                         }
@@ -720,14 +684,7 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     child.geometry.computeBoundsTree();
                 }
 
-
-
-
-
-
-
-
-               if (!window.danhSachMap) window.danhSachMap = [];
+                if (!window.danhSachMap) window.danhSachMap = [];
                 window.danhSachMap.push(child);
                 window.matDatHanhTinhGoc.push(child); // 🌟 Lưu lại lưới va chạm
             }
@@ -735,9 +692,9 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
     });
 
     scene.add(mapHanhTinh);
-    
+
     // 🌟 BỘ KIỂM SOÁT MAP GỐC: TỰ ĐỘNG TÀNG HÌNH KHI QUA BÍ CẢNH
-    window.kiemSoatHanhTinhGoc = function() {
+    window.kiemSoatHanhTinhGoc = function () {
         if (!window.HANH_TINH_GOC) return;
         if (window.KIEU_TRONG_LUC === 'PHANG') {
             window.HANH_TINH_GOC.visible = false;
@@ -759,8 +716,7 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
     tienHanhTaiNhanVat();
 });
-
-
+    
 
 
 
