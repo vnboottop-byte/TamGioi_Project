@@ -2537,7 +2537,8 @@ window.luuSafeZoneMoi = function() {
     fd.append('y', window.toaDoTamĐangĐo.y);
     fd.append('z', window.toaDoTamĐangĐo.z);
     fd.append('radius', window.banKinhĐangĐo);
-
+    // 🌟 THÊM DÒNG NÀY:
+    fd.append('zone_id', window.ZONE_ID || 'TRUNG_CHAU');
     fetch('api/save_safezone.php', { method: 'POST', body: fd })
     .then(res => res.json()).then(data => {
         if(data.status === 'success') {
