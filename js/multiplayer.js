@@ -312,19 +312,32 @@ livekitScript.onload = async () => {
                         // ==========================================
                         // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
                         // ==========================================
-                        if (Array.isArray(data) && data[0] === 1) { 
+                        if (Array.isArray(data) && data[0] === 1) {
+
+                            // 🌟 HẢI QUAN ĐA VŨ TRỤ: Kẻ nào không cùng Map thì tàng hình!
+                            let senderZone = data[16] || 'TRUNG_CHAU';
+                            if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
+                                if (window.remotePlayers[senderId]) {
+                                    if (window.remotePlayers[senderId].mesh) window.remotePlayers[senderId].mesh.visible = false;
+                                    if (window.remotePlayers[senderId].tag) window.remotePlayers[senderId].tag.style.display = 'none';
+                                }
+                                return; // Khác Map thì không tính toán tọa độ làm gì cho mệt CPU
+                            }
+
                             let mappedData = {
                                 type: 'vitri', x: data[1], y: data[2], z: data[3], rx: data[4], ry: data[5], rz: data[6],
                                 size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14],
-                                vuKhiHienThi: data[15] // 🌟 BẮT SÓNG: Hứng lấy biến tàng hình vũ khí từ Engine gửi sang!
+                                vuKhiHienThi: data[15]
                             };
-                            
+
                             let rp = window.remotePlayers[senderId];
+                            if (rp && rp.mesh) rp.mesh.visible = true; // 🌟 Trùng Map thì hiện hình lại
+
                             // Nếu chưa có nhân vật -> Nặn ra
-                            if (!rp) { 
-                                taoBanSaoNguoiChoi(senderId, mappedData); 
-                            } 
-                            // Nếu có rồi -> Kéo tọa độ đi
+                            if (!rp) {
+                                taoBanSaoNguoiChoi(senderId, mappedData);
+                            }
+                            // 🌟 Nếu có rồi -> Kéo tọa độ đi (KHÚC NÀY CỦA SẾP PHẢI GIỮ NGUYÊN)
                             else if (rp.status === 'ready') {
                                 rp.targetPos = new THREE.Vector3(mappedData.x, mappedData.y, mappedData.z);
                                 rp.targetRot = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz);
@@ -332,21 +345,16 @@ livekitScript.onload = async () => {
                                 if (mappedData.size > 0 && rp.mesh.scale.x !== mappedData.size) {
                                     rp.mesh.scale.setScalar(mappedData.size);
                                 }
-                                
+
                                 let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
                                 if (hpBar) hpBar.style.width = Math.max(0, (mappedData.hp / mappedData.maxHp) * 100) + '%';
-                                
+
                                 // 🌟 THỰC THI ÁN LỆNH: Bật/Tắt vũ khí Live theo đúng ý Sếp!
                                 if (rp.vuKhiModel && mappedData.vuKhiHienThi !== undefined) {
                                     rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
                                 }
 
                                 if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
-
-
-
-
-
                                     let upAnim = mappedData.anim.toUpperCase();
                                     if (rp.anims && Object.keys(rp.anims).length > 0) {
                                         let action = rp.anims[upAnim] || rp.anims['IDLE'] || Object.values(rp.anims)[0];
@@ -360,6 +368,10 @@ livekitScript.onload = async () => {
                                 }
                             }
                         }
+
+
+
+
                         // ==========================================
                         // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
                         // ==========================================
