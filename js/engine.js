@@ -2667,12 +2667,7 @@ window.thucHienTruyenTong = function (congData) {
         // 📥 NẠP THẾ GIỚI MỚI (Sẽ tự động kích hoạt lại Công tắc Trọng Lực)
         // ========================================================
         window.loadTatCaMapTuSQL(window.ZONE_ID);
-
-
-
-
-
-
+        window.loadSafeZonesVaTeleports(); // Nạp lại cửa của thế giới mới
 
         // Mở mắt ra
         setTimeout(() => {
@@ -2711,7 +2706,7 @@ window.loadSafeZonesVaTeleports = function() {
     });
 
     // 2. Tải Cổng Dịch Chuyển & Nắn Xương Lên Mặt Đất
-    fetch('api/get_teleports.php').then(res => res.json()).then(data => {
+    fetch('api/get_safezones.php?zone=' + currentZone).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             data.data.forEach(tp => {
                 let dest = new THREE.Vector3(parseFloat(tp.dest_x), parseFloat(tp.dest_y), parseFloat(tp.dest_z));
