@@ -1228,12 +1228,8 @@ function animate() {
         // ===============================================
         if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
             var viTriCu = playerModel.position.clone();
-
             // ==========================================
-            // 🧱 RADAR DÒ TƯỜNG (BẢN VÁ AAA: CHỐNG SPAM PHÍM SPACE CLIP XUYÊN TƯỜNG)
-            // ==========================================
-            // ==========================================
-            // 🧱 RADAR DÒ TƯỜNG (BẢN VÁ TỐI THƯỢNG: CCD CHỐNG XUYÊN TƯỜNG 648 KM/H)
+            // 🧱 RADAR DÒ TƯỜNG VÀ TRẦN (BẢN VÁ: ĐO ĐỘ DỐC LEO NÚI & DỜI SÚNG LÊN ĐẦU)
             // ==========================================
             function kiemTraVaChamTuong(huongDi, tocDo) {
                 if (!window.danhSachMap || window.danhSachMap.length === 0) return false;
@@ -1244,33 +1240,51 @@ function animate() {
                 let diemBan = playerModel.position.clone();
 
                 if (laBayLen) {
-                    diemBan.add(huongLen.multiplyScalar(0.1)); // Bắn từ gót chân lên
+                    // 🌟 BẤM SPACE: Dời súng Laser lên thẳng ĐỈNH ĐẦU (Cao 2 mét)
+                    diemBan.add(huongLen.clone().multiplyScalar(2.0)); 
                     window.radarTuong.set(diemBan, huongDi);
                     let chamTuong = window.radarTuong.intersectObjects(window.danhSachMap, true);
                     let vatCan = chamTuong.find(hit => hit.object.userData && !hit.object.userData.isCloud);
 
                     if (vatCan) {
-                        // 🌟 THUẬT TOÁN CCD: Nếu khoảng cách tới trần < quãng đường Sếp bay trong 1 frame
-                        if (vatCan.distance < 2.2 + tocDo) {
-                            // Dịch chuyển Sếp dán chặt vào trần nhà (Cách đúng 1cm)
-                            let viTriDungLai = vatCan.point.clone().sub(huongLen.multiplyScalar(2.21));
+                        // Khoảng cách từ đỉnh đầu lên trần < 0.2m + tốc độ nhảy là đụng!
+                        if (vatCan.distance < 0.2 + tocDo) {
+                            // Dán chặt đầu cách trần 0.21m (Tính từ điểm chạm dội ngược xuống gót chân)
+                            let viTriDungLai = vatCan.point.clone().sub(huongLen.clone().multiplyScalar(2.21));
                             playerModel.position.copy(viTriDungLai);
-                            return true; // Phanh lại, khóa chết vị trí!
+                            return true; // Phanh cứng lại, chống xuyên!
                         }
                     }
                 } else {
-                    diemBan.add(huongLen.multiplyScalar(1.5)); // Đi ngang thì bắn từ ngực
+                    // 🌟 ĐI NGANG WASD: Đặt súng ở ngang ngực
+                    diemBan.add(huongLen.clone().multiplyScalar(1.0)); 
                     window.radarTuong.set(diemBan, huongDi);
                     let chamTuong = window.radarTuong.intersectObjects(window.danhSachMap, true);
                     let vatCan = chamTuong.find(hit => hit.object.userData && !hit.object.userData.isCloud);
 
                     if (vatCan && vatCan.distance < 0.8 + tocDo) {
-                        // Ép dính Sếp vào vách đá, tránh bị kẹt ở xa nếu chạy ngang quá nhanh
-                        if (vatCan.distance > 0.81) {
-                            let viTriDungLai = vatCan.point.clone().sub(huongDi.clone().multiplyScalar(0.81));
-                            playerModel.position.copy(viTriDungLai);
+                        // 🏔️ THUẬT TOÁN ĐO ĐỘ DỐC LEO NÚI
+                        let worldNormal = new THREE.Vector3(0, 1, 0);
+                        if (vatCan.face) {
+                            // Lấy góc nghiêng của mặt đất chỗ va chạm
+                            worldNormal.copy(vatCan.face.normal).transformDirection(vatCan.object.matrixWorld).normalize();
                         }
-                        return true;
+                        
+                        let doDoc = worldNormal.dot(huongLen);
+                        // doDoc = 1 (Đường bằng phẳng), doDoc = 0 (Tường thẳng đứng 90 độ), doDoc < 0 (Trần nhà)
+                        // Chỉ khóa lại nếu độ dốc gắt hơn 60 độ (doDoc < 0.5)
+                        if (doDoc < 0.5) {
+                            // Đây là bức tường bê tông hoặc vách núi đá dựng đứng!
+                            if (vatCan.distance > 0.81) {
+                                let viTriDungLai = vatCan.point.clone().sub(huongDi.clone().multiplyScalar(0.81));
+                                // Loại bỏ độ cao Y để không bị trồi sụt khi đi bám tường
+                                let truyenY = viTriDungLai.clone().sub(playerModel.position).dot(huongLen);
+                                viTriDungLai.sub(huongLen.clone().multiplyScalar(truyenY));
+                                playerModel.position.copy(viTriDungLai);
+                            }
+                            return true; // Chặn cứng Sếp lại!
+                        }
+                        // Nếu doDoc >= 0.5 -> Sườn núi thoai thoải -> KHÔNG return true, cho Sếp chạy lên bình thường!
                     }
                 }
                 return false;
