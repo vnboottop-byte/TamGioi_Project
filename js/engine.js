@@ -2709,7 +2709,8 @@ window.loadSafeZonesVaTeleports = function() {
                             window.TELEPORT_MIXERS.push(mixer);
                         }
 
-                        window.DANH_SACH_CONG.push({ mesh: congGroup, dest: dest, name: tp.ten_dich_den });
+                        // 🌟 Ép cổng lưu thêm thông tin Khu Vực Đích (zone_dich_den)
+                        window.DANH_SACH_CONG.push({ mesh: congGroup, dest: dest, name: tp.ten_dich_den, zone_dich_den: tp.zone_dich_den });
                         if (typeof window.taoBienTenCong === 'function') window.taoBienTenCong(tp.ten_dich_den, pos.x, pos.y, pos.z);
                     });
                 }
