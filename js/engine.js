@@ -2569,7 +2569,7 @@ window.thucHienTruyenTong = function (congData) {
             // - HOẶC quá 10 giây bị kẹt mạng (Fallback an toàn).
             if ((window.daNhanDanhSachMap && !coMapDangLoad && coMapDaLoad) || 
                 (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP.length === 0) || 
-                thoiGianCho >= 10000) {
+                thoiGianCho >= 20000) {
                 
                 clearInterval(vongLapChoMap);
                 if (manHinhDichChuyen) manHinhDichChuyen.style.display = 'none'; // Thu hồi lỗ giun
