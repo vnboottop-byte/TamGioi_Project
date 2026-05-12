@@ -501,7 +501,7 @@ window.addEventListener('pointerdown', (event) => {
 });
 
 // Quăng Sếp lên độ cao 5000m (hoặc tọa độ lưu trong SQL) để Sếp rơi tự do xuống hành tinh bên dưới
-const TOA_DO_SPAWN = { x: window.SPAWN_X || 0, y: window.SPAWN_Y || 5000, z: window.SPAWN_Z || 0 };
+const TOA_DO_SPAWN = { x: window.SPAWN_X || 0, y: window.SPAWN_Y || 0, z: window.SPAWN_Z || 0 };
 
 camera.far = 30000; 
 camera.updateProjectionMatrix();
