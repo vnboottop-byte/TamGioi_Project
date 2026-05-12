@@ -1933,6 +1933,8 @@ window.xuLyLoadMapChunk = function (mapData) {
                     let serializedBVH = await p;
                     child.geometry.boundsTree = MeshBVHLib.MeshBVH.deserialize(serializedBVH, child.geometry);
                     let timeEnd = performance.now();
+                    // 🌟 TRẢ LẠI DÒNG BÁO CÁO 
+                    console.log(`👷 WORKER BVH: Đúc ngầm vật lý cho [${child.name || "Mesh Vô Danh"}] mất ${(timeEnd - timeStart).toFixed(2)} ms!`);
                 } else if (typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
                 }
