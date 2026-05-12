@@ -639,7 +639,8 @@ window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
 // 📡 RADAR TÒA ÁN TỐI CAO V2.1 (Tương thích Mảng & Chống Nhân Bản)
 // ==========================================
 window.radarDongBoThucTe = function () {
-    fetch('api/get_bosses.php?v=' + Date.now()).then(res => res.json()).then(data => {
+    let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
+    fetch('api/get_bosses.php?v=' + Date.now() + '&zone=' + currentZone).then(res => res.json()).then(data => {
         if (data.status === 'success' && window.danhSachQuaiVat) {
             data.data.forEach(bossSQL => {
                 let id = bossSQL.id;
