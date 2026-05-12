@@ -663,31 +663,31 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
 
             if (laMayKhyQuyen) {
-                // 🌟 XỬ LÝ KHÍ QUYỂN / NGÂN HÀ / MÂY
+                // Xử lý Lồng Bầu Trời: Tàng hình vật lý, đẩy ra xa
                 child.frustumCulled = false;
-                child.renderOrder = -1; // Đẩy ra xa nhất
-
+                child.renderOrder = -1; 
                 if (child.material) {
-                    
-                    // 🛑 ĐÃ TẮT BỘ HÚT HDRI: Không lấy vũ trụ làm ánh sáng nữa vì nó gây đen kim loại!
-                    
-                    // Chỉ kích sáng chính cái bầu trời lên cho đẹp
                     if (child.material.map) {
                         child.material.emissiveMap = child.material.map;
                         child.material.emissive = new THREE.Color(0xffffff);
                         child.material.emissiveIntensity = 1.2;
                     }
-
-                    // Ép mây thành dạng xuyên thấu
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
                         map: mat.map, color: mat.color || 0xffffff, transparent: true,
-                        opacity: mat.opacity !== undefined ? mat.opacity : 0.8,
-                        side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending
+                        opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
+                        side: THREE.DoubleSide, // 🌟 PHẢI LÀ DOUBLESIDE THÌ RADAR MỚI ĐO ĐƯỢC CHUẨN KHOẢNG CÁCH!
+                        depthWrite: false
                     }));
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
+                
+                // 🌟 LƯU VÀO DANH SÁCH BẦU TRỜI ĐỂ LÀM LƯỚI ĐIỆN BẢO VỆ
+                if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
+                window.danhSachBauTroi.push(child);
+                
+                continue; 
             }
 
 
