@@ -1823,13 +1823,14 @@ window.xuLyLoadMapChunk = function (mapData) {
             let child = danhSachMesh[i];
 
             // ==========================================
-            // 🌟 LÁ CHẮN BẦU TRỜI: XỬ LÝ MÂY/TRỜI ĐỂ HIỆN RA VÀ CHỐNG BAY XUYÊN
+            // 🌟 LÁ CHẮN BẦU TRỜI (BẢN VÁ: CHỐNG LỖI UNDEFINED CỦA TÊN MESH)
             // ==========================================
-            let tenMesh = child.name.toLowerCase();
+            // 🌟 Dùng ( || "" ) để nếu Mesh không có tên thì biến thành chuỗi rỗng, không bao giờ bị lỗi sập Game!
+            let tenMesh = (child.name || "").toLowerCase();
             let laMayKhyQuyen = false;
 
             child.traverseAncestors(p => {
-                let pName = p.name.toLowerCase();
+                let pName = (p.name || "").toLowerCase();
                 if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao') || pName.includes('sky')) laMayKhyQuyen = true;
             });
 
@@ -1841,19 +1842,27 @@ window.xuLyLoadMapChunk = function (mapData) {
 
                 if (child.material) {
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
-                    let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
-                        map: mat.map, color: mat.color || 0xffffff, transparent: true,
-                        opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
-                        side: THREE.DoubleSide, 
-                        depthWrite: true // 🌟 ĐỂ SKY KHÔNG BỊ TÀNG HÌNH
-                    }));
+                    let newMats = mats.map(mat => {
+                        if (!mat) return new THREE.MeshBasicMaterial({ color: 0xffffff });
+                        return new THREE.MeshBasicMaterial({
+                            map: mat.map || null, 
+                            color: mat.color || 0xffffff, 
+                            transparent: true,
+                            opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
+                            side: THREE.DoubleSide, 
+                            depthWrite: true // 🌟 ĐỂ SKY KHÔNG BỊ TÀNG HÌNH
+                        });
+                    });
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
                 
-                // 🌟 ĐĂNG KÝ VÀO LƯỚI ĐIỆN BẢO VỆ CHỐNG XUYÊN THẤU
+                // 🌟 LƯỚI ĐIỆN BẢO VỆ CHỐNG XUYÊN THẤU VÀ DỌN RÁC (ĐÃ BỌC THÉP KHAI BÁO)
                 if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
                 window.danhSachBauTroi.push(child);
+
+                if (!mapData.mayMeshes) mapData.mayMeshes = [];
+                mapData.mayMeshes.push(child);
 
                 // 🛑 QUAN TRỌNG: BỎ QUA KHÔNG ĐÚC VẬT LÝ MẶT ĐẤT CHO BẦU TRỜI (CHỐNG LẶP 5 PHÚT)
                 continue; 
@@ -1898,15 +1907,16 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
-                let tenMesh2 = child.name.toLowerCase();
+                let tenMesh2 = (child.name || "").toLowerCase();
                 let laMatNuoc = tenMesh2.includes('water') || tenMesh2.includes('nuoc') || tenMesh2.includes('bien') || tenMesh2.includes('ocean');
 
                 let mats = Array.isArray(child.material) ? child.material : [child.material];
                 
                 if (laMatNuoc) {
                     let newMats = mats.map(mat => {
+                        if (!mat) return new THREE.MeshBasicMaterial({ color: 0x1e90ff });
                         let basicMat = new THREE.MeshBasicMaterial({
-                            map: mat.map,
+                            map: mat.map || null,
                             color: mat.color || 0x1e90ff, 
                             transparent: true,
                             opacity: 0.8,
@@ -1926,6 +1936,7 @@ window.xuLyLoadMapChunk = function (mapData) {
                 } 
                 else {
                     mats.forEach(mat => {
+                        if (!mat) return;
                         if (mat.emissive) mat.emissive.setHex(0x000000);
                         if (mat.color) {
                             let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
@@ -1946,7 +1957,6 @@ window.xuLyLoadMapChunk = function (mapData) {
             child.updateMatrixWorld(true);
 
             // --- C. ĐÚC KHUÔN VẬT LÝ BVH (ỦY QUYỀN CHO NHÂN CPU ẢO) ---
-            // 🌟 ĐÃ LỌC BẦU TRỜI (Ở MỤC TRÊN) NÊN KHÔNG LO BỊ LỖI CHẶN BVH NỮA
             if (child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
                 if (window.myBvhWorker) {
                     let timeStart = performance.now();
@@ -1974,6 +1984,8 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             if (!window.danhSachMap) window.danhSachMap = [];
             window.danhSachMap.push(child);
+            
+            if (!mapData.matDatMeshes) mapData.matDatMeshes = [];
             mapData.matDatMeshes.push(child);
 
             if (window.renderer && typeof scene !== 'undefined') {
