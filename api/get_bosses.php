@@ -1,12 +1,13 @@
 <?php
+// File: api/get_bosses.php
 header('Content-Type: application/json');
 require_once '../db.php';
 
+// 🌟 THÊM LỌC THEO ZONE_ID
 $zone = isset($_GET['zone']) ? $_GET['zone'] : 'TRUNG_CHAU';
 $now = time();
 $respawn_time = 600; 
 
-// 🌟 LỌC QUÁI THEO MAP
 $stmt = $conn->prepare("SELECT * FROM map_monsters WHERE zone_id = ? ORDER BY id DESC");
 $stmt->bind_param("s", $zone);
 $stmt->execute();

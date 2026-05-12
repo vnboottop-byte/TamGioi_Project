@@ -1,7 +1,9 @@
 <?php
+// File: api/get_safezones.php
 header('Content-Type: application/json');
 require_once '../db.php';
 
+// 🌟 THÊM LỌC THEO ZONE_ID
 $zone = isset($_GET['zone']) ? $_GET['zone'] : 'TRUNG_CHAU';
 $stmt = $conn->prepare("SELECT * FROM safe_zones WHERE zone_id = ?");
 $stmt->bind_param("s", $zone);
