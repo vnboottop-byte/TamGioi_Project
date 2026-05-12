@@ -3,10 +3,8 @@
 header('Content-Type: application/json');
 require_once '../db.php';
 
-// Bắt khu vực cần lấy (Mặc định là TRUNG_CHAU nếu không có)
+// 🌟 THÊM LỌC THEO ZONE_ID
 $zone = isset($_GET['zone']) ? $_GET['zone'] : 'TRUNG_CHAU';
-
-// Lọc Map theo Zone
 $stmt = $conn->prepare("SELECT * FROM map_chunks WHERE zone_id = ?");
 $stmt->bind_param("s", $zone);
 $stmt->execute();
