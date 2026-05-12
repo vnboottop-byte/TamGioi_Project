@@ -1737,6 +1737,7 @@ function animate() {
                         vuKhiHienThi = (window.vuKhiModel && window.vuKhiModel.visible) ? 1 : 0;
                     }
 
+                    // 🌟 BẢN VÁ AAA: Bơm thêm thông số thứ 17 (ZONE_ID)
                     const myPosArr = [
                         1, parseFloat(playerModel.position.x.toFixed(2)), parseFloat(playerModel.position.y.toFixed(2)), parseFloat(playerModel.position.z.toFixed(2)),
                         parseFloat(playerModel.rotation.x.toFixed(2)), parseFloat(playerModel.rotation.y.toFixed(2)), parseFloat(playerModel.rotation.z.toFixed(2)),
@@ -1746,7 +1747,8 @@ function animate() {
                         typeof window.WEAPON_URL !== 'undefined' ? window.WEAPON_URL : '', 
                         typeof window.MOUNT_URL !== 'undefined' ? window.MOUNT_URL : '', 
                         typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' ? window.SCRIPT_PHAI_CUA_TOI : '',
-                        vuKhiHienThi 
+                        vuKhiHienThi,
+                        window.ZONE_ID || 'TRUNG_CHAU' // <-- ĐÂY! Tấm vé thông hành qua các Map Phẳng!
                     ];
 
                     try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(myPosArr)), { reliable: false }); } catch (e) { }
