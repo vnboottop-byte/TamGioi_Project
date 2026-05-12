@@ -1841,13 +1841,6 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao') || tenMesh.includes('sky')) laMayKhyQuyen = true;
 
-
-
-
-
-
-
-
             if (laMayKhyQuyen) {
                 child.frustumCulled = false;
                 child.renderOrder = -1; // Đẩy ra xa nhất
