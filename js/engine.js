@@ -1363,9 +1363,33 @@ function animate() {
                 if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
 
                 let dangChuDongDoiDoCao = false;
+
+
+
                 if (window.keys && window.keys.space) {
-                    dangChuDongDoiDoCao = true; window.isMoving = false; playerModel.position.y += currentSprint;
+                    dangChuDongDoiDoCao = true; window.isMoving = false;
+                    
+                    // 🌟 BẢN VÁ: QUÉT TRẦN NHÀ TRƯỚC KHI BAY LÊN
+                    if (!window.radarBauTroi) { window.radarBauTroi = new THREE.Raycaster(); window.radarBauTroi.far = 10; }
+                    // Bắn tia từ đầu nhân vật hướng lên trời
+                    window.radarBauTroi.set(playerModel.position, new THREE.Vector3(0, 1, 0));
+                    let chamTran = window.radarBauTroi.intersectObjects(window.danhSachBauTroi || [], true);
+                    
+                    if (chamTran.length === 0) {
+                        playerModel.position.y += currentSprint; // Đường thông hè thoáng thì bay!
+                    } else {
+                        // Đã chạm vào lồng bầu trời, khóa độ cao lại!
+                        if (typeof window.hienThongBaoBoGoc === 'function' && !window.dangBaoBauTroi) {
+                             window.hienThongBaoBoGoc("☁️ Bạn đã chạm đến giới hạn Bầu Trời!", "#3498db");
+                             window.dangBaoBauTroi = true;
+                             setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                        }
+                    }
                     if (typeof playAnim === 'function') playAnim('BAY');
+                }
+
+
+
                 } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
                     if (doCao > 0) { playerModel.position.y -= currentSprint; if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; }
