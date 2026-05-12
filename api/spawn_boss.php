@@ -27,14 +27,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hp = $max_hp;
         $damage = 100 + (($level - 1) * 3);
 
-        // 🌟 3. LƯU VÀO DATABASE
-        $sql_insert = "INSERT INTO map_monsters (name, pos_x, pos_y, pos_z, hp, max_hp, damage, attack_range, model_url, level, scale, class_code) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+
+
+        $sql_insert = "INSERT INTO map_monsters (name, pos_x, pos_y, pos_z, hp, max_hp, damage, attack_range, model_url, level, scale, class_code, zone_id) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                        
         $stmt_insert = $conn->prepare($sql_insert);
         
-        // Chuỗi format 12 biến chuẩn: s=string, d=double, i=int. 
-        $stmt_insert->bind_param("sdddiiidsids", $name, $x, $y, $z, $hp, $max_hp, $damage, $range, $model, $level, $scale, $class_code);
+        // Chuỗi format 13 biến chuẩn: thêm s và $zone_id ở cuối
+        $stmt_insert->bind_param("sdddiiidsidss", $name, $x, $y, $z, $hp, $max_hp, $damage, $range, $model, $level, $scale, $class_code, $zone_id);
+      
+      
+      
         $stmt_insert->execute();
 
         echo json_encode(['status' => 'success', 'msg' => "✅ Đã đẻ Boss: Cấp $level | HP: " . number_format($hp) . " | Dame: " . number_format($damage)]);
