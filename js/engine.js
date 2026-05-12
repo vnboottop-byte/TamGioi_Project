@@ -1743,7 +1743,17 @@ setTimeout(() => { window.loadTatCaMapTuSQL(); }, 3000);
 // 2. HÀM TẢI MỘT CHUNK VÀO RAM (BẢN VÁ AAA: TẢI HIỀN HOÀ CHỐNG GIẬT LAG)
 window.xuLyLoadMapChunk = function (mapData) {
     if (mapData.isLoaded || mapData.isLoading || typeof window.loaderSieuToc === 'undefined') return;
+    
+    // 🌟 LÁ CHẮN THÉP CHỐNG LỖI MÀN HÌNH ĐEN (THIẾU LINK MAP TRONG SQL)
+    if (!mapData.model_url || mapData.model_url.trim() === '') {
+        console.warn("⚠️ Đã chặn Map ID " + mapData.id + " vì bị rỗng link Model!");
+        return;
+    }
+    
     mapData.isLoading = true;
+
+
+
 
     window.loaderSieuToc.load(mapData.model_url, async function (gltf) {
         let mapMesh = gltf.scene;
@@ -1990,8 +2000,8 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
             // --- C. ĐÚC KHUÔN VẬT LÝ BVH (ỦY QUYỀN CHO NHÂN CPU ẢO) ---
-            // 🌟 BẢN VÁ: Cho phép đúc BVH cho cả Map nhỏ trang trí (Bỏ điều kiện laMatDatKhongLo)
-            if (child.geometry) {
+            // 🌟 BẢN VÁ AAA: LỌC MESH RỖNG BỊ LỖI CỦA 3D ARTIST (CHỐNG SẬP GAME)
+            if (child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
 
 
                 if (window.myBvhWorker) {
