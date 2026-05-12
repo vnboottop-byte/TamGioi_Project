@@ -1055,7 +1055,8 @@ function hoanTatTaiModels() {
     // 🌟 BẢN VÁ: NẮN LẠI TRỤC XƯƠNG SỐNG NGAY KHI VỪA ĐĂNG NHẬP
     // ==========================================
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
-    let huongLenTroiMoi = playerModel.position.clone().sub(tam).normalize();
+    let huongLenTroiMoi = playerModel.position.clone().sub(tam);
+    if (huongLenTroiMoi.lengthSq() < 0.001) huongLenTroiMoi.set(0, 1, 0); else huongLenTroiMoi.normalize();
     playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
     playerModel.up.copy(huongLenTroiMoi);
     window.mucTieuBanKinhDat = playerModel.position.distanceTo(tam); // Khóa Radar chống văng lún
