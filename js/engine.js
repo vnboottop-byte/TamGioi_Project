@@ -1230,33 +1230,40 @@ function animate() {
             var viTriCu = playerModel.position.clone();
 
             // ==========================================
-            // 🧱 RADAR DÒ TƯỜNG (CHỐNG XUYÊN VÁCH HẦM NGỤC)
+            // 🧱 RADAR DÒ TƯỜNG (BẢN VÁ AAA: CHỐNG SPAM PHÍM SPACE CLIP XUYÊN TƯỜNG)
             // ==========================================
             function kiemTraVaChamTuong(huongDi, tocDo) {
                 if (!window.danhSachMap || window.danhSachMap.length === 0) return false;
-                if (!window.radarTuong) {
-                    window.radarTuong = new THREE.Raycaster();
-                    window.radarTuong.firstHitOnly = false; // Phải bắn xuyên mây để tìm vách đá
-                }
+                if (!window.radarTuong) { window.radarTuong = new THREE.Raycaster(); window.radarTuong.firstHitOnly = false; }
 
-                // Đặt tâm tia Laser ở ngay ngực nhân vật (Cách gót chân 1.5m)
                 let huongLen = playerModel.up.clone().normalize();
-                let diemBan = playerModel.position.clone().add(huongLen.multiplyScalar(1.5));
+                let laBayLen = huongDi.dot(huongLen) > 0.5; // Đang bay lên hay đi ngang?
+
+                let diemBan = playerModel.position.clone();
+                let khoangCachAnToan = 0;
+
+                if (laBayLen) {
+                    diemBan.add(huongLen.multiplyScalar(0.1)); // Đặt súng ở mắt cá chân bắn thẳng lên
+                    khoangCachAnToan = 2.2 + tocDo; // Đầu nhân vật cao 2m + bù trừ
+                } else {
+                    diemBan.add(huongLen.multiplyScalar(1.5)); // Đi ngang thì đặt súng ở ngực
+                    khoangCachAnToan = 0.8 + tocDo; // Bán kính bề ngang vai
+                }
 
                 window.radarTuong.set(diemBan, huongDi);
                 let chamTuong = window.radarTuong.intersectObjects(window.danhSachMap, true);
 
                 if (chamTuong.length > 0) {
-                    // Loại bỏ những thứ là mây/trời (có userData.isCloud)
                     let vatCan = chamTuong.find(hit => hit.object.userData && !hit.object.userData.isCloud);
-
-                    // Khoảng cách va chạm: Bán kính người (khoảng 0.8m) + Tốc độ chạy của Sếp
-                    if (vatCan && vatCan.distance < (0.8 + tocDo)) {
-                        return true; // Phanh gấp! Phía trước là tường!
+                    if (vatCan && vatCan.distance < khoangCachAnToan) {
+                        // 🌟 TỐI HẬU THUẬT: Nếu đụng đỉnh đầu, Ép dội ngược lại 0.2m! Không thể lết qua được!
+                        if (laBayLen) playerModel.position.sub(huongLen.multiplyScalar(0.2));
+                        return true;
                     }
                 }
                 return false;
             }
+            // ==========================================
             // ==========================================
 
             if (window.KIEU_TRONG_LUC === 'PHANG') {
@@ -1299,13 +1306,31 @@ function animate() {
                 else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
                 if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
 
+                // 🌟 LƯỚI ĐIỆN KHÔNG GIAN (BỌC THÉP CHỐNG NHẤP NHẢ PHÍM SPACE)
                 function kiemTraVaChamKetGioi(huongDi, khoangCachBuffer) {
                     if (!window.danhSachBauTroi || window.danhSachBauTroi.length === 0) return false;
                     if (!window.radarBauTroi) window.radarBauTroi = new THREE.Raycaster();
-                    let diemBan = playerModel.position.clone(); diemBan.y += 2.0;
+
+                    let huongLen = playerModel.up.clone().normalize();
+                    let laBayLen = huongDi.dot(huongLen) > 0.5;
+                    let diemBan = playerModel.position.clone();
+
+                    if (laBayLen) {
+                        diemBan.add(huongLen.multiplyScalar(0.1)); // Từ gót chân
+                        khoangCachBuffer += 2.2;
+                    } else {
+                        diemBan.add(huongLen.multiplyScalar(1.5)); // Từ ngực
+                    }
+
                     window.radarBauTroi.set(diemBan, huongDi);
                     let chamTuong = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
-                    return (chamTuong.length > 0 && chamTuong[0].distance < khoangCachBuffer);
+
+                    if (chamTuong.length > 0 && chamTuong[0].distance < khoangCachBuffer) {
+                        // Đập đầu vào kính bầu trời -> Dội ngược xuống 0.2m
+                        if (laBayLen) playerModel.position.sub(huongLen.multiplyScalar(0.2));
+                        return true;
+                    }
+                    return false;
                 }
 
                 function canhBaoKetGioi() {
