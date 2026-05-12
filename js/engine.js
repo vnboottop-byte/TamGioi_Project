@@ -1365,22 +1365,25 @@ function animate() {
                 }
 
                 let dangChuDongDoiDoCao = false;
+                // 🌟 TÁCH RIÊNG TỐC ĐỘ BẤM CÁCH: Chỉ bằng 70% tốc độ bay ngang để dễ luồn lách
+                let tocDoBayLen = currentSprint * 0.7;
 
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
                     let huongBayLen = new THREE.Vector3(0, 1, 0);
 
-                    // 🌟 BẢN VÁ AAA: KIỂM TRA ĐỒNG THỜI CẢ TRẦN HẦM NGỤC (ĐÁ) LẪN LỒNG BẦU TRỜI (MÂY)
-                    if (!kiemTraVaChamKetGioi(huongBayLen, currentSprint + 2.0) && !kiemTraVaChamTuong(huongBayLen, currentSprint)) {
-                        playerModel.position.y += currentSprint;
-                    } else {
-                        canhBaoKetGioi();
-                    }
+                    if (!kiemTraVaChamKetGioi(huongBayLen, tocDoBayLen + 2.0) && !kiemTraVaChamTuong(huongBayLen, tocDoBayLen)) {
+                        playerModel.position.y += tocDoBayLen;
+                        tocDoHienTaiThucTe = tocDoBayLen; // 🌟 Truyền số liệu thật ra đồng hồ HUD!
+                    } else { canhBaoKetGioi(); }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
-
                     dangChuDongDoiDoCao = true; window.isMoving = false;
-                    if (doCao > 0) { playerModel.position.y -= currentSprint; if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; }
+                    if (doCao > 0) {
+                        playerModel.position.y -= tocDoBayLen;
+                        tocDoHienTaiThucTe = tocDoBayLen; // 🌟 Truyền số liệu thật ra đồng hồ HUD!
+                        if (playerModel.position.y < matDatY) playerModel.position.y = matDatY;
+                    }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 }
 
@@ -1499,19 +1502,22 @@ function animate() {
                 if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
 
                 let dangChuDongDoiDoCao = false;
+                // 🌟 TÁCH RIÊNG TỐC ĐỘ BẤM CÁCH: Chỉ bằng 70% tốc độ bay ngang
+                let tocDoBayLen = currentSprint * 0.7;
+
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
 
-                    // 🌟 BẢN VÁ AAA: BẬT RADAR QUÉT NÓC TRƯỚC KHI BAY LÊN (HÀNH TINH CẦU)
-                    if (!kiemTraVaChamTuong(huongLenTroi, currentSprint)) {
-                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(currentSprint));
+                    if (!kiemTraVaChamTuong(huongLenTroi, tocDoBayLen)) {
+                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(tocDoBayLen));
+                        tocDoHienTaiThucTe = tocDoBayLen; // 🌟 Truyền số liệu thật ra đồng hồ HUD!
                     }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
-
                     dangChuDongDoiDoCao = true; window.isMoving = false;
                     if (doCao > 0) {
-                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(-currentSprint));
+                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(-tocDoBayLen));
+                        tocDoHienTaiThucTe = tocDoBayLen; // 🌟 Truyền số liệu thật ra đồng hồ HUD!
                         if (playerModel.position.distanceTo(tamHanhTinh) < rHanhTinh + 0.1) {
                             playerModel.position.copy(tamHanhTinh).add(huongLenTroi.clone().multiplyScalar(rHanhTinh + 0.1));
                         }
@@ -1627,10 +1633,18 @@ function animate() {
                 window.vongTronSafeZone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), groundDir);
             }
 
+            // ==========================================
+            // 🌟 CẬP NHẬT HUD TỐC ĐỘ (BẢN VÁ: XÓA SỐ FAKE 648 KM/H)
+            // ==========================================
             if (document.getElementById('bay-hud')) {
-                let kmh = Math.round(tocDoHienTaiThucTe * 216); if (window.keys && window.keys.space) kmh = Math.round(3.0 * 216);
-                if (!isKeyboardMoving && !window.isMoving && (!window.keys || !window.keys.space)) kmh = 0;
-                document.getElementById('bay-hud').style.color = mauChu; document.getElementById('bay-hud').style.borderColor = mauChu; document.getElementById('bay-hud').style.boxShadow = `0 0 10px ${mauChu}`;
+                let kmh = Math.round(tocDoHienTaiThucTe * 216);
+
+                // Nếu đang rớt tự do hoặc đứng yên thì Tốc độ = 0
+                if (!isKeyboardMoving && !window.isMoving && !dangChuDongDoiDoCao) kmh = 0;
+
+                document.getElementById('bay-hud').style.color = mauChu;
+                document.getElementById('bay-hud').style.borderColor = mauChu;
+                document.getElementById('bay-hud').style.boxShadow = `0 0 10px ${mauChu}`;
                 document.getElementById('bay-hud').innerHTML = `TẦNG: <b>${tangKhongGian}</b><br>ĐỘ CAO: <b>${doCao === 9999 ? 'VÔ TẬN' : Math.max(0, Math.round(doCao)) + ' m'}</b><br>TỐC ĐỘ: <b>${kmh} KM/H</b>`;
             }
 
