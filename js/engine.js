@@ -1364,9 +1364,10 @@ function animate() {
                     }
                 }
 
-                let dangChuDongDoiDoCao = false;
+                
+                var dangChuDongDoiDoCao = false;
                 // 🌟 TÁCH RIÊNG TỐC ĐỘ BẤM CÁCH: Chỉ bằng 70% tốc độ bay ngang để dễ luồn lách
-                let tocDoBayLen = currentSprint * 0.7;
+                var tocDoBayLen = currentSprint * 0.7;
 
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
@@ -1501,9 +1502,9 @@ function animate() {
 
                 if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
 
-                let dangChuDongDoiDoCao = false;
+                var dangChuDongDoiDoCao = false;
                 // 🌟 TÁCH RIÊNG TỐC ĐỘ BẤM CÁCH: Chỉ bằng 70% tốc độ bay ngang
-                let tocDoBayLen = currentSprint * 0.7;
+                var tocDoBayLen = currentSprint * 0.7;
 
                 if (window.keys && window.keys.space) {
                     dangChuDongDoiDoCao = true; window.isMoving = false;
@@ -1640,7 +1641,7 @@ function animate() {
                 let kmh = Math.round(tocDoHienTaiThucTe * 216);
 
                 // Nếu đang rớt tự do hoặc đứng yên thì Tốc độ = 0
-                if (!isKeyboardMoving && !window.isMoving && !dangChuDongDoiDoCao) kmh = 0;
+                if (!window.isKeyboardMoving && !window.isMoving && !dangChuDongDoiDoCao) kmh = 0;
 
                 document.getElementById('bay-hud').style.color = mauChu;
                 document.getElementById('bay-hud').style.borderColor = mauChu;
