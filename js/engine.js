@@ -93,8 +93,13 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
                 // ==========================================
                 // 🌟 BẢN VÁ: NẮN LẠI XƯƠNG SAU KHI HỒI SINH Ở TÂN THỦ THÔN
                 // ==========================================
+
+
+
+
                 let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
-                let huongLenTroiMoi = playerModel.position.clone().sub(tam).normalize();
+                let huongLenTroiMoi = playerModel.position.clone().sub(tam);
+                if (huongLenTroiMoi.lengthSq() < 0.001) huongLenTroiMoi.set(0, 1, 0); else huongLenTroiMoi.normalize();
 
 
 
