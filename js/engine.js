@@ -1944,9 +1944,19 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
                 window.KIEU_TRONG_LUC = 'PHANG';
                 window.toaDoMatDat = 0; // Set sẵn mặt cỏ ở 0 để Sếp đáp xuống từ độ cao 15m
             }
-            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
 
-      
+
+
+
+
+
+
+
+
+           console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
+            
+            // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
+            if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
 
         }
     }).catch(err => console.error(err));
