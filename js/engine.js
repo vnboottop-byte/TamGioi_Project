@@ -2692,8 +2692,18 @@ window.hienThongBaoBoGoc = function(msg, mauSac) {
 };
 
 window.loadSafeZonesVaTeleports = function() {
-    // 1. Tải Safe Zones & Dựng Biển Neon
-    fetch('api/get_safezones.php').then(res => res.json()).then(data => {
+    let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
+    
+    // 🌟 Xóa sạch Cổng và SafeZone cũ trước khi load cái mới
+    if (window.vongTronSafeZone) window.vongTronSafeZone.visible = false;
+    window.DANH_SACH_SAFE_ZONE = [];
+    if (window.DANH_SACH_CONG) {
+        window.DANH_SACH_CONG.forEach(c => { if(typeof window.donRac3D === 'function') window.donRac3D(c.mesh); else scene.remove(c.mesh); });
+    }
+    window.DANH_SACH_CONG = [];
+
+    // 1. Tải Safe Zones & Dựng Biển Neon (Kèm theo Zone)
+    fetch('api/get_safezones.php?zone=' + currentZone).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.DANH_SACH_SAFE_ZONE = data.data.map(sz => ({ x: parseFloat(sz.pos_x), y: parseFloat(sz.pos_y), z: parseFloat(sz.pos_z), radius: parseFloat(sz.radius) }));
             window.DANH_SACH_SAFE_ZONE.forEach(sz => { if(typeof window.taoBienNeonSafeZone === 'function') window.taoBienNeonSafeZone(sz.x, sz.y, sz.z); });
