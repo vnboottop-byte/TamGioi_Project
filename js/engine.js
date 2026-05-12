@@ -2691,10 +2691,13 @@ window.hienThongBaoBoGoc = function(msg, mauSac) {
     setTimeout(() => { div.remove(); }, 2000);
 };
 
+
+
+
 window.loadSafeZonesVaTeleports = function() {
     let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
     
-    // 🌟 Xóa sạch Cổng và SafeZone cũ trước khi load cái mới
+    // 🌟 1. Xóa sạch Cổng và SafeZone cũ để nạp cái mới
     if (window.vongTronSafeZone) window.vongTronSafeZone.visible = false;
     window.DANH_SACH_SAFE_ZONE = [];
     if (window.DANH_SACH_CONG) {
@@ -2702,27 +2705,31 @@ window.loadSafeZonesVaTeleports = function() {
     }
     window.DANH_SACH_CONG = [];
 
-    // 1. Tải Safe Zones & Dựng Biển Neon (Kèm theo Zone)
-    fetch('api/get_safezones.php?zone=' + currentZone).then(res => res.json()).then(data => {
+    // 🌟 2. BÍ THUẬT CHỐNG CACHE: Gắn thêm Date.now() vào cuối URL
+    // Tải Safe Zones
+    fetch('api/get_safezones.php?zone=' + currentZone + '&v=' + Date.now()).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.DANH_SACH_SAFE_ZONE = data.data.map(sz => ({ x: parseFloat(sz.pos_x), y: parseFloat(sz.pos_y), z: parseFloat(sz.pos_z), radius: parseFloat(sz.radius) }));
             window.DANH_SACH_SAFE_ZONE.forEach(sz => { if(typeof window.taoBienNeonSafeZone === 'function') window.taoBienNeonSafeZone(sz.x, sz.y, sz.z); });
         }
     });
 
-    // 2. Tải Cổng Dịch Chuyển & Nắn Xương Lên Mặt Đất
-    fetch('api/get_safezones.php?zone=' + currentZone).then(res => res.json()).then(data => {
+    // 🌟 3. Tải Cổng Dịch Chuyển (Kèm chống Cache)
+    fetch('api/get_teleports.php?zone=' + currentZone + '&v=' + Date.now()).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             data.data.forEach(tp => {
+                
+                // 🛑 LÁ CHẮN THÉP CHỐNG LỖI ĐỎ MÀN HÌNH (Cannot read property undefined)
+                if (!tp.model_url || tp.model_url.trim() === '') return;
+
                 let dest = new THREE.Vector3(parseFloat(tp.dest_x), parseFloat(tp.dest_y), parseFloat(tp.dest_z));
                 let pos = new THREE.Vector3(parseFloat(tp.pos_x), parseFloat(tp.pos_y), parseFloat(tp.pos_z));
+                
                 if (window.loaderSieuToc) {
                     window.loaderSieuToc.load(tp.model_url, function (gltf) {
-                        // 🌟 BẢN VÁ: Nhét cổng vào 1 cái Khối Ảo (Group) để bẻ góc không bị lỗi
                         let congGroup = new THREE.Group();
                         congGroup.position.copy(pos);
 
-                        // Ép khối ảo đứng thẳng ôm Trái Đất
                         let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
                         let upDir = congGroup.position.clone().sub(tam).normalize();
                         congGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
@@ -2730,14 +2737,14 @@ window.loadSafeZonesVaTeleports = function() {
                         let mesh = gltf.scene;
                         let scale = parseFloat(tp.scale) || 1;
                         mesh.scale.set(scale, scale, scale);
-
-                        // 🌟 BẺ CỔNG NẰM XUỐNG 90 ĐỘ (Sửa lỗi lật mặt -Y)
                         mesh.rotation.x = -Math.PI / 2;
+
+                        // 🌟 CHỐNG TÀNG HÌNH DO LỖI CULLING CỦA THREE.JS
+                        mesh.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
 
                         congGroup.add(mesh);
                         scene.add(congGroup);
 
-                        // 🌟 KÍCH HOẠT ANIMATION CHO CỔNG
                         if (gltf.animations && gltf.animations.length > 0) {
                             let mixer = new THREE.AnimationMixer(mesh);
                             gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
@@ -2745,7 +2752,7 @@ window.loadSafeZonesVaTeleports = function() {
                             window.TELEPORT_MIXERS.push(mixer);
                         }
 
-                        // 🌟 Ép cổng lưu thêm thông tin Khu Vực Đích (zone_dich_den)
+                        // 🌟 Lưu lại Mã Vùng Đích Đến
                         window.DANH_SACH_CONG.push({ mesh: congGroup, dest: dest, name: tp.ten_dich_den, zone_dich_den: tp.zone_dich_den });
                         if (typeof window.taoBienTenCong === 'function') window.taoBienTenCong(tp.ten_dich_den, pos.x, pos.y, pos.z);
                     });
@@ -2754,6 +2761,8 @@ window.loadSafeZonesVaTeleports = function() {
         }
     });
 };
+
+
 setTimeout(() => { window.loadSafeZonesVaTeleports(); }, 4000); // Chờ 4s cho map khởi động xong mới load
 
 
