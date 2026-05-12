@@ -1892,7 +1892,6 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
-window.ZONE_ID = 'TRUNG_CHAU'; // Mặc định khi mới đăng nhập vào game
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
     // Gọi API kèm theo Tên Khu Vực
     fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
