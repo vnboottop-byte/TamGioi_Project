@@ -584,8 +584,17 @@ if (typeof MeshBVHLib !== 'undefined') {
 
 loader.load('uploads/anims/map_san_dinh.glb', function (gltf) { 
     const mapHanhTinh = gltf.scene;
+    
+    // 🌟 LƯU LẠI BẢN GỐC ĐỂ TẮT/MỞ KHI XUYÊN KHÔNG
+    window.HANH_TINH_GOC = mapHanhTinh; 
+    window.matDatHanhTinhGoc = []; 
 
     if (gltf.animations && gltf.animations.length > 0) {
+
+
+
+
+
         window.mixerTraiDat = new THREE.AnimationMixer(mapHanhTinh);
         gltf.animations.forEach((clip) => {
             let action = window.mixerTraiDat.clipAction(clip);
