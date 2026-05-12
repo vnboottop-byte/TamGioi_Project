@@ -2064,14 +2064,70 @@ window.xuLyLoadMapChunk = function (mapData) {
         // 🌟 LẮP CẢM BIẾN THỜI GIAN THEO LỆNH SẾP
         let thoiGianĐoFPS = performance.now();
 
+
+
+
+
+
+
+
         // 2. Xử lý TỪ TỪ từng cục đất, từng cái cây...
         for (let i = 0; i < danhSachMesh.length; i++) {
             let child = danhSachMesh[i];
+
+            // ==========================================
+            // 🌟 LÁ CHẮN BẦU TRỜI: NGĂN CHẶN LỖI ĐỨNG TRÊN NÓC MAP VÀ LÚP LOAD/UNLOAD
+            // ==========================================
+            let tenMesh = child.name.toLowerCase();
+            let laMayKhyQuyen = false;
+
+            child.traverseAncestors(p => {
+                let pName = p.name.toLowerCase();
+                // 🌟 Bơm thêm từ khóa 'sky' để quét triệt để
+                if (pName.includes('cloud') || pName.includes('may') || pName.includes('atmosphere') || pName.includes('datroi') || pName.includes('nganha') || pName.includes('sao') || pName.includes('sky')) laMayKhyQuyen = true;
+            });
+
+            if (tenMesh.includes('cloud') || tenMesh.includes('may') || tenMesh.includes('atmosphere') || tenMesh.includes('datroi') || tenMesh.includes('nganha') || tenMesh.includes('sao') || tenMesh.includes('sky')) laMayKhyQuyen = true;
+
+            if (laMayKhyQuyen) {
+                // Xử lý Lồng Bầu Trời: Tàng hình vật lý, đẩy ra xa
+                child.frustumCulled = false;
+                child.renderOrder = -1; 
+                if (child.material) {
+                    if (child.material.map) {
+                        child.material.emissiveMap = child.material.map;
+                        child.material.emissive = new THREE.Color(0xffffff);
+                        child.material.emissiveIntensity = 1.2;
+                    }
+                    let mats = Array.isArray(child.material) ? child.material : [child.material];
+                    let newMats = mats.map(mat => new THREE.MeshBasicMaterial({
+                        map: mat.map, color: mat.color || 0xffffff, transparent: true,
+                        opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
+                        side: THREE.BackSide, // 🌟 Ép nhìn từ trong ra ngoài để đứng dưới đất vẫn thấy bầu trời
+                        depthWrite: false
+                    }));
+                    child.material = newMats.length === 1 ? newMats[0] : newMats;
+                }
+                child.userData.isCloud = true;
+                
+                // 🛑 QUAN TRỌNG NHẤT: Bỏ qua hoàn toàn, không đúc BVH, không cho vào Radar quét đất!
+                continue; 
+            }
+            // ==========================================
 
             let toaDoThucTe = new THREE.Vector3();
             child.getWorldPosition(toaDoThucTe);
             let doCaoCuaMesh = toaDoThucTe.distanceTo(tamHanhTinh) - rHanhTinh;
             let laDatSatMatGround = doCaoCuaMesh < 15.0;
+
+            // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
+
+
+
+
+
+
+
 
             // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
             // 🌟 KIỂM TRA ĐA VŨ TRỤ: Chỉ bẻ cong lưới nếu đang ở Hành Tinh Cầu!
@@ -2192,7 +2248,10 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
             // --- C. ĐÚC KHUÔN VẬT LÝ BVH (ỦY QUYỀN CHO NHÂN CPU ẢO) ---
-            if (laMatDatKhongLo && child.geometry) {
+            // 🌟 BẢN VÁ: Cho phép đúc BVH cho cả Map nhỏ trang trí (Bỏ điều kiện laMatDatKhongLo)
+            if (child.geometry) {
+
+
                 if (window.myBvhWorker) {
                     let timeStart = performance.now();
                     
@@ -2235,10 +2294,13 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             
 
-            if (laMatDatKhongLo) {
-                if (!window.danhSachMap) window.danhSachMap = [];
-                window.danhSachMap.push(child);
-            }
+            // 🌟 BẢN VÁ: Luôn đưa mọi Map (Lớn/Nhỏ) vào Radar để người chơi có thể giẫm lên được
+            if (!window.danhSachMap) window.danhSachMap = [];
+            window.danhSachMap.push(child);
+
+
+
+
             mapData.matDatMeshes.push(child);
 
             // ==========================================
