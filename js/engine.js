@@ -2006,18 +2006,22 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
 
-        // Đặt vị trí và bẻ hướng lên trời
-        mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-        
-        // 🌟 LÁ CHẮN TOÁN HỌC: Tránh lỗi NaN khi rải Map ở đúng tâm 0,0,0
-        let huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
-        if (huongLenGoc.lengthSq() < 0.001) {
-            huongLenGoc.set(0, 1, 0); // Ép cứng hướng lên trời nếu ở tâm lõi
-        } else {
-            huongLenGoc.normalize();
-        }
-        
+
+
+
+        // Đặt vị trí
+        mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));    
+        // 🌟 BẢN VÁ LẬT NGƯỢC MAP: Tách biệt hoàn toàn Tròn và Phẳng
+        let huongLenGoc = new THREE.Vector3(0, 1, 0); // Mặc định Bí Cảnh Phẳng luôn hướng lên trời +Y    
+        if (window.KIEU_TRONG_LUC !== 'PHANG') {
+            huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
+            if (huongLenGoc.lengthSq() < 0.001) huongLenGoc.set(0, 1, 0); else huongLenGoc.normalize();
+        }     
         mapMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenGoc);
+
+
+
+
 
 
 
