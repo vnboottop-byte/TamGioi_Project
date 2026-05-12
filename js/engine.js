@@ -1229,7 +1229,15 @@ function animate() {
                 var tamHanhTinh = new THREE.Vector3(0, 0, 0);  
                 var rHanhTinh = 0;
 
-                if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); window.radarTrongLuc.firstHitOnly = true; }
+
+
+
+
+
+                if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
+                // 🌟 BẢN VÁ HẦM NGỤC: Tắt firstHitOnly để Radar có thể nhìn xuyên qua nóc hầm xuống tận đáy hầm!
+                window.radarTrongLuc.firstHitOnly = false;
+
                 if (typeof window.khungHinhRadar === 'undefined') window.khungHinhRadar = 0; window.khungHinhRadar++;
 
                 let dangCuaDong = window.isMoving || window.isKeyboardMoving || (window.keys && (window.keys.space || window.keys.shift || window.keys.x || window.keys.c));
@@ -1239,9 +1247,20 @@ function animate() {
                     window.radarTrongLuc.set(tiaXuatPhat, new THREE.Vector3(0, -1, 0));
                     window.radarTrongLuc.far = Infinity;
                     window.danhSachMap = window.danhSachMap.filter(obj => obj && typeof obj.raycast === 'function');
+
                     var intersects = window.radarTrongLuc.intersectObjects(window.danhSachMap, true);
-                    if (intersects.length > 0) window.toaDoMatDat = intersects[0].point.y;
+                    if (intersects.length > 0) {
+                        // 🌟 THUẬT TOÁN XUYÊN HẦM: Lấy mặt đất cao nhất nằm NGAY DƯỚI CHÂN nhân vật (bù 3m để leo dốc)
+                        let chieuCaoToiDa = playerModel.position.y + 3.0;
+                        let diemChamDat = intersects.find(hit => hit.point.y <= chieuCaoToiDa);
+                        if (diemChamDat) window.toaDoMatDat = diemChamDat.point.y;
+                    }
                 }
+
+
+
+
+
 
                 var matDatY = window.toaDoMatDat || 0;
                 var doCao = playerModel.position.y - matDatY;
