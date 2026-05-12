@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $level = intval($_POST['level'] ?? 1);
         $scale = floatval($_POST['scale'] ?? 1.0);
         $class_code = $_POST['class_code'] ?? 'TU_TIEN';
+        $zone_id = $_POST['zone_id'] ?? 'TRUNG_CHAU';
 
         // 🌟 2. CÔNG THỨC ĐỒNG BỘ TUYẾN TÍNH NHƯ NGƯỜI CHƠI
         // Cấp 1: 1000 HP, 100 DMG. Mỗi cấp tăng 30 HP, 3 DMG.
