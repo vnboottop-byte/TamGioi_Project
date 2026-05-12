@@ -1991,8 +1991,19 @@ window.xuLyLoadMapChunk = function (mapData) {
 
         // Đặt vị trí và bẻ hướng lên trời
         mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-        let huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh).normalize();
+        
+        // 🌟 LÁ CHẮN TOÁN HỌC: Tránh lỗi NaN khi rải Map ở đúng tâm 0,0,0
+        let huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
+        if (huongLenGoc.lengthSq() < 0.001) {
+            huongLenGoc.set(0, 1, 0); // Ép cứng hướng lên trời nếu ở tâm lõi
+        } else {
+            huongLenGoc.normalize();
+        }
+        
         mapMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenGoc);
+
+
+
 
         if (parseFloat(mapData.rot_x) !== 0) mapMesh.rotateX(parseFloat(mapData.rot_x));
         if (parseFloat(mapData.rot_y) !== 0) mapMesh.rotateY(parseFloat(mapData.rot_y));
@@ -2577,7 +2588,8 @@ window.taoBienNeonSafeZone = function(x, y, z) {
     // Treo bảng lên cao cách mặt đất 300 mét
     let pos = new THREE.Vector3(x, y, z);
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
-    let groundDir = pos.clone().sub(tam).normalize();
+    let groundDir = pos.clone().sub(tam);
+    if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); else groundDir.normalize();
     sprite.position.copy(pos).add(groundDir.multiplyScalar(300)); 
     sprite.scale.set(800, 400, 1); // Kích thước khổng lồ để nhìn từ xa
     scene.add(sprite);
@@ -2815,9 +2827,19 @@ window.loadSafeZonesVaTeleports = function() {
                         let congGroup = new THREE.Group();
                         congGroup.position.copy(pos);
 
+
+
+
+
+
                         let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
-                        let upDir = congGroup.position.clone().sub(tam).normalize();
+                        let upDir = congGroup.position.clone().sub(tam);
+                        if (upDir.lengthSq() < 0.001) upDir.set(0, 1, 0); else upDir.normalize();
                         congGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
+
+
+
+
 
                         let mesh = gltf.scene;
                         let scale = parseFloat(tp.scale) || 1;
