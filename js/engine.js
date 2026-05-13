@@ -1018,7 +1018,7 @@ function hoanTatTaiModels() {
     if (window.ADMIN_NAME === "Admin") { window.MAU_TOI_DA = 999999999; window.mauBanThan = 999999999; }
     playerModel.traverse(function(child) { if (child.isMesh) child.frustumCulled = false; });
     
-    // Nắn trục xương sống
+    // 1. Nắn trục xương sống
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
     let huongLenTroiMoi = playerModel.position.clone().sub(tam);
     if (huongLenTroiMoi.lengthSq() < 0.001) huongLenTroiMoi.set(0, 1, 0); else huongLenTroiMoi.normalize();
@@ -1030,30 +1030,40 @@ function hoanTatTaiModels() {
     if (window.HePhaiHienTai && typeof window.HePhaiHienTai.khoiTao === 'function') window.HePhaiHienTai.khoiTao();
 
     // ==========================================
-    // 🌟 BỘ ĐIỀU KHIỂN LOADING XỊN XÒ (LIÊN KẾT TRỰC TIẾP VỚI TIẾN TRÌNH MAP)
+    // 🌟 BẢN VÁ LOADING THỦY LỰC: CHẠY TỪ TỪ THEO Ý SẾP
     // ==========================================
     let manHinhLoading = document.getElementById('manHinhLoadingGame');
     let thanhTienTrinh = document.getElementById('thanhTienTrinhGame');
     let textTienTrinh = document.getElementById('textTienTrinhGame');
     
-    if (thanhTienTrinh) thanhTienTrinh.style.width = '30%';
-    if (textTienTrinh) textTienTrinh.innerText = "Đang kéo dữ liệu Vũ Trụ từ máy chủ...";
-
     window.loadTatCaMapTuSQL();
     window.loadSafeZonesVaTeleports();
 
     let thoiGianChoInit = 0;
+    let phanTramAo = 0; // 🌟 Biến chạy tịnh tiến
+
     let vongLapChoVaoGame = setInterval(() => {
         thoiGianChoInit += 500;
         
-        if (!window.daNhanDanhSachMap) return; // Chờ SQL
-
-        if (thanhTienTrinh && thanhTienTrinh.style.width === '30%') {
-            thanhTienTrinh.style.width = '60%';
-            textTienTrinh.innerText = "Đang uốn nắn Địa hình và đúc Khuôn Vật Lý (BVH)...";
+        // --- A. THUẬT TOÁN CHẠY % GIẢ LẬP (SMOOTH PROGRESS) ---
+        if (thoiGianChoInit <= 10000) {
+            // 🚀 Giây 0 đến 10: Tăng tốc 6% mỗi giây (3% mỗi nhịp check)
+            phanTramAo += 3;
+            if (textTienTrinh) textTienTrinh.innerText = "Đang kết nối Vũ Trụ và Đúc Khuôn Vật Lý (BVH)...";
+        } else {
+            // 🐢 Giây 11 đến 30: Chạy lừ đừ mỗi nhịp 1% cho người chơi sốt ruột chơi
+            phanTramAo += 1;
+            if (textTienTrinh) textTienTrinh.innerText = "Đang uốn nắn Địa hình và Ổn định Không gian...";
         }
 
-        // Ép đúc map
+        // Khóa ở 99%, không cho lên 100% nếu chưa xong thật
+        if (phanTramAo > 99) phanTramAo = 99;
+        if (thanhTienTrinh) thanhTienTrinh.style.width = phanTramAo + '%';
+
+        // --- B. KIỂM TRA TRẠNG THÁI MAP THẬT ---
+        if (!window.daNhanDanhSachMap) return; // Đợi SQL trả data
+
+        // Ép đúc map (Logic cũ giữ nguyên để đảm bảo mượt)
         if (window.THONG_TIN_CAC_MAP) {
             window.THONG_TIN_CAC_MAP.forEach(mapData => {
                 let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
@@ -1066,23 +1076,23 @@ function hoanTatTaiModels() {
         let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
         let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
         let vungDatNayCoMap = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0;
-        let daXongXuoi = false;
-
+        
+        let daXongXuoiThatSu = false;
         if (vungDatNayCoMap) {
-            if (!coMapDangLoad && coMapDaLoad) daXongXuoi = true;
+            // Xong khi: Đã đúc ít nhất 1 map và không còn cái nào đang hì hục load
+            if (!coMapDangLoad && coMapDaLoad) daXongXuoiThatSu = true;
         } else {
-            daXongXuoi = true; // Bí cảnh trống
+            daXongXuoiThatSu = true; // Map trống (Bắc Cực/Nam Cực) thì cho vào luôn
         }
 
-        // MỞ MẮT ĐÓN BÌNH MINH
-        if (daXongXuoi || thoiGianChoInit >= 30000) {
+        // --- C. CHỐT HẠ: NHẢY VỌT LÊN 100% ---
+        if (daXongXuoiThatSu || thoiGianChoInit >= 30000) {
             clearInterval(vongLapChoVaoGame);
             
             if (thanhTienTrinh) thanhTienTrinh.style.width = '100%'; 
-            if (textTienTrinh) textTienTrinh.innerText = "THẾ GIỚI ĐÃ SẴN SÀNG!";
-            console.log("🟢 [LOADING] Đã đúc xong Map, mở mắt đón bình minh!");
-            
-            // Hiệu ứng mờ dần rồi mới tắt hẳn
+            if (textTienTrinh) textTienTrinh.innerText = "THẾ GIỚI ĐÃ SẴN SÀNG! VÀO THÔI SẾP!";
+            console.log("🟢 [LOADING] Thành công! Đã mở cửa thiên đình.");
+
             setTimeout(() => {
                 if (manHinhLoading) {
                     manHinhLoading.style.opacity = '0';
