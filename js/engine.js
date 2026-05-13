@@ -1302,6 +1302,7 @@ function animate() {
         // ===============================================
         if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
             var viTriCu = playerModel.position.clone();
+
             // ==========================================
             // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHỈ CHẶN TRẦN TRỜI - KHÔNG CHẶN VÁCH)
             // ==========================================
@@ -1313,13 +1314,20 @@ function animate() {
                 }
                 
                 let huongLen = playerModel.up.clone().normalize();
-                let diemBan = playerModel.position.clone().add(huongLen.multiplyScalar(1.5)); // Bắn từ ngực
+                let diemBan = playerModel.position.clone().add(huongLen.clone().multiplyScalar(1.5)); 
                 
                 window.radarBauTroi.set(diemBan, huongDi);
                 let chamBauTroi = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
                 
                 if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
-                    return true; // Đụng "kính" bầu trời rồi!
+                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.5m để chống lọt do lag phím!
+                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.5));
+                    if (!window.dangBaoBauTroi) {
+                        window.dangBaoBauTroi = true;
+                        if(typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
+                        setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                    }
+                    return true; 
                 }
                 return false;
             }
@@ -1333,7 +1341,7 @@ function animate() {
                 var rHanhTinh = 0;
 
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
-                // 🌟 GIỮ LẠI TÍNH NĂNG CHUI HẦM (Không bị dịch chuyển lên nóc)
+                // 🌟 GIỮ LẠI TÍNH NĂNG CHUI HẦM
                 window.radarTrongLuc.firstHitOnly = false; 
 
                 if (typeof window.khungHinhRadar === 'undefined') window.khungHinhRadar = 0; window.khungHinhRadar++;
@@ -1368,19 +1376,22 @@ function animate() {
                 var dangChuDongDoiDoCao = false;
                 var tocDoBayLen = currentSprint * 0.7; 
 
-
-                
                 if (window.keys && window.keys.space) {
-                    var dangChuDongDoiDoCao = true; window.isMoving = false;
-                    let vLen = (window.KIEU_TRONG_LUC === 'PHANG') ? new THREE.Vector3(0, 1, 0) : playerModel.up.clone().normalize();
+                    dangChuDongDoiDoCao = true; window.isMoving = false;
+                    let vLen = new THREE.Vector3(0, 1, 0);
 
-                    // 🌟 KIỂM TRA TRẦN TRỜI TRƯỚC KHI CHO BAY LÊN
+                    // 🌟 KIỂM TRA TRẦN TRỜI 
                     if (!kiemTraVaChamKetGioi(vLen, tocDoBayLen + 2.0)) {
-                        if (window.KIEU_TRONG_LUC === 'PHANG') playerModel.position.y += tocDoBayLen;
-                        else playerModel.position.add(vLen.multiplyScalar(tocDoBayLen));
+                        playerModel.position.y += tocDoBayLen;
                         tocDoHienTaiThucTe = tocDoBayLen;
-                    } else {
-                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
+                    }
+                    if (typeof playAnim === 'function') playAnim('BAY');
+                } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
+                    dangChuDongDoiDoCao = true; window.isMoving = false;
+                    if (doCao > 0) { 
+                        playerModel.position.y -= tocDoBayLen; 
+                        tocDoHienTaiThucTe = tocDoBayLen;
+                        if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; 
                     }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 }
@@ -1400,19 +1411,15 @@ function animate() {
                     if (window.keys.a) huongDiChuyen.sub(right); if (window.keys.d) huongDiChuyen.add(right); huongDiChuyen.normalize();
 
                     if (huongDiChuyen.length() > 0) {
-                        // 🌟 CHẠY XUYÊN TƯỜNG THOẢI MÁI
+                        // 🌟 CHẠY XUYÊN TƯỜNG NHƯNG BỊ CHẶN BỞI BẦU TRỜI (CHỐNG LỖI KÉP)
                         if (!kiemTraVaChamKetGioi(huongDiChuyen, currentSprint + 2.0)) {
+                            let yTruoc = playerModel.position.y;
                             playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
-                            // ... (giữ nguyên phần lerp matDatY cũ của Sếp)
+                            if (!dangChuDongDoiDoCao) {
+                                if (yTruoc - matDatY < 3.0) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
+                                else playerModel.position.y = yTruoc;
+                            }
                         }
-
-                        
-
-                        if (!dangChuDongDoiDoCao) {
-                            if (yTruoc - matDatY < 3.0) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
-                            else playerModel.position.y = yTruoc;
-                        }
-                        
                         let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongDiChuyen), huongLenTroi);
                         playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
                         tocDoHienTaiThucTe = currentSprint;
@@ -1423,13 +1430,17 @@ function animate() {
                         let huongBayThang = vecToTarget.clone().normalize();
                         if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
                         
-                        // 🌟 CHẠY CHUỘT XUYÊN TƯỜNG THOẢI MÁI
-                        playerModel.position.add(huongBayThang.multiplyScalar(currentSprint)); 
-                        tocDoHienTaiThucTe = currentSprint;
+                        // 🌟 CHẠY CHUỘT BỊ CHẶN BỞI BẦU TRỜI
+                        if (!kiemTraVaChamKetGioi(huongBayThang, currentSprint + 2.0)) {
+                            playerModel.position.add(huongBayThang.multiplyScalar(currentSprint)); 
+                            tocDoHienTaiThucTe = currentSprint;
+                            if (playerModel.position.y - matDatY < 0.1) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
+                        } else {
+                            window.isMoving = false; // Ngừng chạy nếu đập tường mây
+                        }
+                        
                         let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongBayThang), huongLenTroi);
                         playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
-                        if (playerModel.position.y - matDatY < 0.1) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
-                        
                     } else {
                         window.isMoving = false; if (typeof playIdle === 'function') playIdle();
                         if (window.vongMucTieu) window.vongMucTieu.visible = false;
@@ -1450,7 +1461,6 @@ function animate() {
                 var timThayDat = false;
 
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
-                // 🌟 GIỮ LẠI TÍNH NĂNG CHUI HẦM
                 window.radarTrongLuc.firstHitOnly = false; 
 
                 var hanhTinhGanNhat = null;
@@ -1502,16 +1512,23 @@ function animate() {
                 var tocDoBayLen = currentSprint * 0.7; 
 
                 if (window.keys && window.keys.space) {
-                    var dangChuDongDoiDoCao = true; window.isMoving = false;
-                    let vLen = (window.KIEU_TRONG_LUC === 'PHANG') ? new THREE.Vector3(0, 1, 0) : playerModel.up.clone().normalize();
+                    dangChuDongDoiDoCao = true; window.isMoving = false;
+                    let vLen = playerModel.up.clone().normalize();
 
-                    // 🌟 KIỂM TRA TRẦN TRỜI TRƯỚC KHI CHO BAY LÊN
+                    // 🌟 KIỂM TRA TRẦN TRỜI
                     if (!kiemTraVaChamKetGioi(vLen, tocDoBayLen + 2.0)) {
-                        if (window.KIEU_TRONG_LUC === 'PHANG') playerModel.position.y += tocDoBayLen;
-                        else playerModel.position.add(vLen.multiplyScalar(tocDoBayLen));
+                        playerModel.position.add(vLen.multiplyScalar(tocDoBayLen));
                         tocDoHienTaiThucTe = tocDoBayLen;
-                    } else {
-                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
+                    }
+                    if (typeof playAnim === 'function') playAnim('BAY');
+                } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
+                    dangChuDongDoiDoCao = true; window.isMoving = false;
+                    if (doCao > 0) {
+                        playerModel.position.add(huongLenTroi.clone().multiplyScalar(-tocDoBayLen));
+                        tocDoHienTaiThucTe = tocDoBayLen;
+                        if (playerModel.position.distanceTo(tamHanhTinh) < rHanhTinh + 0.1) {
+                            playerModel.position.copy(tamHanhTinh).add(huongLenTroi.clone().multiplyScalar(rHanhTinh + 0.1));
+                        }
                     }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 }
@@ -1531,20 +1548,20 @@ function animate() {
                     if (window.keys.a) huongDiChuyen.sub(right); if (window.keys.d) huongDiChuyen.add(right); huongDiChuyen.normalize();
 
                     if (huongDiChuyen.length() > 0) {
-                        // 🌟 CHẠY XUYÊN TƯỜNG CỎ THOẢI MÁI
-                        let doCaoTruocKhiChay = playerModel.position.distanceTo(tamHanhTinh);
-                        playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
-                        if (!dangChuDongDoiDoCao) {
-                            let vecTam = playerModel.position.clone().sub(tamHanhTinh).normalize();
-                            if (doCaoTruocKhiChay < rHanhTinh + 3.0) {
-                                let viTriDat = tamHanhTinh.clone().add(vecTam.multiplyScalar(rHanhTinh + 0.1));
-                                playerModel.position.lerp(viTriDat, 0.3);
-                            } else {
-                                let viTriCong = tamHanhTinh.clone().add(vecTam.multiplyScalar(doCaoTruocKhiChay));
-                                playerModel.position.copy(viTriCong);
+                        if (!kiemTraVaChamKetGioi(huongDiChuyen, currentSprint + 2.0)) {
+                            let doCaoTruocKhiChay = playerModel.position.distanceTo(tamHanhTinh);
+                            playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
+                            if (!dangChuDongDoiDoCao) {
+                                let vecTam = playerModel.position.clone().sub(tamHanhTinh).normalize();
+                                if (doCaoTruocKhiChay < rHanhTinh + 3.0) {
+                                    let viTriDat = tamHanhTinh.clone().add(vecTam.multiplyScalar(rHanhTinh + 0.1));
+                                    playerModel.position.lerp(viTriDat, 0.3);
+                                } else {
+                                    let viTriCong = tamHanhTinh.clone().add(vecTam.multiplyScalar(doCaoTruocKhiChay));
+                                    playerModel.position.copy(viTriCong);
+                                }
                             }
                         }
-                        
                         let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongDiChuyen), huongLenTroi);
                         playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
                         tocDoHienTaiThucTe = currentSprint;
@@ -1557,17 +1574,20 @@ function animate() {
                         if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
                         let tocDoThucTe = currentSprint;
                         
-                        // 🌟 CHẠY CHUỘT XUYÊN TƯỜNG
-                        playerModel.position.add(huongBayThang.multiplyScalar(tocDoThucTe)); 
-                        tocDoHienTaiThucTe = tocDoThucTe;
-                        
-                        if (hanhTinhGanNhat && rHanhTinh > 0) {
-                            let dCenter = playerModel.position.distanceTo(tamHanhTinh);
-                            let vecTam = playerModel.position.clone().sub(tamHanhTinh).normalize();
-                            if (dCenter < rHanhTinh + 0.1) {
-                                let viTriDat = tamHanhTinh.clone().add(vecTam.multiplyScalar(rHanhTinh + 0.1));
-                                playerModel.position.lerp(viTriDat, 0.3);
+                        if (!kiemTraVaChamKetGioi(huongBayThang, tocDoThucTe + 2.0)) {
+                            playerModel.position.add(huongBayThang.multiplyScalar(tocDoThucTe)); 
+                            tocDoHienTaiThucTe = tocDoThucTe;
+                            
+                            if (hanhTinhGanNhat && rHanhTinh > 0) {
+                                let dCenter = playerModel.position.distanceTo(tamHanhTinh);
+                                let vecTam = playerModel.position.clone().sub(tamHanhTinh).normalize();
+                                if (dCenter < rHanhTinh + 0.1) {
+                                    let viTriDat = tamHanhTinh.clone().add(vecTam.multiplyScalar(rHanhTinh + 0.1));
+                                    playerModel.position.lerp(viTriDat, 0.3);
+                                }
                             }
+                        } else {
+                            window.isMoving = false;
                         }
 
                         let targetMat = new THREE.Matrix4().lookAt(playerModel.position, playerModel.position.clone().sub(huongBayThang), huongLenTroi);
@@ -1682,7 +1702,6 @@ function animate() {
                 }
             } 
         }
-
 
 
 
