@@ -1405,8 +1405,9 @@ function animate() {
                             playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
                             // ... (giữ nguyên phần lerp matDatY cũ của Sếp)
                         }
-                        let yTruoc = playerModel.position.y;
-                        playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
+
+                        
+
                         if (!dangChuDongDoiDoCao) {
                             if (yTruoc - matDatY < 3.0) playerModel.position.y = THREE.MathUtils.lerp(playerModel.position.y, matDatY, 0.3);
                             else playerModel.position.y = yTruoc;
