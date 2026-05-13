@@ -1302,6 +1302,27 @@ function animate() {
         // ===============================================
         if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
             var viTriCu = playerModel.position.clone();
+            // ==========================================
+            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHỈ CHẶN TRẦN TRỜI - KHÔNG CHẶN VÁCH)
+            // ==========================================
+            function kiemTraVaChamKetGioi(huongDi, khoangCachBuffer) {
+                if (!window.danhSachBauTroi || window.danhSachBauTroi.length === 0) return false;
+                if (!window.radarBauTroi) { 
+                    window.radarBauTroi = new THREE.Raycaster(); 
+                    window.radarBauTroi.firstHitOnly = true; 
+                }
+                
+                let huongLen = playerModel.up.clone().normalize();
+                let diemBan = playerModel.position.clone().add(huongLen.multiplyScalar(1.5)); // Bắn từ ngực
+                
+                window.radarBauTroi.set(diemBan, huongDi);
+                let chamBauTroi = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
+                
+                if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
+                    return true; // Đụng "kính" bầu trời rồi!
+                }
+                return false;
+            }
 
             if (window.KIEU_TRONG_LUC === 'PHANG') {
                 // ----------------------------------------------------
