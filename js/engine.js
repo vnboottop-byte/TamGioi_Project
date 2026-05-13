@@ -1126,33 +1126,27 @@ let idleTimer = null;
 
 
 // ==========================================
-// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V41 - PHÂN LUỒNG TUYỆT ĐỐI NGƯỜI & THÚ)
+// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V42 - PHÂN LUỒNG TUYỆT ĐỐI NGƯỜI & THÚ)
 // ==========================================
 function playAnim(animName) {
     let upName = animName.toUpperCase();
     
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm mọi hành động đi/chạy/bay chen ngang
-    if (window.dangMuaChieu && !upName.includes('CHIEU') && !upName.includes('ATTACK') && upName !== 'DIE' && upName !== 'DEATH') {
-        return;
-    }
-
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
     let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName === 'TANCONG' || upName === 'SKILL';
+    let laHanhDongNguoi = laChieuTanCong || upName === 'DIE' || upName === 'DEATH';
 
     // ==========================================
-    // 🐎 NHÁNH 1: ĐANG CƯỠI THÚ (PHÂN LUỒNG)
+    // 🐎 NHÁNH 1: ĐANG CƯỠI THÚ
     // ==========================================
     if (dangCuoiThu) {
         
-        // --- A. XỬ LÝ CHO NGƯỜI CƯỠI (Nằm ở layer trên) ---
-        if (window.animationsMapChar) {
-            // Người thì chỉ biết: Hoặc là đánh nhau, Hoặc là ngồi yên (IDLE). Cấm chạy bộ trên lưng rồng!
-            let lenhChoNguoi = laChieuTanCong ? upName : 'IDLE';
+        // --- A. LỆNH CHO NGƯỜI CƯỠI ---
+        if (laHanhDongNguoi) {
+            // Chống spam: Nếu đang múa chiêu dở dang thì chặn chiêu mới lại
+            if (window.dangMuaChieu && !laChieuTanCong && upName !== 'DIE' && upName !== 'DEATH') return;
             
-            if (window.currentAnimNameChar !== lenhChoNguoi) {
-                let actionChar = window.animationsMapChar[lenhChoNguoi];
-                
-                // Móc lốp dự phòng nếu animator lười không đổi tên
+            if (window.animationsMapChar) {
+                let actionChar = window.animationsMapChar[upName];
                 if (!actionChar && laChieuTanCong) actionChar = window.animationsMapChar['ATTACK'] || window.animationsMapChar['ATTACK1'] || window.animationsMapChar['SKILL'];
                 if (!actionChar) actionChar = window.animationsMapChar['NHANROI'] || window.animationsMapChar['IDLE'] || Object.values(window.animationsMapChar)[0];
 
@@ -1160,77 +1154,93 @@ function playAnim(animName) {
                     if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
                     window.currentActionChar = actionChar;
                     window.currentActionChar.reset().fadeIn(0.2).play();
-                    window.currentAnimNameChar = lenhChoNguoi;
+                    window.currentAnimNameChar = upName;
                     
-                    // 🌟 Nếu đang múa chiêu trên lưng thú, đo thời gian để khóa
+                    // Kích hoạt lá chắn khiên chống đè animation
                     if (laChieuTanCong) {
-                        let tgMua = actionChar.getClip().duration * 1000;
-                        kichHoatKhiencAnimation(tgMua);
+                        window.thoiGianAnimHienTai = actionChar.getClip().duration * 1000;
+                        kichHoatKhiencAnimation(window.thoiGianAnimHienTai);
                     }
                 }
             }
-        }
-
-        // --- B. XỬ LÝ CHO CON THÚ BÊN DƯỚI ---
-        // Con thú TUYỆT ĐỐI KHÔNG nhận lệnh chém giết (laChieuTanCong). 
-        // Nếu sếp bấm chém, con thú sẽ giữ nguyên việc nó đang làm (bay/chạy/đứng yên).
-        if (laChieuTanCong) {
-            let doCaoThucTe = 0;
-            if (window.playerModel && window.TAM_HANH_TINH_HIEN_TAI) {
-                doCaoThucTe = window.playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI) - (window.BAN_KINH_HANH_TINH_HIEN_TAI || 80000);
+            // THÚ KHÔNG NHẬN LỆNH ĐÁNH NHAU -> KẾT THÚC!
+            return; 
+        } 
+        else {
+            // --- B. LỆNH DI CHUYỂN (CHO CẢ THÚ VÀ NGƯỜI) ---
+            // Người: Phải ngồi im trên yên ngựa (Ép về NHANROI/IDLE), TRỪ KHI Sếp đang bận múa chiêu
+            if (!window.dangMuaChieu && window.animationsMapChar) {
+                let lenhNguoi = 'NHANROI';
+                if (window.currentAnimNameChar !== lenhNguoi) {
+                    let actionChar = window.animationsMapChar[lenhNguoi] || window.animationsMapChar['IDLE'] || Object.values(window.animationsMapChar)[0];
+                    if (actionChar) {
+                        if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
+                        window.currentActionChar = actionChar;
+                        window.currentActionChar.reset().fadeIn(0.2).play();
+                        window.currentAnimNameChar = lenhNguoi;
+                    }
+                }
             }
-            // Ép lệnh của thú về lại trạng thái di chuyển (BAY hoặc CHAYBO)
-            upName = (window.isMoving || window.isKeyboardMoving) ? (doCaoThucTe > 5.0 ? 'BAY' : 'CHAYBO') : 'IDLE';
+            // Thú: Được phép lọt qua cửa ải này để đi xuống phần chạy lệnh BAY/CHAYBO bên dưới!
+        }
+    } 
+    else {
+        // ==========================================
+        // 🏃 NHÁNH 2: KHÔNG CƯỠI THÚ
+        // ==========================================
+        // Đang múa chiêu thì cấm di chuyển chạy/bay chen ngang
+        if (window.dangMuaChieu && !laHanhDongNguoi) return; 
+        
+        if (laChieuTanCong) {
+            let action = animationsMap[upName] || animationsMap['ATTACK'] || animationsMap['SKILL'];
+            if (action) {
+                window.thoiGianAnimHienTai = action.getClip().duration * 1000;
+                kichHoatKhiencAnimation(window.thoiGianAnimHienTai);
+            }
         }
     }
 
     // ==========================================
-    // 🏃 NHÁNH 2: XỬ LÝ CHUNG (Người đi bộ, hoặc phần thân dưới của Thú)
+    // XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI HOẶC NGƯỜI ĐI BỘ
     // ==========================================
     
-    // Nếu lệnh giống y hệt lệnh cũ đang chạy thì thôi, không bắt hệ thống múa lại từ đầu!
-    if (currentAnimName === upName) return; 
+    // 🌟 ĐỒNG BỘ TỪ ĐIỂN ĐỂ CHỐNG LỖI GIẬT KHUNG HÌNH (TWITCH FIX)
+    let checkName = upName;
+    if (checkName === 'IDLE') checkName = 'NHANROI';
+    if (checkName === 'RUN' || checkName === 'WALK') checkName = 'CHAYBO';
+    if (checkName === 'FLY') checkName = 'BAY';
+    
+    // Nếu lệnh mới giống hệt trạng thái hiện tại thì bỏ qua, chống Restart Animation
+    if (currentAnimName === checkName) return; 
     
     let action = animationsMap[upName];
-    
-    // Thuật toán dò tìm từ đồng nghĩa (Đã sắp xếp thứ tự chuẩn)
     if (!action) {
-        if (upName === 'CHAYBO' || upName === 'RUN') action = animationsMap['RUN'] || animationsMap['WALK'] || animationsMap['RUNNING'];
+        if (checkName === 'CHAYBO') action = animationsMap['RUN'] || animationsMap['WALK'] || animationsMap['RUNNING'] || animationsMap['CHAYBO'];
         else if (laChieuTanCong) action = animationsMap['ATTACK'] || animationsMap['ATTACK1'] || animationsMap['ATTACK01'] || animationsMap['BITE'] || animationsMap['SKILL'];
-        else if (upName === 'NHANROI' || upName === 'IDLE') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['IDLE01'];
-        else if (upName === 'BAY' || upName === 'FLY') action = animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'];
-        else if (upName === 'DIE' || upName === 'DEATH') action = animationsMap['DEATH'] || animationsMap['DIE'];
+        else if (checkName === 'NHANROI') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['IDLE01'] || animationsMap['NHANROI'];
+        else if (checkName === 'BAY') action = animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'] || animationsMap['BAY'];
+        else if (checkName === 'DIE' || checkName === 'DEATH') action = animationsMap['DEATH'] || animationsMap['DIE'];
     }
     
-    // Vét máng: Nếu không có gì sất, lấy đại cái đầu tiên
+    // Vét máng: Nếu không có gì sất thì lấy cái đầu tiên
     if (!action && animationsMap && Object.keys(animationsMap).length > 0) {
         action = animationsMap['TAKE 001'] || Object.values(animationsMap)[0];
     }
     if (!action) return; 
     
-    // Chuyển đổi Animation mượt mà (Fade in 0.2s)
     if (currentAction) currentAction.fadeOut(0.2); 
     currentAction = action; 
     currentAction.reset().fadeIn(0.2).play(); 
-    currentAnimName = upName; 
-
-    // 🌟 Bơm thời gian bảo vệ nếu là người đi bộ đang múa chiêu
-    if (!dangCuoiThu && laChieuTanCong) {
-        let tgMua = action.getClip().duration * 1000;
-        kichHoatKhiencAnimation(tgMua);
-    }
+    currentAnimName = checkName; // Lưu tên đã chuẩn hóa
 }
 
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     window.dangMuaChieu = true;
     
-    // Ép giới hạn an toàn (Chống file lỗi thời gian quá dài hoặc quá ngắn)
-    let thoiGianKhoa = thoiGianTheoAnim;
-    if (thoiGianKhoa < 500) thoiGianKhoa = 500;   // Ít nhất 0.5s
+    let thoiGianKhoa = thoiGianTheoAnim || 1500;
+    if (thoiGianKhoa < 500) thoiGianKhoa = 500;   // Khóa tay ít nhất 0.5s
     if (thoiGianKhoa > 2000) thoiGianKhoa = 1500; // Tối đa 1.5s để Sếp không bị đơ
-    
-    window.thoiGianAnimHienTai = thoiGianKhoa; // Phục vụ cho Cung Thủ tắt cung
     
     if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
     window.khoaAnimTimeout = setTimeout(() => {
