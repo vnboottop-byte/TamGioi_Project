@@ -1019,7 +1019,7 @@ function hoanTatTaiModels() {
     if (window.ADMIN_NAME === "Admin") { window.MAU_TOI_DA = 999999999; window.mauBanThan = 999999999; }
     playerModel.traverse(function(child) { if (child.isMesh) child.frustumCulled = false; });
     
-    // Nắn trục xương sống
+    // 1. Nắn trục xương sống
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0,0,0);
     let huongLenTroiMoi = playerModel.position.clone().sub(tam);
     if (huongLenTroiMoi.lengthSq() < 0.001) huongLenTroiMoi.set(0, 1, 0); else huongLenTroiMoi.normalize();
@@ -1032,21 +1032,26 @@ function hoanTatTaiModels() {
     if (window.HePhaiHienTai && typeof window.HePhaiHienTai.khoiTao === 'function') window.HePhaiHienTai.khoiTao();
 
     // ==========================================
-    // 🌟 BẢN VÁ THEO Ý SẾP: GIỮ MÀN HÌNH LOADING CHỜ ĐÚC MAP XONG MỚI TẮT!
+    // 🌟 BẢN VÁ AAA: CHỐNG MỞ MẮT SỚM KHI ĐĂNG NHẬP
     // ==========================================
     let manHinhLoading = document.getElementById('loading');
     
-    // 1. Kích hoạt kéo Map và Cổng ngay lập tức
+    // Kích hoạt kéo Map và Cổng ngay lập tức
     window.loadTatCaMapTuSQL();
     window.loadSafeZonesVaTeleports();
 
-    // 2. Vòng lặp chờ đúc Map
     let thoiGianChoInit = 0;
     let vongLapChoVaoGame = setInterval(() => {
         thoiGianChoInit += 500;
         
-        // Ép đúc map ngay chỗ player đứng (Tăng tốc xử lý)
-        if (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP) {
+        // 🔒 CHỐT CHẶN 1: Nếu SQL chưa trả về danh sách Map, tuyệt đối không được tắt Loading!
+        if (!window.daNhanDanhSachMap) {
+            console.log("⏳ Đang đợi SQL phản hồi danh sách Map...");
+            return; 
+        }
+
+        // Ép đúc map ngay chỗ player đứng để hệ thống nhận diện có Map đang load
+        if (window.THONG_TIN_CAC_MAP) {
             window.THONG_TIN_CAC_MAP.forEach(mapData => {
                 let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
                 if (playerModel.position.distanceTo(mPos) < 10000 && !mapData.isLoaded && !mapData.isLoading) {
@@ -1058,27 +1063,34 @@ function hoanTatTaiModels() {
         let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
         let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
 
-        // ĐIỀU KIỆN TẮT MÀN HÌNH LOADING:
-        // Đã load xong ít nhất 1 map VÀ không còn map nào dang dở HOẶC Map trống trơn HOẶC Kẹt mạng quá 10s
-        if ((window.daNhanDanhSachMap && !coMapDangLoad && coMapDaLoad) || 
-            (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP.length === 0) || 
-            thoiGianChoInit >= 30000) {
-            
+        // 🔒 CHỐT CHẶN 2: ĐIỀU KIỆN TẮT MÀN HÌNH LOADING
+        // - Phải nhận được danh sách từ SQL (daNhanDanhSachMap = true)
+        // - VÀ (Nếu có Map gần đây thì phải đúc xong HẾT - !coMapDangLoad && coMapDaLoad)
+        // - VÀ (Nếu Map đó trống trơn không có gì - THONG_TIN_CAC_MAP.length === 0)
+        // - VÀ (Dự phòng kẹt mạng quá 15s)
+        
+        let vungDatNayCoMap = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0;
+        let daXongXuoi = false;
+
+        if (vungDatNayCoMap) {
+            // Nếu có Map, phải đợi đúc xong ít nhất 1 cái và không còn cái nào đang hì hục đúc
+            if (!coMapDangLoad && coMapDaLoad) daXongXuoi = true;
+        } else {
+            // Nếu Map trống (vùng đất chưa khai phá), cho vào luôn
+            daXongXuoi = true;
+        }
+
+        if (daXongXuoi || thoiGianChoInit >= 15000) {
             clearInterval(vongLapChoVaoGame);
-            
-            // XONG XUÔI HẾT RỒI MỚI TẮT BẢNG LOADING NHÉ!
             if (manHinhLoading) manHinhLoading.style.display = 'none'; 
-            console.log("🟢 [LOADING] Mọi thứ đã đúc xong, vác kiếm lên đi Sếp!");
+            console.log("🟢 [LOADING] Đã đúc xong Map, mở mắt đón bình minh!");
         }
     }, 500);
 }
 
 
 
-function cayMatAdmin(modelGoc) {
-    // Đã xóa bỏ chức năng gọi đôi mắt khổng lồ cho Admin
-    return;
-}
+
 
 let idleTimer = null; 
 
