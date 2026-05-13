@@ -129,7 +129,7 @@
                     v.scale.set(tyLe, tyLe, tyLe);
                 }
 
-                // ĐÃ XÓA SẠCH ĐOẠN TÔ MÀU VÀNG Ở ĐÂY 🌟
+                
                 group.add(v);
             });
         }
