@@ -4,6 +4,7 @@
 (function () {
     const kyNangPhapSu = [];
     const danhSachSoBayPS = [];
+    const vfxNoPhapSu = []; // 🌟 KHO CHỨA CÁC VỤ NỔ ANIME
     let vongPhepModel = null;
     let isVongPhepSetup = false;
 
@@ -27,14 +28,80 @@
 
     
 
+    // ==========================================
+    // 💥 TUYỆT KỸ VFX: VỤ NỔ ANIME KIỂU BLOX FRUITS
+    // ==========================================
     function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
-        if (typeof window.taoHieuUngNo === 'function') {
-            window.taoHieuUngNo(pos, banKinh * 0.5, mauHex);
-        }
+        // 1. Xử lý Trừ Máu trước
         if (isRemote === false) gaySatThuongPS(pos, luongDame, banKinh);
         else if (typeof isRemote === 'number' && isRemote > 0) {
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
         }
+
+        if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
+
+        // 2. ĐÚC VFX 3 LỚP
+        const vfxGroup = new THREE.Group();
+        vfxGroup.position.copy(pos);
+
+        // --- LỚP 1: QUẢ CẦU LÕI NĂNG LƯỢNG ---
+        const geoCau = new THREE.SphereGeometry(1, 16, 16);
+        const matCau = new THREE.MeshBasicMaterial({
+            color: mauHex,
+            transparent: true,
+            opacity: 1.0,
+            blending: THREE.AdditiveBlending, // Sáng chói lóa
+            depthWrite: false
+        });
+        const quaCau = new THREE.Mesh(geoCau, matCau);
+        vfxGroup.add(quaCau);
+
+        // --- LỚP 2: SÓNG XUNG KÍCH TRÊN MẶT ĐẤT ---
+        const geoSong = new THREE.RingGeometry(0.5, 1.5, 32);
+        const matSong = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+        const songXungKich = new THREE.Mesh(geoSong, matSong);
+        // Ép vòng nhẫn nằm song song với mặt đất
+        let upV = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.up.clone() : new THREE.Vector3(0,1,0);
+        songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
+        vfxGroup.add(songXungKich);
+
+        // --- LỚP 3: CÁC KHỐI TINH THỂ VĂNG TUNG TÓE ---
+        const manhVo = [];
+        const geoManh = new THREE.TetrahedronGeometry(0.8); // Khối đa giác nhọn
+        for (let i = 0; i < 15; i++) {
+            const matManh = new THREE.MeshBasicMaterial({
+                color: mauHex, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending
+            });
+            const manh = new THREE.Mesh(geoManh, matManh);
+            
+            // Random hướng văng nổ tung 360 độ
+            let vx = (Math.random() - 0.5) * 3;
+            let vy = Math.random() * 3 + 1; // Luôn nảy lên trời
+            let vz = (Math.random() - 0.5) * 3;
+            let vDir = new THREE.Vector3(vx, vy, vz);
+            
+            manhVo.push({ mesh: manh, velocity: vDir });
+            vfxGroup.add(manh);
+        }
+
+        scene.add(vfxGroup);
+
+        // Ghi danh vào sổ Nam Tào để vòng lặp vật lý xử lý
+        vfxNoPhapSu.push({
+            group: vfxGroup,
+            quaCau: quaCau,
+            songXungKich: songXungKich,
+            manhVo: manhVo,
+            life: 30, // Tồn tại 30 khung hình (Nổ rất nhanh và đanh)
+            maxScale: banKinh * 0.8 // Độ to phình ra
+        });
     }
 
 
@@ -344,6 +411,48 @@
 
             if (s.life <= 0) { window.donRac3D(s.mesh); if (s.meshBot) window.donRac3D(s.meshBot); kyNangPhapSu.splice(i, 1); }
         }
+
+
+
+
+         // ==========================================
+        // 💥 VÒNG LẶP RENDER VFX NỔ ANIME 3D
+        // ==========================================
+        for (let i = vfxNoPhapSu.length - 1; i >= 0; i--) {
+            let vfx = vfxNoPhapSu[i];
+            vfx.life--;
+
+            // Thuật toán Ease-Out: Phình to cực nhanh lúc đầu, sau đó chậm dần
+            let tienTrinh = 1 - (vfx.life / 30); // Chạy từ 0 đến 1
+            let doPhinh = 1 - Math.pow(1 - tienTrinh, 3); // Đường cong Toán học Anime
+
+            // 1. Cập nhật Quả Cầu
+            let scaleCau = vfx.maxScale * doPhinh;
+            vfx.quaCau.scale.set(scaleCau, scaleCau, scaleCau);
+            vfx.quaCau.material.opacity = (vfx.life / 30); // Mờ dần
+
+            // 2. Cập nhật Sóng Xung Kích
+            let scaleSong = vfx.maxScale * 1.5 * doPhinh;
+            vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
+            vfx.songXungKich.material.opacity = (vfx.life / 30) * 0.6;
+
+            // 3. Cập nhật Mảnh Vỡ Tinh Thể
+            vfx.manhVo.forEach(m => {
+                m.mesh.position.add(m.velocity);
+                m.mesh.rotation.x += 0.2;
+                m.mesh.rotation.y += 0.2;
+                m.velocity.y -= 0.15; // Rớt xuống do trọng lực
+                m.mesh.material.opacity = (vfx.life / 30);
+            });
+
+            // 4. Dọn rác khi vụ nổ tàn phai
+            if (vfx.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(vfx.group);
+                else scene.remove(vfx.group);
+                vfxNoPhapSu.splice(i, 1);
+            }
+        }
+
 
 
 
