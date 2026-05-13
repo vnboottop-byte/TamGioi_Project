@@ -1075,7 +1075,7 @@ function hoanTatTaiModels() {
         }
 
         // MỞ MẮT ĐÓN BÌNH MINH
-        if (daXongXuoi || thoiGianChoInit >= 15000) {
+        if (daXongXuoi || thoiGianChoInit >= 30000) {
             clearInterval(vongLapChoVaoGame);
             
             if (thanhTienTrinh) thanhTienTrinh.style.width = '100%'; 
