@@ -1092,6 +1092,7 @@ function hoanTatTaiModels() {
             clearInterval(vongLapChoVaoGame);
             
             if (thanhTienTrinh) thanhTienTrinh.style.width = '100%'; 
+            if (soPhanTram) soPhanTram.innerText = '100%'; // 🌟 CHỐT SỐ 100%
             if (textTienTrinh) textTienTrinh.innerText = "THẾ GIỚI ĐÃ SẴN SÀNG! VÀO THÔI SẾP!";
             console.log("🟢 [LOADING] Thành công! Đã mở cửa thiên đình.");
 
