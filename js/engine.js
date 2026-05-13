@@ -1124,7 +1124,7 @@ let idleTimer = null;
 
 
 
-
+// ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA BẮT ĐẦU 
 // ==========================================
 // 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V42 - PHÂN LUỒNG TUYỆT ĐỐI NGƯỜI & THÚ)
 // ==========================================
@@ -1199,7 +1199,7 @@ function playAnim(animName) {
             }
         }
     }
-
+    
     // ==========================================
     // XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI HOẶC NGƯỜI ĐI BỘ
     // ==========================================
@@ -1247,8 +1247,7 @@ function kichHoatKhiencAnimation(thoiGianTheoAnim) {
         window.dangMuaChieu = false;
     }, thoiGianKhoa);
 }
-
-
+// ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
 
 
 
