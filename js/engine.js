@@ -1367,19 +1367,20 @@ function animate() {
 
                 var dangChuDongDoiDoCao = false;
                 var tocDoBayLen = currentSprint * 0.7; 
+
+
                 
                 if (window.keys && window.keys.space) {
-                    dangChuDongDoiDoCao = true; window.isMoving = false; 
-                    // 🌟 BAY XUYÊN NÓC, KHÔNG CẢN TRỞ
-                    playerModel.position.y += tocDoBayLen; 
-                    tocDoHienTaiThucTe = tocDoBayLen;
-                    if (typeof playAnim === 'function') playAnim('BAY');
-                } else if (window.keys && (window.keys.shift || window.keys.x || window.keys.c)) {
-                    dangChuDongDoiDoCao = true; window.isMoving = false;
-                    if (doCao > 0) { 
-                        playerModel.position.y -= tocDoBayLen; 
+                    var dangChuDongDoiDoCao = true; window.isMoving = false; 
+                    let vLen = (window.KIEU_TRONG_LUC === 'PHANG') ? new THREE.Vector3(0, 1, 0) : playerModel.up.clone().normalize();
+                    
+                    // 🌟 KIỂM TRA TRẦN TRỜI TRƯỚC KHI CHO BAY LÊN
+                    if (!kiemTraVaChamKetGioi(vLen, tocDoBayLen + 2.0)) {
+                        if (window.KIEU_TRONG_LUC === 'PHANG') playerModel.position.y += tocDoBayLen;
+                        else playerModel.position.add(vLen.multiplyScalar(tocDoBayLen));
                         tocDoHienTaiThucTe = tocDoBayLen;
-                        if (playerModel.position.y < matDatY) playerModel.position.y = matDatY; 
+                    } else {
+                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
                     }
                     if (typeof playAnim === 'function') playAnim('BAY');
                 }
