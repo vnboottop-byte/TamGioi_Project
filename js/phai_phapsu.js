@@ -29,78 +29,79 @@
     
 
     // ==========================================
-    // 💥 TUYỆT KỸ VFX: VỤ NỔ ANIME KIỂU BLOX FRUITS
+    // 💥 TUYỆT KỸ VFX: VỤ NỔ ANIME LỞM CHỞM KIỂU BLOX FRUITS
     // ==========================================
     function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
-        // 1. Xử lý Trừ Máu trước
         if (isRemote === false) gaySatThuongPS(pos, luongDame, banKinh);
         else if (typeof isRemote === 'number' && isRemote > 0) {
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
         }
-
         if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
 
-        // 2. ĐÚC VFX 3 LỚP
         const vfxGroup = new THREE.Group();
         vfxGroup.position.copy(pos);
 
-        // --- LỚP 1: QUẢ CẦU LÕI NĂNG LƯỢNG ---
-        const geoCau = new THREE.SphereGeometry(1, 16, 16);
-        const matCau = new THREE.MeshBasicMaterial({
-            color: mauHex,
-            transparent: true,
-            opacity: 1.0,
-            blending: THREE.AdditiveBlending, // Sáng chói lóa
-            depthWrite: false
-        });
-        const quaCau = new THREE.Mesh(geoCau, matCau);
-        vfxGroup.add(quaCau);
+        // --- LỚP 1: LÕI LỬA LỞM CHỞM (SPRIKY CORE) ---
+        // IcosahedronGeometry(1, 0) tạo ra một khối 20 mặt cực kỳ nhọn và góc cạnh
+        const geoLoi = new THREE.IcosahedronGeometry(1, 0);
 
-        // --- LỚP 2: SÓNG XUNG KÍCH TRÊN MẶT ĐẤT ---
-        const geoSong = new THREE.RingGeometry(0.5, 1.5, 32);
-        const matSong = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            side: THREE.DoubleSide,
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-        const songXungKich = new THREE.Mesh(geoSong, matSong);
-        // Ép vòng nhẫn nằm song song với mặt đất
-        let upV = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.up.clone() : new THREE.Vector3(0,1,0);
-        songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
-        vfxGroup.add(songXungKich);
+        // 4 Lớp màu đặc trưng của lửa Anime (Bên trong sáng chói, bên ngoài khói đen)
+        const mauLop = [0xffffff, 0xffff00, 0xff3300, 0x110000]; // Trắng -> Vàng -> Đỏ Cam -> Khói Đen
+        const meshesLoi = [];
 
-        // --- LỚP 3: CÁC KHỐI TINH THỂ VĂNG TUNG TÓE ---
-        const manhVo = [];
-        const geoManh = new THREE.TetrahedronGeometry(0.8); // Khối đa giác nhọn
-        for (let i = 0; i < 15; i++) {
-            const matManh = new THREE.MeshBasicMaterial({
-                color: mauHex, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending
+        for (let i = 0; i < 4; i++) {
+            let mat = new THREE.MeshBasicMaterial({
+                color: mauLop[i],
+                transparent: true,
+                opacity: (i === 3) ? 0.8 : 1.0, // Khói đen thì hơi mờ
+                blending: (i === 3) ? THREE.NormalBlending : THREE.AdditiveBlending, // Đen không được phát sáng
+                depthWrite: false,
+                side: THREE.DoubleSide
             });
-            const manh = new THREE.Mesh(geoManh, matManh);
-            
-            // Random hướng văng nổ tung 360 độ
-            let vx = (Math.random() - 0.5) * 3;
-            let vy = Math.random() * 3 + 1; // Luôn nảy lên trời
-            let vz = (Math.random() - 0.5) * 3;
-            let vDir = new THREE.Vector3(vx, vy, vz);
-            
-            manhVo.push({ mesh: manh, velocity: vDir });
-            vfxGroup.add(manh);
+            let mesh = new THREE.Mesh(geoLoi, mat);
+            // Cố tình xoay ngẫu nhiên các khối để các gai nhọn đâm tua tủa ra ngoài
+            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+            vfxGroup.add(mesh);
+            meshesLoi.push(mesh);
         }
+
+        // --- LỚP 2: CÁC TIA LỬA ĐÂM LÊN TRỜI (FIRE SPIKES) ---
+        const tiaLua = [];
+        const geoTia = new THREE.ConeGeometry(0.8, 5, 4); // Kim tự tháp 4 cạnh siêu nhọn
+        geoTia.translate(0, 2.5, 0); // Dời tâm xuống đáy để nó phóng to từ dưới lên
+
+        for (let i = 0; i < 8; i++) {
+            let matTia = new THREE.MeshBasicMaterial({
+                color: (i % 2 === 0) ? 0xffaa00 : 0xff3300, // Đan xen tia Vàng và tia Đỏ
+                transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            let meshTia = new THREE.Mesh(geoTia, matTia);
+
+            // Xoay hướng các tia đâm tỏa ra 360 độ và hơi chếch lên trời
+            let dir = new THREE.Vector3((Math.random() - 0.5) * 2, Math.random() * 2 + 0.5, (Math.random() - 0.5) * 2).normalize();
+            let upV = new THREE.Vector3(0, 1, 0);
+            meshTia.quaternion.setFromUnitVectors(upV, dir);
+
+            vfxGroup.add(meshTia);
+            tiaLua.push(meshTia);
+        }
+
+        // --- LỚP 3: VẾT KHÓI ĐEN LOANG DƯỚI MẶT ĐẤT ---
+        const geoDat = new THREE.RingGeometry(0.1, 1, 8); // Vòng bát giác lởm chởm
+        const matDat = new THREE.MeshBasicMaterial({ color: 0x110000, transparent: true, opacity: 0.9, side: THREE.DoubleSide, depthWrite: false });
+        const vetDat = new THREE.Mesh(geoDat, matDat);
+
+        let upToaDo = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.up.clone() : new THREE.Vector3(0, 1, 0);
+        vetDat.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upToaDo);
+        vetDat.position.add(upToaDo.clone().multiplyScalar(0.2)); // Nhích lên khỏi mặt đất tí cho khỏi bị lỗi giật hình
+        vfxGroup.add(vetDat);
 
         scene.add(vfxGroup);
 
-        // Ghi danh vào sổ Nam Tào để vòng lặp vật lý xử lý
         vfxNoPhapSu.push({
-            group: vfxGroup,
-            quaCau: quaCau,
-            songXungKich: songXungKich,
-            manhVo: manhVo,
-            life: 30, // Tồn tại 30 khung hình (Nổ rất nhanh và đanh)
-            maxScale: banKinh * 0.8 // Độ to phình ra
+            group: vfxGroup, meshesLoi: meshesLoi, tiaLua: tiaLua, vetDat: vetDat,
+            life: 40, // Thời gian sống
+            maxScale: banKinh * 0.45 // Độ bành trướng
         });
     }
 
@@ -415,37 +416,48 @@
 
 
 
-         // ==========================================
-        // 💥 VÒNG LẶP RENDER VFX NỔ ANIME 3D
+        // ==========================================
+        // 💥 VÒNG LẶP RENDER VFX NỔ ANIME 3D (BLOX FRUITS STYLE)
         // ==========================================
         for (let i = vfxNoPhapSu.length - 1; i >= 0; i--) {
             let vfx = vfxNoPhapSu[i];
             vfx.life--;
 
-            // Thuật toán Ease-Out: Phình to cực nhanh lúc đầu, sau đó chậm dần
-            let tienTrinh = 1 - (vfx.life / 30); // Chạy từ 0 đến 1
-            let doPhinh = 1 - Math.pow(1 - tienTrinh, 3); // Đường cong Toán học Anime
+            let tienTrinh = 1 - (vfx.life / 40);
+            // 🌟 ĐỘNG LỰC HỌC: Phình to cực gắt ở 20% đầu tiên, sau đó rung rinh nhẹ
+            let doPhinh = 0;
+            if (tienTrinh < 0.2) doPhinh = tienTrinh * 5; // Bùng nổ
+            else doPhinh = 1 + Math.sin((tienTrinh - 0.2) * Math.PI) * 0.15; // Rung chuyển
 
-            // 1. Cập nhật Quả Cầu
-            let scaleCau = vfx.maxScale * doPhinh;
-            vfx.quaCau.scale.set(scaleCau, scaleCau, scaleCau);
-            vfx.quaCau.material.opacity = (vfx.life / 30); // Mờ dần
+            // 1. Nhào nặn Lõi Lửa Gai Góc
+            vfx.meshesLoi.forEach((mesh, index) => {
+                // Tầng trong cùng nhỏ nhất, tầng khói đen ngoài cùng to nhất
+                let scale = vfx.maxScale * doPhinh * (0.7 + index * 0.4);
+                mesh.scale.set(scale, scale, scale);
 
-            // 2. Cập nhật Sóng Xung Kích
-            let scaleSong = vfx.maxScale * 1.5 * doPhinh;
-            vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
-            vfx.songXungKich.material.opacity = (vfx.life / 30) * 0.6;
+                // Xoay cuộn các khối ngược chiều nhau để tạo cảm giác ngọn lửa đang cháy dữ dội
+                mesh.rotation.x += 0.05 * (index % 2 === 0 ? 1 : -1);
+                mesh.rotation.y += 0.05 * (index % 2 === 0 ? -1 : 1);
 
-            // 3. Cập nhật Mảnh Vỡ Tinh Thể
-            vfx.manhVo.forEach(m => {
-                m.mesh.position.add(m.velocity);
-                m.mesh.rotation.x += 0.2;
-                m.mesh.rotation.y += 0.2;
-                m.velocity.y -= 0.15; // Rớt xuống do trọng lực
-                m.mesh.material.opacity = (vfx.life / 30);
+                // Khói đen tan lâu hơn lửa sáng
+                mesh.material.opacity = (vfx.life / 40) * (index === 3 ? 0.9 : 1.0);
             });
 
-            // 4. Dọn rác khi vụ nổ tàn phai
+            // 2. Bắn Tỏa Tia Lửa Đâm Lên Trời
+            vfx.tiaLua.forEach(tia => {
+                let scaleTia = vfx.maxScale * doPhinh * 1.5;
+                // Kéo dãn tia dài ra, bóp dẹp bề ngang lại
+                tia.scale.set(scaleTia * 0.2, scaleTia, scaleTia * 0.2);
+                tia.material.opacity = (vfx.life / 40);
+            });
+
+            // 3. Loang Vết Khói Đen Dưới Đất
+            let scaleDat = vfx.maxScale * doPhinh * 2.5;
+            vfx.vetDat.scale.set(scaleDat, scaleDat, 1);
+            vfx.vetDat.rotation.z -= 0.02; // Vòng khói xoay dưới chân
+            vfx.vetDat.material.opacity = (vfx.life / 40) * 0.8;
+
+            // Dọn Dẹp
             if (vfx.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(vfx.group);
                 else scene.remove(vfx.group);
