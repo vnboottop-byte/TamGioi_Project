@@ -1401,6 +1401,10 @@ function animate() {
 
                     if (huongDiChuyen.length() > 0) {
                         // 🌟 CHẠY XUYÊN TƯỜNG THOẢI MÁI
+                        if (!kiemTraVaChamKetGioi(huongDiChuyen, currentSprint + 2.0)) {
+                            playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
+                            // ... (giữ nguyên phần lerp matDatY cũ của Sếp)
+                        }
                         let yTruoc = playerModel.position.y;
                         playerModel.position.add(huongDiChuyen.clone().multiplyScalar(currentSprint));
                         if (!dangChuDongDoiDoCao) {
