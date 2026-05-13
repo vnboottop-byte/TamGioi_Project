@@ -51,7 +51,7 @@ https://drive.google.com/drive/folders/1rEYcXxj-EwtSt4WX4cjYqT-bWP78D-3E?usp=sha
 
 
 
-//CODE XOAY VŨ KHÍ  TESS XOAY SÚNG
+//CODE XOAY VŨ KHÍ TESS XOAY VŨ KHÍ
 
 // 🌟 ĐỒNG BỘ V47: BỌC SÚNG BẰNG WRAPPER ĐỂ PHÁ KHÓA TRỤC TỌA ĐỘ
 khoiTao: function () {
