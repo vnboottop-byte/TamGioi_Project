@@ -959,8 +959,9 @@ function tienHanhTaiNhanVat() {
 
 function loadVuKhiChoNhanVat(nhanVatDich) {
     // 🛑 LỆNH CẤM: Cung Thủ và Xạ Thủ tự có kịch bản vũ khí riêng, Engine không được can thiệp!
+    // 🛑 LỆNH CẤM: Engine không được can thiệp vào Vũ khí của Phái tầm xa và Pháp Sư!
     if (window.SCRIPT_PHAI_CUA_TOI) {
-        if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung')) {
+        if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) {
             return;
         }
     }
