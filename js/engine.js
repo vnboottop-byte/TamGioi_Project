@@ -1080,7 +1080,7 @@ function hoanTatTaiModels() {
             daXongXuoi = true;
         }
 
-        if (daXongXuoi || thoiGianChoInit >= 15000) {
+        if (daXongXuoi || thoiGianChoInit >= 30000) {
             clearInterval(vongLapChoVaoGame);
             if (manHinhLoading) manHinhLoading.style.display = 'none'; 
             console.log("🟢 [LOADING] Đã đúc xong Map, mở mắt đón bình minh!");
@@ -1090,7 +1090,13 @@ function hoanTatTaiModels() {
 
 
 
+function cayMatAdmin(modelGoc) {
 
+    // Đã xóa bỏ chức năng gọi đôi mắt khổng lồ cho Admin
+
+    return;
+
+}
 
 let idleTimer = null; 
 
