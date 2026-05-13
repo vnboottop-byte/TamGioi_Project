@@ -1035,6 +1035,7 @@ function hoanTatTaiModels() {
     let manHinhLoading = document.getElementById('manHinhLoadingGame');
     let thanhTienTrinh = document.getElementById('thanhTienTrinhGame');
     let textTienTrinh = document.getElementById('textTienTrinhGame');
+    let soPhanTram = document.getElementById('soPhanTramLoading'); // 🌟 KHAI BÁO SỐ %
     
     window.loadTatCaMapTuSQL();
     window.loadSafeZonesVaTeleports();
@@ -1059,6 +1060,7 @@ function hoanTatTaiModels() {
         // Khóa ở 99%, không cho lên 100% nếu chưa xong thật
         if (phanTramAo > 99) phanTramAo = 99;
         if (thanhTienTrinh) thanhTienTrinh.style.width = phanTramAo + '%';
+        if (soPhanTram) soPhanTram.innerText = phanTramAo + '%'; // 🌟 ÉP SỐ NHẢY THEO THANH!
 
         // --- B. KIỂM TRA TRẠNG THÁI MAP THẬT ---
         if (!window.daNhanDanhSachMap) return; // Đợi SQL trả data
