@@ -582,7 +582,7 @@
 
                     // 2. CHỈNH TRỤC TỰ XOAY (Quay tít thò lò)
                     // Nếu thấy gậy xoay như cánh quạt, hãy đổi chữ rotateY thành rotateX hoặc rotateZ nhé!
-                    window.truongHoThe.rotateY(window.gocTuXoayTruong);
+                    window.truongHoThe.rotateZ(window.gocTuXoayTruong);
                 }
             } 
         };
