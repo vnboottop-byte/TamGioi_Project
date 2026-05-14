@@ -3268,131 +3268,160 @@ window.botAutoTimer = setInterval(() => {
 (function khoiTaoToolAnimationAdmin() {
     let panel = document.createElement('div');
     panel.id = 'admin-anim-tool';
-    panel.style.cssText = 'position:fixed; top:60px; left:20px; background:rgba(30, 0, 15, 0.9); color:#ffaa00; padding:15px; z-index:999999; border:2px solid #ffaa00; border-radius:8px; text-align:left; font-family:monospace; display:none; box-shadow: 0 0 15px #ffaa00; min-width: 350px;';
+    // Đưa qua bên Phải, Kéo bự ra 600px cho Slider dài ra kéo cho sướng tay!
+    panel.style.cssText = 'position:fixed; top:60px; right:20px; background:rgba(30, 0, 15, 0.95); color:#ffaa00; padding:20px; z-index:999999; border:2px solid #ffaa00; border-radius:8px; text-align:left; font-family:monospace; display:none; box-shadow: 0 0 20px #ffaa00; width: 600px;';
     
     panel.innerHTML = `
         <h3 style="margin:0 0 15px 0; color:#fff; text-shadow: 0 0 5px #ffaa00; text-align:center;">🎬 GM ANIMATION INSPECTOR</h3>
         
         <div style="margin-bottom:15px;">
             <b>📂 Chọn Animation:</b><br>
-            <select id="aat-select" style="width:100%; padding:5px; background:#111; color:#ffaa00; border:1px solid #ffaa00; margin-top:5px;"></select>
+            <select id="aat-select" style="width:100%; padding:8px; background:#111; color:#ffaa00; border:1px solid #ffaa00; margin-top:5px; font-size:16px;"></select>
         </div>
 
         <div style="margin-bottom:15px;">
             <b>⏱️ Timeline (Kéo để xem):</b><br>
-            <input type="range" id="aat-slider" min="0" max="1" step="0.01" value="0" style="width:100%; margin-top:10px; cursor:pointer;">
+            <input type="range" id="aat-slider" min="0" max="1" step="0.001" value="0" style="width:100%; margin-top:10px; cursor:pointer;">
         </div>
 
         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-            <button id="aat-prev-frame" style="padding:5px 10px; font-weight:bold; cursor:pointer;">⏪ -0.05s</button>
-            <button id="aat-play-pause" style="padding:5px 15px; font-weight:bold; cursor:pointer; background:#ffaa00; border:none; color:#000;">⏯️ PLAY / PAUSE</button>
-            <button id="aat-next-frame" style="padding:5px 10px; font-weight:bold; cursor:pointer;">+0.05s ⏩</button>
+            <button id="aat-prev-frame" style="padding:8px 15px; font-weight:bold; cursor:pointer; background:#333; color:#fff; border:1px solid #ffaa00;">⏪ -0.05s</button>
+            <button id="aat-play-pause" style="padding:8px 25px; font-weight:bold; cursor:pointer; background:#ffaa00; border:none; color:#000; font-size:16px;">⏯️ PLAY / PAUSE</button>
+            <button id="aat-next-frame" style="padding:8px 15px; font-weight:bold; cursor:pointer; background:#333; color:#fff; border:1px solid #ffaa00;">+0.05s ⏩</button>
         </div>
 
-        <div style="background:#000; padding:10px; border:1px solid #555; color:#00ffcc; font-weight:bold; font-size: 16px; text-align:center;" id="aat-output">
+        <div style="background:#000; padding:15px; border:1px solid #555; color:#00ffcc; font-weight:bold; font-size: 18px; text-align:center;" id="aat-output">
             Thời gian: 0.000s / 0.000s
         </div>
-        <div style="font-size:11px; color:#888; margin-top:5px; text-align:center;">Lưu ý: Bấm F10 để thoát và mở lại di chuyển.</div>
+        <div style="font-size:12px; color:#888; margin-top:10px; text-align:center;">Lưu ý: Bấm F10 để thoát và mở lại di chuyển.</div>
     `;
     document.body.appendChild(panel);
 
     let isVisible = false;
     let isPlaying = false;
-    let updateTimer = null;
 
-    // Các thành phần UI
     const selectEl = document.getElementById('aat-select');
     const sliderEl = document.getElementById('aat-slider');
     const outputEl = document.getElementById('aat-output');
     const playBtn = document.getElementById('aat-play-pause');
 
-    // Nạp danh sách Animation đang có trên người nhân vật
-    function loadDanhSachAnimation() {
-        selectEl.innerHTML = '';
-        if (window.animationsMap) {
-            for (let tenAnim in window.animationsMap) {
-                let opt = document.createElement('option');
-                opt.value = tenAnim; opt.innerText = tenAnim;
-                selectEl.appendChild(opt);
-            }
+    // 🌟 TRÍ TUỆ NHÂN TẠO: Tự biết Sếp đang đi bộ hay cưỡi rồng để lấy đúng Danh sách
+    function getMap() {
+        if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "" && window.animationsMapChar) return window.animationsMapChar;
+        return typeof animationsMap !== 'undefined' ? animationsMap : {};
+    }
+
+    function getAction() {
+        if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "" && window.currentActionChar) return window.currentActionChar;
+        return typeof currentAction !== 'undefined' ? currentAction : null;
+    }
+
+    function setAction(action) {
+        if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") {
+            if (window.currentActionChar) window.currentActionChar.fadeOut(0.1);
+            window.currentActionChar = action;
+        } else {
+            if (typeof currentAction !== 'undefined' && currentAction) currentAction.fadeOut(0.1);
+            currentAction = action; // Ghi thẳng vào biến toàn cục của engine.js
         }
     }
 
-    // Ép khung hình dừng lại ở số giây Sếp chọn
+    function loadDanhSachAnimation() {
+        selectEl.innerHTML = '';
+        let map = getMap();
+        for (let tenAnim in map) {
+            let opt = document.createElement('option');
+            opt.value = tenAnim; opt.innerText = tenAnim;
+            selectEl.appendChild(opt);
+        }
+    }
+
     function epKhungHinh(thoiGian) {
-        if (!window.currentAction) return;
-        window.currentAction.paused = false; // Phải unpause để đổi time
-        window.currentAction.time = thoiGian;
-        if (typeof mixer !== 'undefined' && mixer) mixer.update(0); // Ép Engine render đúng frame đó
-        window.currentAction.paused = !isPlaying; 
+        let act = getAction();
+        if (!act) return;
+        act.paused = false; 
+        act.time = thoiGian;
         
-        let total = window.currentAction.getClip().duration;
+        // Cưỡng ép Engine render ngay khung hình này
+        let activeMixer = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.mixerNhanVatPhu : mixer;
+        if (activeMixer) activeMixer.update(0); 
+
+        act.paused = !isPlaying; 
+        
+        let total = act.getClip().duration;
         outputEl.innerText = `[ ${thoiGian.toFixed(3)}s / ${total.toFixed(3)}s ]`;
     }
 
-    // Xử lý sự kiện kéo Slider
+    // Khi Sếp cầm thanh trượt kéo
     sliderEl.addEventListener('input', (e) => {
         isPlaying = false;
-        if (window.currentAction) window.currentAction.paused = true;
+        let act = getAction();
+        if (act) act.paused = true;
         epKhungHinh(parseFloat(e.target.value));
     });
 
-    // Xử lý nút Play/Pause
+    // Nút Play / Pause
     playBtn.addEventListener('click', () => {
-        if (!window.currentAction) return;
+        let act = getAction();
+        if (!act) return;
         isPlaying = !isPlaying;
-        window.currentAction.paused = !isPlaying;
-        window.currentAction.timeScale = isPlaying ? 1 : 0;
+        act.paused = !isPlaying;
+        act.timeScale = isPlaying ? 1 : 0;
     });
 
-    // Nhích từng Frame (+/- 0.05s)
+    // Nhích tới/lui 0.05s
     document.getElementById('aat-prev-frame').addEventListener('click', () => {
         isPlaying = false;
-        if (window.currentAction) {
-            let t = Math.max(0, window.currentAction.time - 0.05);
+        let act = getAction();
+        if (act) {
+            let t = Math.max(0, act.time - 0.05);
             sliderEl.value = t; epKhungHinh(t);
         }
     });
+
     document.getElementById('aat-next-frame').addEventListener('click', () => {
         isPlaying = false;
-        if (window.currentAction) {
-            let total = window.currentAction.getClip().duration;
-            let t = Math.min(total, window.currentAction.time + 0.05);
+        let act = getAction();
+        if (act) {
+            let total = act.getClip().duration;
+            let t = Math.min(total, act.time + 0.05);
             sliderEl.value = t; epKhungHinh(t);
         }
     });
 
-    // Xử lý khi chọn Animation khác trong Menu
+    // Khi chuyển đổi Animation trong List
     selectEl.addEventListener('change', (e) => {
         let tenAnim = e.target.value;
-        if (window.animationsMap && window.animationsMap[tenAnim]) {
-            if (window.currentAction) window.currentAction.fadeOut(0.1);
-            window.currentAction = window.animationsMap[tenAnim];
-            window.currentAction.reset().fadeIn(0.1).play();
+        let map = getMap();
+        if (map && map[tenAnim]) {
+            let newAction = map[tenAnim];
+            setAction(newAction);
+            newAction.reset().fadeIn(0.1).play();
             
-            window.currentAction.timeScale = 1;
-            isPlaying = true; window.currentAction.paused = false;
+            newAction.timeScale = 1;
+            isPlaying = true; 
+            newAction.paused = false;
 
-            let total = window.currentAction.getClip().duration;
+            let total = newAction.getClip().duration;
             sliderEl.max = total;
             sliderEl.value = 0;
         }
     });
 
-    // Vòng lặp cập nhật Slider khi đang Play
+    // Vòng lặp cập nhật thanh Slider khi đang bấm Play
     setInterval(() => {
-        if (isVisible && isPlaying && window.currentAction) {
-            sliderEl.value = window.currentAction.time;
-            let total = window.currentAction.getClip().duration;
-            outputEl.innerText = `[ ${window.currentAction.time.toFixed(3)}s / ${total.toFixed(3)}s ]`;
-            if (window.currentAction.time >= total - 0.01) {
-                // Tự động lặp lại
-                window.currentAction.time = 0;
+        if (isVisible && isPlaying) {
+            let act = getAction();
+            if (act) {
+                sliderEl.value = act.time;
+                let total = act.getClip().duration;
+                outputEl.innerText = `[ ${act.time.toFixed(3)}s / ${total.toFixed(3)}s ]`;
+                if (act.time >= total - 0.01) act.time = 0;
             }
         }
     }, 30);
 
-    // ⌨️ PHÍM TẮT F10 (CHỈ DÀNH CHO ADMIN)
+    // ⌨️ BẬT TẮT BẰNG PHÍM F10
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F10') {
             let role = (window.ROLE || "").toLowerCase();
@@ -3403,24 +3432,26 @@ window.botAutoTimer = setInterval(() => {
             panel.style.display = isVisible ? 'block' : 'none';
             
             if(isVisible) {
-                console.log("🎬 Đã bật GM Animation Inspector!");
-                loadDanhSachAnimation();
-                // Khóa hệ thống tự chạy Animation của Engine
+                // Điểm huyệt khóa vận động của Engine!
                 window.isTestingAnimation = true; 
+                window.isMoving = false;
+                window.isKeyboardMoving = false;
                 
-                // Mặc định chọn cái đầu tiên
+                loadDanhSachAnimation(); // Nạp đạn danh sách Animation
+                
                 if (selectEl.options.length > 0) {
                     selectEl.value = selectEl.options[0].value;
                     selectEl.dispatchEvent(new Event('change'));
                 }
             } else {
-                // Tắt tool thì mở khóa cho Engine hoạt động lại bình thường
+                // Tắt tool thì giải huyệt
                 window.isTestingAnimation = false;
-                if (window.currentAction) {
-                    window.currentAction.paused = false;
-                    window.currentAction.timeScale = 1;
+                let act = getAction();
+                if (act) {
+                    act.paused = false;
+                    act.timeScale = 1;
                 }
-                if (typeof playIdle === 'function') playIdle(); // Trả về tư thế đứng im
+                if (typeof playIdle === 'function') playIdle(); 
             }
         }
     });
