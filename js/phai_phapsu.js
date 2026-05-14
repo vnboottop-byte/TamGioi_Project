@@ -102,34 +102,47 @@
 
 
 
-    function taoVongPhepXin(mauSac, scaleSize, isUpright = false) {
+    // ==========================================
+    // 🪃 HÀM TẠO VŨ KHÍ BAY (PHI VÒNG PHÉP KÈM TEXTURE GỐC)
+    // ==========================================
+    function taoVuKhiBayPS(weaponUrl, mauSac, scaleSize, isUpright = false) {
         const group = new THREE.Group();
-        
-        // 🌟 BẢN VÁ: ÉP MÁY CỦA PHÁI KHÁC CŨNG PHẢI TẢI VÒNG PHÉP BẰNG HÀM TẢI ĐỘNG!
+        let urlCanTai = weaponUrl || 'uploads/anims/vong_phep.glb';
+
         if (typeof window.taiHoacNhanBanAsset === 'function') {
-            window.taiHoacNhanBanAsset('uploads/anims/vong_phep.glb', (v) => {
-                v.rotation.x = Math.PI / 2;
+            window.taiHoacNhanBanAsset(urlCanTai, (v) => {
+                
+                // Giữ nguyên hình hài, chỉ phủ thêm lớp Hào quang nhẹ theo màu Chiêu thức
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
                         c.material = c.material.clone();
-                        c.material.color.setHex(mauSac);
-                        c.material.emissive = new THREE.Color(mauSac);
-                        c.material.emissiveIntensity = 2.0;
+                        c.material.side = THREE.DoubleSide; // Nhìn được cả 2 mặt khi xoay
                         c.material.transparent = true;
-                        c.material.opacity = 0.9;
-                        c.material.blending = THREE.AdditiveBlending;
-                        c.material.depthWrite = false;
+                        
+                        // Phủ thêm màu hào quang nhẹ nhàng (0.5), KHÔNG làm mất vân Texture gốc!
+                        c.material.emissive = new THREE.Color(mauSac);
+                        c.material.emissiveIntensity = 0.5; 
                     }
                 });
+                
+                // 📏 BỘ THƯỚC ĐO TỰ ĐỘNG CHUẨN XÁC
+                v.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(v);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                let tiLeChuan = scaleSize / maxDim; 
+                v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+
                 group.add(v);
             });
         }
         
+        // Nắn trục quay
         if (!isUpright) group.rotation.x = -Math.PI / 2;
-        group.scale.set(scaleSize, scaleSize, scaleSize);
+        else group.rotation.x = 0; // Để nó dựng đứng như cái bánh xe
+
         return group;
     }
-
 
 
 
