@@ -479,7 +479,7 @@
                         const box = new THREE.Box3().setFromObject(vuKhiGoc);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                        let tiLeChuan = 0.5 / maxDim; 
+                        let tiLeChuan = 0.3 / maxDim; 
                         vuKhiGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
 
                         scene.add(vuKhiGoc); // Thả lơ lửng, không làm con của nhân vật
