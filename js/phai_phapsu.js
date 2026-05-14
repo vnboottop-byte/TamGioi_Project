@@ -344,12 +344,6 @@
      
 
         
-
-        
-
-
-
-
         for (let i = kyNangPhapSu.length - 1; i >= 0; i--) {
             let s = kyNangPhapSu[i]; s.life--;
 
@@ -377,7 +371,17 @@
                 s.mesh.children.forEach(c => c.rotation.y += 0.2);
                 s.meshBot.children.forEach(c => c.rotation.y -= 0.2);
                 
-                // 🌟 LOGIC XUYÊN NHAU 3 LẦN: Dùng hàm Cos để đảo vị trí cực mượt
+                // 🌟 LOGIC TẦM NHIỆT: Liên tục dò tìm mục tiêu và bám theo!
+                if (!s.isRemote) {
+                    // Lấy vị trí tâm bão hiện tại làm gốc để quét radar
+                    const mucTieuMoi = window.layMucTieuGanNhatPS(s.targetPos);
+                    if (mucTieuMoi) {
+                        // Kéo tâm bão bám theo kẻ địch cực mượt (Tốc độ bám 0.08)
+                        s.targetPos.lerp(mucTieuMoi, 0.08); 
+                    }
+                }
+
+                // 🌟 LOGIC XUYÊN NHAU: Tính toán dựa trên Tâm bão (targetPos) mới
                 let offset = Math.cos(s.ticks * 3) * 15; // Biên độ 15m
                 s.mesh.position.copy(s.targetPos).add(s.upV.clone().multiplyScalar(offset));
                 s.meshBot.position.copy(s.targetPos).sub(s.upV.clone().multiplyScalar(offset));
@@ -387,19 +391,25 @@
                 }
             }
             else if (s.type === 'F') {
+                // 🌟 LOGIC TẦM NHIỆT: Kéo Khối lập phương bay theo kẻ địch
+                if (!s.isRemote) {
+                    const mucTieuMoi = window.layMucTieuGanNhatPS(s.targetPos);
+                    if (mucTieuMoi) {
+                        s.targetPos.lerp(mucTieuMoi, 0.06); // Chiêu F nặng nề nên bám đuôi từ từ tạo áp lực
+                        // Cập nhật vị trí Khối lập phương trôi theo tâm mới
+                        s.mesh.position.copy(s.targetPos).add(s.upV.clone().multiplyScalar(10));
+                    }
+                }
+
                 // 🌟 Xoay khối lập phương khổng lồ cực đẹp
                 s.mesh.rotation.y += 0.03; 
                 s.mesh.rotation.z += 0.02;
                 s.mesh.children.forEach(v => v.children.forEach(c => c.rotation.y += 0.15));
+                
                 if (++s.ticks > 150) { 
                     s.life = 0; taoVuNoPS(s.targetPos, s.isRemote, s.damage, 30, 0xff0000); 
                 }
             }
-
-
-
-
-
 
             if (s.life <= 0) { window.donRac3D(s.mesh); if (s.meshBot) window.donRac3D(s.meshBot); kyNangPhapSu.splice(i, 1); }
         }
