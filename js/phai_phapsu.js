@@ -480,12 +480,76 @@
             tenPhai: "Pháp Sư",
             khoiTao: function () {
                 const l = new THREE.GLTFLoader(); if (window.loaderSieuToc) l.setDRACOLoader(window.loaderSieuToc);
+                
+                // 1. Tải Vòng Phép Hộ Thể (Xoay sau lưng)
                 l.load('uploads/anims/vong_phep.glb', (gltf) => { vongPhepModel = gltf.scene; });
+
+                // 2. 🌟 TẢI VŨ KHÍ CẦM TAY (Vòng phép nhỏ / Gậy trong lòng bàn tay)
+                let urlVuKhi = window.WEAPON_URL || 'uploads/anims/vong_phep.glb'; 
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset(urlVuKhi, (vuKhiGoc) => {
+                        window.vuKhiPhapSu = vuKhiGoc;
+                        
+                        // 🌟 THƯỚC ĐO CHUẨN MỰC: Ép to đúng 1.2 mét, không quan tâm nhân vật to nhỏ ra sao!
+                        vuKhiGoc.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(vuKhiGoc);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                        let tiLeChuan = 1.2 / maxDim; 
+                        vuKhiGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+
+                        // 🌟 GIẢI THOÁT LỜI NGUYỀN: Thêm thẳng vào Môi trường (Scene), Không làm "con" của xương nào cả!
+                        scene.add(vuKhiGoc);
+
+                        // 🌟 TÌM KIẾM XƯƠNG TAY PHẢI ĐỂ ĐỊNH VỊ
+                        window.xuongTayPhaiPS = null;
+                        if (window.playerModel) {
+                            window.playerModel.traverse(c => {
+                                if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND.R') || c.name.toUpperCase().includes('RIGHTHAND'))) {
+                                    window.xuongTayPhaiPS = c;
+                                }
+                            });
+                        }
+                    });
+                }
             },
             tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) { 
                 window.tungComboPhapSu(phim, isRemote, origin, target, dir, casterId, weaponUrl); 
             },
-            capNhat: function () {} // Đã chạy ngầm, không cần gọi đúp nữa
+            
+            // 🌟 CẬP NHẬT CHUYỂN ĐỘNG VŨ KHÍ LƠ LỬNG TRONG LÒNG BÀN TAY
+            capNhat: function () {
+                if (window.vuKhiPhapSu && window.playerModel) {
+                    let diemDich = new THREE.Vector3();
+                    
+                    if (window.xuongTayPhaiPS) {
+                        // Nếu có xương tay: Hút tọa độ Thế giới của lòng bàn tay
+                        window.xuongTayPhaiPS.getWorldPosition(diemDich);
+                        
+                        // Kéo nhích ra phía trước lòng bàn tay một tí để khỏi cắm vào da thịt
+                        let upV = window.playerModel.up.clone();
+                        let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
+                        diemDich.add(fwd.multiplyScalar(0.3)).add(upV.multiplyScalar(0.2));
+                    } else {
+                        // Nếu Model quái thai không có xương tay: Cho lơ lửng bên phải thân mình
+                        window.playerModel.getWorldPosition(diemDich);
+                        let upV = window.playerModel.up.clone();
+                        let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
+                        let rightV = new THREE.Vector3().crossVectors(fwd, upV).normalize().negate();
+                        
+                        // Tọa độ lơ lửng: Cao 2m, Dịch sang phải 1m, Nhích lên trước mặt 0.5m
+                        diemDich.add(upV.multiplyScalar(2.0)).add(rightV.multiplyScalar(1.0)).add(fwd.multiplyScalar(0.5));
+                    }
+
+                    // 🌟 NAM CHÂM VẬT LÝ: Hút vũ khí bay theo tay cực mượt (Lerp)
+                    window.vuKhiPhapSu.position.lerp(diemDich, 0.3);
+                    
+                    // Xoay tròn đều cực ngầu
+                    window.vuKhiPhapSu.rotation.x += 0.02;
+                    window.vuKhiPhapSu.rotation.y += 0.05;
+                    window.vuKhiPhapSu.rotation.z += 0.03;
+                }
+            } 
         };
         window.HePhaiHienTai.khoiTao();
     }
