@@ -59,105 +59,157 @@ window.congKinhNghiem = function (soExp, targetLevel = 1) {
 };
 
 // ==========================================
-// 🎒 HỆ THỐNG TÚI ĐỒ & TRANG BỊ ĐỘNG
+// 🎒 HỆ THỐNG TÚI ĐỒ "GIỚI CHỈ" VIP (CYBERPUNK x TU TIÊN)
 // ==========================================
 
-// 1. Tạo nút Mở Túi Đồ trên màn hình (Góc trên bên trái)
-const btnTuiDo = document.createElement('div');
-btnTuiDo.id = 'btnTuiDo'; // Đặt ID để dễ quản lý
-btnTuiDo.innerHTML = '🎒 TÚI ĐỒ (B)';
-btnTuiDo.style.cssText = "position:fixed; top:20px; left:20px; background:linear-gradient(45deg, #27ae60, #2ecc71); padding:10px 20px; border-radius:8px; font-weight:bold; color:white; cursor:pointer; z-index:100; box-shadow:0 4px 10px rgba(0,0,0,0.5); border:2px solid white;";
-document.body.appendChild(btnTuiDo);
+// Biến lưu trữ
+window.khoDoData = [];
+window.trangHienTai = 1;
+const O_MOI_TRANG = 30;
 
-// 2. Tạo Bảng Giao diện Túi Đồ (Lúc đầu ẩn đi)
-const modalTuiDo = document.createElement('div');
-modalTuiDo.id = 'modalTuiDo';
-modalTuiDo.style.cssText = "display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:rgba(0,0,0,0.95); border:3px solid #2ecc71; padding:25px; z-index:1000; width:600px; max-height:80vh; overflow-y:auto; border-radius:15px; color:white; box-shadow:0 0 30px rgba(46, 204, 113, 0.4); font-family: sans-serif;";
-modalTuiDo.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2ecc71; padding-bottom: 10px; margin-bottom: 20px;">
-        <h2 style="color:#2ecc71; margin:0; text-transform:uppercase; font-weight:900;">🎒 KHÔNG GIAN GIỚI CHỈ</h2>
-        <button onclick="dongTuiDo()" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; font-weight: bold; cursor: pointer; border-radius: 5px;">ĐÓNG [X]</button>
-    </div>
-    <div id="danhSachTuiDo" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px;">
-        </div>
-`;
-document.body.appendChild(modalTuiDo);
-
-// 3. Logic Đóng / Mở Túi Đồ
-btnTuiDo.onclick = () => loadTuiDo();
-
-function dongTuiDo() {
-    document.getElementById('modalTuiDo').style.display = 'none';
-}
-
-// Mở túi bằng phím 'B'
+// Bắt sự kiện phím B để mở
 document.addEventListener('keydown', (e) => { 
     if ((e.key || "").toLowerCase() === 'b' && document.activeElement === document.body) {
-        let modal = document.getElementById('modalTuiDo');
-        if (modal.style.display === 'none' || modal.style.display === '') {
-            loadTuiDo();
-        } else {
-            dongTuiDo();
-        }
+        let modal = document.getElementById('inventoryModal');
+        if (!modal) return;
+        if (modal.style.display === 'none' || modal.style.display === '') moTuiDoVIP();
+        else dongTuiDoVIP();
     }
 });
 
-// 4. Tải dữ liệu Túi Đồ từ SQL
-function loadTuiDo() {
-    document.getElementById('modalTuiDo').style.display = 'block';
-    const container = document.getElementById('danhSachTuiDo');
-    container.innerHTML = '<p style="color:yellow; text-align:center; grid-column: 1 / -1;">⏳ Đang lục túi...</p>';
-
+// Hàm gọi API load túi đồ
+window.moTuiDoVIP = function() {
+    const modal = document.getElementById('inventoryModal');
+    if (modal) modal.style.display = 'flex';
+    document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px;">Đang quét Không gian...</div>';
+    
     fetch('api/get_inventory.php')
-        .then(res => res.json())
-        .then(data => {
-            if (data.status !== 'success') {
-                container.innerHTML = `<p style="color:red; grid-column: 1 / -1;">Lỗi: ${data.msg}</p>`; return;
-            }
-            if (data.data.length === 0) {
-                container.innerHTML = '<p style="color:#ccc; text-align:center; grid-column: 1 / -1;">Túi đồ trống trơn. Hãy ra Lâm Tỳ Các mua sắm đi Đạo Hữu!</p>'; return;
-            }
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            window.khoDoData = data.data;
+            document.getElementById('gameGoldUI').innerText = parseInt(data.game_gold).toLocaleString();
+            document.getElementById('invCountUI').innerText = window.khoDoData.length;
+            window.trangHienTai = 1;
+            renderTrangTuiDo();
+            document.getElementById('invDetailContent').innerHTML = '<i style="font-size:40px; color:#555;" class="fas fa-crosshairs"></i><br><br>Chọn vật phẩm để đồng bộ dữ liệu...';
+        }
+    });
+};
 
-            container.innerHTML = '';
-            data.data.forEach(item => {
-                let isEquipped = parseInt(item.is_equipped) === 1;
-                let bgBorder = isEquipped ? 'border: 2px solid #f1c40f; background: #333;' : 'border: 1px solid #555; background: #222;';
-                
-                // Icon phân loại
-                let typeName = '🥷 Ngoại Hình';
-                if(item.item_type === 'weapon') typeName = '⚔️ Vũ Khí';
-                if(item.item_type === 'mount') typeName = '🐲 Thú Cưỡi';
+window.dongTuiDoVIP = function() {
+    document.getElementById('inventoryModal').style.display = 'none';
+};
 
-                // Nút Trang Bị / Đang dùng
-                let btnHtml = isEquipped 
-                    ? `<button disabled style="background:#f1c40f; color:black; padding:8px; border:none; border-radius:5px; width:100%; font-weight:bold;">✅ Đang dùng</button>`
-                    : `<button onclick="macDoVaoNguoi(${item.item_id})" style="background:#3498db; color:white; padding:8px; border:none; border-radius:5px; cursor:pointer; width:100%; font-weight:bold; transition: background 0.2s;" onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">✨ Trang bị</button>`;
-                
-                container.innerHTML += `
-                    <div style="padding: 15px; border-radius: 8px; text-align: center; ${bgBorder}">
-                        <h4 style="margin: 0 0 5px 0; color: #fff; font-size: 14px;">${item.name}</h4>
-                        <p style="font-size: 12px; color: #aaa; margin: 0 0 15px 0;">${typeName}</p>
-                        ${btnHtml}
-                    </div>
-                `;
-            });
-        }).catch(err => container.innerHTML = '<p style="color:red; grid-column: 1 / -1;">Lỗi kết nối API Túi đồ!</p>');
+// Hàm Vẽ từng trang
+function renderTrangTuiDo() {
+    const grid = document.getElementById('invGrid');
+    const pagination = document.getElementById('invPagination');
+    grid.innerHTML = ''; pagination.innerHTML = '';
+    
+    let tongSoTrang = Math.ceil(Math.max(1, window.khoDoData.length) / O_MOI_TRANG);
+    // Luôn giữ tối đa 7 trang
+    if (tongSoTrang < 7) tongSoTrang = 7; 
+
+    // Render 30 ô
+    let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
+    let endIdx = startIdx + O_MOI_TRANG;
+
+    for (let i = startIdx; i < endIdx; i++) {
+        let item = window.khoDoData[i];
+        if (item) {
+            let iconText = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
+            let isEq = parseInt(item.is_equipped) === 1 ? 'equipped' : '';
+            let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';
+            
+            grid.innerHTML += `
+                <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item)})' title="${item.name}">
+                    <span style="font-size:24px;">${iconText}</span>
+                    ${badge}
+                </div>`;
+        } else {
+            // Ô trống
+            grid.innerHTML += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
+        }
+    }
+
+    // Vẽ nút phân trang
+    for(let p = 1; p <= tongSoTrang; p++) {
+        let activeCls = (p === window.trangHienTai) ? 'active' : '';
+        pagination.innerHTML += `<button class="inv-page-btn ${activeCls}" onclick="chuyenTrangTuiDo(${p})">${p}</button>`;
+    }
 }
 
-// 5. Mặc đồ vào người (Gọi API equip_item.php)
-window.macDoVaoNguoi = function(itemId) {
-    const fd = new FormData();
-    fd.append('item_id', itemId);
+window.chuyenTrangTuiDo = function(p) { window.trangHienTai = p; renderTrangTuiDo(); };
 
-    fetch('api/equip_item.php', { method: 'POST', body: fd })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Tạm thời F5 lại game để Load lại Model. 
-                // Sau này rảnh mình sẽ viết thuật toán thay Model Live không cần F5!
-                location.reload(); 
-            } else {
-                alert("❌ Lỗi: " + data.msg);
-            }
-        }).catch(err => alert("❌ Lỗi đường truyền tới SQL!"));
-}
+// Hàm Chọn Món Đồ Hiện Ra Bên Phải
+window.chonXemMonDo = function(item) {
+    let detailBox = document.getElementById('invDetailContent');
+    let isEq = parseInt(item.is_equipped) === 1;
+    let iconText = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
+    
+    // Nút Mặc / Tháo
+    let btnHanhDong = isEq 
+        ? `<button class="btn-cyber" style="background:#e74c3c; color:white;" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'unequip')">🔽 THÁO TRANG BỊ</button>`
+        : `<button class="btn-cyber" style="background:#00e5ff; color:black;" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'equip')">🔼 MẶC TRANG BỊ</button>`;
+
+    // Nút Bán Rác
+    let btnBanRac = isEq 
+        ? `<p style="color:#7f8c8d; font-size:12px; margin-top:5px;">*Phải tháo đồ mới được bán</p>`
+        : `<button class="btn-cyber" style="background:transparent; border:1px solid #ff007f; color:#ff007f; margin-top:5px;" onclick="banRacPhiShop(${item.inv_id})">♻️ PHI SHOP LẤY VÀNG</button>`;
+
+    detailBox.innerHTML = `
+        <div style="font-size:60px; margin-bottom:10px; text-shadow:0 0 15px ${isEq ? 'gold' : '#00e5ff'};">${iconText}</div>
+        <h3 style="color:${isEq ? 'gold' : '#00e5ff'}; margin:0 0 5px 0; text-transform:uppercase;">${item.name}</h3>
+        <p style="color:#ff007f; font-weight:bold; margin:0 0 15px 0; font-size:12px;">Hệ Yêu Cầu: ${item.required_class === 'ALL' ? 'Dùng Chung' : item.required_class}</p>
+        
+        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; text-align:left; font-size:13px; margin-bottom:20px; border:1px solid #333;">
+            <div style="margin-bottom:5px;">⚔️ Tấn Công: <span style="color:#ff3333; float:right;">+${item.bonus_damage || 0}</span></div>
+            <div style="margin-bottom:5px;">❤️ Sinh Lực: <span style="color:#2ecc71; float:right;">+${item.bonus_hp || 0}</span></div>
+            <div>⚡ Giá Trị: <span style="color:gold; float:right;">~${parseInt((item.price || 5000) * 0.1)} Vàng</span></div>
+        </div>
+        
+        ${btnHanhDong}
+        ${btnBanRac}
+    `;
+};
+
+// 🌟 THUẬT TOÁN KIỂM TRA PHÁI VÀ THAY ĐỒ
+window.thucHienHanhDongTrangBi = function(invId, action) {
+    if (action === 'equip') {
+        // Kiểm tra xem Sếp có mặc lộn đồ môn phái khác không
+        let item = window.khoDoData.find(i => i.inv_id == invId);
+        if (item && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
+            alert(`⚠️ Tẩu hỏa nhập ma! Món này chỉ dành cho hệ [${item.required_class}]!`);
+            return;
+        }
+    }
+
+    fetch('api/toggle_equip.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ inv_id: invId, action: action })
+    }).then(res => res.json()).then(data => {
+        if(data.status === 'success') {
+            // Thay đồ xong thì F5 game để nạp lại nhân vật
+            location.reload();
+        } else alert("Lỗi thay đồ!");
+    });
+};
+
+// 🌟 THUẬT TOÁN BÁN RÁC
+window.banRacPhiShop = function(invId) {
+    if(!confirm("Bạn có chắc muốn vứt món này vào tiệm cầm đồ không?")) return;
+    
+    fetch('api/sell_item.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ inv_id: invId })
+    }).then(res => res.json()).then(data => {
+        if(data.status === 'success') {
+            // Hiển thị chữ Vàng bay lên đầu
+            if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} VÀNG`, "gold");
+            window.moTuiDoVIP(); // Load lại túi đồ
+        } else alert(data.msg);
+    });
+};
