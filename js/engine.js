@@ -3260,15 +3260,12 @@ window.botAutoTimer = setInterval(() => {
 
 
 
-
-
 // =========================================================================
 // 🎬 HỆ THỐNG SOI ANIMATION TỪNG MILIGIÂY (DÀNH CHO ADMIN - BẤM F10)
 // =========================================================================
 (function khoiTaoToolAnimationAdmin() {
     let panel = document.createElement('div');
     panel.id = 'admin-anim-tool';
-    // Đưa qua bên Phải, Kéo bự ra 600px cho Slider dài ra kéo cho sướng tay!
     panel.style.cssText = 'position:fixed; top:60px; right:20px; background:rgba(30, 0, 15, 0.95); color:#ffaa00; padding:20px; z-index:999999; border:2px solid #ffaa00; border-radius:8px; text-align:left; font-family:monospace; display:none; box-shadow: 0 0 20px #ffaa00; width: 600px;';
     
     panel.innerHTML = `
@@ -3282,6 +3279,19 @@ window.botAutoTimer = setInterval(() => {
         <div style="margin-bottom:15px;">
             <b>⏱️ Timeline (Kéo để xem):</b><br>
             <input type="range" id="aat-slider" min="0" max="1" step="0.001" value="0" style="width:100%; margin-top:10px; cursor:pointer;">
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px; gap:10px;">
+            <div style="flex:1; background:#222; padding:10px; border:1px solid #0f0; border-radius:5px;">
+                <b style="color:#0f0;">🟢 MỐC A (Bắt đầu):</b><br>
+                <input type="number" id="aat-mark-a" step="0.001" value="0" style="width:100%; padding:5px; background:#000; color:#0f0; border:1px solid #555; margin-top:5px; font-size:16px;">
+                <button id="btn-set-a" style="width:100%; padding:5px; margin-top:5px; cursor:pointer; background:#0f0; color:#000; font-weight:bold; border:none;">Lấy Giây Hiện Tại</button>
+            </div>
+            <div style="flex:1; background:#222; padding:10px; border:1px solid #f00; border-radius:5px;">
+                <b style="color:#f00;">🔴 MỐC B (Kết thúc):</b><br>
+                <input type="number" id="aat-mark-b" step="0.001" value="0" style="width:100%; padding:5px; background:#000; color:#f00; border:1px solid #555; margin-top:5px; font-size:16px;">
+                <button id="btn-set-b" style="width:100%; padding:5px; margin-top:5px; cursor:pointer; background:#f00; color:#000; font-weight:bold; border:none;">Lấy Giây Hiện Tại</button>
+            </div>
         </div>
 
         <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
@@ -3304,8 +3314,9 @@ window.botAutoTimer = setInterval(() => {
     const sliderEl = document.getElementById('aat-slider');
     const outputEl = document.getElementById('aat-output');
     const playBtn = document.getElementById('aat-play-pause');
+    const inputA = document.getElementById('aat-mark-a');
+    const inputB = document.getElementById('aat-mark-b');
 
-    // 🌟 TRÍ TUỆ NHÂN TẠO: Tự biết Sếp đang đi bộ hay cưỡi rồng để lấy đúng Danh sách
     function getMap() {
         if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "" && window.animationsMapChar) return window.animationsMapChar;
         return typeof animationsMap !== 'undefined' ? animationsMap : {};
@@ -3322,7 +3333,7 @@ window.botAutoTimer = setInterval(() => {
             window.currentActionChar = action;
         } else {
             if (typeof currentAction !== 'undefined' && currentAction) currentAction.fadeOut(0.1);
-            currentAction = action; // Ghi thẳng vào biến toàn cục của engine.js
+            currentAction = action; 
         }
     }
 
@@ -3342,17 +3353,25 @@ window.botAutoTimer = setInterval(() => {
         act.paused = false; 
         act.time = thoiGian;
         
-        // Cưỡng ép Engine render ngay khung hình này
         let activeMixer = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.mixerNhanVatPhu : mixer;
         if (activeMixer) activeMixer.update(0); 
 
         act.paused = !isPlaying; 
-        
         let total = act.getClip().duration;
         outputEl.innerText = `[ ${thoiGian.toFixed(3)}s / ${total.toFixed(3)}s ]`;
     }
 
-    // Khi Sếp cầm thanh trượt kéo
+    // 🌟 1. NÚT CHỐT MỐC A VÀ B
+    document.getElementById('btn-set-a').addEventListener('click', () => {
+        let act = getAction();
+        if (act) inputA.value = act.time.toFixed(3);
+    });
+
+    document.getElementById('btn-set-b').addEventListener('click', () => {
+        let act = getAction();
+        if (act) inputB.value = act.time.toFixed(3);
+    });
+
     sliderEl.addEventListener('input', (e) => {
         isPlaying = false;
         let act = getAction();
@@ -3360,7 +3379,6 @@ window.botAutoTimer = setInterval(() => {
         epKhungHinh(parseFloat(e.target.value));
     });
 
-    // Nút Play / Pause
     playBtn.addEventListener('click', () => {
         let act = getAction();
         if (!act) return;
@@ -3369,7 +3387,6 @@ window.botAutoTimer = setInterval(() => {
         act.timeScale = isPlaying ? 1 : 0;
     });
 
-    // Nhích tới/lui 0.05s
     document.getElementById('aat-prev-frame').addEventListener('click', () => {
         isPlaying = false;
         let act = getAction();
@@ -3389,7 +3406,6 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 
-    // Khi chuyển đổi Animation trong List
     selectEl.addEventListener('change', (e) => {
         let tenAnim = e.target.value;
         let map = getMap();
@@ -3405,23 +3421,38 @@ window.botAutoTimer = setInterval(() => {
             let total = newAction.getClip().duration;
             sliderEl.max = total;
             sliderEl.value = 0;
+            
+            // 🌟 Khi đổi Animation, Reset lại Mốc A là 0, Mốc B là Full giây
+            inputA.value = 0;
+            inputB.value = total.toFixed(3);
         }
     });
 
-    // Vòng lặp cập nhật thanh Slider khi đang bấm Play
+    // 🌟 2. VÒNG LẶP CHẶN ĐẦU ĐUÔI (A -> B)
     setInterval(() => {
         if (isVisible && isPlaying) {
             let act = getAction();
             if (act) {
+                let moca = parseFloat(inputA.value) || 0;
+                let mocb = parseFloat(inputB.value) || act.getClip().duration;
+
+                // Nếu chạy lố vạch B, bế cổ quăng ngược về vạch A
+                if (act.time >= mocb) {
+                    act.time = moca;
+                }
+                
+                // Tránh trường hợp user nhập mốc A sai lệch
+                if (act.time < moca) {
+                    act.time = moca;
+                }
+
                 sliderEl.value = act.time;
                 let total = act.getClip().duration;
                 outputEl.innerText = `[ ${act.time.toFixed(3)}s / ${total.toFixed(3)}s ]`;
-                if (act.time >= total - 0.01) act.time = 0;
             }
         }
     }, 30);
 
-    // ⌨️ BẬT TẮT BẰNG PHÍM F10
     document.addEventListener('keydown', (e) => {
         if (e.key === 'F10') {
             let role = (window.ROLE || "").toLowerCase();
@@ -3432,19 +3463,17 @@ window.botAutoTimer = setInterval(() => {
             panel.style.display = isVisible ? 'block' : 'none';
             
             if(isVisible) {
-                // Điểm huyệt khóa vận động của Engine!
                 window.isTestingAnimation = true; 
                 window.isMoving = false;
                 window.isKeyboardMoving = false;
                 
-                loadDanhSachAnimation(); // Nạp đạn danh sách Animation
+                loadDanhSachAnimation(); 
                 
                 if (selectEl.options.length > 0) {
                     selectEl.value = selectEl.options[0].value;
                     selectEl.dispatchEvent(new Event('change'));
                 }
             } else {
-                // Tắt tool thì giải huyệt
                 window.isTestingAnimation = false;
                 let act = getAction();
                 if (act) {
