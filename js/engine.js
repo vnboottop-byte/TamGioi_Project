@@ -3125,3 +3125,117 @@ window.botAutoTimer = setInterval(() => {
         if (window.vongMucTieu) window.vongMucTieu.visible = false;
     }
 }, 200);
+
+
+
+
+
+
+
+
+
+// =========================================================================
+// 🛠️ HỆ THỐNG ĐỘ VŨ KHÍ TOÀN CẦU (DÀNH RIÊNG CHO ADMIN - BẤM F9)
+// =========================================================================
+(function khoiTaoToolVuKhiAdmin() {
+    // 1. Tạo giao diện Bảng Điều Khiển (Ẩn mặc định)
+    let panel = document.createElement('div');
+    panel.id = 'admin-weapon-tool';
+    panel.style.cssText = 'position:fixed; top:60px; right:20px; background:rgba(0, 15, 30, 0.9); color:#00ffcc; padding:15px; z-index:999999; border:2px solid #00ffcc; border-radius:8px; text-align:left; font-family:monospace; display:none; box-shadow: 0 0 15px #00ffcc; min-width: 300px;';
+
+    panel.innerHTML = `
+        <h3 style="margin:0 0 15px 0; color:#fff; text-shadow: 0 0 5px #00ffcc; text-align:center;">🔧 GM WEAPON TUNER</h3>
+        
+        <div style="margin-bottom:15px;">
+            <b>🎯 Chọn Vũ Khí Đang Cầm:</b><br>
+            <select id="awt-target" style="width:100%; padding:5px; background:#111; color:#0f0; border:1px solid #0f0; margin-top:5px;">
+                <option value="vuKhiModel">Kiếm / Găng (Cơ bản)</option>
+                <option value="vuKhiWrapper">Súng (Xạ Thủ)</option>
+                <option value="cungTrenTay">Cung (Cung Thủ)</option>
+                <option value="vuKhiPhapSu">Vòng Phép Tay (Pháp Sư)</option>
+                <option value="truongHoThe">Trượng Sau Lưng (Pháp Sư)</option>
+                <option value="kiemHoThe">Phi Kiếm Hộ Thể (Tu Tiên)</option>
+            </select>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <b>📍 VỊ TRÍ (Position):</b>
+            <div>
+                X: <button onclick="awtEdit('pos','x',1)">+</button> <button onclick="awtEdit('pos','x',-1)">-</button>
+                Y: <button onclick="awtEdit('pos','y',1)">+</button> <button onclick="awtEdit('pos','y',-1)">-</button>
+                Z: <button onclick="awtEdit('pos','z',1)">+</button> <button onclick="awtEdit('pos','z',-1)">-</button>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <b>🔄 GÓC XOAY (Rotation):</b>
+            <div>
+                X: <button onclick="awtEdit('rot','x',1)">+</button> <button onclick="awtEdit('rot','x',-1)">-</button>
+                Y: <button onclick="awtEdit('rot','y',1)">+</button> <button onclick="awtEdit('rot','y',-1)">-</button>
+                Z: <button onclick="awtEdit('rot','z',1)">+</button> <button onclick="awtEdit('rot','z',-1)">-</button>
+            </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <b>📏 KÍCH CỠ (Scale):</b>
+            <div>
+                ALL: <button onclick="awtEdit('scale','all',1)">To Lên (+)</button> <button onclick="awtEdit('scale','all',-1)">Nhỏ Đi (-)</button>
+            </div>
+        </div>
+
+        <div style="background:#000; padding:10px; border:1px solid #555; color:#ffcc00; font-weight:bold; white-space: pre-wrap;" id="awt-output">
+// Tọa độ chuẩn sẽ hiện ở đây để Sếp Copy!
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    // 2. Logic Xử Lý Nút Bấm
+    window.awtEdit = function (type, axis, dir) {
+        let targetName = document.getElementById('awt-target').value;
+        let target = window[targetName];
+
+        if (!target) {
+            document.getElementById('awt-output').innerText = `❌ LỖI: Không tìm thấy [${targetName}]!\nHãy chắc chắn bạn đang dùng đúng Hệ Phái.`;
+            return;
+        }
+
+        let posStep = 0.05;        // Nhích 5cm mỗi lần bấm
+        let rotStep = Math.PI / 32; // Xoay khoảng 5.6 độ mỗi lần bấm
+        let scaleStep = 0.05;      // To nhỏ 5%
+
+        if (type === 'pos') target.position[axis] += posStep * dir;
+        if (type === 'rot') target.rotation[axis] += rotStep * dir;
+        if (type === 'scale') {
+            target.scale.x += scaleStep * dir;
+            target.scale.y += scaleStep * dir;
+            target.scale.z += scaleStep * dir;
+        }
+
+        target.updateMatrixWorld(true);
+
+        // Hiển thị code cho Sếp copy
+        let px = target.position.x.toFixed(3), py = target.position.y.toFixed(3), pz = target.position.z.toFixed(3);
+        let rx = target.rotation.x.toFixed(3), ry = target.rotation.y.toFixed(3), rz = target.rotation.z.toFixed(3);
+        let s = target.scale.x.toFixed(3);
+
+        document.getElementById('awt-output').innerText =
+            `${targetName}.scale.set(${s}, ${s}, ${s});\n` +
+            `${targetName}.position.set(${px}, ${py}, ${pz});\n` +
+            `${targetName}.rotation.set(${rx}, ${ry}, ${rz});`;
+    };
+
+    // 3. Phím Tắt ẨN / HIỆN Tool (Bấm F9)
+    let isVisible = false;
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F9') {
+            // LÁ CHẮN: CHỈ ADMIN MỚI MỞ ĐƯỢC
+            let role = (window.ROLE || "").toLowerCase();
+            let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+            if (role !== "admin" && name !== "admin") return;
+
+            isVisible = !isVisible;
+            panel.style.display = isVisible ? 'block' : 'none';
+            if (isVisible) console.log("🔧 Đã bật GM Weapon Tuner!");
+        }
+    });
+})();
