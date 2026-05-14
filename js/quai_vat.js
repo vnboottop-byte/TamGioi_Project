@@ -103,7 +103,22 @@ function thucHienCaiChetCuaBoss(boss) {
     if (typeof window.congKinhNghiem === 'function') {
         window.congKinhNghiem(expNhanDuoc, bossLevel);
     }
+
+
+
+
+    // 🌟 CHÈN THÊM ĐOẠN HÚT VÀNG NÀY VÀO ĐÂY:
+    if (typeof window.taoHieuUngLootVang === 'function') {
+        window.taoHieuUngLootVang(boss.mesh.position, bossLevel);
+    }
+
+
 }
+
+
+
+
+
 
 
 
