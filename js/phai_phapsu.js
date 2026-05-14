@@ -549,7 +549,7 @@
                 // --- B. VỆ TINH TRƯỢNG PHÉP (VŨ KHÍ 2) BAY QUANH NGƯỜI ---
                 if (isTruongPhepSetup && window.truongHoThe) {
                     window.gocXoayTruong += 0.04;   // Tốc độ bay quanh người
-                    window.gocTuXoayTruong += 0.05; // Tốc độ trượng tự xoay tít
+                    window.gocTuXoayTruong += 0.09; // Tốc độ trượng tự xoay tít
 
                     const banKinh = 2.0; // Khoảng cách cách người 2 mét
                     const posThuc = new THREE.Vector3();
