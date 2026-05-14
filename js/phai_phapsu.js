@@ -564,7 +564,7 @@
                         window.xuongTayPhaiPS.getWorldPosition(diemDich);
                         let upV = window.playerModel.up.clone();
                         let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
-                        diemDich.add(fwd.multiplyScalar(0.1)).add(upV.multiplyScalar(0.2));
+                        diemDich.add(fwd.multiplyScalar(0.1)).add(upV.multiplyScalar(0.1));
                     } else {
                         window.playerModel.getWorldPosition(diemDich);
                         let upV = window.playerModel.up.clone();
