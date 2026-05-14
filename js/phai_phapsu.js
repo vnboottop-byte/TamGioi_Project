@@ -576,7 +576,7 @@
                     window.vuKhiPhapSu.position.lerp(diemDich, 0.3);
                     window.vuKhiPhapSu.rotation.x = 0;       // Khóa cứng (Sửa số này bằng F9 nếu muốn nghiêng)
                     window.vuKhiPhapSu.rotation.z = 1.57;       // Khóa cứng
-                    window.vuKhiPhapSu.rotation.x += 0.09;
+                    window.vuKhiPhapSu.rotation.y += 0.09;
                 }
 
                 // --- B. VỆ TINH TRƯỢNG PHÉP (VŨ KHÍ 2) BAY QUANH NGƯỜI ---
