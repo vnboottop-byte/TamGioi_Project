@@ -495,7 +495,7 @@
                         const box = new THREE.Box3().setFromObject(vuKhiGoc);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                        let tiLeChuan = 1.2 / maxDim; 
+                        let tiLeChuan = 0.5 / maxDim; 
                         vuKhiGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
 
                         // 🌟 GIẢI THOÁT LỜI NGUYỀN: Thêm thẳng vào Môi trường (Scene), Không làm "con" của xương nào cả!
