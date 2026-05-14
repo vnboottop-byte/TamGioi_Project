@@ -107,10 +107,15 @@ function thucHienCaiChetCuaBoss(boss) {
 
 
 
-    // 🌟 CHÈN THÊM ĐOẠN HÚT VÀNG NÀY VÀO ĐÂY:
+    // (Bên dưới đoạn window.congKinhNghiem...)
     if (typeof window.taoHieuUngLootVang === 'function') {
-        window.taoHieuUngLootVang(boss.mesh.position, bossLevel);
+        // 🌟 BẢN VÁ: Truyền thêm boss.name vào hàm
+        window.taoHieuUngLootVang(boss.mesh.position, bossLevel, boss.name);
     }
+
+
+
+
 
 
 }
