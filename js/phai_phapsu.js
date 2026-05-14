@@ -577,7 +577,7 @@
                     // 🔧 KHU VỰC CĂN CHỈNH GÓC GẬY CHO SẾP
                     // =====================================
                     // 1. CHỈNH ĐỘ NGHIÊNG (X và Z)
-                    window.truongHoThe.rotateX(0); // Nghiêng ra trước/sau (Sửa số 0.5 thành 0 nếu muốn thẳng đứng, hoặc 1.57 nếu muốn gậy nằm ngang)
+                    window.truongHoThe.rotateX(1.57); // Nghiêng ra trước/sau (Sửa số 0.5 thành 0 nếu muốn thẳng đứng, hoặc 1.57 nếu muốn gậy nằm ngang)
                     window.truongHoThe.rotateZ(0);   // Nghiêng sang trái/phải
 
                     // 2. CHỈNH TRỤC TỰ XOAY (Quay tít thò lò)
