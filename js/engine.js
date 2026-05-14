@@ -3582,69 +3582,123 @@ window.botAutoTimer = setInterval(() => {
 
 
 // ==================================================
-// 💰 HIỆU ỨNG AUTO-LOOT (VÀNG VÀ VẬT PHẨM VIP)
+// 💰 HIỆU ỨNG AUTO-LOOT (LINH THẠCH & GACHA VIP)
 // ==================================================
 window.taoHieuUngLootVang = function (viTriXac, levelBoss, tenBoss) {
     let fd = new FormData();
     fd.append('monster_level', levelBoss);
-    fd.append('monster_name', tenBoss || ''); // Gửi tên Boss lên Server
+    fd.append('monster_name', tenBoss || '');
 
     fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
         .then(data => {
             if (data.gold) {
-                // Hiệu ứng bay Đồng Vàng
-                let lootGeo = new THREE.SphereGeometry(0.5, 8, 8);
-                let lootMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
-                let lootObj = new THREE.Mesh(lootGeo, lootMat);
-                lootObj.position.copy(viTriXac);
-                window.scene.add(lootObj);
+                // 🌟 1. NÂNG TỌA ĐỘ LÊN KHỎI MẶT ĐẤT (Tâm ngực Boss)
+                let tamXac = viTriXac.clone().add(new THREE.Vector3(0, 3, 0));
 
-                // Nếu rớt đồ, đẻ thêm 1 Viên Ngọc Phát Sáng (Gacha)
+                // 🌟 2. ĐÚC 5-8 VIÊN LINH THẠCH SÁNG CHÓI VĂNG TUNG TÓE
+                let soLuongLinhThach = 5 + Math.floor(Math.random() * 4);
+                let mangLinhThach = [];
+
+                for (let i = 0; i < soLuongLinhThach; i++) {
+                    // Tinh thể hình thoi (Octahedron) phong cách Cyberpunk
+                    let ngocGeo = new THREE.OctahedronGeometry(0.4);
+                    let ngocMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true });
+                    let ngocObj = new THREE.Mesh(ngocGeo, ngocMat);
+
+                    ngocObj.position.copy(tamXac);
+
+                    // Lực văng ngẫu nhiên 360 độ
+                    let vecVang = new THREE.Vector3((Math.random() - 0.5) * 8, Math.random() * 10, (Math.random() - 0.5) * 8);
+
+                    window.scene.add(ngocObj);
+                    mangLinhThach.push({ mesh: ngocObj, vel: vecVang });
+                }
+
+                // 🎁 NẾU TRÚNG GACHA ĐỒ VIP: Rớt thêm 1 quả cầu năng lượng siêu to
                 let itemObj = null;
                 if (data.item_name) {
-                    let colorGacha = data.item_type === 'mount' ? 0xff00ff : 0x00e5ff; // Tím (Thú), Xanh (Vũ khí)
+                    let colorGacha = data.item_type === 'mount' ? 0xff00ff : 0xf1c40f;
                     itemObj = new THREE.Mesh(
-                        new THREE.OctahedronGeometry(1.2),
-                        new THREE.MeshBasicMaterial({ color: colorGacha, wireframe: true })
+                        new THREE.IcosahedronGeometry(1.5),
+                        new THREE.MeshBasicMaterial({ color: colorGacha, wireframe: false, transparent: true, opacity: 0.8 })
                     );
-                    itemObj.position.copy(viTriXac).add(new THREE.Vector3(2, 0, 2)); // Nằm cạnh đống vàng
+                    itemObj.position.copy(tamXac);
                     window.scene.add(itemObj);
                 }
 
-                let startT = Date.now();
+                let phase = 1; // Pha 1: Văng ra, Pha 2: Hút vào người
+                let tick = 0;
+
                 let loop = setInterval(() => {
-                    let t = (Date.now() - startT) / 1000;
-                    if (t >= 1) {
-                        clearInterval(loop);
-                        if (typeof window.donRac3D === 'function') {
-                            window.donRac3D(lootObj);
-                            if (itemObj) window.donRac3D(itemObj);
-                        }
+                    tick++;
 
-                        // Hiện chữ nhặt được Vàng
-                        if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} Vàng`, "gold");
+                    if (phase === 1) {
+                        // 🚀 PHA 1: NỔ TUNG TÓE RA XUNG QUANH
+                        mangLinhThach.forEach(lt => {
+                            lt.mesh.position.add(lt.vel.clone().multiplyScalar(0.03));
+                            lt.vel.y -= 0.5; // Chịu trọng lực rớt nhẹ xuống
+                            lt.mesh.rotation.x += 0.2; lt.mesh.rotation.y += 0.2; // Xoay tít
+                        });
+                        if (itemObj) { itemObj.position.y += 0.1; itemObj.rotation.y += 0.1; }
 
-                        // 🌟 Hiện chữ nhặt được ĐỒ
-                        if (data.item_name && typeof window.taoSoSatThuong === 'function') {
-                            setTimeout(() => {
-                                window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ${data.item_name}`, "#00e5ff");
-                            }, 200);
-                        }
-                        return;
+                        if (tick > 20) { phase = 2; tick = 0; } // Sau ~0.6 giây thì chuyển pha
                     }
+                    else if (phase === 2) {
+                        // 🧲 PHA 2: NAM CHÂM HÚT VÀO NGƯỜI CHƠI
+                        let t = tick / 15; // Hút cực nhanh trong 15 frame (~0.45s)
 
-                    // Hút vút về phía Sếp
-                    if (window.playerModel) {
-                        lootObj.position.lerp(window.playerModel.position, t);
-                        lootObj.position.y += Math.sin(t * Math.PI) * 3;
+                        if (t >= 1) {
+                            clearInterval(loop);
 
-                        if (itemObj) {
-                            itemObj.position.lerp(window.playerModel.position, t);
-                            itemObj.position.y += Math.sin(t * Math.PI) * 5;
-                            itemObj.rotation.x += 0.2; itemObj.rotation.y += 0.2;
+                            // Đốt rác 3D
+                            mangLinhThach.forEach(lt => { if (typeof window.donRac3D === 'function') window.donRac3D(lt.mesh); });
+                            if (itemObj) window.donRac3D(itemObj);
+
+                            // 🌟 BÁO CÁO KẾT QUẢ BẰNG HÀM CHỮ NỔI RIÊNG BIỆT (KHÔNG BỊ -NaN)
+                            let diemBaoCao = window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0));
+                            window.taoChuNoiGacha(diemBaoCao, `+${data.gold} Linh Thạch`, "#00ffcc");
+
+                            if (data.item_name) {
+                                setTimeout(() => {
+                                    window.taoChuNoiGacha(diemBaoCao.clone().add(new THREE.Vector3(0, 2, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
+                                }, 200);
+                            }
+                            return;
                         }
+
+                        // Bay vòng cung về tâm ngực người chơi
+                        let diemHut = window.playerModel.position.clone().add(new THREE.Vector3(0, 2.5, 0));
+                        mangLinhThach.forEach(lt => { lt.mesh.position.lerp(diemHut, t); });
+                        if (itemObj) itemObj.position.lerp(diemHut, t);
                     }
                 }, 30);
             }
         }).catch(e => { });
+};
+
+// ==================================================
+// 🖋️ HÀM TẠO CHỮ NỔI GACHA (ĐỘC LẬP - MIỄN NHIỄM VỚI Math.round CỦA SÁT THƯƠNG)
+// ==================================================
+window.taoChuNoiGacha = function (pos3D, text, color) {
+    const div = document.createElement('div');
+    div.innerText = text;
+    // Style Chữ Cyberpunk rực rỡ
+    div.style.cssText = `position:absolute; color:${color}; font-weight:900; font-size:26px; text-shadow:0px 0px 10px ${color}, 2px 2px 0px #000; pointer-events:none; z-index:99999; text-transform:uppercase;`;
+    document.body.appendChild(div);
+
+    let life = 60; let offsetY = 0;
+    let loop = setInterval(() => {
+        life--; offsetY += 0.05;
+        let p = pos3D.clone(); p.y += offsetY; p.project(window.camera);
+
+        if (p.z < 1) {
+            div.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`;
+            div.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+            div.style.opacity = life / 60;
+        } else {
+            div.style.display = 'none';
+        }
+
+        if (life <= 0) { clearInterval(loop); div.remove(); }
+    }, 30);
 };
