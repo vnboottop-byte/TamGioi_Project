@@ -1,83 +1,169 @@
 {
+    "METAVERSE_TAM_GIOI": {
+        "Version": "AAA_Stable_V2.0",
+        "Description": "Hệ thống WebGL 3D Multiplayer Đa Vũ Trụ",
+        "Core_Engine": {
+            "Vat_Ly_Da_Vu_Tru": {
+                "Status": "Hoàn hảo",
+                "KIEU_TRONG_LUC": {
+                    "CAU": "Hút về tâm (0,0,0) - Áp dụng cho TRUNG_CHAU (Trái Đất). Cho phép đi lộn ngược, lượn vòng quanh hành tinh.",
+                    "PHANG": "Hút thẳng xuống -Y - Áp dụng cho các Bí Cảnh. Cho phép lơ lửng an toàn nếu rơi khỏi mép Map."
+                },
+                "Chuyen_Doi_Tu_Dong": "Nhận diện KIEU_TRONG_LUC từ cơ sở dữ liệu SQL thông qua API get_maps.php, áp dụng lực hút ngay lập tức khi tải lại trang."
+            },
+            "Radar_Va_Cham": {
+                "Status": "Tối ưu AAA - Không kẹt cỏ cây",
+                "Dieu_Huong_Ngang": "Súng Radar đặt ở ngực. Có thuật toán đo độ dốc (Slope <= 60 độ) để tự động trượt lên sườn núi, đồi. Chặn cứng ở vách 90 độ.",
+                "Xuyen_Ham_Nguc": "Radar trọng lực (firstHitOnly = false) cho phép phân biệt nhiều tầng mặt đất, người chơi đi vào hầm không bị dịch chuyển lên nóc núi.",
+                "Chong_Xuyen_Tran": "Súng Radar dời lên đỉnh đầu khi bay (Space). Nếu đụng trần nhà sẽ tự động dán chặt đầu cách trần 0.2m, triệt tiêu lỗi spam phím Space lọt nóc.",
+                "Luoi_Dien_Bau_Troi": "Radar bọc thép riêng biệt chỉ bắt va chạm với 'Sky/Cloud'. Áp dụng cơ chế dội ngược (Bounce-back) 0.5m, chống kẹt phím lọt ra ngoài vũ trụ."
+            },
+            "Smart_Loading_Screen": {
+                "Status": "Native Engine Controlled",
+                "Quy_Trinh": "Tước quyền tự đóng của HTML. Giao toàn quyền cho engine.js.",
+                "Hieu_Ung_Thuy_Luc": "Chạy % tịnh tiến mượt mà từ 0% -> 60% (10s đầu), lừ đừ từ 60% -> 99% (để câu giờ đúc BVH).",
+                "Mo_Mat_Thong_Minh": "Chỉ vọt lên 100% và mở màn hình khi: SQL trả xong data + Khuôn vật lý (BVH) đã đúc xong ít nhất 1 Map + Không còn Map nào đang hì hục đúc."
+            },
+            "Quan_Ly_Tai_Nguyen_VRAM": {
+                "Radius_Load": "10.000m (Nạp đất đai, kiến trúc)",
+                "Radius_Boss": "5.000m (Đánh thức quái vật, NPC)",
+                "Radius_Unload": "12.000m (Thiêu rụi Map và dọn xác Boss khỏi RAM/VRAM để chống tràn bộ nhớ)"
+            }
+        },
+        "Multiplayer_LiveKit": {
+            "Hai_Quan_Xuyen_Khong": {
+                "Dong_Dau_Vi_Tri": "Gói tin myPosArr (Index 16) bắt buộc chứa ZONE_ID.",
+                "Dong_Dau_Chieu_Thuc": "Máy đóng dấu tự động gắn ZONE_ID vào các JSON Object (Skill, Boss, Đạn bắn).",
+                "Kiem_Duyet": "Nếu gói tin đến từ ZONE_ID khác với Map hiện tại -> Hủy ngay lập tức. Triệt tiêu hoàn toàn Bóng ma tàng hình và Kiếm ma bay xuyên vũ trụ."
+            },
+            "Bao_Mat": "Kiểm tra check_session mỗi 10 giây. Đăng nhập 2 nơi sẽ tự động đá văng kết nối cũ."
+        },
+        "Game_Play_&_Ecosystem": {
+            "Truyen_Tong_Tran": {
+                "Chuc_nang": "Cổng dịch chuyển nối liền các không gian.",
+                "Co_Che": "Khi chạm cổng -> Hiện lỗ giun Wormhole (Canvas 2D) -> Rút ống thở VRAM Map cũ -> Tải Map và SafeZone của Zone mới -> Chờ đúc xong BVH mới tắt lỗ giun."
+            },
+            "Vung_An_Toan_Safe_Zone": {
+                "Chuc_nang": "Biển Neon 3D + Vòng tròn đánh dấu.",
+                "Co_Che": "Khi đứng trong vòng, biến IS_IN_SAFE_ZONE = true -> Khóa toàn bộ các nút xuất chiêu (Q, E, R, F) và khóa mục tiêu chuột (Chống PK trộm)."
+            },
+            "Auto_AFK_Bot": {
+                "Co_Che": "Tự động khóa mục tiêu ưu tiên Boss còn sống. Giữ khoảng cách bắn tỉa (450m). Boss lại gần -> tự lùi, Boss chạy xa -> rượt theo. Spam phím kỹ năng ngẫu nhiên."
+            }
+        },
+        "Artificial_Intelligence_AI": {
+            "Boss_Thong_Minh": {
+                "Radar_Dia_Hinh": "Sử dụng window.danhSachMap. Boss biết leo núi, chui hầm ngục và không bị rơi xuống vực.",
+                "Vat_Ly_Dong": "Boss tự động nhận diện Trọng lực (Phẳng/Cầu) theo Zone hiện tại để uốn nắn xương sống đi theo bề mặt cong.",
+                "Hoi_Sinh": "Heartbeat 10s kiểm tra DB. Boss chết trên Client sẽ hồi sinh tự động nếu SQL báo máu > 0."
+            },
+            "Phantom_Fake_Players": {
+                "Chuc_nang": "NPC giả lập người chơi, đẻ ra mỗi 10 phút nếu vắng người.",
+                "Hunter_Mode": "50% tỷ lệ đẻ Sát thủ (Rượt đuổi và bắn đạn, PK với người chơi).",
+                "Passerby_Mode": "50% tỷ lệ đẻ Khách qua đường (Đẻ tít đằng xa, lướt ngang qua màn hình và biến mất để tạo cảm giác server đông đúc)."
+            }
+        },
+        "GM_Admin_Tools": {
+            "Mat_Than_F8": "Bảng soi FPS, Draw Calls, Băng thông LiveKit (Gửi/Nhận KB/s), và Cảnh báo thắt cổ chai CPU/GPU.",
+            "Ban_Tay_Sang_The": {
+                "Rai_Map": "Tải file .glb, chỉ định Trọng Lực (CAU/PHANG) ngay trên UI, lưu thẳng vào SQL.",
+                "De_Boss": "Thuật toán Xoắn Ốc Vàng (Golden Spiral) giúp đẻ hàng chục Boss không bị dính vào nhau. Hệ đánh xa đẻ vòng ngoài, Hệ cận chiến/Bầy đàn đẻ sát tâm.",
+                "Dat_Cong": "Chỉ định Zone_ID đích đến, ném thẳng tọa độ x,y,z vào SQL."
+            }
+        },
+        "Deprecated_Removed": [
+            "XÓA: Radar quét cỏ cây/bụi rậm làm khựng nhân vật.",
+            "XÓA: Lỗi bay xuyên nóc khi spam phím Space.",
+            "XÓA: Lỗi đụng sườn núi bị kẹt chân không cho trượt lên.",
+            "XÓA: Rom.php tự động tắt màn hình Loading sau 2.5s.",
+            "XÓA: HUD Tốc độ báo ảo 648 km/h (Đã thay bằng biến tocDoHienTaiThucTe chuẩn xác)."
+        ]
+    }
+}
+
+
+
   "METAVERSE_TAM_GIOI": {
-    "Version": "AAA_Stable_V2.0",
-    "Description": "Hệ thống WebGL 3D Multiplayer Đa Vũ Trụ",
+    "Version": "AAA_Stable_V3.0_Economy",
+    "Description": "Hệ thống WebGL 3D Multiplayer - Bản Cập Nhật Nền Kinh Tế & Túi Đồ Không Gian",
+    
     "Core_Engine": {
       "Vat_Ly_Da_Vu_Tru": {
         "Status": "Hoàn hảo",
         "KIEU_TRONG_LUC": {
-          "CAU": "Hút về tâm (0,0,0) - Áp dụng cho TRUNG_CHAU (Trái Đất). Cho phép đi lộn ngược, lượn vòng quanh hành tinh.",
-          "PHANG": "Hút thẳng xuống -Y - Áp dụng cho các Bí Cảnh. Cho phép lơ lửng an toàn nếu rơi khỏi mép Map."
-        },
-        "Chuyen_Doi_Tu_Dong": "Nhận diện KIEU_TRONG_LUC từ cơ sở dữ liệu SQL thông qua API get_maps.php, áp dụng lực hút ngay lập tức khi tải lại trang."
+          "CAU": "Hút về tâm (0,0,0) - Áp dụng cho TRUNG_CHAU (Trái Đất).",
+          "PHANG": "Hút thẳng xuống -Y - Áp dụng cho các Bí Cảnh."
+        }
       },
       "Radar_Va_Cham": {
         "Status": "Tối ưu AAA - Không kẹt cỏ cây",
-        "Dieu_Huong_Ngang": "Súng Radar đặt ở ngực. Có thuật toán đo độ dốc (Slope <= 60 độ) để tự động trượt lên sườn núi, đồi. Chặn cứng ở vách 90 độ.",
-        "Xuyen_Ham_Nguc": "Radar trọng lực (firstHitOnly = false) cho phép phân biệt nhiều tầng mặt đất, người chơi đi vào hầm không bị dịch chuyển lên nóc núi.",
-        "Chong_Xuyen_Tran": "Súng Radar dời lên đỉnh đầu khi bay (Space). Nếu đụng trần nhà sẽ tự động dán chặt đầu cách trần 0.2m, triệt tiêu lỗi spam phím Space lọt nóc.",
-        "Luoi_Dien_Bau_Troi": "Radar bọc thép riêng biệt chỉ bắt va chạm với 'Sky/Cloud'. Áp dụng cơ chế dội ngược (Bounce-back) 0.5m, chống kẹt phím lọt ra ngoài vũ trụ."
+        "Dieu_Huong_Ngang": "Súng Radar đặt ở ngực. Tự động trượt lên sườn núi (Slope <= 60 độ).",
+        "Luoi_Dien_Bau_Troi": "Radar bọc thép chặn 'Sky/Cloud' dội ngược 0.5m."
       },
       "Smart_Loading_Screen": {
         "Status": "Native Engine Controlled",
-        "Quy_Trinh": "Tước quyền tự đóng của HTML. Giao toàn quyền cho engine.js.",
-        "Hieu_Ung_Thuy_Luc": "Chạy % tịnh tiến mượt mà từ 0% -> 60% (10s đầu), lừ đừ từ 60% -> 99% (để câu giờ đúc BVH).",
-        "Mo_Mat_Thong_Minh": "Chỉ vọt lên 100% và mở màn hình khi: SQL trả xong data + Khuôn vật lý (BVH) đã đúc xong ít nhất 1 Map + Không còn Map nào đang hì hục đúc."
-      },
-      "Quan_Ly_Tai_Nguyen_VRAM": {
-        "Radius_Load": "10.000m (Nạp đất đai, kiến trúc)",
-        "Radius_Boss": "5.000m (Đánh thức quái vật, NPC)",
-        "Radius_Unload": "12.000m (Thiêu rụi Map và dọn xác Boss khỏi RAM/VRAM để chống tràn bộ nhớ)"
+        "Mo_Mat_Thong_Minh": "Chỉ vọt lên 100% khi SQL trả data + BVH đúc xong ít nhất 1 Map."
       }
     },
-    "Multiplayer_LiveKit": {
-      "Hai_Quan_Xuyen_Khong": {
-        "Dong_Dau_Vi_Tri": "Gói tin myPosArr (Index 16) bắt buộc chứa ZONE_ID.",
-        "Dong_Dau_Chieu_Thuc": "Máy đóng dấu tự động gắn ZONE_ID vào các JSON Object (Skill, Boss, Đạn bắn).",
-        "Kiem_Duyet": "Nếu gói tin đến từ ZONE_ID khác với Map hiện tại -> Hủy ngay lập tức. Triệt tiêu hoàn toàn Bóng ma tàng hình và Kiếm ma bay xuyên vũ trụ."
+
+    "Economy_System": {
+      "Tien_Te_Kep": {
+        "Balance": "VNĐ/KNB - Tiền nạp thẻ, dùng để mua đồ VIP trên Lâm Tỳ Các (Shop Hệ Thống).",
+        "Game_Gold": "Linh Thạch - Tiền cày cuốc, rớt từ quái, dùng để giao dịch Chợ Đen, mua máu/mana."
       },
-      "Bao_Mat": "Kiểm tra check_session mỗi 10 giây. Đăng nhập 2 nơi sẽ tự động đá văng kết nối cũ."
+      "Global_Loot_Gacha": {
+        "Co_Che": "Máy chủ PHP (loot_monster.php) quyết định rớt đồ. Vàng rớt 100% (100-500 x Cấp Boss).",
+        "Ty_Le_Rot_Do": "Tính toán dựa trên Giá Trị (Price) của Shop và Cấp Độ (Level) của Boss. Đồ càng đắt tỷ lệ càng thấp. Cấp Boss càng cao nhân phẩm càng được Buff.",
+        "Hieu_Ung_Client": "Vàng và Vật phẩm rớt ra dưới dạng 3D (Khối cầu vàng, Ngọc Octahedron), sau 1 giây tự động bay vút hút vào người chơi."
+      },
+      "Auction_House_Cho_Den": {
+        "Chuc_Nang": "Giao dịch P2P qua SQL, an toàn tuyệt đối chống Dupe đồ.",
+        "Quy_Trinh": "Người bán Treo đồ (API sell_auction.php) -> Hàng vào Chợ, xóa khỏi túi. Người mua Mua đồ (API buy_auction.php) -> Trừ vàng người mua, nhét đồ vào túi -> Chuyển vàng cho người bán.",
+        "Thue_Giao_Dich": "Thu 5% Thuế Sàn vào không khí (Gold Sink) để chống lạm phát Linh Thạch."
+      }
     },
+
     "Game_Play_&_Ecosystem": {
+      "Khong_Gian_Gioi_Chi_Tui_Do": {
+        "UI_UX": "Phong cách Cyberpunk x Tu Tiên (inventory_ui.php). Bảng lưới 6x6, hỗ trợ phân trang (Tối thiểu 7 trang = 252 ô).",
+        "Hologram_3D": "Sử dụng engine 'window.inv3D' riêng biệt chiếu 3D trực tiếp món đồ xoay 360 độ trong UI. Tự động căn giữa, scale chuẩn theo BoundingBox.",
+        "Check_Phai": "Dùng biến 'window.FACTION_CODE' để đối chiếu với 'required_class' của đồ. Sai phái -> Tẩu hỏa nhập ma, cấm mặc.",
+        "Phan_Ra_Rac": "Bán đồ cũ trực tiếp không cần NPC (api/sell_item.php) thu về 10% giá trị gốc thành Linh Thạch."
+      },
       "Truyen_Tong_Tran": {
-        "Chuc_nang": "Cổng dịch chuyển nối liền các không gian.",
-        "Co_Che": "Khi chạm cổng -> Hiện lỗ giun Wormhole (Canvas 2D) -> Rút ống thở VRAM Map cũ -> Tải Map và SafeZone của Zone mới -> Chờ đúc xong BVH mới tắt lỗ giun."
-      },
-      "Vung_An_Toan_Safe_Zone": {
-        "Chuc_nang": "Biển Neon 3D + Vòng tròn đánh dấu.",
-        "Co_Che": "Khi đứng trong vòng, biến IS_IN_SAFE_ZONE = true -> Khóa toàn bộ các nút xuất chiêu (Q, E, R, F) và khóa mục tiêu chuột (Chống PK trộm)."
-      },
-      "Auto_AFK_Bot": {
-        "Co_Che": "Tự động khóa mục tiêu ưu tiên Boss còn sống. Giữ khoảng cách bắn tỉa (450m). Boss lại gần -> tự lùi, Boss chạy xa -> rượt theo. Spam phím kỹ năng ngẫu nhiên."
+        "Chuc_nang": "Cổng dịch chuyển nối liền các không gian kèm hiệu ứng Lỗ Giun (Wormhole 2D)."
       }
     },
+
     "Artificial_Intelligence_AI": {
       "Boss_Thong_Minh": {
-        "Radar_Dia_Hinh": "Sử dụng window.danhSachMap. Boss biết leo núi, chui hầm ngục và không bị rơi xuống vực.",
-        "Vat_Ly_Dong": "Boss tự động nhận diện Trọng lực (Phẳng/Cầu) theo Zone hiện tại để uốn nắn xương sống đi theo bề mặt cong.",
         "Hoi_Sinh": "Heartbeat 10s kiểm tra DB. Boss chết trên Client sẽ hồi sinh tự động nếu SQL báo máu > 0."
       },
       "Phantom_Fake_Players": {
-        "Chuc_nang": "NPC giả lập người chơi, đẻ ra mỗi 10 phút nếu vắng người.",
-        "Hunter_Mode": "50% tỷ lệ đẻ Sát thủ (Rượt đuổi và bắn đạn, PK với người chơi).",
-        "Passerby_Mode": "50% tỷ lệ đẻ Khách qua đường (Đẻ tít đằng xa, lướt ngang qua màn hình và biến mất để tạo cảm giác server đông đúc)."
+        "Chuc_nang": "NPC giả lập người chơi, đẻ ra mỗi 10 phút nếu vắng người (Hunter rượt bắn, Passerby bay lướt qua)."
       }
     },
-    "GM_Admin_Tools": {
-      "Mat_Than_F8": "Bảng soi FPS, Draw Calls, Băng thông LiveKit (Gửi/Nhận KB/s), và Cảnh báo thắt cổ chai CPU/GPU.",
-      "Ban_Tay_Sang_The": {
-        "Rai_Map": "Tải file .glb, chỉ định Trọng Lực (CAU/PHANG) ngay trên UI, lưu thẳng vào SQL.",
-        "De_Boss": "Thuật toán Xoắn Ốc Vàng (Golden Spiral) giúp đẻ hàng chục Boss không bị dính vào nhau. Hệ đánh xa đẻ vòng ngoài, Hệ cận chiến/Bầy đàn đẻ sát tâm.",
-        "Dat_Cong": "Chỉ định Zone_ID đích đến, ném thẳng tọa độ x,y,z vào SQL."
-      }
+
+    "Database_Structure": {
+      "auction_house": "Bảng lưu đồ trên chợ (id, seller_name, item_id, item_type, price_gold, status, created_at).",
+      "game_characters": "Cột quan trọng: 'game_gold' (Túi tiền Linh Thạch), 'zone_id' (Map đang đứng).",
+      "shop_items": "Cột quan trọng: 'required_class' (Khóa hệ phái, DEFAULT 'ALL'), 'price' (Dùng làm lõi tính tỷ lệ Gacha)."
     },
+
+    "New_API_Files_V3": [
+      "loot_monster.php (Xử lý Gacha tự động)",
+      "sell_item.php (Rã đồ lấy 10% vàng)",
+      "toggle_equip.php (Mặc và Tháo đồ)",
+      "sell_auction.php (Đẩy lên Chợ Đen)",
+      "buy_auction.php (Mua từ Chợ Đen)",
+      "get_auctions.php (Lấy dữ liệu Chợ Đen)"
+    ],
+
     "Deprecated_Removed": [
-      "XÓA: Radar quét cỏ cây/bụi rậm làm khựng nhân vật.",
-      "XÓA: Lỗi bay xuyên nóc khi spam phím Space.",
-      "XÓA: Lỗi đụng sườn núi bị kẹt chân không cho trượt lên.",
-      "XÓA: Rom.php tự động tắt màn hình Loading sau 2.5s.",
-      "XÓA: HUD Tốc độ báo ảo 648 km/h (Đã thay bằng biến tocDoHienTaiThucTe chuẩn xác)."
+      "XÓA BẢNG: `monster_drops` (Bỏ set tỷ lệ rớt đồ bằng tay).",
+      "XÓA API: `save_drop_rate.php` và giao diện Cài đặt rớt đồ (Thay bằng Lò Quay Nhân Phẩm Global).",
+      "XÓA LỖI: Ô túi đồ aspect-ratio 1/1 làm rớt Footer xuống đáy.",
+      "XÓA LỖI: Mô hình 3D trong túi đồ lệch tâm (Đã áp dụng công thức trừ ngược Center Scaled)."
     ]
   }
 }
-
