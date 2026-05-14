@@ -159,9 +159,14 @@ window.chonXemMonDo = function(item) {
         ? `<button class="btn-cyber" style="background:#e74c3c; color:white; box-shadow: 0 0 10px rgba(231,76,60,0.5);" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'unequip')">🔽 THÁO TRANG BỊ</button>`
         : `<button class="btn-cyber" style="background:#00e5ff; color:black; box-shadow: 0 0 10px rgba(0,229,255,0.5);" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'equip')">🔼 MẶC TRANG BỊ</button>`;
 
+    // Nút Bán Rác & Treo Chợ Đen
     let btnBanRac = isEq 
-        ? `<p style="color:#7f8c8d; font-size:11px; margin-top:0;">*Phải tháo đồ mới được rã vào lò</p>`
-        : `<button class="btn-cyber" style="background:transparent; border:1px solid #ff007f; color:#ff007f; margin-top:0; padding:8px;" onclick="banRacPhiShop(${item.inv_id})">♻️ PHÂN RÃ (+${parseInt((item.price || 5000) * 0.1)} Vàng)</button>`;
+        ? `<p style="color:#7f8c8d; font-size:11px; margin-top:0;">*Phải tháo đồ mới được rã/bán</p>`
+        : `<div style="display:flex; gap:10px; margin-top:10px;">
+               <button class="btn-cyber" style="background:transparent; border:1px solid #ff007f; color:#ff007f; margin:0; padding:8px; font-size:11px; flex:1;" onclick="banRacPhiShop(${item.inv_id})">♻️ RÃ (${parseInt((item.price || 5000) * 0.1)} Vàng)</button>
+               <button class="btn-cyber" style="background:transparent; border:1px solid #f1c40f; color:#f1c40f; margin:0; padding:8px; font-size:11px; flex:1;" onclick="treoBanChoden(${item.inv_id})">⚖️ TREO CHỢ</button>
+           </div>`;
+
 
     // 🌟 RÚT GỌN TÊN VÀ HỆ YÊU CẦU CHO ĐẸP VÀ VỪA VẶN
     detailBox.innerHTML = `
@@ -316,5 +321,35 @@ window.banRacPhiShop = function(invId) {
             if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} LINH THẠCH`, "gold");
             window.moTuiDoVIP(); 
         } else alert(data.msg);
+    });
+};
+
+
+
+
+
+
+
+
+// 🌟 THUẬT TOÁN TREO BÁN LÊN CHỢ ĐEN
+window.treoBanChoden = function(invId) {
+    let giaBan = prompt("⚖️ Nhập số Linh Thạch (Vàng) bạn muốn bán món này (Thuế chợ 5%):", "10000");
+    if (giaBan === null || giaBan.trim() === "") return;
+    
+    let parsedGia = parseInt(giaBan.replace(/\D/g, '')); // Lọc lấy số
+    if (isNaN(parsedGia) || parsedGia <= 0) { alert("❌ Giá không hợp lệ!"); return; }
+
+    if(!confirm(`Bạn sẽ treo bán món này với giá ${parsedGia.toLocaleString()} Vàng?\nThuế giao dịch 5% sẽ được trừ khi có người mua.`)) return;
+
+    let fd = new FormData();
+    fd.append('inv_id', invId);
+    fd.append('price_gold', parsedGia);
+
+    fetch('api/sell_auction.php', { method: 'POST', body: fd })
+    .then(res => res.json()).then(data => {
+        if(data.status === 'success') {
+            alert("✔️ Đã ném đồ lên Chợ Đen thành công!");
+            window.moTuiDoVIP(); // Cập nhật lại túi đồ
+        } else alert("❌ Lỗi: " + data.msg);
     });
 };
