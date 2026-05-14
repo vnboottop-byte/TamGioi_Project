@@ -507,7 +507,7 @@
                     window.taiHoacNhanBanAsset(urlVuKhi, (vuKhiGoc) => {
                         window.vuKhiPhapSu = vuKhiGoc;
                         
-                        // Thước đo chuẩn mực: Ép to đúng 1.2 mét
+                        // Thước đo chuẩn mực: Ép to đúng 0.3 mét
                         vuKhiGoc.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(vuKhiGoc);
                         const size = box.getSize(new THREE.Vector3());
@@ -564,7 +564,7 @@
                         window.xuongTayPhaiPS.getWorldPosition(diemDich);
                         let upV = window.playerModel.up.clone();
                         let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
-                        diemDich.add(fwd.multiplyScalar(0.3)).add(upV.multiplyScalar(0.2));
+                        diemDich.add(fwd.multiplyScalar(0.1)).add(upV.multiplyScalar(0.2));
                     } else {
                         window.playerModel.getWorldPosition(diemDich);
                         let upV = window.playerModel.up.clone();
