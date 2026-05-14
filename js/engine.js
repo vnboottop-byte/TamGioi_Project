@@ -3597,7 +3597,7 @@ window.botAutoTimer = setInterval(() => {
 
 
 // ==================================================
-// 💰 HIỆU ỨNG AUTO-LOOT (LINH THẠCH & GACHA VIP) - BẢN BAY MƯỢT
+// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH TINH THỂ VIP (BẢN V10 - FIX CHỮ & ĐÚC ĐẸP NHƯ ẢNH)
 // ==================================================
 window.taoHieuUngLootVang = function (viTriXac, levelBoss, tenBoss) {
     let fd = new FormData();
@@ -3607,33 +3607,65 @@ window.taoHieuUngLootVang = function (viTriXac, levelBoss, tenBoss) {
     fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
         .then(data => {
             if (data.gold) {
-                // 1. Nâng tọa độ lên khỏi mặt đất (Tâm ngực Boss)
+                // 🌟 NÂNG TỌA ĐỘ LÊN KHỎI MẶT ĐẤT (Tâm ngực Boss)
                 let tamXac = viTriXac.clone().add(new THREE.Vector3(0, 3, 0));
 
-                // 2. Đúc 5-8 viên Linh Thạch sáng chói
+                // 🌟 1. HIỆN CHỮ NGAY LẬP TỨC KHI BOSS CHẾT (ĐỂ SẾP BIẾT VÀNG ĐÃ RỚT)
+                // Sửa lỗi mất chữ: Hiện ngay tại xác Boss, không hiện tại người chơi nữa!
+                if (typeof window.taoChuNoiGacha === 'function') {
+                    let diemBaoChữ = tamXac.clone().add(new THREE.Vector3(0, 3, 0));
+                    window.taoChuNoiGacha(diemBaoChữ, `+${data.gold} Linh Thạch`, "#00ffcc");
+
+                    if (data.item_name) {
+                        setTimeout(() => {
+                            window.taoChuNoiGacha(diemBaoChữ.clone().add(new THREE.Vector3(0, 3, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
+                        }, 200);
+                    }
+                }
+
+                // 🌟 2. ĐÚC 5-8 CỤM TINH THỂ THẠCH ANH (DẸP BỎ CỤC CŨ, LÀM ĐẸP NHƯ ẢNH)
                 let soLuongLinhThach = 5 + Math.floor(Math.random() * 4);
                 let mangLinhThach = [];
 
                 for (let i = 0; i < soLuongLinhThach; i++) {
-                    let ngocGeo = new THREE.OctahedronGeometry(0.4);
-                    let ngocMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: true });
-                    let ngocObj = new THREE.Mesh(ngocGeo, ngocMat);
-                    ngocObj.position.copy(tamXac);
+                    // Tạo một Group để ghép nhiều viên đá nhỏ thành Cụm Tinh thể lởm chởm như ảnh
+                    let cumNgocGroup = new THREE.Group();
 
-                    // Lực văng ngẫu nhiên (Giảm lực nảy lên cao để nó lăn trên đất)
+                    // Chất liệu Tinh thể phát sáng (Glow cyan solid)
+                    let ngocMat = new THREE.MeshBasicMaterial({
+                        color: 0x00ffcc, // Xanh ngọc Cyan chuẩn ảnh
+                        wireframe: false, // TẮT WIREFRAME XẤU QUẮC
+                        transparent: true,
+                        opacity: 0.9,
+                        blending: THREE.AdditiveBlending // Hiệu ứng cộng sáng cho rực rỡ
+                    });
+
+                    // Ghép 3 viên đá khác kích thước thành cụm
+                    for (let j = 0; j < 3; j++) {
+                        let ngocGeo = new THREE.IcosahedronGeometry(0.2 + (Math.random() * 0.3));
+                        let viênNgoc = new THREE.Mesh(ngocGeo, ngocMat);
+                        // Sắp xếp lởm chởm ngẫu nhiên trong cụm
+                        viênNgoc.position.set((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5);
+                        viênNgoc.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+                        cumNgocGroup.add(viênNgoc);
+                    }
+
+                    cumNgocGroup.position.copy(tamXac);
+
+                    // Lực văng ngẫu nhiên tung tóe lả tả trên đất
                     let vecVang = new THREE.Vector3((Math.random() - 0.5) * 8, 4 + Math.random() * 4, (Math.random() - 0.5) * 8);
 
-                    window.scene.add(ngocObj);
-                    mangLinhThach.push({ mesh: ngocObj, vel: vecVang });
+                    window.scene.add(cumNgocGroup);
+                    mangLinhThach.push({ group: cumNgocGroup, vel: vecVang });
                 }
 
-                // 🎁 Nếu trúng Gacha đồ VIP
+                // 🎁 Nếu trúng Gacha đồ VIP (Cục này cho to và phát sáng rực rỡ hơn)
                 let itemObj = null;
                 if (data.item_name) {
                     let colorGacha = data.item_type === 'mount' ? 0xff00ff : 0xf1c40f;
                     itemObj = new THREE.Mesh(
                         new THREE.IcosahedronGeometry(1.5),
-                        new THREE.MeshBasicMaterial({ color: colorGacha, wireframe: false, transparent: true, opacity: 0.8 })
+                        new THREE.MeshBasicMaterial({ color: colorGacha, wireframe: false, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
                     );
                     itemObj.position.copy(tamXac).add(new THREE.Vector3(0, 2, 0));
                     window.scene.add(itemObj);
@@ -3646,56 +3678,48 @@ window.taoHieuUngLootVang = function (viTriXac, levelBoss, tenBoss) {
                     tick++;
 
                     if (phase === 1) {
-                        // 🚀 PHA 1: NỔ TUNG TÓE (Kéo dài lên 35 frame ~ 1 giây để nằm trên đất)
+                        // 🚀 PHA 1: NỔ TUNG TÓE (35 frame ~ 1 giây lăn lóc trên đất)
                         mangLinhThach.forEach(lt => {
-                            lt.mesh.position.add(lt.vel.clone().multiplyScalar(0.03));
+                            lt.group.position.add(lt.vel.clone().multiplyScalar(0.03));
 
                             // Chịu trọng lực rớt xuống đất
-                            if (lt.mesh.position.y > viTriXac.y + 0.5) {
+                            if (lt.group.position.y > viTriXac.y + 0.5) {
                                 lt.vel.y -= 0.3;
                             } else {
-                                // Chạm đất thì trượt lết chậm lại
+                                // Chạm đất thì trượt lết chậm lại và xoay chầm chậm khoe vẻ đẹp
                                 lt.vel.y = 0;
                                 lt.vel.x *= 0.85;
                                 lt.vel.z *= 0.85;
+                                lt.group.rotation.y += 0.05;
                             }
-                            lt.mesh.rotation.x += 0.1; lt.mesh.rotation.y += 0.1;
                         });
 
                         if (itemObj) { itemObj.position.y += 0.05; itemObj.rotation.y += 0.05; }
 
-                        // 🌟 MẤT KHOẢNG 1.2 GIÂY ĐỂ NGẮM TRƯỚC KHI BAY VÀO NGƯỜI
+                        // Nằm ngắm vẻ đẹp Linh Thạch trên đất 1 giây
                         if (tick > 35) { phase = 2; tick = 0; }
                     }
                     else if (phase === 2) {
-                        // 🧲 PHA 2: HÚT VÀO NGƯỜI (Tăng lên 40 frame = 1.2s bay tới)
+                        // 🧲 PHA 2: HÚT VÀO NGƯỜI TỪ TỪ ĐIỆU ĐÀ (40 frame = 1.2s bay tới)
                         let t = tick / 40;
 
                         if (t >= 1) {
                             clearInterval(loop);
-
                             // Xóa 3D
-                            mangLinhThach.forEach(lt => { if (typeof window.donRac3D === 'function') window.donRac3D(lt.mesh); });
+                            mangLinhThach.forEach(lt => { if (typeof window.donRac3D === 'function') window.donRac3D(lt.group); });
                             if (itemObj) window.donRac3D(itemObj);
-
-                            let diemBaoCao = window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0));
-                            window.taoChuNoiGacha(diemBaoCao, `+${data.gold} Linh Thạch`, "#00ffcc");
-
-                            if (data.item_name) {
-                                setTimeout(() => {
-                                    window.taoChuNoiGacha(diemBaoCao.clone().add(new THREE.Vector3(0, 2, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
-                                }, 200);
-                            }
                             return;
                         }
 
-                        // 🌟 THUẬT TOÁN HÚT MƯỢT MÀ TỪ TỪ (Nội suy 10% mỗi frame)
+                        // Thuật toán hút mượt mà điệu đà
                         if (window.playerModel) {
                             let diemHut = window.playerModel.position.clone().add(new THREE.Vector3(0, 2.5, 0));
 
                             mangLinhThach.forEach(lt => {
-                                lt.mesh.position.lerp(diemHut, 0.15); // Hút lượn vòng cung cực êm
-                                lt.mesh.rotation.x += 0.3;
+                                lt.group.position.lerp(diemHut, 0.15); // Hút lượn vòng cung cực êm
+                                lt.group.rotation.x += 0.2;
+                                // Thu nhỏ tinh thể khi vào gần cơ thể
+                                if (t > 0.5) lt.group.scale.multiplyScalar(0.95);
                             });
 
                             if (itemObj) {
