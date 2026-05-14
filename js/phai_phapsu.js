@@ -132,7 +132,11 @@
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-
+                // 🌟 CHỖ NÀY ĐỂ NẮN LẠI GÓC CỦA MODEL TRƯỚC KHI PHÓNG
+                // Nếu ném ra bị lệch, Sếp thử bật/tắt hoặc chỉnh thông số các dòng này:
+                v.rotation.x = Math.PI / 2; // Xoay 90 độ trục X
+                v.rotation.y = 0;
+                v.rotation.z = 0;
                 group.add(v);
             });
         }
