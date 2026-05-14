@@ -1134,6 +1134,11 @@ function playAnim(animName) {
     if (window.isTestingAnimation) return;
     /////////////////////////////////
     let upName = animName.toUpperCase();
+
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm mọi hành động đi/chạy/bay chen ngang
+    if (window.dangMuaChieu && !upName.includes('CHIEU') && !upName.includes('ATTACK') && upName !== 'DIE' && upName !== 'DEATH') {
+        return;
+    }
     
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
     let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName === 'TANCONG' || upName === 'SKILL';
