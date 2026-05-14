@@ -253,9 +253,9 @@ function hienThi3DTrongTui(url, loaiDo) {
         const center = bbox.getCenter(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-        // Vừa khít khung 300px
-        let scale = 18 / maxDim; 
-        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 22 / maxDim; 
+        // 🌟 ĐÃ GIẢM SCALE XUỐNG ĐỂ MODEL LỌT TRỌN VÀO KHUNG
+        let scale = 14 / maxDim; 
+        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 18 / maxDim; 
 
         model.scale.setScalar(scale);
         model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
@@ -265,7 +265,8 @@ function hienThi3DTrongTui(url, loaiDo) {
             model.rotation.z = Math.PI; 
             model.rotation.x = Math.PI / 4; 
         } else if (loaiDo === 'mount' || loaiDo === 'model') {
-            model.position.y -= 2; 
+            // 🌟 XÓA BỎ LỆNH ĐẨY MÔ HÌNH XUỐNG ĐÁY
+            model.position.y += 0; 
         }
 
         loading.style.display = 'none';
