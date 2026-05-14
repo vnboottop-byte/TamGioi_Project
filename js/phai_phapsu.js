@@ -322,33 +322,9 @@
     window.updateCombatPhapSu = function () {
      
 
-    if (!isVongPhepSetup && vongPhepModel && window.playerModel) {
-        // ... (Code cũ giữ nguyên) ...
-            window.vongPhepHoThe = vongPhepModel.clone();
-            window.vongPhepHoThe.traverse(c => {
-                if (c.isMesh && c.material) {
-                    c.material = c.material.clone(); c.material.color.setHex(0xffaa00);
-                    c.material.emissive = new THREE.Color(0xffaa00); c.material.emissiveIntensity = 1.0;
-                    c.material.transparent = true; c.material.blending = THREE.AdditiveBlending; c.material.depthWrite = false;
-                }
-            });
-            scene.add(window.vongPhepHoThe);
-            window.vongPhepHoThe.scale.set(0.1, 0.1, 0.1); 
-            window.gocXoayVongPhep = 0; window.gocTuXoayVongPhep = 0; isVongPhepSetup = true;
-        }
+        
 
-        if (isVongPhepSetup && window.vongPhepHoThe && window.playerModel) {
-            window.gocXoayVongPhep += 0.05; window.gocTuXoayVongPhep += 0.1;
-            const banKinh = 2.5; const pos = new THREE.Vector3(); window.playerModel.getWorldPosition(pos);
-            const up = window.playerModel.up.clone().normalize(); pos.add(up.clone().multiplyScalar(2.0));
-            const right = new THREE.Vector3().crossVectors(up, new THREE.Vector3(0, 0, 1)).normalize();
-            if (right.lengthSq() < 0.1) right.crossVectors(up, new THREE.Vector3(1, 0, 0)).normalize();
-            const fwd = new THREE.Vector3().crossVectors(right, up).normalize();
-            pos.add(right.multiplyScalar(Math.cos(window.gocXoayVongPhep) * banKinh)).add(fwd.multiplyScalar(Math.sin(window.gocXoayVongPhep) * banKinh));
-            window.vongPhepHoThe.position.copy(pos);
-            window.vongPhepHoThe.quaternion.copy(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), up));
-            window.vongPhepHoThe.rotateX(Math.PI / 2); window.vongPhepHoThe.rotateZ(window.gocTuXoayVongPhep);
-        }
+        
 
 
 
@@ -490,8 +466,7 @@
             khoiTao: function () {
                 const l = new THREE.GLTFLoader(); if (window.loaderSieuToc) l.setDRACOLoader(window.loaderSieuToc);
                 
-                // ⚙️ 1. Tải Vòng Phép Hộ Thể (Xoay sau lưng - GIỮ NGUYÊN CỦA CŨ ĐỂ KHÔNG BỊ MẤT)
-                l.load('uploads/anims/vong_phep.glb', (gltf) => { vongPhepModel = gltf.scene; });
+                
 
                 // 🔮 2. TẢI VŨ KHÍ CẦM TAY (Vòng phép nhỏ lơ lửng ở tay phải - WEAPON 1)
                 let urlVuKhi = window.WEAPON_URL || 'uploads/anims/vong_phep.glb'; 
