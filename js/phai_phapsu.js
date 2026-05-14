@@ -436,24 +436,26 @@
                 vfx.velocities[j].y *= 0.85;
                 vfx.velocities[j].z *= 0.85;
             }
+
+            // ... (đoạn trên giữ nguyên) ...
             vfx.pts.geometry.attributes.position.needsUpdate = true;
             
-            // Lửa phình to ra và mờ dần
-            vfx.pts.material.size += 0.8; 
+            // 🌟 1. GIẢM TỐC ĐỘ PHÌNH TO CỦA LỬA (Từ 0.8 xuống 0.4)
+            vfx.pts.material.size += 0.4; 
             vfx.pts.material.opacity = vfx.life / 60;
             
-            // 🌟 ĐỔI MÀU NHIỆT ĐỘ (TUYỆT KỸ CỦA RỒNG)
-            if (vfx.life < 40) vfx.pts.material.color.setHex(0xff3300); // Cam rực
+            if (vfx.life < 40) vfx.pts.material.color.setHex(0xff3300);
             if (vfx.life < 15) {
-                vfx.pts.material.color.setHex(0x111111); // Tắt lửa chuyển thành Khói Đen
-                vfx.pts.material.blending = THREE.NormalBlending; // Bỏ chế độ phát sáng đi
+                vfx.pts.material.color.setHex(0x111111);
+                vfx.pts.material.blending = THREE.NormalBlending;
             }
 
-            // 2. XỬ LÝ SÓNG XUNG KÍCH
+            // 🌟 2. GIẢM ĐỘ RỘNG CỦA SÓNG XUNG KÍCH MẶT ĐẤT (Từ 2.5 xuống 1.5)
             let tienTrinh = 1 - (vfx.life / 60);
-            let scaleSong = vfx.maxScale * (tienTrinh * 2.5); // Sóng nở rộng gấp 2.5 lần bán kính
+            let scaleSong = vfx.maxScale * (tienTrinh * 1.5); 
             vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
             vfx.songXungKich.material.opacity = (vfx.life / 60) * 0.6;
+            // ... (đoạn dọn rác bên dưới giữ nguyên) ...
 
             // 3. DỌN RÁC
             if (vfx.life <= 0) {
