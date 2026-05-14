@@ -3485,3 +3485,94 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 })();
+
+
+
+
+
+
+
+// =========================================================================
+// 👁️ MẮT THẦN X-QUANG: HIỂN THỊ TRỤC XYZ XUYÊN THẤU (DÀNH CHO ADMIN - BẤM END)
+// =========================================================================
+(function khoiTaoMatThan3Truc() {
+    let isMatThanAxisOn = false;
+    let matThanInterval = null;
+
+    function quetVaGanTruc() {
+        if (!window.scene) return;
+
+        window.scene.traverse((obj) => {
+            // 🛑 BỎ QUA: Nếu đã có trục rồi, hoặc là Mây/Trời, Hạt bụi, Lazer, Chữ nổi
+            if (obj.userData.isMatThanAxis || obj.userData.isCloud || obj.isSprite || obj.isLine || obj.isPoints || obj.isAxesHelper) return;
+
+            // 🌟 CHỈ GẮN VÀO: Các khối 3D (Mesh) HOẶC Xương gốc/Xương tay cầm vũ khí (Bone)
+            if (obj.isMesh || (obj.isBone && (obj.name.toUpperCase().includes('ROOT') || obj.name.toUpperCase().includes('HAND') || obj.name.toUpperCase().includes('WEAPON')))) {
+
+                // 📏 TÍNH TOÁN ĐỘ DÀI: Tự động co giãn từ 0.5m đến 2.5m để không thành "Ma Trận" rối rắm
+                let size = 1.5;
+                if (obj.geometry && obj.geometry.boundingSphere) {
+                    size = Math.min(2.5, Math.max(0.5, obj.geometry.boundingSphere.radius * 0.5));
+                } else if (obj.isBone) {
+                    size = 1.0; // Xương thì cho trục ngắn thôi
+                }
+
+                // 🎨 TẠO TRỤC XYZ (Đỏ = X, Xanh lá = Y, Xanh dương = Z)
+                let axes = new THREE.AxesHelper(size);
+
+                // 🌟 BÍ THUẬT XUYÊN THẤU X-RAY (Đâm xuyên mọi vật thể)
+                axes.material.depthTest = false;
+                axes.material.depthWrite = false;
+                axes.material.transparent = true;
+                axes.material.opacity = 0.8;
+                axes.renderOrder = 999999; // Luôn vẽ chồng lên trên cùng
+                axes.frustumCulled = false;
+
+                axes.userData.isMatThanAxis = true; // Dán tem để sau này dễ dọn rác
+                obj.add(axes);
+            }
+        });
+    }
+
+    function tatVaDonRacTruc() {
+        let trucCanXoa = [];
+        window.scene.traverse((obj) => {
+            if (obj.userData.isMatThanAxis) trucCanXoa.push(obj);
+        });
+
+        // Đem đi nghiền rác trả lại VRAM
+        trucCanXoa.forEach(truc => {
+            if (truc.parent) truc.parent.remove(truc);
+            if (truc.geometry) truc.geometry.dispose();
+            if (truc.material) truc.material.dispose();
+        });
+    }
+
+    // ⌨️ BẮT SỰ KIỆN PHÍM 'END'
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'End' || e.code === 'End') {
+            // LÁ CHẮN BẢO MẬT: CHỈ ADMIN MỚI ĐƯỢC DÙNG
+            let role = (window.ROLE || "").toLowerCase();
+            let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+            if (role !== "admin" && name !== "admin") return;
+
+            isMatThanAxisOn = !isMatThanAxisOn;
+
+            if (isMatThanAxisOn) {
+                quetVaGanTruc(); // Quét ngay lập tức
+
+                // Cứ 2s quét lại 1 lần để bọc trục cho Map/Quái vật vừa Load từ phương xa tới
+                matThanInterval = setInterval(quetVaGanTruc, 2000);
+
+                if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("👁️ MẮT THẦN (END): Đã bật X-Quang 3 Trục XYZ!", "#00ffcc");
+                console.log("👁️ [MẮT THẦN] Đã hiển thị trục XYZ toàn bản đồ.");
+            } else {
+                if (matThanInterval) clearInterval(matThanInterval);
+                tatVaDonRacTruc(); // Xóa sạch sẽ trục
+
+                if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("👁️ MẮT THẦN (END): Đã tắt!", "#ff4d4d");
+                console.log("👁️ [MẮT THẦN] Đã thu hồi trục XYZ.");
+            }
+        }
+    });
+})();
