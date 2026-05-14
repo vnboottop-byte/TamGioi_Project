@@ -569,11 +569,20 @@
                     posThuc.add(offsetRight).add(offsetForward);
                     window.truongHoThe.position.copy(posThuc);
 
-                    // Nắn trục trượng: Đầu trượng hướng lên, nghiêng nhẹ và xoay tít
+                    // 🌟 Nắn trục trượng: Bắt đầu từ tư thế đứng thẳng theo trọng lực (Mỏ neo)
                     const qTruong = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLen);
                     window.truongHoThe.quaternion.copy(qTruong);
-                    window.truongHoThe.rotateX(0.5); // Độ nghiêng của gậy
-                    window.truongHoThe.rotateY(window.gocTuXoayTruong); 
+
+                    // =====================================
+                    // 🔧 KHU VỰC CĂN CHỈNH GÓC GẬY CHO SẾP
+                    // =====================================
+                    // 1. CHỈNH ĐỘ NGHIÊNG (X và Z)
+                    window.truongHoThe.rotateX(0); // Nghiêng ra trước/sau (Sửa số 0.5 thành 0 nếu muốn thẳng đứng, hoặc 1.57 nếu muốn gậy nằm ngang)
+                    window.truongHoThe.rotateZ(0);   // Nghiêng sang trái/phải
+
+                    // 2. CHỈNH TRỤC TỰ XOAY (Quay tít thò lò)
+                    // Nếu thấy gậy xoay như cánh quạt, hãy đổi chữ rotateY thành rotateX hoặc rotateZ nhé!
+                    window.truongHoThe.rotateY(window.gocTuXoayTruong);
                 }
             } 
         };
