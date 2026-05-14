@@ -3575,3 +3575,39 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 })();
+
+
+
+// ==================================================
+// 💰 HIỆU ỨNG AUTO-LOOT (HÚT VÀNG TỪ XÁC BOSS)
+// ==================================================
+window.taoHieuUngLootVang = function(viTriXac, levelBoss) {
+    // 1. Gửi API gọi Server cộng tiền thật
+    let fd = new FormData();
+    fd.append('monster_level', levelBoss);
+    fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
+    .then(data => {
+        if(data.gold) {
+            // 2. Tạo hiệu ứng bay tiền
+            let lootGeo = new THREE.SphereGeometry(0.5, 8, 8);
+            let lootMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
+            let lootObj = new THREE.Mesh(lootGeo, lootMat);
+            lootObj.position.copy(viTriXac);
+            window.scene.add(lootObj);
+
+            let startT = Date.now();
+            let loop = setInterval(() => {
+                let t = (Date.now() - startT) / 1000; // Bay 1 giây
+                if (t >= 1) {
+                    clearInterval(loop);
+                    window.scene.remove(lootObj);
+                    if(typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold} Vàng`, "gold");
+                    return;
+                }
+                // Hút vút về phía Sếp
+                lootObj.position.lerp(window.playerModel.position, t);
+                lootObj.position.y += Math.sin(t * Math.PI) * 3; // Nảy vòng cung lên
+            }, 30);
+        }
+    }).catch(e => {});
+};
