@@ -221,7 +221,7 @@
 
 
     // ==========================================
-    // 🏹 TUNG CHIÊU MẠNG (ĐÃ CÂN BẰNG CHỈ SỐ & VẬT LÝ HÌNH CẦU)
+    // 🏹 TUNG CHIÊU MẠNG (PHI VÒNG PHÉP THỰC CHIẾN)
     // ==========================================
     window.tungComboPhapSu = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         if (!window.playerModel && !isRemote) return;
@@ -233,10 +233,12 @@
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim);
         }
 
-
-
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
+
+        // 🌟 LẤY ĐÚNG VŨ KHÍ ĐANG TRANG BỊ ĐỂ NÉM ĐI
+        let vuKhiThucTe = weaponUrl;
+        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
 
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
@@ -245,64 +247,66 @@
             upVector = viTriGoc.clone().normalize(); 
         } else {
             viTriGoc = new THREE.Vector3();
-            upVector = window.playerModel.up.clone().normalize(); // 🌟 Trục 'Lên Trời' động
+            upVector = window.playerModel.up.clone().normalize(); 
             
-            if (window.vongPhepHoThe) window.vongPhepHoThe.getWorldPosition(viTriGoc);
-            else { viTriGoc.copy(window.playerModel.position); viTriGoc.add(upVector.clone().multiplyScalar(5)); }
+            // Phóng ra từ tay nhân vật
+            if (window.vuKhiPhapSu) window.vuKhiPhapSu.getWorldPosition(viTriGoc);
+            else { viTriGoc.copy(window.playerModel.position); viTriGoc.add(upVector.clone().multiplyScalar(2)); }
             
             huongMat = new THREE.Vector3(); window.playerModel.getWorldDirection(huongMat); huongMat.normalize();
             
             let target = window.layMucTieuGanNhatPS(viTriGoc);
             mucTieu = target ? target.clone() : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
+
+            // Gửi lệnh lên mạng (Kèm theo Link Vũ Khí)
+            if (window.room && window.room.localParticipant) {
+                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                    type: 'TUNG_CHIEU', skillType: phim, className: 'PhapSu',
+                    origin: { x: viTriGoc.x, y: viTriGoc.y, z: viTriGoc.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z },
+                    weaponUrl: vuKhiThucTe
+                })), { reliable: true });
+            }
         }
 
-        // 🌟 BẢN VÁ: TẠO QUATERNION 'NẰM NGANG' SONG SONG SƯỜN ĐỒI
-        // Ta dùng trục Z làm pháp tuyến cho vòng phép (phía trước) và ép nó trùng với upVector.
-        // Điều này đảm bảo vòng phép nằm song song với mặt phẳng của map cầu.
         let qNamNgangMatDat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), upVector);
 
         if (phim === 'Q') {
-            const vongQ = taoVongPhepXin(0x00ffff, 8, true); 
+            // Ném 1 Vòng Phép dựng đứng như Bánh xe chạy tới (Aura Xanh)
+            const vongQ = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 5, true); 
             vongQ.position.copy(viTriGoc); 
             vongQ.up.copy(upVector); 
-            // 🛑 Chiêu Q vẫn là chiêu "dựng đứng" và lookAt mục tiêu để bắn đi (giữ nguyên)
             vongQ.lookAt(mucTieu); 
             scene.add(vongQ);
             kyNangPhapSu.push({ mesh: vongQ, type: 'Q', life: 150, targetPos: mucTieu, damage: dameGoc * 0.4, speed: 2.0, isRemote: isRemote, upV: upVector });
         }
         else if (phim === 'E') {
-            const vongE = taoVongPhepXin(0xff00ff, 20, false); 
-            // 🌟 NẰM NGANG VÀ GIÁNG TỪ TRÊN CAO 15M XUỐNG
+            // Giáng 1 Vòng Phép khổng lồ nằm ngang từ trên trời xuống (Aura Tím)
+            const vongE = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 15, false); 
             vongE.position.copy(mucTieu).add(upVector.clone().multiplyScalar(15));
-            // Ép tư thế nằm ngang song song mặt đất
             vongE.quaternion.copy(qNamNgangMatDat); 
             scene.add(vongE);
             kyNangPhapSu.push({ mesh: vongE, type: 'E', state: 'GIANG_XUONG', life: 250, targetPos: mucTieu, damage: dameGoc * 0.6, isRemote: isRemote, upV: upVector });
         }
         else if (phim === 'R') {
-            // 2 vòng 2 màu: Tren (Màu Tím của E), Duoi (Màu Xanh của Q)
-            const vongTren = taoVongPhepXin(0xff00ff, 25, false); // Màu Tím
-            const vongDuoi = taoVongPhepXin(0x00ffff, 25, false); // Màu Xanh
+            // Xoắn ốc 2 Vòng Phép Khổng Lồ
+            const vongTren = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 20, false);
+            const vongDuoi = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 20, false);
 
-            // 🌟 NẰM NGANG VÀ GỌI TỪ TRÊN/DƯỚI
             vongTren.position.copy(mucTieu).add(upVector.clone().multiplyScalar(15));
-            vongDuoi.position.copy(mucTieu).sub(upVector.clone().multiplyScalar(5)); // Dưới đất giáng lên
-            
-            // Ép cả 2 nằm ngang song song mặt đất
+            vongDuoi.position.copy(mucTieu).sub(upVector.clone().multiplyScalar(5)); 
             vongTren.quaternion.copy(qNamNgangMatDat); 
             vongDuoi.quaternion.copy(qNamNgangMatDat);
             
             scene.add(vongTren); scene.add(vongDuoi);
-            // swapCount: dùng để đếm số lần đổi vị trí 3 lần
             kyNangPhapSu.push({ mesh: vongTren, meshBot: vongDuoi, type: 'R', ticks: 0, swapCount: 0, life: 400, targetPos: mucTieu, damage: dameGoc * 0.5, isRemote: isRemote, upV: upVector });
         }
         else if (phim === 'F') {
+            // Khối Lập Phương Bát Quái
             const box = new THREE.Group(); 
             box.position.copy(mucTieu).add(upVector.clone().multiplyScalar(10));
             box.quaternion.copy(qNamNgangMatDat);
             
-            // 🌟 TĂNG KÍCH THƯỚC HỘP (s = 35) VÀ OFFSET ĐỂ KHÔNG LỒNG NHAU
-            const s = 35; const color = 0xff0000;
+            const s = 25; 
             const mat = [
                 { pos: [0, 0, s / 2], rot: [0, 0, 0] }, 
                 { pos: [0, 0, -s / 2], rot: [0, Math.PI, 0] }, 
@@ -312,7 +316,7 @@
                 { pos: [0, -s / 2, 0], rot: [Math.PI / 2, 0, 0] }
             ];
             mat.forEach(m => { 
-                let v = taoVongPhepXin(color, s, true); 
+                let v = taoVuKhiBayPS(vuKhiThucTe, 0xff0000, s, true); // Aura Đỏ
                 v.position.set(...m.pos); v.rotation.set(...m.rot); 
                 box.add(v); 
             });
