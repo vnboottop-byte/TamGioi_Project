@@ -156,7 +156,7 @@
 
 
     window.layMucTieuGanNhatPS = function(viTriGoc) {
-        let targetPos = null; let minD = 500; // Tầm nhìn Pháp Sư
+        let targetPos = null; let minD = 200; // Tầm nhìn Pháp Sư
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
