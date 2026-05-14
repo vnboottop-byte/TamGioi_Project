@@ -1130,6 +1130,9 @@ let idleTimer = null;
 // 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V42 - PHÂN LUỒNG TUYỆT ĐỐI NGƯỜI & THÚ)
 // ==========================================
 function playAnim(animName) {
+    // 🛑 CHỐT CHẶN F10: Nếu Admin đang Test Animation, cấm Engine đổi tư thế nhân vật!
+    if (window.isTestingAnimation) return;
+    /////////////////////////////////
     let upName = animName.toUpperCase();
     
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
