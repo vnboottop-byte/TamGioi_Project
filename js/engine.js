@@ -832,7 +832,7 @@ function tienHanhTaiNhanVat() {
             thuCuoi.add(thuCuoiGoc);
             
             // 🌟 2. ÉP CÂN CÁI LỒNG (Chứ không ép con thú trực tiếp)
-            chuanHoaKichThuoc(thuCuoi, 15); 
+           // chuanHoaKichThuoc(thuCuoi, 15); 
             
             thuCuoi.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
             scene.add(thuCuoi);
