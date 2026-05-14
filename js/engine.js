@@ -3578,36 +3578,73 @@ window.botAutoTimer = setInterval(() => {
 
 
 
+
+
+
 // ==================================================
-// 💰 HIỆU ỨNG AUTO-LOOT (HÚT VÀNG TỪ XÁC BOSS)
+// 💰 HIỆU ỨNG AUTO-LOOT (VÀNG VÀ VẬT PHẨM VIP)
 // ==================================================
-window.taoHieuUngLootVang = function(viTriXac, levelBoss) {
-    // 1. Gửi API gọi Server cộng tiền thật
+window.taoHieuUngLootVang = function (viTriXac, levelBoss, tenBoss) {
     let fd = new FormData();
     fd.append('monster_level', levelBoss);
-    fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
-    .then(data => {
-        if(data.gold) {
-            // 2. Tạo hiệu ứng bay tiền
-            let lootGeo = new THREE.SphereGeometry(0.5, 8, 8);
-            let lootMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
-            let lootObj = new THREE.Mesh(lootGeo, lootMat);
-            lootObj.position.copy(viTriXac);
-            window.scene.add(lootObj);
+    fd.append('monster_name', tenBoss || ''); // Gửi tên Boss lên Server
 
-            let startT = Date.now();
-            let loop = setInterval(() => {
-                let t = (Date.now() - startT) / 1000; // Bay 1 giây
-                if (t >= 1) {
-                    clearInterval(loop);
-                    window.scene.remove(lootObj);
-                    if(typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold} Vàng`, "gold");
-                    return;
+    fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
+        .then(data => {
+            if (data.gold) {
+                // Hiệu ứng bay Đồng Vàng
+                let lootGeo = new THREE.SphereGeometry(0.5, 8, 8);
+                let lootMat = new THREE.MeshBasicMaterial({ color: 0xf1c40f });
+                let lootObj = new THREE.Mesh(lootGeo, lootMat);
+                lootObj.position.copy(viTriXac);
+                window.scene.add(lootObj);
+
+                // Nếu rớt đồ, đẻ thêm 1 Viên Ngọc Phát Sáng (Gacha)
+                let itemObj = null;
+                if (data.item_name) {
+                    let colorGacha = data.item_type === 'mount' ? 0xff00ff : 0x00e5ff; // Tím (Thú), Xanh (Vũ khí)
+                    itemObj = new THREE.Mesh(
+                        new THREE.OctahedronGeometry(1.2),
+                        new THREE.MeshBasicMaterial({ color: colorGacha, wireframe: true })
+                    );
+                    itemObj.position.copy(viTriXac).add(new THREE.Vector3(2, 0, 2)); // Nằm cạnh đống vàng
+                    window.scene.add(itemObj);
                 }
-                // Hút vút về phía Sếp
-                lootObj.position.lerp(window.playerModel.position, t);
-                lootObj.position.y += Math.sin(t * Math.PI) * 3; // Nảy vòng cung lên
-            }, 30);
-        }
-    }).catch(e => {});
+
+                let startT = Date.now();
+                let loop = setInterval(() => {
+                    let t = (Date.now() - startT) / 1000;
+                    if (t >= 1) {
+                        clearInterval(loop);
+                        if (typeof window.donRac3D === 'function') {
+                            window.donRac3D(lootObj);
+                            if (itemObj) window.donRac3D(itemObj);
+                        }
+
+                        // Hiện chữ nhặt được Vàng
+                        if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} Vàng`, "gold");
+
+                        // 🌟 Hiện chữ nhặt được ĐỒ
+                        if (data.item_name && typeof window.taoSoSatThuong === 'function') {
+                            setTimeout(() => {
+                                window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ${data.item_name}`, "#00e5ff");
+                            }, 200);
+                        }
+                        return;
+                    }
+
+                    // Hút vút về phía Sếp
+                    if (window.playerModel) {
+                        lootObj.position.lerp(window.playerModel.position, t);
+                        lootObj.position.y += Math.sin(t * Math.PI) * 3;
+
+                        if (itemObj) {
+                            itemObj.position.lerp(window.playerModel.position, t);
+                            itemObj.position.y += Math.sin(t * Math.PI) * 5;
+                            itemObj.rotation.x += 0.2; itemObj.rotation.y += 0.2;
+                        }
+                    }
+                }, 30);
+            }
+        }).catch(e => { });
 };
