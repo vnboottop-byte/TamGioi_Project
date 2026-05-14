@@ -64,7 +64,7 @@
         const texture = (typeof window.layTextureLua === 'function') ? window.layTextureLua() : null;
         const mat = new THREE.PointsMaterial({ 
             color: mauHex || 0xffddaa, // Trắng vàng chói lóa
-            size: 20.0, // Hạt lửa siêu bự
+            size: 12.0, // 🌟 ĐÃ GIẢM TỪ 20 XUỐNG 12 ĐỂ BỚT CHOÁNG NGỢP
             map: texture, 
             transparent: true, 
             opacity: 1.0, 
