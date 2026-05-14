@@ -3239,3 +3239,181 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =========================================================================
+// 🎬 HỆ THỐNG SOI ANIMATION TỪNG MILIGIÂY (DÀNH CHO ADMIN - BẤM F10)
+// =========================================================================
+(function khoiTaoToolAnimationAdmin() {
+    let panel = document.createElement('div');
+    panel.id = 'admin-anim-tool';
+    panel.style.cssText = 'position:fixed; top:60px; left:20px; background:rgba(30, 0, 15, 0.9); color:#ffaa00; padding:15px; z-index:999999; border:2px solid #ffaa00; border-radius:8px; text-align:left; font-family:monospace; display:none; box-shadow: 0 0 15px #ffaa00; min-width: 350px;';
+    
+    panel.innerHTML = `
+        <h3 style="margin:0 0 15px 0; color:#fff; text-shadow: 0 0 5px #ffaa00; text-align:center;">🎬 GM ANIMATION INSPECTOR</h3>
+        
+        <div style="margin-bottom:15px;">
+            <b>📂 Chọn Animation:</b><br>
+            <select id="aat-select" style="width:100%; padding:5px; background:#111; color:#ffaa00; border:1px solid #ffaa00; margin-top:5px;"></select>
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <b>⏱️ Timeline (Kéo để xem):</b><br>
+            <input type="range" id="aat-slider" min="0" max="1" step="0.01" value="0" style="width:100%; margin-top:10px; cursor:pointer;">
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+            <button id="aat-prev-frame" style="padding:5px 10px; font-weight:bold; cursor:pointer;">⏪ -0.05s</button>
+            <button id="aat-play-pause" style="padding:5px 15px; font-weight:bold; cursor:pointer; background:#ffaa00; border:none; color:#000;">⏯️ PLAY / PAUSE</button>
+            <button id="aat-next-frame" style="padding:5px 10px; font-weight:bold; cursor:pointer;">+0.05s ⏩</button>
+        </div>
+
+        <div style="background:#000; padding:10px; border:1px solid #555; color:#00ffcc; font-weight:bold; font-size: 16px; text-align:center;" id="aat-output">
+            Thời gian: 0.000s / 0.000s
+        </div>
+        <div style="font-size:11px; color:#888; margin-top:5px; text-align:center;">Lưu ý: Bấm F10 để thoát và mở lại di chuyển.</div>
+    `;
+    document.body.appendChild(panel);
+
+    let isVisible = false;
+    let isPlaying = false;
+    let updateTimer = null;
+
+    // Các thành phần UI
+    const selectEl = document.getElementById('aat-select');
+    const sliderEl = document.getElementById('aat-slider');
+    const outputEl = document.getElementById('aat-output');
+    const playBtn = document.getElementById('aat-play-pause');
+
+    // Nạp danh sách Animation đang có trên người nhân vật
+    function loadDanhSachAnimation() {
+        selectEl.innerHTML = '';
+        if (window.animationsMap) {
+            for (let tenAnim in window.animationsMap) {
+                let opt = document.createElement('option');
+                opt.value = tenAnim; opt.innerText = tenAnim;
+                selectEl.appendChild(opt);
+            }
+        }
+    }
+
+    // Ép khung hình dừng lại ở số giây Sếp chọn
+    function epKhungHinh(thoiGian) {
+        if (!window.currentAction) return;
+        window.currentAction.paused = false; // Phải unpause để đổi time
+        window.currentAction.time = thoiGian;
+        if (typeof mixer !== 'undefined' && mixer) mixer.update(0); // Ép Engine render đúng frame đó
+        window.currentAction.paused = !isPlaying; 
+        
+        let total = window.currentAction.getClip().duration;
+        outputEl.innerText = `[ ${thoiGian.toFixed(3)}s / ${total.toFixed(3)}s ]`;
+    }
+
+    // Xử lý sự kiện kéo Slider
+    sliderEl.addEventListener('input', (e) => {
+        isPlaying = false;
+        if (window.currentAction) window.currentAction.paused = true;
+        epKhungHinh(parseFloat(e.target.value));
+    });
+
+    // Xử lý nút Play/Pause
+    playBtn.addEventListener('click', () => {
+        if (!window.currentAction) return;
+        isPlaying = !isPlaying;
+        window.currentAction.paused = !isPlaying;
+        window.currentAction.timeScale = isPlaying ? 1 : 0;
+    });
+
+    // Nhích từng Frame (+/- 0.05s)
+    document.getElementById('aat-prev-frame').addEventListener('click', () => {
+        isPlaying = false;
+        if (window.currentAction) {
+            let t = Math.max(0, window.currentAction.time - 0.05);
+            sliderEl.value = t; epKhungHinh(t);
+        }
+    });
+    document.getElementById('aat-next-frame').addEventListener('click', () => {
+        isPlaying = false;
+        if (window.currentAction) {
+            let total = window.currentAction.getClip().duration;
+            let t = Math.min(total, window.currentAction.time + 0.05);
+            sliderEl.value = t; epKhungHinh(t);
+        }
+    });
+
+    // Xử lý khi chọn Animation khác trong Menu
+    selectEl.addEventListener('change', (e) => {
+        let tenAnim = e.target.value;
+        if (window.animationsMap && window.animationsMap[tenAnim]) {
+            if (window.currentAction) window.currentAction.fadeOut(0.1);
+            window.currentAction = window.animationsMap[tenAnim];
+            window.currentAction.reset().fadeIn(0.1).play();
+            
+            window.currentAction.timeScale = 1;
+            isPlaying = true; window.currentAction.paused = false;
+
+            let total = window.currentAction.getClip().duration;
+            sliderEl.max = total;
+            sliderEl.value = 0;
+        }
+    });
+
+    // Vòng lặp cập nhật Slider khi đang Play
+    setInterval(() => {
+        if (isVisible && isPlaying && window.currentAction) {
+            sliderEl.value = window.currentAction.time;
+            let total = window.currentAction.getClip().duration;
+            outputEl.innerText = `[ ${window.currentAction.time.toFixed(3)}s / ${total.toFixed(3)}s ]`;
+            if (window.currentAction.time >= total - 0.01) {
+                // Tự động lặp lại
+                window.currentAction.time = 0;
+            }
+        }
+    }, 30);
+
+    // ⌨️ PHÍM TẮT F10 (CHỈ DÀNH CHO ADMIN)
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'F10') {
+            let role = (window.ROLE || "").toLowerCase();
+            let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+            if (role !== "admin" && name !== "admin") return;
+
+            isVisible = !isVisible;
+            panel.style.display = isVisible ? 'block' : 'none';
+            
+            if(isVisible) {
+                console.log("🎬 Đã bật GM Animation Inspector!");
+                loadDanhSachAnimation();
+                // Khóa hệ thống tự chạy Animation của Engine
+                window.isTestingAnimation = true; 
+                
+                // Mặc định chọn cái đầu tiên
+                if (selectEl.options.length > 0) {
+                    selectEl.value = selectEl.options[0].value;
+                    selectEl.dispatchEvent(new Event('change'));
+                }
+            } else {
+                // Tắt tool thì mở khóa cho Engine hoạt động lại bình thường
+                window.isTestingAnimation = false;
+                if (window.currentAction) {
+                    window.currentAction.paused = false;
+                    window.currentAction.timeScale = 1;
+                }
+                if (typeof playIdle === 'function') playIdle(); // Trả về tư thế đứng im
+            }
+        }
+    });
+})();
