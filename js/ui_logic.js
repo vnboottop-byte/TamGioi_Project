@@ -65,15 +65,18 @@ window.congKinhNghiem = function (soExp, targetLevel = 1) {
 // Biến lưu trữ
 window.khoDoData = [];
 window.trangHienTai = 1;
-const O_MOI_TRANG = 30;
+const O_MOI_TRANG = 36; // 🌟 TĂNG LÊN 36 Ô (6x6)
+
+// 🌟 BỘ MÁY CHIẾU 3D RIÊNG CHO TÚI ĐỒ
+window.inv3D = { scene: null, cam: null, renderer: null, model: null, mixer: null, clock: new THREE.Clock(), reqId: null };
 
 // Bắt sự kiện phím B để mở
 document.addEventListener('keydown', (e) => { 
     if ((e.key || "").toLowerCase() === 'b' && document.activeElement === document.body) {
         let modal = document.getElementById('inventoryModal');
         if (!modal) return;
-        if (modal.style.display === 'none' || modal.style.display === '') moTuiDoVIP();
-        else dongTuiDoVIP();
+        if (modal.style.display === 'none' || modal.style.display === '') window.moTuiDoVIP();
+        else window.dongTuiDoVIP();
     }
 });
 
@@ -81,7 +84,7 @@ document.addEventListener('keydown', (e) => {
 window.moTuiDoVIP = function() {
     const modal = document.getElementById('inventoryModal');
     if (modal) modal.style.display = 'flex';
-    document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px;">Đang quét Không gian...</div>';
+    document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px; font-weight:bold;">Đang quét Không gian Giới Chỉ...</div>';
     
     fetch('api/get_inventory.php')
     .then(res => res.json())
@@ -92,7 +95,15 @@ window.moTuiDoVIP = function() {
             document.getElementById('invCountUI').innerText = window.khoDoData.length;
             window.trangHienTai = 1;
             renderTrangTuiDo();
-            document.getElementById('invDetailContent').innerHTML = '<i style="font-size:40px; color:#555;" class="fas fa-crosshairs"></i><br><br>Chọn vật phẩm để đồng bộ dữ liệu...';
+            
+            // Xóa model cũ khi vừa mở túi
+            if (window.inv3D.model && window.inv3D.scene) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(window.inv3D.model);
+                else window.inv3D.scene.remove(window.inv3D.model);
+                window.inv3D.model = null;
+            }
+
+            document.getElementById('invDetailContent').innerHTML = '<i style="font-size:40px; color:#555;" class="fas fa-crosshairs"></i><br><br>Chọn vật phẩm để phân tích dữ liệu...';
         }
     });
 };
@@ -108,10 +119,8 @@ function renderTrangTuiDo() {
     grid.innerHTML = ''; pagination.innerHTML = '';
     
     let tongSoTrang = Math.ceil(Math.max(1, window.khoDoData.length) / O_MOI_TRANG);
-    // Luôn giữ tối đa 7 trang
-    if (tongSoTrang < 7) tongSoTrang = 7; 
+    if (tongSoTrang < 7) tongSoTrang = 7; // Mặc định hiện 7 trang cho ngầu
 
-    // Render 30 ô
     let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
     let endIdx = startIdx + O_MOI_TRANG;
 
@@ -123,17 +132,15 @@ function renderTrangTuiDo() {
             let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';
             
             grid.innerHTML += `
-                <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item)})' title="${item.name}">
-                    <span style="font-size:24px;">${iconText}</span>
+                <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
+                    <span style="font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">${iconText}</span>
                     ${badge}
                 </div>`;
         } else {
-            // Ô trống
             grid.innerHTML += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
         }
     }
 
-    // Vẽ nút phân trang
     for(let p = 1; p <= tongSoTrang; p++) {
         let activeCls = (p === window.trangHienTai) ? 'active' : '';
         pagination.innerHTML += `<button class="inv-page-btn ${activeCls}" onclick="chuyenTrangTuiDo(${p})">${p}</button>`;
@@ -146,41 +153,131 @@ window.chuyenTrangTuiDo = function(p) { window.trangHienTai = p; renderTrangTuiD
 window.chonXemMonDo = function(item) {
     let detailBox = document.getElementById('invDetailContent');
     let isEq = parseInt(item.is_equipped) === 1;
-    let iconText = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
     
     // Nút Mặc / Tháo
     let btnHanhDong = isEq 
-        ? `<button class="btn-cyber" style="background:#e74c3c; color:white;" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'unequip')">🔽 THÁO TRANG BỊ</button>`
-        : `<button class="btn-cyber" style="background:#00e5ff; color:black;" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'equip')">🔼 MẶC TRANG BỊ</button>`;
+        ? `<button class="btn-cyber" style="background:#e74c3c; color:white; box-shadow: 0 0 10px rgba(231,76,60,0.5);" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'unequip')">🔽 THÁO TRANG BỊ</button>`
+        : `<button class="btn-cyber" style="background:#00e5ff; color:black; box-shadow: 0 0 10px rgba(0,229,255,0.5);" onclick="thucHienHanhDongTrangBi(${item.inv_id}, 'equip')">🔼 MẶC TRANG BỊ</button>`;
 
-    // Nút Bán Rác
     let btnBanRac = isEq 
-        ? `<p style="color:#7f8c8d; font-size:12px; margin-top:5px;">*Phải tháo đồ mới được bán</p>`
-        : `<button class="btn-cyber" style="background:transparent; border:1px solid #ff007f; color:#ff007f; margin-top:5px;" onclick="banRacPhiShop(${item.inv_id})">♻️ PHI SHOP LẤY VÀNG</button>`;
+        ? `<p style="color:#7f8c8d; font-size:11px; margin-top:0;">*Phải tháo đồ mới được rã vào lò</p>`
+        : `<button class="btn-cyber" style="background:transparent; border:1px solid #ff007f; color:#ff007f; margin-top:0; padding:8px;" onclick="banRacPhiShop(${item.inv_id})">♻️ PHÂN RÃ (+${parseInt((item.price || 5000) * 0.1)} Vàng)</button>`;
 
+    // 🌟 RÚT GỌN TÊN VÀ HỆ YÊU CẦU CHO ĐẸP VÀ VỪA VẶN
     detailBox.innerHTML = `
-        <div style="font-size:60px; margin-bottom:10px; text-shadow:0 0 15px ${isEq ? 'gold' : '#00e5ff'};">${iconText}</div>
-        <h3 style="color:${isEq ? 'gold' : '#00e5ff'}; margin:0 0 5px 0; text-transform:uppercase;">${item.name}</h3>
-        <p style="color:#ff007f; font-weight:bold; margin:0 0 15px 0; font-size:12px;">Hệ Yêu Cầu: ${item.required_class === 'ALL' ? 'Dùng Chung' : item.required_class}</p>
+        <h3 style="color:${isEq ? 'gold' : '#00e5ff'}; margin:0 0 5px 0; text-transform:uppercase; font-size: 16px; text-shadow: 0 0 5px ${isEq ? 'gold' : 'cyan'};">${item.name}</h3>
+        <p style="color:#ff007f; font-weight:bold; margin:0 0 10px 0; font-size:11px;">Hệ: ${item.required_class === 'ALL' ? 'Dùng Chung' : item.required_class}</p>
         
-        <div style="background:rgba(0,0,0,0.5); padding:10px; border-radius:5px; text-align:left; font-size:13px; margin-bottom:20px; border:1px solid #333;">
-            <div style="margin-bottom:5px;">⚔️ Tấn Công: <span style="color:#ff3333; float:right;">+${item.bonus_damage || 0}</span></div>
-            <div style="margin-bottom:5px;">❤️ Sinh Lực: <span style="color:#2ecc71; float:right;">+${item.bonus_hp || 0}</span></div>
-            <div>⚡ Giá Trị: <span style="color:gold; float:right;">~${parseInt((item.price || 5000) * 0.1)} Vàng</span></div>
+        <div style="background:rgba(0,0,0,0.5); padding:8px 12px; border-radius:5px; text-align:left; font-size:12px; margin-bottom:15px; border:1px solid #333; color: #ccc;">
+            <div style="margin-bottom:3px;">⚔️ Tấn Công: <span style="color:#ff3333; float:right; font-weight:bold;">+${item.bonus_damage || 0}</span></div>
+            <div>❤️ Sinh Lực: <span style="color:#2ecc71; float:right; font-weight:bold;">+${item.bonus_hp || 0}</span></div>
         </div>
         
         ${btnHanhDong}
         ${btnBanRac}
     `;
+
+    // 🌟 KÍCH HOẠT MÁY CHIẾU 3D
+    hienThi3DTrongTui(item.model_url, item.item_type);
 };
+
+// 🌟 BỘ MÁY ĐÚC 3D TRONG TÚI ĐỒ (CYBERPUNK HOLOGRAM)
+function hienThi3DTrongTui(url, loaiDo) {
+    let box = document.getElementById('inv3DViewer');
+    let loading = document.getElementById('inv3DLoading');
+    if (!box) return;
+
+    // 1. Khởi tạo sân khấu 1 lần duy nhất
+    if (!window.inv3D.renderer) {
+        window.inv3D.scene = new THREE.Scene();
+        window.inv3D.cam = new THREE.PerspectiveCamera(45, box.clientWidth / box.clientHeight, 0.1, 1000);
+        window.inv3D.cam.position.set(0, 5, 30);
+
+        window.inv3D.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        window.inv3D.renderer.setSize(box.clientWidth, box.clientHeight);
+        
+        // Bơm ánh sáng PBR Kim loại
+        window.inv3D.renderer.outputEncoding = THREE.sRGBEncoding;
+        window.inv3D.renderer.toneMapping = THREE.LinearToneMapping;
+        window.inv3D.renderer.toneMappingExposure = 1.0;
+
+        if (typeof THREE.RoomEnvironment !== 'undefined') {
+            const pmremGenerator = new THREE.PMREMGenerator(window.inv3D.renderer);
+            window.inv3D.scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        }
+
+        // Vòng lặp xoay tự động
+        function animateInv() {
+            window.inv3D.reqId = requestAnimationFrame(animateInv);
+            let delta = window.inv3D.clock.getDelta();
+            if (window.inv3D.mixer) window.inv3D.mixer.update(delta);
+            if (window.inv3D.model) window.inv3D.model.rotation.y += 0.015; // Xoay chầm chậm khoe hàng
+            window.inv3D.renderer.render(window.inv3D.scene, window.inv3D.cam);
+        }
+        animateInv();
+    }
+
+    // Nhét Canvas vào Ô Đen (Giữ lại loading)
+    box.innerHTML = '';
+    box.appendChild(window.inv3D.renderer.domElement);
+    box.appendChild(loading);
+    loading.style.display = 'block';
+
+    // 2. Dọn rác Model Cũ
+    if (window.inv3D.model) {
+        if (typeof window.donRac3D === 'function') window.donRac3D(window.inv3D.model);
+        else window.inv3D.scene.remove(window.inv3D.model);
+        window.inv3D.model = null;
+    }
+    if (window.inv3D.mixer) { window.inv3D.mixer.stopAllAction(); window.inv3D.mixer = null; }
+
+    if (!url) { loading.style.display = 'none'; return; }
+
+    // 3. Tải Model Mới bằng Ống Hút Siêu Tốc
+    const loader = window.loaderSieuToc || new THREE.GLTFLoader();
+    loader.load(url, (gltf) => {
+        let model = gltf.scene;
+        window.inv3D.model = model;
+        window.inv3D.scene.add(model);
+
+        // Kích hoạt Animation thở/bay
+        if (gltf.animations && gltf.animations.length > 0) {
+            window.inv3D.mixer = new THREE.AnimationMixer(model);
+            window.inv3D.mixer.clipAction(gltf.animations[0]).play();
+        }
+
+        // 🌟 BỘ THƯỚC ĐO THẦN THÁNH: Ép vừa khít khung màn hình
+        model.updateMatrixWorld(true);
+        const bbox = new THREE.Box3().setFromObject(model);
+        const size = bbox.getSize(new THREE.Vector3());
+        const center = bbox.getCenter(new THREE.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+
+        // Vừa khít khung 300px
+        let scale = 18 / maxDim; 
+        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 22 / maxDim; 
+
+        model.scale.setScalar(scale);
+        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+
+        // Tạo dáng 3D góc ngầu nhất
+        if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
+            model.rotation.z = Math.PI; 
+            model.rotation.x = Math.PI / 4; 
+        } else if (loaiDo === 'mount' || loaiDo === 'model') {
+            model.position.y -= 2; 
+        }
+
+        loading.style.display = 'none';
+    });
+}
 
 // 🌟 THUẬT TOÁN KIỂM TRA PHÁI VÀ THAY ĐỒ
 window.thucHienHanhDongTrangBi = function(invId, action) {
     if (action === 'equip') {
-        // Kiểm tra xem Sếp có mặc lộn đồ môn phái khác không
         let item = window.khoDoData.find(i => i.inv_id == invId);
         if (item && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
-            alert(`⚠️ Tẩu hỏa nhập ma! Món này chỉ dành cho hệ [${item.required_class}]!`);
+            alert(`⚠️ Tẩu hỏa nhập ma! Pháp bảo này chứa sức mạnh của hệ [${item.required_class}], cơ thể bạn không chịu nổi!`);
             return;
         }
     }
@@ -191,15 +288,14 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         body: JSON.stringify({ inv_id: invId, action: action })
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
-            // Thay đồ xong thì F5 game để nạp lại nhân vật
             location.reload();
         } else alert("Lỗi thay đồ!");
     });
 };
 
-// 🌟 THUẬT TOÁN BÁN RÁC
+// 🌟 THUẬT TOÁN BÁN RÁC (PHÂN RÃ)
 window.banRacPhiShop = function(invId) {
-    if(!confirm("Bạn có chắc muốn vứt món này vào tiệm cầm đồ không?")) return;
+    if(!confirm("♻️ Bạn có chắc muốn ném món này vào Lò Bát Quái để phân rã lấy Linh thạch không? Mất vĩnh viễn đó nha!")) return;
     
     fetch('api/sell_item.php', {
         method: 'POST',
@@ -207,9 +303,8 @@ window.banRacPhiShop = function(invId) {
         body: JSON.stringify({ inv_id: invId })
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
-            // Hiển thị chữ Vàng bay lên đầu
-            if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} VÀNG`, "gold");
-            window.moTuiDoVIP(); // Load lại túi đồ
+            if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} LINH THẠCH`, "gold");
+            window.moTuiDoVIP(); 
         } else alert(data.msg);
     });
 };
