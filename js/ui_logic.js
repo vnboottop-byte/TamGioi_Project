@@ -173,17 +173,18 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
     }
 };
 
-// 📸 NHIẾP ẢNH GIA XỬ LÝ HÀNG ĐỢI TỪNG NGƯỜI MỘT
-window.xuLyHangDoiChupAnh = function() {
-    // Đang bận hoặc hết khách thì nghỉ
-    if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
-    window.thumb3D.isProcessing = true; // Khóa cửa Studio
 
-    let task = window.thumb3D.queue.shift(); // Mời người đầu tiên vào
+
+
+// 📸 NHIẾP ẢNH GIA XỬ LÝ HÀNG ĐỢI TỪNG NGƯỜI MỘT (FIX CĂN GIỮA TUYỆT ĐỐI)
+window.xuLyHangDoiChupAnh = function() {
+    if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
+    window.thumb3D.isProcessing = true;
+
+    let task = window.thumb3D.queue.shift();
     let url = task.url;
     let loaiDo = task.loaiDo;
 
-    // Xây Studio nếu chưa có
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
@@ -203,36 +204,44 @@ window.xuLyHangDoiChupAnh = function() {
 
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(url, (model) => {
-            window.thumb3D.scene.add(model);
+            // 🌟 TẠO HỘP PIVOT ĐỂ QUAY QUANH TÂM ẢNH
+            let pivot = new THREE.Group();
+            window.thumb3D.scene.add(pivot);
+            pivot.add(model);
 
             model.updateMatrixWorld(true);
             const bbox = new THREE.Box3().setFromObject(model);
             const size = bbox.getSize(new THREE.Vector3());
-            const center = bbox.getCenter(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
             let scale = 8.5 / maxDim; 
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 11.5 / maxDim; 
-            
             model.scale.setScalar(scale);
-            model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
+            // 🌟 CĂN TÂM CHUẨN XÁC SAU KHI THU PHÓNG
+            model.updateMatrixWorld(true);
+            const bboxScaled = new THREE.Box3().setFromObject(model);
+            const centerScaled = bboxScaled.getCenter(new THREE.Vector3());
+
+            // Kéo lùi mô hình về để "Trọng tâm Bounding Box" lọt đúng vào lõi (0,0,0) của Pivot
+            model.position.x -= centerScaled.x;
+            model.position.y -= centerScaled.y;
+            model.position.z -= centerScaled.z;
+
+            // 🌟 CHÌA KHÓA: BÂY GIỜ TA CHỈ ĐƯỢC XOAY CÁI HỘP PIVOT CHỨ KHÔNG XOAY MODEL
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
-                model.rotation.set(Math.PI/4, Math.PI/4, 0); 
+                pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
             } else if (loaiDo === 'mount' || loaiDo === 'model') {
-                model.rotation.set(0, -Math.PI/6, 0); 
+                pivot.rotation.set(0, -Math.PI / 6, 0); 
             }
 
-            // 🌟 CHÌA KHÓA TRỊ BỆNH: CHỜ 100ms ĐỂ CARD MÀN HÌNH QUÉT MÀU XONG MỚI CHỤP!
             setTimeout(() => {
                 window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
                 let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
                 
-                // Trả ảnh ra quầy lễ tân
                 window.THUMBNAIL_CACHE[url] = dataURL;
-                window.thumb3D.scene.remove(model);
+                window.thumb3D.scene.remove(pivot); // Xóa cái hộp đi là sạch sẽ
                 
-                // Mở cửa mời khách tiếp theo vào
                 window.thumb3D.isProcessing = false;
                 window.xuLyHangDoiChupAnh();
             }, 100); 
@@ -243,6 +252,9 @@ window.xuLyHangDoiChupAnh = function() {
         window.xuLyHangDoiChupAnh();
     }
 };
+
+
+
 
 // Hàm Vẽ từng trang (Giữ nguyên DOM an toàn)
 function renderTrangTuiDo() {
