@@ -3594,9 +3594,35 @@ window.botAutoTimer = setInterval(() => {
 
 
 
+// ==================================================
+// 🖋️ HÀM TẠO CHỮ NỔI GACHA (ĐỘC LẬP - MIỄN NHIỄM VỚI LỖI -NaN)
+// ==================================================
+window.taoChuNoiGacha = function (pos3D, text, color) {
+    const div = document.createElement('div');
+    div.innerText = text;
+    // Style Chữ Cyberpunk rực rỡ, không có dấu trừ và không làm tròn số
+    div.style.cssText = `position:absolute; color:${color}; font-weight:900; font-size:26px; text-shadow:0px 0px 10px ${color}, 2px 2px 0px #000; pointer-events:none; z-index:99999; text-transform:uppercase;`;
+    document.body.appendChild(div);
+    
+    let life = 60; let offsetY = 0;
+    let loop = setInterval(() => {
+        life--; offsetY += 0.05;
+        let p = pos3D.clone(); p.y += offsetY; p.project(window.camera);
+        
+        if (p.z < 1) {
+            div.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`;
+            div.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+            div.style.opacity = life / 60;
+        } else { 
+            div.style.display = 'none'; 
+        }
+        
+        if (life <= 0) { clearInterval(loop); div.remove(); }
+    }, 30);
+};
 
 // ==================================================
-// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V13 - FIX LỖI TÀNG HÌNH & KÍCH THƯỚC)
+// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V14 - FULL CHỮ VÀ VŨ KHÍ 3D KHỔNG LỒ)
 // ==================================================
 window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
     let fd = new FormData();
@@ -3653,7 +3679,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                         const center = bbox.getCenter(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
                         
-                        // 🌟 ÉP KÍCH THƯỚC CHUẨN CỐ ĐỊNH Ở ĐÂY (VD: To 6 mét khổng lồ rực rỡ!)
+                        // 🌟 ÉP KÍCH THƯỚC CHUẨN CỐ ĐỊNH: Đồ vật to đùng 6 mét
                         let scale = 6.0 / maxDim; 
                         model.scale.setScalar(scale);
                         model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
@@ -3674,7 +3700,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                 tick++;
                 
                 if (phase === 1) {
-                    // 🚀 PHA 1: NỔ TUNG TÓE (Tăng lên 60 frame = 2 giây để Sếp ngắm đồ 3D)
+                    // 🚀 PHA 1: NỔ TUNG TÓE (Nằm đất 2 giây để ngắm Model 3D tải về)
                     mangLinhThach.forEach(lt => {
                         lt.group.position.add(lt.vel.clone().multiplyScalar(0.03));
                         if (lt.group.position.y > viTriXac.y + 0.5) {
@@ -3688,7 +3714,6 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                     });
                     
                     if (itemHolder) { 
-                        // Lơ lửng bồng bềnh
                         itemHolder.position.y += Math.sin(tick * 0.1) * 0.02;
                         if (itemHolder.pivot) itemHolder.pivot.rotation.y += 0.05;
                     }
@@ -3696,7 +3721,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                     if (tick > 60) { phase = 2; tick = 0; } 
                 } 
                 else if (phase === 2) {
-                    // 🧲 PHA 2: HÚT VÀO NGƯỜI (40 frame = 1.2s)
+                    // 🧲 PHA 2: HÚT VÀO NGƯỜI (1.2s)
                     let t = tick / 40; 
                     
                     if (t >= 1) {
@@ -3707,6 +3732,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                             else window.scene.remove(itemHolder);
                         }
                         
+                        // 🌟 TẠI ĐÂY: GỌI HÀM HIỆN CHỮ GACHA!
                         if (window.playerModel && typeof window.taoChuNoiGacha === 'function') {
                             window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} LINH THẠCH`, "#00ffcc");
                             if (data.item_name) {
@@ -3724,14 +3750,13 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                         mangLinhThach.forEach(lt => { 
                             lt.group.position.lerp(diemHut, 0.15); 
                             lt.group.rotation.x += 0.2;
-                            // 🌟 THUẬT TOÁN TEO NHỎ CHUẨN XÁC: Teo nhỏ dần về 0 khi bay gần tới ngực
                             lt.group.scale.setScalar(1 - t);
                         });
                         
                         if (itemHolder) {
                             itemHolder.position.lerp(diemHut, 0.1); 
                             if (itemHolder.pivot) itemHolder.pivot.rotation.y += 0.3;
-                            // 🌟 THUẬT TOÁN TEO NHỎ CHUẨN XÁC: Không phụ thuộc vào thời gian load mạng!
+                            // 🌟 TEO NHỎ CHUẨN XÁC KHI BAY VÀO NGƯỜI
                             itemHolder.scale.setScalar(1 - t); 
                         }
                     }
