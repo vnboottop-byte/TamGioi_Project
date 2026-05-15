@@ -231,22 +231,40 @@ function renderTrangTuiDo() {
     let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
     let endIdx = startIdx + O_MOI_TRANG;
 
+
+
+
     for (let i = startIdx; i < endIdx; i++) {
         let item = window.khoDoData[i];
         if (item) {
-            let iconText = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
             let isEq = parseInt(item.is_equipped) === 1 ? 'equipped' : '';
             let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';
             
+            // Emoji dự phòng nếu lỗi mạng
+            let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
+            let imgId = 'thumb_inv_' + item.inv_id;
+
+            // 🌟 ẢNH MẶC ĐỊNH MỜ ĐI (opacity 0) ĐỂ CHỜ STUDIO CHỤP!
+            let iconHTML = `<img id="${imgId}" src="" style="width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 0 5px rgba(0,229,255,0.4)); transition: transform 0.2s, opacity 0.5s; opacity: 0;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';" onerror="this.onerror=null; this.outerHTML='<span style=\\'font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));\\'>${fallbackEmoji}</span>';">`;
+            
             grid.innerHTML += `
                 <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
-                    <span style="font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">${iconText}</span>
+                    ${iconHTML}
                     ${badge}
                 </div>`;
+            
+            // 🌟 GỬI LỆNH CHỤP ẢNH TỰ ĐỘNG
+            setTimeout(() => {
+                if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(item.model_url, item.item_type, imgId);
+            }, 10);
+            
         } else {
             grid.innerHTML += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
         }
     }
+
+
+
 
     for(let p = 1; p <= tongSoTrang; p++) {
         let activeCls = (p === window.trangHienTai) ? 'active' : '';
