@@ -88,10 +88,8 @@ document.addEventListener('keydown', (e) => {
 
 
 
-
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (AUTO 3D THUMBNAIL)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (AUTO 3D THUMBNAIL) - ĐÃ FIX LỖI ẨN ẢNH
 // ==========================================
 window.thumb3D = window.thumb3D || {};
 window.THUMBNAIL_CACHE = window.THUMBNAIL_CACHE || {};
@@ -101,29 +99,33 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
     let imgEl = document.getElementById(imgId);
     if (!imgEl) return;
 
+    // Hàm tiện ích: Dán ảnh và làm mờ Emoji nền
+    function anEmojiHienAnh(srcData) {
+        imgEl.src = srcData;
+        imgEl.style.opacity = 1; // Hiện ảnh 3D
+        let emj = document.getElementById('emoji_' + imgId);
+        if(emj) emj.style.opacity = 0; // Tắt Emoji lót nền đi
+    }
+
     // 1. ĐÃ CHỤP RỒI -> LẤY ẢNH TRONG KHO RA XÀI NGAY LẬP TỨC!
     if (window.THUMBNAIL_CACHE[url]) {
-        imgEl.src = window.THUMBNAIL_CACHE[url];
-        imgEl.style.opacity = 1;
+        anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
         return;
     }
 
-    // 2. CHƯA CHỤP -> KHỞI TẠO STUDIO ẨN (Chỉ chạy 1 lần duy nhất)
+    // 2. CHƯA CHỤP -> KHỞI TẠO STUDIO ẨN
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
-        window.thumb3D.renderer.setSize(256, 256); // Độ phân giải 256x256 siêu nét
+        window.thumb3D.renderer.setSize(256, 256); 
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
         
         window.thumb3D.scene = new THREE.Scene();
-        
-        // Đánh 2 dàn đèn siêu rực rỡ để tôn lên độ VIP của đồ
         window.thumb3D.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
         let dLight = new THREE.DirectionalLight(0xffffff, 1.5);
         dLight.position.set(10, 20, 15);
         window.thumb3D.scene.add(dLight);
 
-        // Camera máy cơ
         window.thumb3D.cam = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
         window.thumb3D.cam.position.set(0, 0, 15);
         window.thumb3D.cam.lookAt(0, 0, 0);
@@ -132,51 +134,101 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
     // 3. ĐƯA MÔ HÌNH VÀO CHỤP BẰNG ỐNG HÚT SIÊU TỐC
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(url, (model) => {
-            // Chặn lỗi: Nếu trong lúc đang load mà thằng khác chụp xong rồi thì lấy xài luôn
+            // Chặn lỗi chụp trùng lặp
             if (window.THUMBNAIL_CACHE[url]) {
-                let el = document.getElementById(imgId);
-                if(el) { el.src = window.THUMBNAIL_CACHE[url]; el.style.opacity = 1; }
+                anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
                 return;
             }
 
             window.thumb3D.scene.add(model);
 
-            // Căn thước đo chuẩn xác để đồ vật nằm lọt thỏm giữa khung hình
             model.updateMatrixWorld(true);
             const bbox = new THREE.Box3().setFromObject(model);
             const size = bbox.getSize(new THREE.Vector3());
             const center = bbox.getCenter(new THREE.Vector3());
             const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-            let scale = 8.5 / maxDim; // Độ bự chung
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 11.5 / maxDim; // Vũ khí dài nên ép to thêm chút
+            let scale = 8.5 / maxDim; 
+            if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 11.5 / maxDim; 
             
             model.scale.setScalar(scale);
             model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
-            // Xoay dáng thần thánh khoe hàng
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
                 model.rotation.set(Math.PI/4, Math.PI/4, 0); 
             } else if (loaiDo === 'mount' || loaiDo === 'model') {
-                model.rotation.set(0, -Math.PI/6, 0); // Khoe góc mặt 3/4
+                model.rotation.set(0, -Math.PI/6, 0); 
             }
 
-            // 📸 TÁCH! CHỤP ẢNH VÀ XUẤT RA DỮ LIỆU SIÊU NHẸ
+            // 📸 TÁCH! CHỤP ẢNH
             window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
             let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
             
-            // Cất vào kho
             window.THUMBNAIL_CACHE[url] = dataURL;
+            anEmojiHienAnh(dataURL);
 
-            // Dán lên cái ô túi đồ
-            let el = document.getElementById(imgId);
-            if(el) { el.src = dataURL; el.style.opacity = 1; }
-
-            // Đuổi mô hình ra khỏi Studio (Không dùng donRac3D ở đây vì nó sẽ phá nát model dùng chung)
             window.thumb3D.scene.remove(model);
         });
     }
 };
+
+// Hàm Vẽ từng trang
+function renderTrangTuiDo() {
+    const grid = document.getElementById('invGrid');
+    const pagination = document.getElementById('invPagination');
+    grid.innerHTML = ''; pagination.innerHTML = '';
+    
+    let tongSoTrang = Math.ceil(Math.max(1, window.khoDoData.length) / O_MOI_TRANG);
+    if (tongSoTrang < 7) tongSoTrang = 7; 
+
+    let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
+    let endIdx = startIdx + O_MOI_TRANG;
+
+    for (let i = startIdx; i < endIdx; i++) {
+        let item = window.khoDoData[i];
+        if (item) {
+            let isEq = parseInt(item.is_equipped) === 1 ? 'equipped' : '';
+            let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';
+            
+            let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
+            let imgId = 'thumb_inv_' + item.inv_id;
+
+            // 🌟 CẤU TRÚC LỚP LÓT: Emoji nằm dưới, Thẻ Ảnh trống (pixel trong suốt) nằm trên, không xài onerror tự hủy nữa!
+            let iconHTML = `
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">${fallbackEmoji}</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.4)); transition: transform 0.2s, opacity 0.5s; opacity: 0;" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';">
+                </div>
+            `;
+            
+            grid.innerHTML += `
+                <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
+                    ${iconHTML}
+                    ${badge}
+                </div>`;
+            
+            // Ra lệnh chụp
+            setTimeout(() => {
+                if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(item.model_url, item.item_type, imgId);
+            }, 10);
+            
+        } else {
+            grid.innerHTML += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
+        }
+    }
+
+    for(let p = 1; p <= tongSoTrang; p++) {
+        let activeCls = (p === window.trangHienTai) ? 'active' : '';
+        pagination.innerHTML += `<button class="inv-page-btn ${activeCls}" onclick="chuyenTrangTuiDo(${p})">${p}</button>`;
+    }
+}
+
+
+
+
+
+
+
 
 
 
