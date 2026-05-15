@@ -3681,7 +3681,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                         const center = bbox.getCenter(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
                         
-                        let scale = 2.0 / maxDim; 
+                        let scale = 5.0 / maxDim; 
                         model.scale.setScalar(scale);
                         model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
                         
