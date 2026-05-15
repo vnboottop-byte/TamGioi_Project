@@ -351,19 +351,17 @@ window.chonXemMonDo = function(item) {
 
 
 
-// 🌟 BỘ MÁY ĐÚC 3D TRONG TÚI ĐỒ (ĐÃ FIX TÂM VÀ CAMERA CHUẨN XÁC)
+
+// 🌟 BỘ MÁY ĐÚC 3D TRONG TÚI ĐỒ (ĐÃ FIX GÓC XOAY ĐẸP NHƯ LÂM TỲ CÁC)
 function hienThi3DTrongTui(url, loaiDo) {
     let box = document.getElementById('inv3DViewer');
     let loading = document.getElementById('inv3DLoading');
     if (!box) return;
 
-    // 1. Khởi tạo sân khấu
     if (!window.inv3D.renderer) {
         window.inv3D.scene = new THREE.Scene();
         window.inv3D.cam = new THREE.PerspectiveCamera(45, box.clientWidth / box.clientHeight, 0.1, 1000);
-        
-        // 🌟 BẢN VÁ: Đưa Camera ra xa ở trục Z và bắt nó nhìn thẳng vào gốc tọa độ (0,0,0)
-        window.inv3D.cam.position.set(0, 0, 35); 
+        window.inv3D.cam.position.set(0, 0, 35);
         window.inv3D.cam.lookAt(0, 0, 0);
 
         window.inv3D.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
@@ -380,77 +378,87 @@ function hienThi3DTrongTui(url, loaiDo) {
             window.inv3D.reqId = requestAnimationFrame(animateInv);
             let delta = window.inv3D.clock.getDelta();
             if (window.inv3D.mixer) window.inv3D.mixer.update(delta);
-            if (window.inv3D.model) window.inv3D.model.rotation.y += 0.015; // Xoay khoe hàng
+
+            // 🌟 QUAY CÁI HỘP PIVOT CHỨ KHÔNG QUAY MODEL TRỰC TIẾP
+            if (window.inv3D.pivot) window.inv3D.pivot.rotation.y += 0.015;
+
             window.inv3D.renderer.render(window.inv3D.scene, window.inv3D.cam);
         }
         animateInv();
     }
 
-    // 🌟 BẢN VÁ: Cập nhật lại khung Canvas phòng trường hợp Box bị co giãn do CSS Flexbox
     window.inv3D.cam.aspect = box.clientWidth / box.clientHeight;
     window.inv3D.cam.updateProjectionMatrix();
     window.inv3D.renderer.setSize(box.clientWidth, box.clientHeight);
 
-    // Nhét Canvas vào Ô Đen
     box.innerHTML = '';
     box.appendChild(window.inv3D.renderer.domElement);
     box.appendChild(loading);
     loading.style.display = 'block';
 
-    // 2. Dọn rác Model Cũ
-    if (window.inv3D.model) {
-        if (typeof window.donRac3D === 'function') window.donRac3D(window.inv3D.model);
-        else window.inv3D.scene.remove(window.inv3D.model);
+    // Xóa rác cũ
+    if (window.inv3D.pivot) {
+        window.inv3D.scene.remove(window.inv3D.pivot);
+        if (window.inv3D.model && typeof window.donRac3D === 'function') window.donRac3D(window.inv3D.model);
+        window.inv3D.pivot = null;
         window.inv3D.model = null;
     }
     if (window.inv3D.mixer) { window.inv3D.mixer.stopAllAction(); window.inv3D.mixer = null; }
 
     if (!url) { loading.style.display = 'none'; return; }
 
-    // 3. Tải Model Mới
     const loader = window.loaderSieuToc || new THREE.GLTFLoader();
     loader.load(url, (gltf) => {
         let model = gltf.scene;
         window.inv3D.model = model;
-        window.inv3D.scene.add(model);
 
         if (gltf.animations && gltf.animations.length > 0) {
             window.inv3D.mixer = new THREE.AnimationMixer(model);
             window.inv3D.mixer.clipAction(gltf.animations[0]).play();
         }
 
-        // 🌟 BỘ THƯỚC ĐO THẦN THÁNH V2 (Đo lường & Căn Giữa Tuyệt Đối)
         model.scale.setScalar(1);
-        model.position.set(0,0,0);
+        model.position.set(0, 0, 0);
         model.updateMatrixWorld(true);
 
         const bbox = new THREE.Box3().setFromObject(model);
         const size = bbox.getSize(new THREE.Vector3());
+        const center = bbox.getCenter(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-        // Bóp tỷ lệ chuẩn
-        let scale = 16 / maxDim; 
-        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 22 / maxDim; 
+        let scale = 16 / maxDim;
+        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 22 / maxDim;
         model.scale.setScalar(scale);
 
-        // 🌟 NẮN TRỌNG TÂM: Cập nhật lại Box sau khi Scale, lấy Tâm mới và trừ ngược lại để model về đúng (0,0,0)
         model.updateMatrixWorld(true);
         const bboxScaled = new THREE.Box3().setFromObject(model);
         const centerScaled = bboxScaled.getCenter(new THREE.Vector3());
-        
+
         model.position.x -= centerScaled.x;
         model.position.y -= centerScaled.y;
         model.position.z -= centerScaled.z;
 
-        // Tạo dáng xoay nếu là Vũ Khí
+        // 🌟 TẠO HỘP PIVOT BỌC MODEL LẠI
+        let pivot = new THREE.Group();
+        pivot.add(model);
+        window.inv3D.pivot = pivot;
+        window.inv3D.scene.add(pivot);
+
+        // 🌟 TẠO DÁNG CHÉO 45 ĐỘ CHUẨN LÂM TỲ CÁC (Nghiêng Model bên trong)
         if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
-            model.rotation.z = Math.PI; 
-            model.rotation.x = Math.PI / 4; 
+            model.rotation.set(Math.PI / 4, 0, Math.PI / 6);
+        } else if (loaiDo === 'mount' || loaiDo === 'model') {
+            model.rotation.set(0, -Math.PI / 6, 0);
         }
 
         loading.style.display = 'none';
     });
 }
+
+
+
+
+
 
 // 🌟 THUẬT TOÁN KIỂM TRA PHÁI VÀ THAY ĐỒ
 window.thucHienHanhDongTrangBi = function(invId, action) {
