@@ -86,34 +86,44 @@ document.addEventListener('keydown', (e) => {
 
 
 
-
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (AUTO 3D THUMBNAIL) - ĐÃ FIX LỖI ẨN ẢNH
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (AUTO 3D THUMBNAIL) - BẢN V16 CHỐNG LAG GPU
 // ==========================================
 window.thumb3D = window.thumb3D || {};
 window.THUMBNAIL_CACHE = window.THUMBNAIL_CACHE || {};
 
 window.taoThuNho3D = function(url, loaiDo, imgId) {
     if (!url) return;
-    let imgEl = document.getElementById(imgId);
-    if (!imgEl) return;
 
-    // Hàm tiện ích: Dán ảnh và làm mờ Emoji nền
+    // Hàm tiện ích: Tìm đúng Element tươi nhất trong DOM để dán ảnh
     function anEmojiHienAnh(srcData) {
-        imgEl.src = srcData;
-        imgEl.style.opacity = 1; // Hiện ảnh 3D
+        let imgEl = document.getElementById(imgId);
         let emj = document.getElementById('emoji_' + imgId);
-        if(emj) emj.style.opacity = 0; // Tắt Emoji lót nền đi
+        if(imgEl) { imgEl.src = srcData; imgEl.style.opacity = 1; }
+        if(emj) emj.style.opacity = 0;
     }
 
-    // 1. ĐÃ CHỤP RỒI -> LẤY ẢNH TRONG KHO RA XÀI NGAY LẬP TỨC!
-    if (window.THUMBNAIL_CACHE[url]) {
+    // 1. ĐÃ CHỤP RỒI -> LẤY TRONG KHO RA XÀI NGAY!
+    if (window.THUMBNAIL_CACHE[url] && window.THUMBNAIL_CACHE[url] !== 'LOADING') {
         anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
         return;
     }
 
-    // 2. CHƯA CHỤP -> KHỞI TẠO STUDIO ẨN
+    // 🌟 BÍ THUẬT: Nếu món này đang được chụp dở, thì đứng chờ lấy ảnh xài ké! (Chống cháy Card màn hình)
+    if (window.THUMBNAIL_CACHE[url] === 'LOADING') {
+        let checkCache = setInterval(() => {
+            if (window.THUMBNAIL_CACHE[url] && window.THUMBNAIL_CACHE[url] !== 'LOADING') {
+                clearInterval(checkCache);
+                anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
+            }
+        }, 100);
+        return;
+    }
+
+    // Đánh dấu: "Phòng Studio đang bận chụp món này, các ô khác chờ chút!"
+    window.THUMBNAIL_CACHE[url] = 'LOADING';
+
+    // 2. KHỞI TẠO STUDIO ẨN
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
@@ -131,15 +141,9 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
         window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
-    // 3. ĐƯA MÔ HÌNH VÀO CHỤP BẰNG ỐNG HÚT SIÊU TỐC
+    // 3. ĐƯA MÔ HÌNH VÀO CHỤP
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(url, (model) => {
-            // Chặn lỗi chụp trùng lặp
-            if (window.THUMBNAIL_CACHE[url]) {
-                anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
-                return;
-            }
-
             window.thumb3D.scene.add(model);
 
             model.updateMatrixWorld(true);
@@ -164,6 +168,7 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
             window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
             let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
             
+            // Lưu vào kho để mấy ô kia lấy xài chung
             window.THUMBNAIL_CACHE[url] = dataURL;
             anEmojiHienAnh(dataURL);
 
@@ -172,23 +177,20 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
     }
 };
 
-
-
-
-// Hàm Vẽ từng trang (ĐÃ FIX LỖI DOM ĐẬP ĐI XÂY LẠI)
+// Hàm Vẽ từng trang (ĐÃ FIX LỖI DOM ĐẬP ĐI XÂY LẠI MÀ SẾP QUÊN LƯU NÈ)
 function renderTrangTuiDo() {
     const grid = document.getElementById('invGrid');
     const pagination = document.getElementById('invPagination');
     
     let tongSoTrang = Math.ceil(Math.max(1, window.khoDoData.length) / O_MOI_TRANG);
-    if (tongSoTrang < 7) tongSoTrang = 7; // Mặc định hiện 7 trang cho ngầu
+    if (tongSoTrang < 7) tongSoTrang = 7; 
 
     let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
     let endIdx = startIdx + O_MOI_TRANG;
 
-    // 🌟 BÍ THUẬT: Gom hết HTML vào một biến, KHÔNG đập đi xây lại DOM liên tục nữa!
+    // 🌟 GOM HTML VÀO BIẾN, KHÔNG GẮN LIÊN TỤC VÀO GRID LÀM HỎNG DOM
     let htmlGrid = ''; 
-    let danhSachCanChup = []; // Lên danh sách chờ chụp ảnh
+    let danhSachCanChup = []; 
 
     for (let i = startIdx; i < endIdx; i++) {
         let item = window.khoDoData[i];
@@ -199,7 +201,7 @@ function renderTrangTuiDo() {
             let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
             let imgId = 'thumb_inv_' + item.inv_id;
 
-            // Cấu trúc Lớp lót (Layering) chuẩn AAA
+            // Lớp lót: Emoji ở dưới, ảnh trong suốt ở trên
             let iconHTML = `
                 <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
                     <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">${fallbackEmoji}</div>
@@ -213,18 +215,15 @@ function renderTrangTuiDo() {
                     ${badge}
                 </div>`;
             
-            // Đưa vào danh sách chờ
             danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
-            
         } else {
             htmlGrid += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
         }
     }
 
-    // 🌟 DÁN VÀO DOM ĐÚNG 1 LẦN DUY NHẤT LÚC VÒNG LẶP KẾT THÚC
+    // 🌟 DÁN HTML ĐÚNG 1 LẦN DUY NHẤT TRƯỚC KHI CHỤP!
     grid.innerHTML = htmlGrid; 
 
-    // Phân trang
     let htmlPage = '';
     for(let p = 1; p <= tongSoTrang; p++) {
         let activeCls = (p === window.trangHienTai) ? 'active' : '';
@@ -232,7 +231,7 @@ function renderTrangTuiDo() {
     }
     pagination.innerHTML = htmlPage;
 
-    // 🌟 SAU KHI DÁN XONG, MỚI GỌI MÁY ẢNH RA CHỤP MỘT LƯỢT
+    // Ra lệnh chụp cho danh sách vừa tạo
     setTimeout(() => {
         danhSachCanChup.forEach(task => {
             if(typeof window.taoThuNho3D === 'function') {
@@ -241,9 +240,6 @@ function renderTrangTuiDo() {
         });
     }, 50);
 }
-
-
-
 
 
 
