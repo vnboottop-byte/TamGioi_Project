@@ -3595,8 +3595,36 @@ window.botAutoTimer = setInterval(() => {
 
 
 
+
 // ==================================================
-// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V11 - TRẢ LẠI CHỮ VÀ CHUẨN 3D)
+// 🖋️ HÀM TẠO CHỮ NỔI GACHA (ĐỘC LẬP - MIỄN NHIỄM VỚI LỖI -NaN)
+// ==================================================
+window.taoChuNoiGacha = function (pos3D, text, color) {
+    const div = document.createElement('div');
+    div.innerText = text;
+    // Style Chữ Cyberpunk rực rỡ, không có dấu trừ và không làm tròn số
+    div.style.cssText = `position:absolute; color:${color}; font-weight:900; font-size:26px; text-shadow:0px 0px 10px ${color}, 2px 2px 0px #000; pointer-events:none; z-index:99999; text-transform:uppercase;`;
+    document.body.appendChild(div);
+    
+    let life = 60; let offsetY = 0;
+    let loop = setInterval(() => {
+        life--; offsetY += 0.05;
+        let p = pos3D.clone(); p.y += offsetY; p.project(window.camera);
+        
+        if (p.z < 1) {
+            div.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`;
+            div.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+            div.style.opacity = life / 60;
+        } else { 
+            div.style.display = 'none'; 
+        }
+        
+        if (life <= 0) { clearInterval(loop); div.remove(); }
+    }, 30);
+};
+
+// ==================================================
+// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V12 - TRỊ TẬN GỐC -NaN)
 // ==================================================
 window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
     let fd = new FormData();
@@ -3608,7 +3636,7 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
         if(data.gold) {
             let tamXac = viTriXac.clone().add(new THREE.Vector3(0, 3, 0)); 
             
-            // 🌟 1. ĐÚC 5-8 CỤM TINH THỂ THẠCH ANH (Giữ nguyên độ lấp lánh rực rỡ)
+            // 🌟 1. ĐÚC 5-8 CỤM TINH THỂ THẠCH ANH (Đẹp như ảnh Sếp gửi)
             let soLuongLinhThach = 5 + Math.floor(Math.random() * 4);
             let mangLinhThach = [];
 
@@ -3632,13 +3660,12 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                 mangLinhThach.push({ group: cumNgocGroup, vel: vecVang });
             }
 
-            // 🌟 2. LOAD MÔ HÌNH 3D THẬT CỦA VẬT PHẨM (THAY VÌ CỤC TRÒN TRÒN)
+            // 🌟 2. LOAD MÔ HÌNH 3D THẬT CỦA VẬT PHẨM VĂNG RA
             let itemHolder = null;
             if (data.item_name && data.item_model) {
                 itemHolder = new THREE.Group();
                 itemHolder.position.copy(tamXac).add(new THREE.Vector3(0, 1, 0));
                 
-                // Đúc cái vỏ hào quang bọc bên ngoài
                 let colorGacha = data.item_type === 'mount' ? 0xff00ff : 0xf1c40f; 
                 let halo = new THREE.Mesh(
                     new THREE.SphereGeometry(1.5, 16, 16),
@@ -3646,7 +3673,6 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                 );
                 itemHolder.add(halo);
 
-                // Dùng ống hút siêu tốc bốc cái Model 3D ra
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(data.item_model, (model) => {
                         model.updateMatrixWorld(true);
@@ -3655,12 +3681,10 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                         const center = bbox.getCenter(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
                         
-                        // Bóp cho nó to cỡ 2 mét để ngắm
                         let scale = 2.0 / maxDim; 
                         model.scale.setScalar(scale);
                         model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
                         
-                        // Nhét vào một cái hộp quay để nó tự xoay 360 độ
                         let pivot = new THREE.Group();
                         pivot.add(model);
                         itemHolder.add(pivot);
@@ -3690,7 +3714,6 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                         }
                     });
                     
-                    // Đồ 3D lơ lửng và xoay
                     if (itemHolder) { 
                         if (itemHolder.position.y > viTriXac.y + 1.5) { itemHolder.position.y -= 0.05; }
                         if (itemHolder.pivot) itemHolder.pivot.rotation.y += 0.05;
@@ -3710,20 +3733,19 @@ window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
                             else window.scene.remove(itemHolder);
                         }
                         
-                        // 🌟 3. TRẢ LẠI CHỮ CHUẨN NHƯ V8 (HIỆN LÚC HÚT VÀO NGƯỜI XONG)
-                        if (window.playerModel && typeof window.taoSoSatThuong === 'function') {
-                            window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} LINH THẠCH`, "#00ffcc");
+                        // 🌟 3. DÙNG HÀM MỚI ĐỂ HIỆN CHỮ (CHỐNG LỖI -NaN)
+                        if (window.playerModel && typeof window.taoChuNoiGacha === 'function') {
+                            window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} LINH THẠCH`, "#00ffcc");
                             
                             if (data.item_name) {
                                 setTimeout(() => {
-                                    window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
+                                    window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
                                 }, 200);
                             }
                         }
                         return;
                     }
                     
-                    // Hút mượt mà
                     if (window.playerModel) {
                         let diemHut = window.playerModel.position.clone().add(new THREE.Vector3(0, 2.5, 0));
                         
