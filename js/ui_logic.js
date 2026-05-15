@@ -364,6 +364,10 @@ window.chonXemMonDo = function(item) {
 
 
 
+
+
+
+
 // 🌟 BỘ MÁY ĐÚC 3D TRONG TÚI ĐỒ (ĐÃ FIX GÓC XOAY ĐẸP NHƯ LÂM TỲ CÁC)
 function hienThi3DTrongTui(url, loaiDo) {
     let box = document.getElementById('inv3DViewer');
@@ -450,20 +454,31 @@ function hienThi3DTrongTui(url, loaiDo) {
         model.position.y -= centerScaled.y;
         model.position.z -= centerScaled.z;
 
-        // 🌟 TẠO HỘP PIVOT BỌC MODEL LẠI
+
+
+
+
+        // 🌟 TẠO HỘP PIVOT BỌC MÔ HÌNH LẠI
         let pivot = new THREE.Group();
         pivot.add(model);
         window.inv3D.pivot = pivot;
         window.inv3D.scene.add(pivot);
 
-        // 🌟 TẠO DÁNG CHÉO 45 ĐỘ CHUẨN LÂM TỲ CÁC (Nghiêng Model bên trong)
+        // 🌟 LỖI CŨ CỦA SẾP NẰM Ở ĐÂY NÈ: Thay vì model.rotation, giờ phải đổi thành pivot.rotation
         if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
-            model.rotation.set(Math.PI / 4, 0, Math.PI / 6);
+            pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
         } else if (loaiDo === 'mount' || loaiDo === 'model') {
-            model.rotation.set(0, -Math.PI / 6, 0);
+            pivot.rotation.set(0, -Math.PI / 6, 0); 
         }
 
         loading.style.display = 'none';
+
+
+
+        
+
+
+
     });
 }
 
