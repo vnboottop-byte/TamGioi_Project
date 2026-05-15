@@ -172,17 +172,23 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
     }
 };
 
-// Hàm Vẽ từng trang
+
+
+
+// Hàm Vẽ từng trang (ĐÃ FIX LỖI DOM ĐẬP ĐI XÂY LẠI)
 function renderTrangTuiDo() {
     const grid = document.getElementById('invGrid');
     const pagination = document.getElementById('invPagination');
-    grid.innerHTML = ''; pagination.innerHTML = '';
     
     let tongSoTrang = Math.ceil(Math.max(1, window.khoDoData.length) / O_MOI_TRANG);
-    if (tongSoTrang < 7) tongSoTrang = 7; 
+    if (tongSoTrang < 7) tongSoTrang = 7; // Mặc định hiện 7 trang cho ngầu
 
     let startIdx = (window.trangHienTai - 1) * O_MOI_TRANG;
     let endIdx = startIdx + O_MOI_TRANG;
+
+    // 🌟 BÍ THUẬT: Gom hết HTML vào một biến, KHÔNG đập đi xây lại DOM liên tục nữa!
+    let htmlGrid = ''; 
+    let danhSachCanChup = []; // Lên danh sách chờ chụp ảnh
 
     for (let i = startIdx; i < endIdx; i++) {
         let item = window.khoDoData[i];
@@ -193,7 +199,7 @@ function renderTrangTuiDo() {
             let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
             let imgId = 'thumb_inv_' + item.inv_id;
 
-            // 🌟 CẤU TRÚC LỚP LÓT: Emoji nằm dưới, Thẻ Ảnh trống (pixel trong suốt) nằm trên, không xài onerror tự hủy nữa!
+            // Cấu trúc Lớp lót (Layering) chuẩn AAA
             let iconHTML = `
                 <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
                     <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">${fallbackEmoji}</div>
@@ -201,29 +207,40 @@ function renderTrangTuiDo() {
                 </div>
             `;
             
-            grid.innerHTML += `
+            htmlGrid += `
                 <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
                     ${iconHTML}
                     ${badge}
                 </div>`;
             
-            // Ra lệnh chụp
-            setTimeout(() => {
-                if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(item.model_url, item.item_type, imgId);
-            }, 10);
+            // Đưa vào danh sách chờ
+            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
             
         } else {
-            grid.innerHTML += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
+            htmlGrid += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
         }
     }
 
+    // 🌟 DÁN VÀO DOM ĐÚNG 1 LẦN DUY NHẤT LÚC VÒNG LẶP KẾT THÚC
+    grid.innerHTML = htmlGrid; 
+
+    // Phân trang
+    let htmlPage = '';
     for(let p = 1; p <= tongSoTrang; p++) {
         let activeCls = (p === window.trangHienTai) ? 'active' : '';
-        pagination.innerHTML += `<button class="inv-page-btn ${activeCls}" onclick="chuyenTrangTuiDo(${p})">${p}</button>`;
+        htmlPage += `<button class="inv-page-btn ${activeCls}" onclick="chuyenTrangTuiDo(${p})">${p}</button>`;
     }
+    pagination.innerHTML = htmlPage;
+
+    // 🌟 SAU KHI DÁN XONG, MỚI GỌI MÁY ẢNH RA CHỤP MỘT LƯỢT
+    setTimeout(() => {
+        danhSachCanChup.forEach(task => {
+            if(typeof window.taoThuNho3D === 'function') {
+                window.taoThuNho3D(task.url, task.type, task.id);
+            }
+        });
+    }, 50);
 }
-
-
 
 
 
