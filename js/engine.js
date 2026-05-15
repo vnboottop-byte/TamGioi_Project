@@ -297,18 +297,8 @@ setInterval(() => {
 
     
 
-
-
-
-    
-
-
         
 }, 1000);
-
-
-
-
 
 
 
@@ -322,12 +312,6 @@ const bloomPass = new THREE.UnrealBloomPass(
     0.8,   // 2. RADIUS (Độ lan tỏa): 0.4 là vừa đẹp.
     0.98   // 3. THRESHOLD (Ngưỡng): TĂNG LÊN 0.85 hoặc 0.9. (Cái này cực quan trọng: Nó giúp mặt đất không bị phát sáng, chỉ có Lazer/Skill mới có hào quang!)
 );
-
-
-
-
-
-
 
 
 
@@ -1224,9 +1208,9 @@ function playAnim(animName) {
     
     let action = animationsMap[upName];
     if (!action) {
-        if (checkName === 'CHAYBO') action = animationsMap['RUN'] || animationsMap['WALK'] || animationsMap['RUNNING'] || animationsMap['CHAYBO'];
+        if (checkName === 'CHAYBO') action = animationsMap['RUN'] || animationsMap['DIBO'] || animationsMap['BAY'] || animationsMap['CHAYBO'];
         else if (laChieuTanCong) action = animationsMap['ATTACK'] || animationsMap['ATTACK1'] || animationsMap['ATTACK01'] || animationsMap['BITE'] || animationsMap['SKILL'];
-        else if (checkName === 'NHANROI') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['IDLE01'] || animationsMap['NHANROI'];
+        else if (checkName === 'NHANROI') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['BAY'] || animationsMap['NHANROI'];
         else if (checkName === 'BAY') action = animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'] || animationsMap['BAY'];
         else if (checkName === 'DIE' || checkName === 'DEATH') action = animationsMap['DEATH'] || animationsMap['DIE'];
     }
