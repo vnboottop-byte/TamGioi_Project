@@ -743,18 +743,23 @@ window.capNhatGiaoDienLo = function() {
         slotTrungTam.innerHTML = `<span style="color:#555;">+</span>`;
     }
 
+
+
+
+
+
     // --- VẼ 6 Ô TINH THẠCH & CỘNG ĐIỂM ---
     let tongDiemDa = 0;
     for (let i = 0; i < 6; i++) {
         let sSlot = document.getElementById('fStone_' + i);
         let stone = window.loRenData.stones[i];
         if (stone) {
-            // Đọc số Cấp từ tên (VD: "Tinh Thạch Cấp 2" -> 2)
             let capDaMatch = stone.name.match(/\d+/);
             let capDa = capDaMatch ? parseInt(capDaMatch[0]) : 1;
             
-            // 🌟 CÔNG THỨC KIẾM THẾ: Cấp 1=1đ, Cấp 2=3đ, Cấp 3=9đ, Cấp 4=27đ...
-            let diem = Math.pow(3, capDa - 1);
+            // 🌟 CÔNG THỨC KIẾM THẾ: Hệ số 10/3. 
+            // Cấp 1 = 100đ, Cấp 2 = 333.3đ, Cấp 3 = 1111.1đ
+            let diem = Math.pow(10/3, capDa - 1) * 100;
             tongDiemDa += diem;
 
             let imgId = 'thumb_lo_stone_' + i;
@@ -771,7 +776,7 @@ window.capNhatGiaoDienLo = function() {
         }
     }
 
-    // --- TÍNH TOÁN % VÀ CHI PHÍ ---
+    // --- TÍNH TOÁN % VÀ CHI PHÍ LẠM PHÁT ---
     let rateUI = document.getElementById('forgeSuccessRate');
     let barUI = document.getElementById('forgeRateBar');
     let costUI = document.getElementById('forgeCost');
@@ -782,21 +787,20 @@ window.capNhatGiaoDienLo = function() {
         costUI.innerText = "0";
     } else {
         let lvlHienTai = parseInt(window.loRenData.item.upgrade_level) || 0;
-        let targetLvl = lvlHienTai + 1; // Mục tiêu là lên cấp tiếp theo
+        let targetLvl = lvlHienTai + 1; 
         let priceGoc = parseInt(window.loRenData.item.price) || 10000;
         
-        // 🌟 ĐIỂM YÊU CẦU: Muốn lên +N, cần 1 viên đá Cấp N (Tương đương 3^(N-1) điểm)
-        let diemYeuCau = Math.pow(3, targetLvl - 1);
+        // 🌟 ĐIỂM YÊU CẦU LÊN CẤP N (Bằng đúng điểm của 1 viên Đá Cấp N)
+        let diemYeuCau = Math.pow(10/3, targetLvl - 1) * 100;
         
-        // Tính % thành công (Nếu bỏ thừa đá thì % > 100, nhưng UI chỉ hiện Max 100%)
         let phanTramThucTe = (tongDiemDa / diemYeuCau) * 100;
         let phanTramHienThi = phanTramThucTe > 100 ? 100 : phanTramThucTe;
 
-        // 🌟 TÍNH CHI PHÍ: Cứ 100% thì Tiền x3 so với cấp trước. Tốn theo % đá bỏ vào.
-        // Công thức: Giá Gốc * 3^(Cấp Mục Tiêu - 1) * (Phần Trăm / 100)
-        let mocTien100PhanTram = priceGoc * Math.pow(3, targetLvl - 1);
-        let chiPhi = Math.floor(mocTien100PhanTram * (phanTramThucTe / 100));
-        if (chiPhi < 1000) chiPhi = 1000;
+        // 🌟 CHI PHÍ: Phụ thuộc vào TỔNG ĐIỂM TINH THẠCH bỏ vào lò
+        // Bỏ 4 viên x4 tiền, bỏ 1 viên x1 tiền. Đồ càng đắt tiền phí càng cao.
+        let chiPhi = Math.floor(tongDiemDa * (priceGoc / 100));
+        if (chiPhi < 1000 && tongDiemDa > 0) chiPhi = 1000;
+        if (tongDiemDa === 0) chiPhi = 0;
 
         // Vẽ lên UI
         rateUI.innerText = phanTramHienThi.toFixed(1) + "%";
@@ -814,6 +818,11 @@ window.capNhatGiaoDienLo = function() {
         });
     }, 50);
 };
+
+
+
+
+
 
 // 7. NỐI DÂY VÀO SERVER & HIỆN THÔNG BÁO RÕ RÀNG
 window.tienHanhDapDo = function() {
