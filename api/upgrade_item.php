@@ -48,12 +48,14 @@ try {
 
     if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
 
-    // 4. Khóa Tinh Thạch & Tính điểm chuẩn
+
+
+
+// 4. Khóa Tinh Thạch & Tính điểm chuẩn
     $total_stone_score = 0;
     $valid_stone_ids = []; 
     
     if (!empty($stone_ids) && is_array($stone_ids)) {
-        // Chỉ lấy tối đa 6 viên để chống Hack nhét 100 viên vào gói tin
         $stone_ids = array_slice($stone_ids, 0, 6);
         $placeholders = implode(',', array_fill(0, count($stone_ids), '?'));
         $types = str_repeat('i', count($stone_ids)) . 's'; 
@@ -69,59 +71,62 @@ try {
         
         while ($stone = $resStones->fetch_assoc()) {
             $valid_stone_ids[] = $stone['id'];
-            // Phân tích tên lấy Cấp (VD: "Tinh Thạch Cấp 2" -> 2)
             preg_match('/\d+/', $stone['name'], $matches);
             $capDa = !empty($matches) ? intval($matches[0]) : 1;
-            // Công thức: 3^(cấp-1) * 10
-            $diem = pow(3, $capDa - 1) * 10;
+            
+            // 🌟 ĐIỂM ĐÁ LŨY THỪA 3: Cấp 1=1đ, Cấp 2=3đ, Cấp 3=9đ
+            $diem = pow(3, $capDa - 1);
             $total_stone_score += $diem;
         }
     }
 
     // 5. Tái lập Tỷ Lệ Thực Tế (Giống y hệt Client)
-    $diemYeuCau = 0;
-    $tiLeToiDa = 100;
-    if ($current_lvl < 5) { $diemYeuCau = ($current_lvl + 1) * 20; $tiLeToiDa = 100; }        
-    else if ($current_lvl < 10) { $diemYeuCau = ($current_lvl + 1) * 50; $tiLeToiDa = 50; }  
-    else { $diemYeuCau = ($current_lvl + 1) * 200; $tiLeToiDa = 15; }               
+    $target_lvl = $current_lvl + 1;
+    $diemYeuCau = pow(3, $target_lvl - 1);
 
-    $phanTram = ($total_stone_score / $diemYeuCau) * 100;
-    if ($phanTram > $tiLeToiDa) $phanTram = $tiLeToiDa; 
+    $phanTramThucTe = ($total_stone_score / $diemYeuCau) * 100;
+    
+    // 6. Tính Phí Luyện Hóa: Giá Gốc * 3^(Cấp Mục Tiêu - 1) * (Phần Trăm / 100)
+    $price_goc = intval($mainItem['price']);
+    if ($price_goc <= 0) $price_goc = 10000;
+    
+    $mocTien100PhanTram = $price_goc * pow(3, $target_lvl - 1);
+    $cost = floor($mocTien100PhanTram * ($phanTramThucTe / 100));
+    if ($cost < 1000) $cost = 1000;
 
-    // 6. MÁY QUAY XỔ SỐ CHỐNG HACK (Chạy hàm Random của PHP)
+    if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
+
+    // 7. MÁY QUAY XỔ SỐ CHỐNG HACK
     $rand_val = rand(1, 10000) / 100; // Ra kết quả từ 0.01 đến 100.00
-    $is_success = ($rand_val <= $phanTram);
+    
+    // Tỷ lệ thực tế có thể lên đến 200% nếu nhét thừa đá, nhưng rand_val chỉ max 100. Nên >= 100% là 100% Win.
+    $is_success = ($rand_val <= $phanTramThucTe);
     
     $new_lvl = $current_lvl;
     $drop_level = false;
 
     if ($is_success) {
-        $new_lvl = $current_lvl + 1; // 🟢 THÀNH CÔNG! Lên 1 cấp!
+        $new_lvl = $current_lvl + 1; // 🟢 LÊN CẤP!
     } else {
-        // 🔴 THẤT BẠI! Xử lý rớt cấp
+        // 🔴 THẤT BẠI! CHẾ ĐỘ RỚT CẤP HARDCORE
         if ($current_lvl >= 6 && $current_lvl <= 9) {
-            $new_lvl = $current_lvl - 1; // Phạt rớt 1 cấp
+            $new_lvl = $current_lvl - 1; // Rớt 1 cấp
             $drop_level = true;
         } else if ($current_lvl >= 11 && $current_lvl <= 14) {
-            $new_lvl = 10; // Phạt lọt sàn về mốc an toàn +10
+            $new_lvl = 10; // Rớt lọt sàn về +10
             $drop_level = true;
         }
-        // Từ 1-5 xịt không rớt. Mốc 10 xịt không rớt.
     }
 
-    // 7. THỰC THI THAY ĐỔI XUỐNG DATABASE
-    
-    // Trừ Vàng
+    // 8. THỰC THI THAY ĐỔI XUỐNG DATABASE
     $new_gold = $current_gold - $cost;
     $conn->query("UPDATE game_characters SET game_gold = $new_gold WHERE username = '$user'");
 
-    // Đốt sạch Đá
     if (count($valid_stone_ids) > 0) {
         $ids_to_delete = implode(',', $valid_stone_ids);
         $conn->query("DELETE FROM user_inventory WHERE id IN ($ids_to_delete)");
     }
 
-    // Cập nhật Cấp vũ khí
     if ($new_lvl !== $current_lvl) {
         $conn->query("UPDATE user_inventory SET upgrade_level = $new_lvl WHERE id = $item_id");
     }
