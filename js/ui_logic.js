@@ -718,7 +718,9 @@ window.goDoKhoiLo = function(type, index) {
     window.capNhatGiaoDienLo();
 };
 
-// 6. THUẬT TOÁN TÍNH TỶ LỆ % VÀ CHI PHÍ (CHUẨN KIẾM THẾ)
+
+
+// 6. THUẬT TOÁN TÍNH TỶ LỆ % VÀ CHI PHÍ (CHUẨN KIẾM THẾ 100%)
 window.capNhatGiaoDienLo = function() {
     let slotTrungTam = document.getElementById('forgeItemSlot');
     let danhSachCanChup = [];
@@ -741,7 +743,7 @@ window.capNhatGiaoDienLo = function() {
         slotTrungTam.innerHTML = `<span style="color:#555;">+</span>`;
     }
 
-    // --- VẼ 6 Ô TINH THẠCH ---
+    // --- VẼ 6 Ô TINH THẠCH & CỘNG ĐIỂM ---
     let tongDiemDa = 0;
     for (let i = 0; i < 6; i++) {
         let sSlot = document.getElementById('fStone_' + i);
@@ -751,8 +753,8 @@ window.capNhatGiaoDienLo = function() {
             let capDaMatch = stone.name.match(/\d+/);
             let capDa = capDaMatch ? parseInt(capDaMatch[0]) : 1;
             
-            // Công thức điểm Cấp số nhân: Cấp 1 = 10đ, Cấp 2 = 30đ, Cấp 3 = 90đ...
-            let diem = Math.pow(3, capDa - 1) * 10;
+            // 🌟 CÔNG THỨC KIẾM THẾ: Cấp 1=1đ, Cấp 2=3đ, Cấp 3=9đ, Cấp 4=27đ...
+            let diem = Math.pow(3, capDa - 1);
             tongDiemDa += diem;
 
             let imgId = 'thumb_lo_stone_' + i;
@@ -769,7 +771,7 @@ window.capNhatGiaoDienLo = function() {
         }
     }
 
-    // --- TÍNH TOÁN % VÀ CHI PHÍ LẠM PHÁT ---
+    // --- TÍNH TOÁN % VÀ CHI PHÍ ---
     let rateUI = document.getElementById('forgeSuccessRate');
     let barUI = document.getElementById('forgeRateBar');
     let costUI = document.getElementById('forgeCost');
@@ -779,38 +781,33 @@ window.capNhatGiaoDienLo = function() {
         barUI.style.width = "0%"; barUI.style.background = "#555";
         costUI.innerText = "0";
     } else {
-        let lvl = parseInt(window.loRenData.item.upgrade_level) || 0;
+        let lvlHienTai = parseInt(window.loRenData.item.upgrade_level) || 0;
+        let targetLvl = lvlHienTai + 1; // Mục tiêu là lên cấp tiếp theo
         let priceGoc = parseInt(window.loRenData.item.price) || 10000;
         
-        let diemYeuCau = 0;
-        let tiLeToiDa = 100; // Khóa mốc an toàn
+        // 🌟 ĐIỂM YÊU CẦU: Muốn lên +N, cần 1 viên đá Cấp N (Tương đương 3^(N-1) điểm)
+        let diemYeuCau = Math.pow(3, targetLvl - 1);
         
-        // 🟢 Cấp 1 -> 5: An Toàn. Max 100%. (VD lên +1 cần 20đ = 2 viên Cấp 1)
-        if (lvl < 5) { diemYeuCau = (lvl + 1) * 20; tiLeToiDa = 100; }        
-        // 🟡 Cấp 6 -> 10: Chuyên Nghiệp. Rớt 1 cấp. Max 50%.
-        else if (lvl < 10) { diemYeuCau = (lvl + 1) * 50; tiLeToiDa = 50; }  
-        // 🔴 Cấp 11 -> 15: Chí Tôn. Rớt về 10. Max 15%.
-        else { diemYeuCau = (lvl + 1) * 200; tiLeToiDa = 15; }               
+        // Tính % thành công (Nếu bỏ thừa đá thì % > 100, nhưng UI chỉ hiện Max 100%)
+        let phanTramThucTe = (tongDiemDa / diemYeuCau) * 100;
+        let phanTramHienThi = phanTramThucTe > 100 ? 100 : phanTramThucTe;
 
-        // Tính tỷ lệ % (Ép xuống giới hạn Max)
-        let phanTram = (tongDiemDa / diemYeuCau) * 100;
-        if (phanTram > tiLeToiDa) phanTram = tiLeToiDa; 
-
-        // Tính thuế lạm phát: Đồ càng đắt + Cấp càng cao = Càng tốn nhiều Vàng
-        let chiPhi = Math.floor(priceGoc * (lvl + 1) * 0.1);
+        // 🌟 TÍNH CHI PHÍ: Cứ 100% thì Tiền x3 so với cấp trước. Tốn theo % đá bỏ vào.
+        // Công thức: Giá Gốc * 3^(Cấp Mục Tiêu - 1) * (Phần Trăm / 100)
+        let mocTien100PhanTram = priceGoc * Math.pow(3, targetLvl - 1);
+        let chiPhi = Math.floor(mocTien100PhanTram * (phanTramThucTe / 100));
         if (chiPhi < 1000) chiPhi = 1000;
 
         // Vẽ lên UI
-        rateUI.innerText = phanTram.toFixed(1) + "%";
-        barUI.style.width = phanTram + "%";
+        rateUI.innerText = phanTramHienThi.toFixed(1) + "%";
+        barUI.style.width = phanTramHienThi + "%";
         costUI.innerText = chiPhi.toLocaleString();
 
-        if (phanTram < 15) { rateUI.style.color = "#e74c3c"; barUI.style.background = "linear-gradient(90deg, #c0392b, #e74c3c)"; }
-        else if (phanTram < 50) { rateUI.style.color = "#f1c40f"; barUI.style.background = "linear-gradient(90deg, #e67e22, #f1c40f)"; }
+        if (phanTramHienThi < 30) { rateUI.style.color = "#e74c3c"; barUI.style.background = "linear-gradient(90deg, #c0392b, #e74c3c)"; }
+        else if (phanTramHienThi < 80) { rateUI.style.color = "#f1c40f"; barUI.style.background = "linear-gradient(90deg, #e67e22, #f1c40f)"; }
         else { rateUI.style.color = "#2ecc71"; barUI.style.background = "linear-gradient(90deg, #27ae60, #2ecc71)"; }
     }
 
-    // Ra lệnh Studio chụp ảnh (Chống đè frame)
     setTimeout(() => {
         danhSachCanChup.forEach(task => {
             if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id);
@@ -818,8 +815,7 @@ window.capNhatGiaoDienLo = function() {
     }, 50);
 };
 
-
-// 7. NỐI DÂY VÀO SERVER ĐỂ KHAI LÒ
+// 7. NỐI DÂY VÀO SERVER & HIỆN THÔNG BÁO RÕ RÀNG
 window.tienHanhDapDo = function() {
     if (!window.loRenData.item) {
         alert("❌ Sếp chưa bỏ Pháp Bảo vào lò!");
@@ -828,13 +824,13 @@ window.tienHanhDapDo = function() {
     
     let stoneIds = [];
     window.loRenData.stones.forEach(s => {
-        if (s) stoneIds.push(s.inv_id); // Nhặt ID của mấy cục đá
+        if (s) stoneIds.push(s.inv_id); 
     });
     
     if (stoneIds.length === 0) {
-        if (!confirm("⚠️ Sếp không bỏ Tinh Thạch nào vào lò, tỷ lệ thành công là 0%. Sếp vẫn muốn đập (chỉ tốn Vàng)?")) return;
+        if (!confirm("⚠️ Sếp không bỏ Tinh Thạch nào vào lò, tỷ lệ thành công là 0%. Đập xịt sẽ tốn Vàng và có rủi ro rớt cấp! Xác nhận đập?")) return;
     } else {
-        if (!confirm("🔥 Xác nhận khai hỏa Lò Bát Quái? Tinh thạch sẽ bị thiêu rụi!")) return;
+        if (!confirm("🔥 Xác nhận khai hỏa Lò Bát Quái? Tiền và Tinh thạch sẽ bị thiêu rụi!")) return;
     }
     
     let btn = document.getElementById('btnKhaiLo');
@@ -852,32 +848,30 @@ window.tienHanhDapDo = function() {
         btn.innerText = "🔨 ĐẬP ĐỒ";
         
         if (data.status === 'success') {
-            // Cập nhật ví Vàng ngay lập tức
             let goldUI = document.getElementById('gameGoldUI');
             if (goldUI) goldUI.innerText = parseInt(data.new_gold).toLocaleString();
             
-            // Lấy tọa độ đỉnh đầu người chơi để thả chữ
             let charPos = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.position.clone() : new THREE.Vector3(0,0,0);
             charPos.y += 5;
             
-            // 🌟 HIỆU ỨNG THÀNH BẠI
+            // 🌟 HIỆN THÔNG BÁO BẬT LÊN RÕ RÀNG CHO SẾP THẤY (KÈM CHỮ NỔI 3D)
             if (data.result === 'SUCCESS') {
+                alert(`✨ CHÚC MỪNG! Tuyệt phẩm đã thăng cấp lên +${data.new_level}!`);
                 if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, "✨ NÂNG CẤP THÀNH CÔNG! ✨", "#2ecc71");
-                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0x2ecc71); // Nổ sáng xanh lá
+                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0x2ecc71);
             } else {
-                let msgFail = "❌ NÂNG CẤP THẤT BẠI!";
-                if (data.drop_level) msgFail = "📉 THẤT BẠI - BỊ RỚT CẤP!";
-                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, msgFail, "#e74c3c");
-                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0xe74c3c); // Nổ xịt đỏ
+                let msgFail = `❌ THẤT BẠI! Tinh thạch đã hóa thành tro bụi...`;
+                if (data.drop_level) msgFail += `\n📉 Đắng lòng: Vũ khí bị rớt xuống +${data.new_level}!`;
+                alert(msgFail);
+                
+                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, data.drop_level ? "📉 RỚT CẤP!" : "❌ XỊT RỒI!", "#e74c3c");
+                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0xe74c3c);
             }
             
-            // Xóa sạch đá trong Lò vì đã bị đốt cháy
+            // Dọn lò và load lại túi đồ
             window.loRenData.stones = [null, null, null, null, null, null];
-            
-            // Đóng cửa sổ và mở lại để Tải lại kho đồ mới nhất từ Server
             document.getElementById('forgeModal').style.display = 'none';
             window.moLoBatQuai(); 
-            
         } else {
             alert("❌ Lỗi Lò Rèn: " + data.msg);
         }
@@ -885,6 +879,6 @@ window.tienHanhDapDo = function() {
     .catch(e => {
         btn.disabled = false;
         btn.innerText = "🔨 ĐẬP ĐỒ";
-        alert("Lỗi kết nối đến Server!");
+        alert("Lỗi kết nối đến Tòa Án Tối Cao!");
     });
 };
