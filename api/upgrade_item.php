@@ -94,12 +94,14 @@ try {
     
 
 
-    $cost = floor($total_stone_score * 1000);
-
-
-
-    if ($cost < 1000 && $total_stone_score > 0) $cost = 1000;
+    // 6. Tính Phí Luyện Hóa: 1000 ĐIỂM = 1 VÀNG
+    $cost = floor($total_stone_score / 1000);
+    if ($cost < 1 && $total_stone_score > 0) $cost = 1;
     if ($total_stone_score == 0) $cost = 0;
+
+
+
+
 
     if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
 
