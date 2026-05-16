@@ -44,9 +44,9 @@ try {
 
     if ($cap1 !== $cap2 || $cap2 !== $cap3) throw new Exception("Tẩu hỏa nhập ma! 3 viên Tinh thạch phải có cấp độ y hệt nhau!");
 
-    // 4. Trừ tiền (Cấp 1 = 50k, Cấp 2 = 100k...)
-    $cost = $cap1 * 50000;
-    if ($current_gold < $cost) throw new Exception("Không đủ Pháp lực (Linh Thạch)! Cần " . number_format($cost) . " Vàng.");
+    // 4. Trừ tiền (Cấp mục tiêu x 3 Vàng)
+    $new_level = $cap1 + 1;
+    $cost = $new_level * 3;
     
     $new_gold = $current_gold - $cost;
     $conn->query("UPDATE game_characters SET game_gold = $new_gold WHERE username = '$user'");
