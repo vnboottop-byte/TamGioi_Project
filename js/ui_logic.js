@@ -583,3 +583,242 @@ window.treoBanChoden = function(invId) {
         } else alert("❌ Lỗi: " + data.msg);
     });
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// 🔥 BỘ NÃO LÒ BÁT QUÁI (GIAI ĐOẠN 3 - FRONTEND LOGIC)
+// ==========================================
+window.loRenData = {
+    item: null, // Món đồ trung tâm
+    stones: [null, null, null, null, null, null] // 6 ô đá
+};
+
+// 1. Mở lò & Quét Túi Đồ
+window.moLoBatQuai = function() {
+    document.getElementById('forgeModal').style.display = 'flex';
+    document.getElementById('forgeInventoryGrid').innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#00e5ff; margin-top:50px; font-weight:bold;">Đang quét Túi Càn Khôn...</div>';
+    
+    // Luôn fetch lại API để lấy dữ liệu mới nhất
+    fetch('api/get_inventory.php')
+    .then(res => res.json())
+    .then(data => {
+        if(data.status === 'success') {
+            window.khoDoData = data.data; 
+            window.renderTuiDoLoRen();
+            window.capNhatGiaoDienLo();
+        }
+    });
+};
+
+// 2. Đóng lò & Trả đồ về túi
+window.dongLoBatQuai = function() {
+    document.getElementById('forgeModal').style.display = 'none';
+    window.loRenData.item = null;
+    window.loRenData.stones = [null, null, null, null, null, null];
+};
+
+window.chuyenTabLo = function(tabName, btnEl) {
+    document.querySelectorAll('.tabLoBtn').forEach(b => { b.style.background = '#222'; b.style.color = '#aaa'; });
+    btnEl.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)'; btnEl.style.color = 'white';
+    document.getElementById('tabDapDo').style.display = (tabName === 'DAP_DO') ? 'flex' : 'none';
+    document.getElementById('tabGhepDa').style.display = (tabName === 'GHEP_DA') ? 'block' : 'none';
+};
+
+// 3. Đổ đồ vào danh sách Cột Trái (Chỉ lọc Vũ Khí, Thú, Ngoại Trang, Đá)
+window.renderTuiDoLoRen = function() {
+    const grid = document.getElementById('forgeInventoryGrid');
+    grid.innerHTML = '';
+    
+    let coDo = false;
+    let danhSachCanChup = [];
+
+    window.khoDoData.forEach(item => {
+        // Kiểm tra xem món này có đang được đặt trong Lò không?
+        let dangTrongLo = false;
+        if (window.loRenData.item && window.loRenData.item.inv_id === item.inv_id) dangTrongLo = true;
+        window.loRenData.stones.forEach(s => { if (s && s.inv_id === item.inv_id) dangTrongLo = true; });
+
+        if (!dangTrongLo && ['weapon', 'weapon2', 'mount', 'model', 'material'].includes(item.item_type)) {
+            coDo = true;
+            let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : (item.item_type === 'material' ? '💎' : '👕'));
+            let imgId = 'thumb_forge_' + item.inv_id;
+            
+            let lvl = parseInt(item.upgrade_level) || 0;
+            let badgeLvl = lvl > 0 ? `<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.8); color:${lvl >= 10 ? 'gold' : 'cyan'}; border:1px solid ${lvl >= 10 ? 'gold' : '#00e5ff'}; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:900; z-index:5;">+${lvl}</div>` : '';
+            let isEq = parseInt(item.is_equipped) === 1 ? '<div style="position:absolute; bottom:2px; left:2px; font-size:9px; color:#e74c3c; font-weight:bold;">[MẶC]</div>' : '';
+
+            let iconHTML = `
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">${fallbackEmoji}</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.4)); transition: opacity 0.5s; opacity: 0;">
+                </div>
+            `;
+            
+            grid.innerHTML += `
+                <div class="inv-slot" style="background:#111; border:1px solid #444; border-radius:5px; height:60px; cursor:pointer; position:relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5);" onclick='duaDoVaoLo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
+                    ${badgeLvl}
+                    ${iconHTML}
+                    ${isEq}
+                </div>`;
+                
+            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
+        }
+    });
+    
+    if (!coDo) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">Không có vật phẩm phù hợp...</div>';
+
+    setTimeout(() => {
+        danhSachCanChup.forEach(task => {
+            if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id);
+        });
+    }, 10);
+};
+
+// 4. Nhặt đồ bỏ vào lò
+window.duaDoVaoLo = function(item) {
+    if (item.item_type === 'material') {
+        let idx = window.loRenData.stones.findIndex(s => s === null);
+        if (idx !== -1) window.loRenData.stones[idx] = item;
+        else alert("Lò rèn đã đầy Tinh Thạch! Hãy tháo bớt ra.");
+    } else {
+        if (window.loRenData.item !== null) {
+            alert("Đã có vật phẩm trong lò! Hãy tháo ra trước.");
+            return;
+        }
+        let lvl = parseInt(item.upgrade_level) || 0;
+        if (lvl >= 15) {
+            alert("✨ Pháp bảo này đã đạt Cảnh Giới Tối Đa (Chí Tôn +15), không thể luyện hóa thêm!");
+            return;
+        }
+        window.loRenData.item = item;
+    }
+    window.renderTuiDoLoRen();
+    window.capNhatGiaoDienLo();
+};
+
+// 5. Gỡ đồ trả về túi
+window.goDoKhoiLo = function(type, index) {
+    if (type === 'item') window.loRenData.item = null;
+    if (type === 'stone') window.loRenData.stones[index] = null;
+    window.renderTuiDoLoRen();
+    window.capNhatGiaoDienLo();
+};
+
+// 6. THUẬT TOÁN TÍNH TỶ LỆ % VÀ CHI PHÍ (CHUẨN KIẾM THẾ)
+window.capNhatGiaoDienLo = function() {
+    let slotTrungTam = document.getElementById('forgeItemSlot');
+    let danhSachCanChup = [];
+
+    // --- VẼ Ô VŨ KHÍ ---
+    if (window.loRenData.item) {
+        let it = window.loRenData.item;
+        let lvl = parseInt(it.upgrade_level) || 0;
+        let imgId = 'thumb_lo_main';
+        let emoji = (it.item_type === 'mount') ? '🐲' : '⚔️';
+        slotTrungTam.innerHTML = `
+            <div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); color:gold; border:1px solid gold; font-size:12px; padding:2px 6px; border-radius:5px; font-weight:900; z-index:10; box-shadow:0 0 10px gold;">+${lvl}</div>
+            <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                <div id="emoji_${imgId}" style="position:absolute; font-size:40px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">${emoji}</div>
+                <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 10px rgba(255,170,0,0.8)); transition: opacity 0.5s; opacity: 0;">
+            </div>
+        `;
+        danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId });
+    } else {
+        slotTrungTam.innerHTML = `<span style="color:#555;">+</span>`;
+    }
+
+    // --- VẼ 6 Ô TINH THẠCH ---
+    let tongDiemDa = 0;
+    for (let i = 0; i < 6; i++) {
+        let sSlot = document.getElementById('fStone_' + i);
+        let stone = window.loRenData.stones[i];
+        if (stone) {
+            // Đọc số Cấp từ tên (VD: "Tinh Thạch Cấp 2" -> 2)
+            let capDaMatch = stone.name.match(/\d+/);
+            let capDa = capDaMatch ? parseInt(capDaMatch[0]) : 1;
+            
+            // Công thức điểm Cấp số nhân: Cấp 1 = 10đ, Cấp 2 = 30đ, Cấp 3 = 90đ...
+            let diem = Math.pow(3, capDa - 1) * 10;
+            tongDiemDa += diem;
+
+            let imgId = 'thumb_lo_stone_' + i;
+            sSlot.innerHTML = `
+                <div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; z-index:10; background:rgba(0,0,0,0.5); padding:1px 3px; border-radius:2px;">C${capDa}</div>
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); transition:0.3s;">💎</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 80%; height: 80%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.8)); transition: opacity 0.5s; opacity: 0;">
+                </div>
+            `;
+            danhSachCanChup.push({ url: stone.model_url, type: stone.item_type, id: imgId });
+        } else {
+            sSlot.innerHTML = '';
+        }
+    }
+
+    // --- TÍNH TOÁN % VÀ CHI PHÍ LẠM PHÁT ---
+    let rateUI = document.getElementById('forgeSuccessRate');
+    let barUI = document.getElementById('forgeRateBar');
+    let costUI = document.getElementById('forgeCost');
+
+    if (!window.loRenData.item) {
+        rateUI.innerText = "0%"; rateUI.style.color = "#555";
+        barUI.style.width = "0%"; barUI.style.background = "#555";
+        costUI.innerText = "0";
+    } else {
+        let lvl = parseInt(window.loRenData.item.upgrade_level) || 0;
+        let priceGoc = parseInt(window.loRenData.item.price) || 10000;
+        
+        let diemYeuCau = 0;
+        let tiLeToiDa = 100; // Khóa mốc an toàn
+        
+        // 🟢 Cấp 1 -> 5: An Toàn. Max 100%. (VD lên +1 cần 20đ = 2 viên Cấp 1)
+        if (lvl < 5) { diemYeuCau = (lvl + 1) * 20; tiLeToiDa = 100; }        
+        // 🟡 Cấp 6 -> 10: Chuyên Nghiệp. Rớt 1 cấp. Max 50%.
+        else if (lvl < 10) { diemYeuCau = (lvl + 1) * 50; tiLeToiDa = 50; }  
+        // 🔴 Cấp 11 -> 15: Chí Tôn. Rớt về 10. Max 15%.
+        else { diemYeuCau = (lvl + 1) * 200; tiLeToiDa = 15; }               
+
+        // Tính tỷ lệ % (Ép xuống giới hạn Max)
+        let phanTram = (tongDiemDa / diemYeuCau) * 100;
+        if (phanTram > tiLeToiDa) phanTram = tiLeToiDa; 
+
+        // Tính thuế lạm phát: Đồ càng đắt + Cấp càng cao = Càng tốn nhiều Vàng
+        let chiPhi = Math.floor(priceGoc * (lvl + 1) * 0.1);
+        if (chiPhi < 1000) chiPhi = 1000;
+
+        // Vẽ lên UI
+        rateUI.innerText = phanTram.toFixed(1) + "%";
+        barUI.style.width = phanTram + "%";
+        costUI.innerText = chiPhi.toLocaleString();
+
+        if (phanTram < 15) { rateUI.style.color = "#e74c3c"; barUI.style.background = "linear-gradient(90deg, #c0392b, #e74c3c)"; }
+        else if (phanTram < 50) { rateUI.style.color = "#f1c40f"; barUI.style.background = "linear-gradient(90deg, #e67e22, #f1c40f)"; }
+        else { rateUI.style.color = "#2ecc71"; barUI.style.background = "linear-gradient(90deg, #27ae60, #2ecc71)"; }
+    }
+
+    // Ra lệnh Studio chụp ảnh (Chống đè frame)
+    setTimeout(() => {
+        danhSachCanChup.forEach(task => {
+            if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id);
+        });
+    }, 50);
+};
+
+// 7. XIN CHÀO GIAI ĐOẠN 4
+window.tienHanhDapDo = function() {
+    alert("⚒️ Giao diện và Công thức tỷ lệ của Lò Rèn đã thông luồng chuẩn xác!\n\nAnh em ta sẽ gắn Lõi Backend (Tính toán, trừ Vàng, rớt cấp, Random thực tế chống Hack) ở Giai Đoạn 4 nhé Sếp!");
+};
