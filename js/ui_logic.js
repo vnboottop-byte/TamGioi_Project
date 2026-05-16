@@ -483,7 +483,14 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
             pivot.rotation.set(0, -Math.PI / 6, 0); 
         }
 
+        // 🌟 BẬT HÀO QUANG CHO RẠP CHIẾU PHIM TÚI ĐỒ
+        if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
+            window.bocHaoQuang3D(model, capDo);
+        }
         loading.style.display = 'none';
+
+
+        
 
 
 
