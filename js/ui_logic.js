@@ -1117,16 +1117,15 @@ window.goDaHopThanh = function(index) {
 
 window.capNhatGiaoDienHopThanh = function() {
     let count = 0;
-    let danhSachCanChup = []; // 🌟 THÊM KHAY CHỨA MÁY ẢNH 3D
+    let danhSachCanChup = []; // 🌟 KHAY CHỨA MÁY ẢNH 3D
 
     for (let i = 0; i < 3; i++) {
         let slot = document.getElementById('cStone_' + i);
         let stone = window.hopThanhData.stones[i];
         if (stone) {
             count++;
-            let imgId = 'thumb_craft_slot_' + i; // 🌟 TẠO MÃ ID
+            let imgId = 'thumb_craft_slot_' + i; 
             
-            // 🌟 ĐƯA THẺ <img> VÀO 3 Ô TRỐNG
             slot.innerHTML = `
                 <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
                     <div id="emoji_${imgId}" style="font-size:30px; position:absolute; filter: drop-shadow(0 0 10px cyan); transition:0.3s;">💎</div>
@@ -1148,18 +1147,65 @@ window.capNhatGiaoDienHopThanh = function() {
         let chiPhi = capMoi * 3; // 🌟 PHÍ GHÉP ĐÁ: Cấp mục tiêu x 3 Vàng
         costUI.innerText = chiPhi.toLocaleString('vi-VN');
 
-        resultUI.innerHTML = `<div style="font-size:40px; filter: drop-shadow(0 0 20px gold); animation: nhipTho 1s infinite;">💎</div><div style="position:absolute; bottom:5px; color:gold; font-size:14px; font-weight:900; text-shadow:0 0 5px red;">CẤP ${capMoi}</div>`;
+        // ==========================================
+        // 🌟 BỘ MÁY TÌM KIẾM MODEL 3D CHO ĐÁ MỤC TIÊU
+        // ==========================================
+        let hienThiVaChupAnhKetQua = function(modelUrl) {
+            let imgId = 'thumb_craft_result';
+            resultUI.innerHTML = `
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center; animation: nhipTho 1s infinite;">
+                    <div id="emoji_${imgId}" style="font-size:40px; position:absolute; filter: drop-shadow(0 0 20px gold); transition:0.3s;">💎</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 10px rgba(255,215,0,0.8)); transition: opacity 0.5s; opacity: 0;">
+                    <div style="position:absolute; bottom:2px; color:gold; font-size:14px; font-weight:900; text-shadow:0 0 5px red; z-index:5;">CẤP ${capMoi}</div>
+                </div>
+            `;
+            danhSachCanChup.push({ url: modelUrl, type: 'material', id: imgId, capDo: 0 });
+            
+            // Ra lệnh chụp toàn bộ 4 ô
+            setTimeout(() => {
+                danhSachCanChup.forEach(task => {
+                    if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
+                });
+            }, 50);
+        };
+
+        let tenDaMoi = "Tinh Thạch Cấp " + capMoi;
+        
+        // 1. Dò trong Túi Càn Khôn trước cho nhanh
+        let daMauTrongTui = window.khoDoData.find(item => item.name === tenDaMoi);
+        
+        if (daMauTrongTui && daMauTrongTui.model_url) {
+            hienThiVaChupAnhKetQua(daMauTrongTui.model_url);
+        } else {
+            // 2. Nếu túi không có, gọi API tra cứu Database
+            resultUI.innerHTML = `<span style="color:#00ffff; font-size:10px; font-weight:bold;">Đang soi Database...</span>`;
+            
+            fetch('api/get_shop.php').then(res => res.json()).then(data => {
+                let modelUrlMoi = window.hopThanhData.stones[0].model_url; // Fallback
+                if (data.status === 'success' && data.data) {
+                    let daShop = data.data.find(item => item.name === tenDaMoi && item.item_type === 'material');
+                    if (daShop && daShop.model_url) {
+                        modelUrlMoi = daShop.model_url; // Đã tóm được Link 3D thật sự!
+                    }
+                }
+                hienThiVaChupAnhKetQua(modelUrlMoi);
+            }).catch(e => {
+                // Nếu rớt mạng thì mượn tạm hình cũ đỡ
+                hienThiVaChupAnhKetQua(window.hopThanhData.stones[0].model_url); 
+            });
+        }
+
     } else {
         costUI.innerText = "0";
         resultUI.innerHTML = `<span style="color:#555; font-size:12px; font-weight:bold;">THÀNH PHẨM</span>`;
+        
+        // Cất đá ra thì chỉ chụp lại 3 ô input
+        setTimeout(() => {
+            danhSachCanChup.forEach(task => {
+                if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
+            });
+        }, 50);
     }
-
-    // 🌟 KÍCH HOẠT MÁY ẢNH CHỤP 3 Ô BÊN PHẢI
-    setTimeout(() => {
-        danhSachCanChup.forEach(task => {
-            if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
-        });
-    }, 50);
 };
 
 window.tienHanhHopThanh = function() {
