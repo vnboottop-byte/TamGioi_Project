@@ -699,19 +699,22 @@ window.renderTuiDoLoRen = function() {
 
 
 // 4. Nhặt đồ bỏ vào lò
-window.duaDoVaoLo = function(item) {
+window.duaDoVaoLo = function (item) {
     if (item.item_type === 'material') {
         let idx = window.loRenData.stones.findIndex(s => s === null);
-        if (idx !== -1) window.loRenData.stones[idx] = item;
-        else alert("Lò rèn đã đầy Tinh Thạch! Hãy tháo bớt ra.");
+        if (idx !== -1) {
+            window.loRenData.stones[idx] = item;
+        } else {
+            window.hienThongBaoGame("Lò rèn đã đầy Tinh Thạch! Hãy tháo bớt ra.", false);
+        }
     } else {
         if (window.loRenData.item !== null) {
-            alert("Đã có vật phẩm trong lò! Hãy tháo ra trước.");
+            window.hienThongBaoGame("Đã có vật phẩm trong lò! Hãy tháo ra trước.", false);
             return;
         }
         let lvl = parseInt(item.upgrade_level) || 0;
         if (lvl >= 15) {
-            alert("✨ Pháp bảo này đã đạt Cảnh Giới Tối Đa (Chí Tôn +15), không thể luyện hóa thêm!");
+            window.hienThongBaoGame("✨ Pháp bảo này đã đạt Cảnh Giới Tối Đa (Chí Tôn +15), không thể luyện hóa thêm!", false);
             return;
         }
         window.loRenData.item = item;
