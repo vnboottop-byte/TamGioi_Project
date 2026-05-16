@@ -223,6 +223,77 @@ window.donRac3D = function (obj) {
 };
 
 
+
+
+
+
+
+
+
+
+
+// ==========================================
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX SIÊU NHẸ CHỐNG LAG)
+// ==========================================
+window.bocHaoQuang3D = function (meshVuKhi, capDo) {
+    if (!meshVuKhi || capDo < 4) return; // Dưới +4 mộc mạc không phát sáng
+
+    let mauAura = 0x00ff00; // +4 đến +6: Khói Xanh
+    if (capDo >= 7 && capDo <= 9) mauAura = 0x9b59b6;      // +7 đến +9: Tím Huyền Bí
+    else if (capDo >= 10 && capDo <= 12) mauAura = 0xff3300; // +10 đến +12: Đỏ Rực (Hỏa Diệm)
+    else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
+    else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
+
+    meshVuKhi.traverse(child => {
+        if (child.isMesh && !child.userData.isAura) {
+            // Nhân bản khung xương để làm "lớp vỏ" ánh sáng
+            let voAura = new THREE.Mesh(
+                child.geometry.clone(),
+                new THREE.MeshBasicMaterial({
+                    color: mauAura,
+                    transparent: true,
+                    opacity: capDo >= 15 ? 0.7 : 0.4,
+                    blending: THREE.AdditiveBlending, // Cơ chế hòa trộn tạo độ phát sáng chói lóa
+                    depthWrite: false,
+                    wireframe: capDo >= 10 // Đồ VIP >= 10 sẽ có thêm hiệu ứng lưới điện chạy quanh
+                })
+            );
+            voAura.userData.isAura = true;
+
+            // Phình to lớp vỏ ra một chút để bọc bên ngoài vũ khí gốc
+            let scaleBung = 1.05 + (capDo * 0.005);
+            voAura.scale.set(scaleBung, scaleBung, scaleBung);
+
+            // Nếu là mốc VIP, làm thêm 1 lớp lõi sáng đặc bên trong
+            if (capDo >= 13) {
+                let loiAura = new THREE.Mesh(
+                    child.geometry.clone(),
+                    new THREE.MeshBasicMaterial({
+                        color: 0xffffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false
+                    })
+                );
+                loiAura.scale.set(1.02, 1.02, 1.02);
+                loiAura.userData.isAura = true;
+                child.add(loiAura);
+            }
+
+            child.add(voAura);
+        }
+    });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
@@ -985,6 +1056,12 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
                 } 
             });
 
+
+
+
+
+
+
             if (tayCam) {
                 tayCam.add(vuKhi);
                 vuKhi.position.set(0, 0, 0); 
@@ -993,6 +1070,16 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
                 nhanVatDich.add(vuKhi);
                 vuKhi.position.set(1, 1, 0); 
             }
+
+
+            if (window.WEAPON_LEVEL && window.WEAPON_LEVEL > 0) {
+                window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL);
+            }
+
+
+
+
+            
         });
     }
 }
