@@ -20,8 +20,12 @@ try {
     if (!$item || $item['is_equipped'] == 1) throw new Exception("Không tìm thấy vật phẩm hoặc đang mặc!");
 
     // Đẩy lên bảng auction_house
-    $in = $conn->prepare("INSERT INTO auction_house (seller_name, item_id, item_type, price_gold) VALUES (?, ?, ?, ?)");
-    $in->bind_param("sisi", $user, $item['item_id'], $item['item_type'], $price);
+  
+  
+    $in = $conn->prepare("INSERT INTO auction_house (seller_name, item_id, item_type, price_gold, upgrade_level) VALUES (?, ?, ?, ?, ?)");
+    $in->bind_param("sisii", $user, $item['item_id'], $item['item_type'], $price, $item['upgrade_level']);
+  
+  
     $in->execute();
 
     // Xóa khỏi túi đồ
