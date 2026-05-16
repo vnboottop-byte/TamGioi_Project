@@ -631,12 +631,28 @@ window.dongLoBatQuai = function() {
     window.loRenData.stones = [null, null, null, null, null, null];
 };
 
+
+
+
+window.hopThanhData = { stones: [null, null, null], targetLevel: 0 };
+
 window.chuyenTabLo = function(tabName, btnEl) {
     document.querySelectorAll('.tabLoBtn').forEach(b => { b.style.background = '#222'; b.style.color = '#aaa'; });
-    btnEl.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)'; btnEl.style.color = 'white';
+    
+    if (tabName === 'DAP_DO') {
+        btnEl.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)'; 
+    } else {
+        btnEl.style.background = 'linear-gradient(90deg, #2980b9, #3498db)'; 
+        window.renderTuiDoHopThanh();
+        window.capNhatGiaoDienHopThanh();
+    }
+    btnEl.style.color = 'white';
+    
     document.getElementById('tabDapDo').style.display = (tabName === 'DAP_DO') ? 'flex' : 'none';
-    document.getElementById('tabGhepDa').style.display = (tabName === 'GHEP_DA') ? 'block' : 'none';
+    document.getElementById('tabGhepDa').style.display = (tabName === 'GHEP_DA') ? 'flex' : 'none';
 };
+
+
 
 // 3. Đổ đồ vào danh sách Cột Trái (Chỉ lọc Vũ Khí, Thú, Ngoại Trang, Đá)
 window.renderTuiDoLoRen = function() {
