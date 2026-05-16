@@ -966,3 +966,147 @@ window.tienHanhDapDo = function() {
         });
     });
 };
+
+
+
+
+// ==========================================
+// 🔮 BỘ NÃO HỢP THÀNH (GHÉP ĐÁ)
+// ==========================================
+window.renderTuiDoHopThanh = function() {
+    const grid = document.getElementById('craftInventoryGrid');
+    grid.innerHTML = '';
+    let coDo = false;
+
+    window.khoDoData.forEach(item => {
+        let dangDuocDung = window.hopThanhData.stones.some(s => s && s.inv_id === item.inv_id);
+        // Chặn không cho lấy đá đang bỏ bên Lò Rèn
+        let dangTrongLoRen = window.loRenData.stones.some(s => s && s.inv_id === item.inv_id);
+
+        if (!dangDuocDung && !dangTrongLoRen && item.item_type === 'material') {
+            coDo = true;
+            let capDaMatch = item.name.match(/\d+/);
+            let capDa = capDaMatch ? parseInt(capDaMatch[0]) : 1;
+
+            let iconHTML = `
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <div style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5));">💎</div>
+                    <div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.5); padding:1px 3px; border-radius:2px;">C${capDa}</div>
+                </div>
+            `;
+            
+            grid.innerHTML += `
+                <div class="inv-slot" style="background:#111; border:1px solid #3498db; border-radius:5px; height:60px; cursor:pointer; position:relative;" onclick='chonDaHopThanh(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${capDa})' title="${item.name}">
+                    ${iconHTML}
+                </div>`;
+        }
+    });
+    if (!coDo) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">Không tìm thấy Tinh Thạch trống...</div>';
+};
+
+window.chonDaHopThanh = function(item, capDa) {
+    if (window.hopThanhData.targetLevel > 0 && capDa !== window.hopThanhData.targetLevel) {
+        window.hienThongBaoGame("Chỉ có thể ghép 3 viên Tinh Thạch CÙNG CẤP!", false);
+        return;
+    }
+
+    let idx = window.hopThanhData.stones.findIndex(s => s === null);
+    if (idx !== -1) {
+        window.hopThanhData.stones[idx] = item;
+        window.hopThanhData.targetLevel = capDa;
+    } else {
+        window.hienThongBaoGame("Đã đủ 3 viên Tinh Thạch!", false);
+    }
+    
+    window.renderTuiDoHopThanh();
+    window.capNhatGiaoDienHopThanh();
+};
+
+window.goDaHopThanh = function(index) {
+    window.hopThanhData.stones[index] = null;
+    let conVienNaoKhong = window.hopThanhData.stones.some(s => s !== null);
+    if (!conVienNaoKhong) window.hopThanhData.targetLevel = 0; // Reset lại cấp mục tiêu
+    
+    window.renderTuiDoHopThanh();
+    window.capNhatGiaoDienHopThanh();
+};
+
+window.capNhatGiaoDienHopThanh = function() {
+    let count = 0;
+    for (let i = 0; i < 3; i++) {
+        let slot = document.getElementById('cStone_' + i);
+        let stone = window.hopThanhData.stones[i];
+        if (stone) {
+            count++;
+            slot.innerHTML = `<div style="font-size:30px; filter: drop-shadow(0 0 10px cyan);">💎</div><div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.8); padding:1px 4px; border-radius:3px;">C${window.hopThanhData.targetLevel}</div>`;
+        } else {
+            slot.innerHTML = '';
+        }
+    }
+
+    let costUI = document.getElementById('craftCost');
+    let resultUI = document.getElementById('cResult');
+
+    if (count === 3) {
+        let capMoi = window.hopThanhData.targetLevel + 1;
+        let chiPhi = window.hopThanhData.targetLevel * 50000; // Cấp 1 tốn 50k, Cấp 2 tốn 100k...
+        costUI.innerText = chiPhi.toLocaleString();
+        resultUI.innerHTML = `<div style="font-size:40px; filter: drop-shadow(0 0 20px gold); animation: nhipTho 1s infinite;">💎</div><div style="position:absolute; bottom:5px; color:gold; font-size:14px; font-weight:900; text-shadow:0 0 5px red;">CẤP ${capMoi}</div>`;
+    } else {
+        costUI.innerText = "0";
+        resultUI.innerHTML = `<span style="color:#555; font-size:12px; font-weight:bold;">THÀNH PHẨM</span>`;
+    }
+};
+
+window.tienHanhHopThanh = function() {
+    let stoneIds = [];
+    window.hopThanhData.stones.forEach(s => { if (s) stoneIds.push(s.inv_id); });
+    
+    if (stoneIds.length < 3) {
+        window.hienThongBaoGame("Phải thu thập đủ 3 viên Tinh Thạch cùng cấp để kích hoạt Trận Pháp!", false);
+        return;
+    }
+
+    window.hienXacNhanGame("Dùng lực hút vũ trụ ép 3 viên Tinh Thạch này lại làm một?\nTinh thạch gốc sẽ biến mất vĩnh viễn!", function() {
+        let btn = document.getElementById('btnHopThanh');
+        btn.disabled = true; btn.innerText = "ĐANG ÉP...";
+
+        let fd = new FormData();
+        fd.append('stones', JSON.stringify(stoneIds));
+        
+        fetch('api/craft_stone.php', { method: 'POST', body: fd })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false; btn.innerText = "🔮 GHÉP ĐÁ";
+            
+            if (data.status === 'success') {
+                let goldUI = document.getElementById('gameGoldUI');
+                if (goldUI) goldUI.innerText = parseInt(data.new_gold).toLocaleString();
+                
+                let charPos = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.position.clone() : new THREE.Vector3(0,0,0);
+                charPos.y += 5;
+                
+                window.hienThongBaoGame(`✨ Kì Tích! Đã ngưng tụ thành công [Tinh Thạch Cấp ${data.new_level}]!`, true);
+                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, `✨ NHẬN TINH THẠCH CẤP ${data.new_level} ✨`, "gold");
+                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0x00ffff);
+                
+                // Reset lưới
+                window.hopThanhData = { stones: [null, null, null], targetLevel: 0 };
+                
+                // Load lại túi đồ
+                fetch('api/get_inventory.php').then(res => res.json()).then(invData => {
+                    if(invData.status === 'success') {
+                        window.khoDoData = invData.data; 
+                        window.renderTuiDoHopThanh();
+                        window.capNhatGiaoDienHopThanh();
+                    }
+                });
+            } else {
+                window.hienThongBaoGame("Lỗi Hợp Thành: " + data.msg, false);
+            }
+        }).catch(e => {
+            btn.disabled = false; btn.innerText = "🔮 GHÉP ĐÁ";
+            window.hienThongBaoGame("Lỗi mất kết nối đến Tòa Án Tối Cao!", false);
+        });
+    });
+};
