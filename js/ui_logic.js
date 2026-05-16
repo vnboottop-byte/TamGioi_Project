@@ -367,7 +367,7 @@ window.chonXemMonDo = function(item) {
     `;
 
     // 🌟 KÍCH HOẠT MÁY CHIẾU 3D
-    hienThi3DTrongTui(item.model_url, item.item_type);
+    hienThi3DTrongTui(item.model_url, item.item_type, parseInt(item.upgrade_level)||0);
 };
 
 
@@ -693,6 +693,11 @@ window.renderTuiDoLoRen = function() {
     }, 10);
 };
 
+
+
+
+
+
 // 4. Nhặt đồ bỏ vào lò
 window.duaDoVaoLo = function(item) {
     if (item.item_type === 'material') {
@@ -714,6 +719,11 @@ window.duaDoVaoLo = function(item) {
     window.renderTuiDoLoRen();
     window.capNhatGiaoDienLo();
 };
+
+
+
+
+
 
 // 5. Gỡ đồ trả về túi
 window.goDoKhoiLo = function(type, index) {
