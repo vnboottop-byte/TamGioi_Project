@@ -92,7 +92,12 @@ try {
     $price_goc = intval($mainItem['price']);
     if ($price_goc <= 0) $price_goc = 10000;
     
-    $cost = floor($total_stone_score * ($price_goc / 100));
+
+
+    $cost = floor($total_stone_score * 1000);
+
+
+
     if ($cost < 1000 && $total_stone_score > 0) $cost = 1000;
     if ($total_stone_score == 0) $cost = 0;
 
