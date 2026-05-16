@@ -132,18 +132,14 @@ window.dongTuiDoVIP = function() {
 
 
 
-
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (BẢN V17 - HÀNG ĐỢI XẾP HÀNG & CHỐNG ẢNH MÙ)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (BẢN V18 - BẮT SÁNG HÀO QUANG)
 // ==========================================
 window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
 window.THUMBNAIL_CACHE = window.THUMBNAIL_CACHE || {};
 
-window.taoThuNho3D = function(url, loaiDo, imgId) {
+window.taoThuNho3D = function(url, loaiDo, imgId, capDo = 0) {
     if (!url) return;
-
-    // Hàm tiện ích: Dán ảnh và giấu Emoji
     function anEmojiHienAnh(srcData) {
         let imgEl = document.getElementById(imgId);
         let emj = document.getElementById('emoji_' + imgId);
@@ -151,39 +147,32 @@ window.taoThuNho3D = function(url, loaiDo, imgId) {
         if(emj) emj.style.opacity = 0;
     }
 
-    // 1. ĐÃ CÓ ẢNH TRONG KHO -> XÀI NGAY!
-    if (window.THUMBNAIL_CACHE[url] && window.THUMBNAIL_CACHE[url] !== 'LOADING') {
-        anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
-        return;
+    // 🌟 KHÓA BỘ NHỚ KÉP: Tách biệt ảnh của đồ +0 và đồ +15
+    let cacheKey = url + "_+" + capDo;
+
+    if (window.THUMBNAIL_CACHE[cacheKey] && window.THUMBNAIL_CACHE[cacheKey] !== 'LOADING') {
+        anEmojiHienAnh(window.THUMBNAIL_CACHE[cacheKey]); return;
     }
 
-    // 2. CHƯA CÓ ẢNH VÀ ĐANG CHỤP -> NGỒI CHỜ LẤY ẢNH KÉ (100ms kiểm tra 1 lần)
     let checkCache = setInterval(() => {
-        if (window.THUMBNAIL_CACHE[url] && window.THUMBNAIL_CACHE[url] !== 'LOADING') {
-            clearInterval(checkCache);
-            anEmojiHienAnh(window.THUMBNAIL_CACHE[url]);
+        if (window.THUMBNAIL_CACHE[cacheKey] && window.THUMBNAIL_CACHE[cacheKey] !== 'LOADING') {
+            clearInterval(checkCache); anEmojiHienAnh(window.THUMBNAIL_CACHE[cacheKey]);
         }
     }, 100);
 
-    // 3. NẾU CHƯA AI YÊU CẦU CHỤP MÓN NÀY -> ĐƯA VÀO HÀNG ĐỢI!
-    if (!window.THUMBNAIL_CACHE[url]) {
-        window.THUMBNAIL_CACHE[url] = 'LOADING'; // Đánh dấu đã nhận lịch
-        window.thumb3D.queue.push({ url: url, loaiDo: loaiDo });
+    if (!window.THUMBNAIL_CACHE[cacheKey]) {
+        window.THUMBNAIL_CACHE[cacheKey] = 'LOADING'; 
+        window.thumb3D.queue.push({ url: url, loaiDo: loaiDo, capDo: capDo, cacheKey: cacheKey });
         window.xuLyHangDoiChupAnh();
     }
 };
 
-
-
-
-// 📸 NHIẾP ẢNH GIA XỬ LÝ HÀNG ĐỢI TỪNG NGƯỜI MỘT (FIX CĂN GIỮA TUYỆT ĐỐI)
 window.xuLyHangDoiChupAnh = function() {
     if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
     window.thumb3D.isProcessing = true;
 
     let task = window.thumb3D.queue.shift();
-    let url = task.url;
-    let loaiDo = task.loaiDo;
+    let { url, loaiDo, capDo, cacheKey } = task;
 
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
@@ -193,21 +182,16 @@ window.xuLyHangDoiChupAnh = function() {
         
         window.thumb3D.scene = new THREE.Scene();
         window.thumb3D.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-        let dLight = new THREE.DirectionalLight(0xffffff, 1.5);
-        dLight.position.set(10, 20, 15);
+        let dLight = new THREE.DirectionalLight(0xffffff, 1.5); dLight.position.set(10, 20, 15);
         window.thumb3D.scene.add(dLight);
 
         window.thumb3D.cam = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-        window.thumb3D.cam.position.set(0, 0, 15);
-        window.thumb3D.cam.lookAt(0, 0, 0);
+        window.thumb3D.cam.position.set(0, 0, 15); window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(url, (model) => {
-            // 🌟 TẠO HỘP PIVOT ĐỂ QUAY QUANH TÂM ẢNH
-            let pivot = new THREE.Group();
-            window.thumb3D.scene.add(pivot);
-            pivot.add(model);
+            let pivot = new THREE.Group(); window.thumb3D.scene.add(pivot); pivot.add(model);
 
             model.updateMatrixWorld(true);
             const bbox = new THREE.Box3().setFromObject(model);
@@ -218,40 +202,36 @@ window.xuLyHangDoiChupAnh = function() {
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 11.5 / maxDim; 
             model.scale.setScalar(scale);
 
-            // 🌟 CĂN TÂM CHUẨN XÁC SAU KHI THU PHÓNG
             model.updateMatrixWorld(true);
             const bboxScaled = new THREE.Box3().setFromObject(model);
             const centerScaled = bboxScaled.getCenter(new THREE.Vector3());
 
-            // Kéo lùi mô hình về để "Trọng tâm Bounding Box" lọt đúng vào lõi (0,0,0) của Pivot
-            model.position.x -= centerScaled.x;
-            model.position.y -= centerScaled.y;
-            model.position.z -= centerScaled.z;
+            model.position.x -= centerScaled.x; model.position.y -= centerScaled.y; model.position.z -= centerScaled.z;
 
-            // 🌟 CHÌA KHÓA: BÂY GIỜ TA CHỈ ĐƯỢC XOAY CÁI HỘP PIVOT CHỨ KHÔNG XOAY MODEL
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') {
-                pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
-            } else if (loaiDo === 'mount' || loaiDo === 'model') {
-                pivot.rotation.set(0, -Math.PI / 6, 0); 
+            if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
+            else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0); 
+
+            // 🌟 ĐIỂM ĂN TIỀN: GỌI HÀM PHÁT SÁNG CHO MÁY ẢNH
+            if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
+                window.bocHaoQuang3D(model, capDo);
             }
 
             setTimeout(() => {
                 window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
                 let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
-                
-                window.THUMBNAIL_CACHE[url] = dataURL;
-                window.thumb3D.scene.remove(pivot); // Xóa cái hộp đi là sạch sẽ
-                
-                window.thumb3D.isProcessing = false;
-                window.xuLyHangDoiChupAnh();
+                window.THUMBNAIL_CACHE[cacheKey] = dataURL; // Lưu đúng mã ổ khóa
+                window.thumb3D.scene.remove(pivot); 
+                window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
             }, 100); 
         });
     } else {
-        window.THUMBNAIL_CACHE[url] = 'ERROR';
-        window.thumb3D.isProcessing = false;
-        window.xuLyHangDoiChupAnh();
+        window.THUMBNAIL_CACHE[cacheKey] = 'ERROR'; window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
     }
 };
+
+
+
+
 
 
 
