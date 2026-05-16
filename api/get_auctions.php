@@ -2,7 +2,7 @@
 session_start(); header('Content-Type: application/json'); require_once '../db.php';
 
 // Chỉ lấy những món đang bán (selling)
-$sql = "SELECT a.id as auction_id, a.seller_name, a.price_gold, a.created_at, 
+$sql = "SELECT a.id as auction_id, a.seller_name, a.price_gold, a.created_at, a.upgrade_level,
                s.name, s.model_url, s.item_type, s.required_class, s.bonus_damage, s.bonus_hp 
         FROM auction_house a 
         JOIN shop_items s ON a.item_id = s.id 
