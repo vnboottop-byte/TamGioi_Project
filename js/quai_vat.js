@@ -109,11 +109,9 @@ function thucHienCaiChetCuaBoss(boss) {
 
     // (Bên dưới đoạn window.congKinhNghiem...)
     if (typeof window.taoHieuUngLootVang === 'function') {
-        // 🌟 BẢN VÁ: Truyền thêm boss.name vào hàm
-        window.taoHieuUngLootVang(boss.mesh.position, bossLevel, boss.name);
+        // 🌟 ĐÃ NỐI DÂY: Bắt buộc truyền boss.id để Server soi Database chống Hack!
+        window.taoHieuUngLootVang(boss.mesh.position, boss.id);
     }
-
-
 
 
 
