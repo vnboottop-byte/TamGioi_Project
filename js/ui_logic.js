@@ -1035,12 +1035,13 @@ window.tienHanhDapDo = function() {
 
 
 // ==========================================
-// 🔮 BỘ NÃO HỢP THÀNH (GHÉP ĐÁ)
+// 🔮 BỘ NÃO HỢP THÀNH (GHÉP ĐÁ) - BẢN VÁ LỖI HIỂN THỊ 3D
 // ==========================================
 window.renderTuiDoHopThanh = function() {
     const grid = document.getElementById('craftInventoryGrid');
     grid.innerHTML = '';
     let coDo = false;
+    let danhSachCanChup = []; // 🌟 THÊM KHAY CHỨA MÁY ẢNH 3D
 
     window.khoDoData.forEach(item => {
         let dangDuocDung = window.hopThanhData.stones.some(s => s && s.inv_id === item.inv_id);
@@ -1051,22 +1052,41 @@ window.renderTuiDoHopThanh = function() {
             coDo = true;
             let capDaMatch = item.name.match(/\d+/);
             let capDa = capDaMatch ? parseInt(capDaMatch[0]) : 1;
+            
+            // 🌟 TẠO MÃ ID ẢNH ĐỘC LẬP CHỐNG TRÙNG LẶP
+            let imgId = 'thumb_craft_' + item.inv_id;
 
+            // 🌟 NHÉT THÊM THẺ <img> ĐỂ ĐỘNG CƠ 3D ĐỔ ẢNH VÀO
             let iconHTML = `
                 <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
-                    <div style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5));">💎</div>
-                    <div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.5); padding:1px 3px; border-radius:2px;">C${capDa}</div>
+                    <div id="emoji_${imgId}" style="position:absolute; font-size:24px; filter: drop-shadow(0 0 5px rgba(0,255,255,0.5)); transition:0.3s;">💎</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.8)); transition: opacity 0.5s; opacity: 0;">
+                    <div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.5); padding:1px 3px; border-radius:2px; z-index:5;">C${capDa}</div>
                 </div>
             `;
             
             grid.innerHTML += `
-                <div class="inv-slot" style="background:#111; border:1px solid #3498db; border-radius:5px; height:60px; cursor:pointer; position:relative;" onclick='chonDaHopThanh(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${capDa})' title="${item.name}">
+                <div class="inv-slot" style="background:#111; border:1px solid #3498db; border-radius:5px; height:60px; cursor:pointer; position:relative; box-shadow: 0 2px 5px rgba(0,0,0,0.5);" onclick='chonDaHopThanh(${JSON.stringify(item).replace(/'/g, "&#39;")}, ${capDa})' title="${item.name}">
                     ${iconHTML}
                 </div>`;
+                
+            // 🌟 QUĂNG VÀO HÀNG ĐỢI MÁY ẢNH
+            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId, capDo: 0 });
         }
     });
+    
     if (!coDo) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#555; margin-top:50px;">Không tìm thấy Tinh Thạch trống...</div>';
+
+    // 🌟 KÍCH HOẠT STUDIO CHỤP ẢNH
+    setTimeout(() => {
+        danhSachCanChup.forEach(task => {
+            if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
+        });
+    }, 50);
 };
+
+
+
 
 window.chonDaHopThanh = function(item, capDa) {
     if (window.hopThanhData.targetLevel > 0 && capDa !== window.hopThanhData.targetLevel) {
@@ -1097,12 +1117,24 @@ window.goDaHopThanh = function(index) {
 
 window.capNhatGiaoDienHopThanh = function() {
     let count = 0;
+    let danhSachCanChup = []; // 🌟 THÊM KHAY CHỨA MÁY ẢNH 3D
+
     for (let i = 0; i < 3; i++) {
         let slot = document.getElementById('cStone_' + i);
         let stone = window.hopThanhData.stones[i];
         if (stone) {
             count++;
-            slot.innerHTML = `<div style="font-size:30px; filter: drop-shadow(0 0 10px cyan);">💎</div><div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.8); padding:1px 4px; border-radius:3px;">C${window.hopThanhData.targetLevel}</div>`;
+            let imgId = 'thumb_craft_slot_' + i; // 🌟 TẠO MÃ ID
+            
+            // 🌟 ĐƯA THẺ <img> VÀO 3 Ô TRỐNG
+            slot.innerHTML = `
+                <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
+                    <div id="emoji_${imgId}" style="font-size:30px; position:absolute; filter: drop-shadow(0 0 10px cyan); transition:0.3s;">💎</div>
+                    <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.8)); transition: opacity 0.5s; opacity: 0;">
+                    <div style="position:absolute; bottom:2px; right:2px; color:#fff; font-size:10px; font-weight:bold; background:rgba(0,0,0,0.8); padding:1px 4px; border-radius:3px; z-index:5;">C${window.hopThanhData.targetLevel}</div>
+                </div>
+            `;
+            danhSachCanChup.push({ url: stone.model_url, type: stone.item_type, id: imgId, capDo: 0 });
         } else {
             slot.innerHTML = '';
         }
@@ -1111,21 +1143,23 @@ window.capNhatGiaoDienHopThanh = function() {
     let costUI = document.getElementById('craftCost');
     let resultUI = document.getElementById('cResult');
 
-
-
-
     if (count === 3) {
         let capMoi = window.hopThanhData.targetLevel + 1;
         let chiPhi = capMoi * 3; // 🌟 PHÍ GHÉP ĐÁ: Cấp mục tiêu x 3 Vàng
         costUI.innerText = chiPhi.toLocaleString('vi-VN');
-
-
 
         resultUI.innerHTML = `<div style="font-size:40px; filter: drop-shadow(0 0 20px gold); animation: nhipTho 1s infinite;">💎</div><div style="position:absolute; bottom:5px; color:gold; font-size:14px; font-weight:900; text-shadow:0 0 5px red;">CẤP ${capMoi}</div>`;
     } else {
         costUI.innerText = "0";
         resultUI.innerHTML = `<span style="color:#555; font-size:12px; font-weight:bold;">THÀNH PHẨM</span>`;
     }
+
+    // 🌟 KÍCH HOẠT MÁY ẢNH CHỤP 3 Ô BÊN PHẢI
+    setTimeout(() => {
+        danhSachCanChup.forEach(task => {
+            if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
+        });
+    }, 50);
 };
 
 window.tienHanhHopThanh = function() {
