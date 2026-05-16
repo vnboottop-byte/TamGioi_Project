@@ -300,11 +300,22 @@ function renderTrangTuiDo() {
                 </div>
             `;
             
+
+
+
+
             htmlGrid += `
                 <div class="inv-slot ${isEq}" onclick='chonXemMonDo(${JSON.stringify(item).replace(/'/g, "&#39;")})' title="${item.name}">
                     ${iconHTML}
                     ${badge}
+                    ${badgeLvl}
                 </div>`;
+
+
+
+
+
+
             
             danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
         } else {
