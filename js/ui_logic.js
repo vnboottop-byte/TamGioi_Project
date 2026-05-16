@@ -921,8 +921,11 @@ window.capNhatGiaoDienLo = function() {
         let phanTramThucTe = (tongDiemDa / diemYeuCau) * 100;
         let phanTramHienThi = phanTramThucTe > 100 ? 100 : phanTramThucTe;
 
-        // 🌟 CHI PHÍ CỐ ĐỊNH: 1 ĐIỂM ĐÁ = 1000 VÀNG (1 Viên Cấp 1 = 100.000 Vàng)
-        let chiPhi = Math.floor(tongDiemDa * 1000);
+
+
+        // 🌟 CHI PHÍ LÒ RÈN: 1000 ĐIỂM = 1 VÀNG
+        let chiPhi = Math.floor(tongDiemDa / 1000);
+        if (chiPhi < 1 && tongDiemDa > 0) chiPhi = 1; // Tối thiểu 1 Vàng
         if (tongDiemDa === 0) chiPhi = 0;
 
         rateUI.innerText = phanTramHienThi.toFixed(1) + "%";
@@ -1108,10 +1111,16 @@ window.capNhatGiaoDienHopThanh = function() {
     let costUI = document.getElementById('craftCost');
     let resultUI = document.getElementById('cResult');
 
+
+
+
     if (count === 3) {
         let capMoi = window.hopThanhData.targetLevel + 1;
-        let chiPhi = window.hopThanhData.targetLevel * 50000; // Cấp 1 tốn 50k, Cấp 2 tốn 100k...
-        costUI.innerText = chiPhi.toLocaleString();
+        let chiPhi = capMoi * 3; // 🌟 PHÍ GHÉP ĐÁ: Cấp mục tiêu x 3 Vàng
+        costUI.innerText = chiPhi.toLocaleString('vi-VN');
+
+
+
         resultUI.innerHTML = `<div style="font-size:40px; filter: drop-shadow(0 0 20px gold); animation: nhipTho 1s infinite;">💎</div><div style="position:absolute; bottom:5px; color:gold; font-size:14px; font-weight:900; text-shadow:0 0 5px red;">CẤP ${capMoi}</div>`;
     } else {
         costUI.innerText = "0";
