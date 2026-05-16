@@ -273,10 +273,24 @@ function renderTrangTuiDo() {
     for (let i = startIdx; i < endIdx; i++) {
         let item = window.khoDoData[i];
         if (item) {
+
+
+
+
+
             let isEq = parseInt(item.is_equipped) === 1 ? 'equipped' : '';
-            let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';
-            
+            let badge = isEq ? '<div class="slot-badge">MẶC</div>' : '';            
             let fallbackEmoji = (item.item_type === 'weapon' || item.item_type === 'weapon2') ? '⚔️' : (item.item_type === 'mount' ? '🐲' : '👕');
+            // 🌟 NHÃN CẤP ĐỘ ĐẬP ĐỒ (Chịu trách nhiệm: Hiển thị góc phải ô đồ)
+            let lvl = parseInt(item.upgrade_level) || 0;
+            let badgeLvl = lvl > 0 ? `<div style="position:absolute; top:2px; right:2px; background:rgba(0,0,0,0.7); color:${lvl >= 10 ? 'gold' : 'cyan'}; border:1px solid ${lvl >= 10 ? 'gold' : '#00e5ff'}; font-size:10px; padding:1px 4px; border-radius:3px; font-weight:900; z-index:5; text-shadow: 0 0 5px ${lvl >= 10 ? 'orange' : 'blue'};">+${lvl}</div>` : '';
+
+
+
+
+
+
+
             let imgId = 'thumb_inv_' + item.inv_id;
 
             let iconHTML = `
