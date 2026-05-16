@@ -318,7 +318,7 @@ function renderTrangTuiDo() {
     setTimeout(() => {
         danhSachCanChup.forEach(task => {
             if(typeof window.taoThuNho3D === 'function') {
-                window.taoThuNho3D(task.url, task.type, task.id);
+                window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
             }
         });
     }, 50);
@@ -681,7 +681,7 @@ window.renderTuiDoLoRen = function() {
 
     setTimeout(() => {
         danhSachCanChup.forEach(task => {
-            if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id);
+            if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
         });
     }, 10);
 };
@@ -857,7 +857,7 @@ window.capNhatGiaoDienLo = function() {
 
     setTimeout(() => {
         danhSachCanChup.forEach(task => {
-            if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id);
+            if (typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo);
         });
     }, 50);
 };
