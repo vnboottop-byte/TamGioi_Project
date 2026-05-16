@@ -51,7 +51,9 @@ try {
 
 
 
-// 4. Khóa Tinh Thạch & Tính điểm chuẩn
+
+
+    // 4. Khóa Tinh Thạch & Tính điểm chuẩn
     $total_stone_score = 0;
     $valid_stone_ids = []; 
     
@@ -74,46 +76,46 @@ try {
             preg_match('/\d+/', $stone['name'], $matches);
             $capDa = !empty($matches) ? intval($matches[0]) : 1;
             
-            // 🌟 ĐIỂM ĐÁ LŨY THỪA 3: Cấp 1=1đ, Cấp 2=3đ, Cấp 3=9đ
-            $diem = pow(3, $capDa - 1);
+            // 🌟 ĐIỂM CHUẨN KIẾM THẾ (Hệ số 10/3)
+            $diem = pow(10/3, $capDa - 1) * 100;
             $total_stone_score += $diem;
         }
     }
 
-    // 5. Tái lập Tỷ Lệ Thực Tế (Giống y hệt Client)
+    // 5. Tái lập Tỷ Lệ Thực Tế
     $target_lvl = $current_lvl + 1;
-    $diemYeuCau = pow(3, $target_lvl - 1);
+    $diemYeuCau = pow(10/3, $target_lvl - 1) * 100;
 
     $phanTramThucTe = ($total_stone_score / $diemYeuCau) * 100;
     
-    // 6. Tính Phí Luyện Hóa: Giá Gốc * 3^(Cấp Mục Tiêu - 1) * (Phần Trăm / 100)
+    // 6. Tính Phí Luyện Hóa: Dựa theo tổng điểm đá bỏ vào x (Giá Gốc / 100)
     $price_goc = intval($mainItem['price']);
     if ($price_goc <= 0) $price_goc = 10000;
     
-    $mocTien100PhanTram = $price_goc * pow(3, $target_lvl - 1);
-    $cost = floor($mocTien100PhanTram * ($phanTramThucTe / 100));
-    if ($cost < 1000) $cost = 1000;
+    $cost = floor($total_stone_score * ($price_goc / 100));
+    if ($cost < 1000 && $total_stone_score > 0) $cost = 1000;
+    if ($total_stone_score == 0) $cost = 0;
 
     if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
 
     // 7. MÁY QUAY XỔ SỐ CHỐNG HACK
-    $rand_val = rand(1, 10000) / 100; // Ra kết quả từ 0.01 đến 100.00
+    $rand_val = rand(1, 10000) / 100; 
     
-    // Tỷ lệ thực tế có thể lên đến 200% nếu nhét thừa đá, nhưng rand_val chỉ max 100. Nên >= 100% là 100% Win.
+    // Tỷ lệ thực tế có thể lên đến 120%, rand_val max là 100. Nên chắc chắn 100% Win!
     $is_success = ($rand_val <= $phanTramThucTe);
     
     $new_lvl = $current_lvl;
     $drop_level = false;
 
     if ($is_success) {
-        $new_lvl = $current_lvl + 1; // 🟢 LÊN CẤP!
+        $new_lvl = $current_lvl + 1; 
     } else {
-        // 🔴 THẤT BẠI! CHẾ ĐỘ RỚT CẤP HARDCORE
+        // Rớt cấp Hardcore
         if ($current_lvl >= 6 && $current_lvl <= 9) {
-            $new_lvl = $current_lvl - 1; // Rớt 1 cấp
+            $new_lvl = $current_lvl - 1; 
             $drop_level = true;
         } else if ($current_lvl >= 11 && $current_lvl <= 14) {
-            $new_lvl = 10; // Rớt lọt sàn về +10
+            $new_lvl = 10; 
             $drop_level = true;
         }
     }
@@ -146,3 +148,7 @@ try {
     echo json_encode(['status' => 'error', 'msg' => $e->getMessage()]);
 }
 ?>
+
+
+
+
