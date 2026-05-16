@@ -22,13 +22,6 @@ if ($item_id <= 0) {
 $conn->begin_transaction();
 
 try {
-    // 2. CHECK XEM ĐÃ MUA MÓN NÀY CHƯA (Tránh mua 2 cây kiếm giống hệt nhau tốn tiền)
-    $stmt_check = $conn->prepare("SELECT id FROM user_inventory WHERE username=? AND item_id=?");
-    $stmt_check->bind_param("si", $username, $item_id);
-    $stmt_check->execute();
-    if($stmt_check->get_result()->num_rows > 0) {
-        throw new Exception('Sếp đã sở hữu món pháp bảo này rồi! Hãy kiểm tra Túi Đồ.');
-    }
 
     // 3. SOI GIÁ TIỀN TỪ CỬA HÀNG
     $stmt_item = $conn->prepare("SELECT * FROM shop_items WHERE id = ?");
