@@ -11,7 +11,9 @@ if ($price <= 0) { echo json_encode(['status' => 'error', 'msg' => 'Giá bán ph
 $conn->begin_transaction();
 try {
     // Kéo đồ từ túi ra
-    $stmt = $conn->prepare("SELECT item_id, item_type, is_equipped FROM user_inventory WHERE id = ? AND username = ?");
+ 
+    $stmt = $conn->prepare("SELECT item_id, item_type, is_equipped, upgrade_level FROM user_inventory WHERE id = ? AND username = ?");
+   
     $stmt->bind_param("is", $inv_id, $user); $stmt->execute();
     $item = $stmt->get_result()->fetch_assoc();
 
