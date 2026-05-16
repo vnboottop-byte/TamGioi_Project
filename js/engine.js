@@ -3693,12 +3693,11 @@ window.taoChuNoiGacha = function (pos3D, text, color) {
 };
 
 // ==================================================
-// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V14 - FULL CHỮ VÀ VŨ KHÍ 3D KHỔNG LỒ)
+// 💎 HIỆU ỨNG AUTO-LOOT LINH THẠCH & ĐỒ 3D THẬT (BẢN V15 - ĐỒNG BỘ ID CHỐNG HACK)
 // ==================================================
-window.taoHieuUngLootVang = function(viTriXac, levelBoss, tenBoss) {
+window.taoHieuUngLootVang = function (viTriXac, bossId) {
     let fd = new FormData();
-    fd.append('monster_level', levelBoss);
-    fd.append('monster_name', tenBoss || '');
+    fd.append('monster_id', bossId); // Gửi đúng ID qua chốt kiểm duyệt của PHP
 
     fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
     .then(data => {
