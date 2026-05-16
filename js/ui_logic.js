@@ -579,32 +579,62 @@ window.banRacPhiShop = function(invId) {
 
 
 
-// 🌟 THUẬT TOÁN TREO BÁN LÊN CHỢ ĐEN
-window.treoBanChoden = function(invId) {
-    let giaBan = prompt("⚖️ Nhập số Linh Thạch (Vàng) bạn muốn bán món này (Thuế chợ 5%):", "10000");
-    if (giaBan === null || giaBan.trim() === "") return;
-    
-    let parsedGia = parseInt(giaBan.replace(/\D/g, '')); // Lọc lấy số
-    if (isNaN(parsedGia) || parsedGia <= 0) { alert("❌ Giá không hợp lệ!"); return; }
 
-    if(!confirm(`Bạn sẽ treo bán món này với giá ${parsedGia.toLocaleString()} Vàng?\nThuế giao dịch 5% sẽ được trừ khi có người mua.`)) return;
 
-    let fd = new FormData();
-    fd.append('inv_id', invId);
-    fd.append('price_gold', parsedGia);
 
-    fetch('api/sell_auction.php', { method: 'POST', body: fd })
-    .then(res => res.json()).then(data => {
-        if(data.status === 'success') {
-            alert("✔️ Đã ném đồ lên Chợ Đen thành công!");
-            window.moTuiDoVIP(); // Cập nhật lại túi đồ
-        } else alert("❌ Lỗi: " + data.msg);
+
+// ==========================================
+// ⌨️ UI NHẬP LIỆU GAME AAA (THAY THẾ PROMPT CHROME)
+// ==========================================
+window.hienNhapLieuGame = function (msg, defaultValue, callbackYes) {
+    let box = document.getElementById('gameInputBox');
+    if (!box) {
+        box = document.createElement('div'); box.id = 'gameInputBox';
+        box.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:1000009; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(5px);';
+        document.body.appendChild(box);
+    }
+    box.innerHTML = `
+        <div style="width: 400px; background: linear-gradient(135deg, #2c3e50 0%, #000 100%); border: 2px solid #9b59b6; border-radius: 10px; padding: 20px; text-align: center; box-shadow: 0 0 30px rgba(155, 89, 182, 0.4);">
+            <div style="font-size: 50px; margin-bottom: 10px;">⚖️</div>
+            <h2 style="color: #d2b4de; margin: 0 0 15px 0; text-transform: uppercase;">CHỢ ĐEN GIAO DỊCH</h2>
+            <div style="color: #fff; font-size: 14px; margin-bottom: 15px; line-height: 1.5; white-space: pre-wrap;">${msg}</div>
+            <input type="number" id="gameInputValue" value="${defaultValue}" style="width: 80%; padding: 10px; font-size: 18px; font-weight: bold; text-align: center; color: gold; background: #000; border: 2px solid #f1c40f; border-radius: 5px; margin-bottom: 20px; outline: none;">
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="btnInputYes" style="flex: 1; background: #8e44ad; color: white; font-weight: 900; font-size: 16px; border: 2px solid #9b59b6; padding: 10px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 15px rgba(142, 68, 173, 0.5);">✔️ XÁC NHẬN</button>
+                <button onclick="document.getElementById('gameInputBox').style.display='none'" style="flex: 1; background: #555; color: #fff; font-weight: bold; font-size: 16px; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">HỦY BỎ</button>
+            </div>
+        </div>
+    `;
+    box.style.display = 'flex';
+    setTimeout(() => document.getElementById('gameInputValue').focus(), 100);
+    document.getElementById('btnInputYes').onclick = function () {
+        let val = document.getElementById('gameInputValue').value;
+        box.style.display = 'none';
+        callbackYes(val);
+    };
+};
+
+window.treoBanChoden = function (invId) {
+    window.hienNhapLieuGame("Nhập số Linh Thạch (Vàng) bạn muốn bán món này\n(Thuế chợ 5% sẽ được thu khi có người mua):", 100000, function (giaBan) {
+        let parsedGia = parseInt(giaBan);
+        if (isNaN(parsedGia) || parsedGia <= 0) { window.hienThongBaoGame("❌ Giá không hợp lệ!", false); return; }
+
+        window.hienXacNhanGame(`Bạn sẽ treo bán pháp bảo này với giá ${parsedGia.toLocaleString()} Vàng?`, function () {
+            let fd = new FormData(); fd.append('inv_id', invId); fd.append('price_gold', parsedGia);
+            fetch('api/sell_auction.php', { method: 'POST', body: fd })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        window.hienThongBaoGame("✔️ Đã ném đồ lên Chợ Đen thành công!", true);
+                        window.moTuiDoVIP();
+                    } else window.hienThongBaoGame("❌ Lỗi: " + data.msg, false);
+                });
+        });
     });
 };
 
 
 
-
+    
 
 
 
