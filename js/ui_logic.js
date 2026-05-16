@@ -517,12 +517,11 @@ function hienThi3DTrongTui(url, loaiDo) {
 
 
 
-// 🌟 THUẬT TOÁN KIỂM TRA PHÁI VÀ THAY ĐỒ
 window.thucHienHanhDongTrangBi = function(invId, action) {
     if (action === 'equip') {
         let item = window.khoDoData.find(i => i.inv_id == invId);
         if (item && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
-            alert(`⚠️ Tẩu hỏa nhập ma! Pháp bảo này chứa sức mạnh của hệ [${item.required_class}], cơ thể bạn không chịu nổi!`);
+            window.hienThongBaoGame(`Tẩu hỏa nhập ma! Pháp bảo này chứa sức mạnh của hệ [${item.required_class}], cơ thể bạn không chịu nổi!`, false);
             return;
         }
     }
@@ -534,23 +533,24 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
             location.reload();
-        } else alert("Lỗi thay đồ!");
+        } else window.hienThongBaoGame("Lỗi thay đồ!", false);
     });
 };
 
+
 // 🌟 THUẬT TOÁN BÁN RÁC (PHÂN RÃ)
 window.banRacPhiShop = function(invId) {
-    if(!confirm("♻️ Bạn có chắc muốn ném món này vào Lò Bát Quái để phân rã lấy Linh thạch không? Mất vĩnh viễn đó nha!")) return;
-    
-    fetch('api/sell_item.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ inv_id: invId })
-    }).then(res => res.json()).then(data => {
-        if(data.status === 'success') {
-            if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} LINH THẠCH`, "gold");
-            window.moTuiDoVIP(); 
-        } else alert(data.msg);
+    window.hienXacNhanGame("Bạn có chắc muốn ném món này vào Lò Bát Quái để phân rã lấy Linh thạch không?\nThao tác này làm mất trang bị vĩnh viễn!", function() {
+        fetch('api/sell_item.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ inv_id: invId })
+        }).then(res => res.json()).then(data => {
+            if(data.status === 'success') {
+                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0,5,0)), `+${data.gold_earned} VÀNG`, "gold");
+                window.moTuiDoVIP(); 
+            } else window.hienThongBaoGame(data.msg, false);
+        });
     });
 };
 
