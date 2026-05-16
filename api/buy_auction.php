@@ -8,7 +8,11 @@ $auction_id = intval($_POST['auction_id']);
 $conn->begin_transaction();
 try {
     // 1. Khóa Chợ Đấu Giá (FOR UPDATE để 2 người ko bấm mua 1 món cùng lúc)
-    $stmt = $conn->prepare("SELECT seller_name, item_id, item_type, price_gold FROM auction_house WHERE id = ? AND status = 'selling' FOR UPDATE");
+  
+  
+    $stmt = $conn->prepare("SELECT seller_name, item_id, item_type, price_gold, upgrade_level FROM auction_house WHERE id = ? AND status = 'selling' FOR UPDATE");
+
+    
     $stmt->bind_param("i", $auction_id); $stmt->execute();
     $auction = $stmt->get_result()->fetch_assoc();
 
