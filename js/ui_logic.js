@@ -381,7 +381,7 @@ window.chonXemMonDo = function(item) {
 
 
 // 🌟 BỘ MÁY ĐÚC 3D TRONG TÚI ĐỒ (ĐÃ FIX GÓC XOAY ĐẸP NHƯ LÂM TỲ CÁC)
-function hienThi3DTrongTui(url, loaiDo) {
+function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
     let box = document.getElementById('inv3DViewer');
     let loading = document.getElementById('inv3DLoading');
     if (!box) return;
