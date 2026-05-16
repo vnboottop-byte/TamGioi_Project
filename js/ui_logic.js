@@ -292,12 +292,14 @@ function renderTrangTuiDo() {
                 </div>`;
 
 
+           
+            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId, capDo: parseInt(item.upgrade_level)||0 });
 
 
 
 
-            
-            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
+
+
         } else {
             htmlGrid += `<div class="inv-slot" style="background:#0a0a0a; border-color:#222; cursor:default;"></div>`;
         }
@@ -671,7 +673,7 @@ window.renderTuiDoLoRen = function() {
                     ${isEq}
                 </div>`;
                 
-            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId });
+            danhSachCanChup.push({ url: item.model_url, type: item.item_type, id: imgId, capDo: parseInt(item.upgrade_level)||0 });
         }
     });
     
@@ -793,7 +795,7 @@ window.capNhatGiaoDienLo = function() {
                 <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 85%; height: 85%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 10px rgba(255,170,0,0.8)); transition: opacity 0.5s; opacity: 0;">
             </div>
         `;
-        danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId });
+        danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId, capDo: parseInt(it.upgrade_level)||0 });
     } else {
         slotTrungTam.innerHTML = `<span style="color:#555;">+</span>`;
     }
@@ -817,7 +819,7 @@ window.capNhatGiaoDienLo = function() {
                     <img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; width: 80%; height: 80%; object-fit: contain; z-index:2; filter: drop-shadow(0 0 5px rgba(0,229,255,0.8)); transition: opacity 0.5s; opacity: 0;">
                 </div>
             `;
-            danhSachCanChup.push({ url: stone.model_url, type: stone.item_type, id: imgId });
+            danhSachCanChup.push({ url: stone.model_url, type: stone.item_type, id: imgId, capDo: 0 });
         } else {
             sSlot.innerHTML = '';
         }
