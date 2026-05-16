@@ -818,7 +818,73 @@ window.capNhatGiaoDienLo = function() {
     }, 50);
 };
 
-// 7. XIN CHÀO GIAI ĐOẠN 4
+
+// 7. NỐI DÂY VÀO SERVER ĐỂ KHAI LÒ
 window.tienHanhDapDo = function() {
-    alert("⚒️ Giao diện và Công thức tỷ lệ của Lò Rèn đã thông luồng chuẩn xác!\n\nAnh em ta sẽ gắn Lõi Backend (Tính toán, trừ Vàng, rớt cấp, Random thực tế chống Hack) ở Giai Đoạn 4 nhé Sếp!");
+    if (!window.loRenData.item) {
+        alert("❌ Sếp chưa bỏ Pháp Bảo vào lò!");
+        return;
+    }
+    
+    let stoneIds = [];
+    window.loRenData.stones.forEach(s => {
+        if (s) stoneIds.push(s.inv_id); // Nhặt ID của mấy cục đá
+    });
+    
+    if (stoneIds.length === 0) {
+        if (!confirm("⚠️ Sếp không bỏ Tinh Thạch nào vào lò, tỷ lệ thành công là 0%. Sếp vẫn muốn đập (chỉ tốn Vàng)?")) return;
+    } else {
+        if (!confirm("🔥 Xác nhận khai hỏa Lò Bát Quái? Tinh thạch sẽ bị thiêu rụi!")) return;
+    }
+    
+    let btn = document.getElementById('btnKhaiLo');
+    btn.disabled = true;
+    btn.innerText = "ĐANG LUYỆN HÓA...";
+    
+    let fd = new FormData();
+    fd.append('item_id', window.loRenData.item.inv_id);
+    fd.append('stones', JSON.stringify(stoneIds));
+    
+    fetch('api/upgrade_item.php', { method: 'POST', body: fd })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerText = "🔨 ĐẬP ĐỒ";
+        
+        if (data.status === 'success') {
+            // Cập nhật ví Vàng ngay lập tức
+            let goldUI = document.getElementById('gameGoldUI');
+            if (goldUI) goldUI.innerText = parseInt(data.new_gold).toLocaleString();
+            
+            // Lấy tọa độ đỉnh đầu người chơi để thả chữ
+            let charPos = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.position.clone() : new THREE.Vector3(0,0,0);
+            charPos.y += 5;
+            
+            // 🌟 HIỆU ỨNG THÀNH BẠI
+            if (data.result === 'SUCCESS') {
+                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, "✨ NÂNG CẤP THÀNH CÔNG! ✨", "#2ecc71");
+                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0x2ecc71); // Nổ sáng xanh lá
+            } else {
+                let msgFail = "❌ NÂNG CẤP THẤT BẠI!";
+                if (data.drop_level) msgFail = "📉 THẤT BẠI - BỊ RỚT CẤP!";
+                if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, msgFail, "#e74c3c");
+                if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0xe74c3c); // Nổ xịt đỏ
+            }
+            
+            // Xóa sạch đá trong Lò vì đã bị đốt cháy
+            window.loRenData.stones = [null, null, null, null, null, null];
+            
+            // Đóng cửa sổ và mở lại để Tải lại kho đồ mới nhất từ Server
+            document.getElementById('forgeModal').style.display = 'none';
+            window.moLoBatQuai(); 
+            
+        } else {
+            alert("❌ Lỗi Lò Rèn: " + data.msg);
+        }
+    })
+    .catch(e => {
+        btn.disabled = false;
+        btn.innerText = "🔨 ĐẬP ĐỒ";
+        alert("Lỗi kết nối đến Server!");
+    });
 };
