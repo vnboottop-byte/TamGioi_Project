@@ -14,32 +14,44 @@
     const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
     const thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
+
     function batDauHoiChieu(phimUpper) {
         let tgHoi = thoiGianHoiChieu[phimUpper], tgBatDau = Date.now();
-        let mbSlot = document.getElementById('slot-mb-' + phimUpper);
-        if (!mbSlot) return;
         
-        let mbOv = mbSlot.querySelector('.m-cd');
-        let mbTxt = mbSlot.querySelector('.cd-text');
+        // Cập nhật cả nút PC (Phòng hờ) và nút Mobile
+        let pcSlot = document.getElementById('slot-' + phimUpper);
+        let pcOv = pcSlot ? pcSlot.querySelector('.cd-overlay') : null;
+        let pcTxt = pcSlot ? pcSlot.querySelector('.cd-text') : null;
 
+        let mbSlot = document.getElementById('slot-mb-' + phimUpper);
+        let mbOv = mbSlot ? mbSlot.querySelector('.m-cd') : null;
+        let mbTxt = mbSlot ? mbSlot.querySelector('.cd-text') : null;
+
+        if (pcOv) pcOv.style.height = '100%';
         if (mbOv) mbOv.style.height = '100%';
+        if (pcTxt) pcTxt.style.display = 'block';
         if (mbTxt) mbTxt.style.display = 'block';
         
         const interval = setInterval(() => {
             let conLai = tgHoi - (Date.now() - tgBatDau);
             if (conLai <= 0) {
                 clearInterval(interval); 
+                if (pcOv) pcOv.style.height = '0%';
                 if (mbOv) mbOv.style.height = '0%';
+                if (pcTxt) pcTxt.style.display = 'none';
                 if (mbTxt) mbTxt.style.display = 'none';
             } else {
                 let pt = (conLai / tgHoi * 100) + '%';
                 let sec = (conLai / 1000).toFixed(1);
+                if (pcOv) pcOv.style.height = pt;
                 if (mbOv) mbOv.style.height = pt;
+                if (pcTxt) pcTxt.innerText = sec;
                 if (mbTxt) mbTxt.innerText = sec;
             }
         }, 50); 
     }
 
+ 
     function kichHoatKyNang(phimUpper) {
         if (!window.playerModel || window.isDead || window.dangMuaChieu) return;
         let bayGio = Date.now();
