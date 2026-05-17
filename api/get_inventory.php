@@ -11,9 +11,12 @@ $stmt_gold = $conn->query("SELECT game_gold FROM game_characters WHERE username 
 $game_gold = ($stmt_gold && $stmt_gold->num_rows > 0) ? $stmt_gold->fetch_assoc()['game_gold'] : 0;
 
 // Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
+// Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
+// Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
 $sql = "SELECT inv.id as inv_id, inv.item_id, inv.item_type, inv.is_equipped, inv.upgrade_level,
-               shop.name, shop.model_url, shop.required_class, shop.bonus_damage, shop.bonus_hp, shop.price 
-        FROM user_inventory inv 
+               shop.name, shop.model_url, shop.required_class, shop.bonus_damage, shop.bonus_hp, shop.bonus_speed, shop.price 
+        FROM user_inventory inv
+       
         JOIN shop_items shop ON inv.item_id = shop.id 
         WHERE inv.username = ? 
         ORDER BY inv.is_equipped DESC, inv.id DESC";
