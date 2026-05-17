@@ -327,7 +327,6 @@ function renderTrangTuiDo() {
 window.chuyenTrangTuiDo = function(p) { window.trangHienTai = p; renderTrangTuiDo(); };
 
 
-
 // Hàm Chọn Món Đồ Hiện Ra Bên Phải
 window.chonXemMonDo = function(item) {
     let detailBox = document.getElementById('invDetailContent');
@@ -346,20 +345,13 @@ window.chonXemMonDo = function(item) {
                <button class="btn-cyber" style="background:transparent; border:1px solid #f1c40f; color:#f1c40f; margin:0; padding:8px; font-size:11px; flex:1;" onclick="treoBanChoden(${item.inv_id})">⚖️ TREO CHỢ</button>
            </div>`;
 
-
-
-
-
-
-
-
-
-
-
     // 🌟 TÍNH TOÁN CHỈ SỐ THỰC TẾ SAU KHI ĐẬP ĐỒ (Mỗi cấp + 5% sức mạnh gốc)
+    let lvl = parseInt(item.upgrade_level) || 0;
+    let heSoCong = 1.0 + (lvl * 0.05); // VD: +15 = 1.0 + 0.75 = x1.75
+
     let dameThucTe = Math.floor((item.bonus_damage || 0) * heSoCong);
     let hpThucTe = Math.floor((item.bonus_hp || 0) * heSoCong);
-    let tocDoThucTe = Math.floor((item.bonus_speed || 0) * heSoCong); // 🌟 TÍNH TỐC ĐỘ
+    let tocDoThucTe = Math.floor((item.bonus_speed || 0) * heSoCong); // 🌟 TỐC ĐỘ
 
     // 🌟 RÚT GỌN TÊN VÀ HỆ YÊU CẦU CHO ĐẸP VÀ VỪA VẶN
     let tenHienThi = lvl > 0 ? `${item.name} [+${lvl}]` : item.name;
@@ -367,8 +359,9 @@ window.chonXemMonDo = function(item) {
     // Khoe thêm chỉ số gốc bằng chữ nhỏ mờ mờ cho VIP
     let hienThiGocDame = lvl > 0 ? `<span style="font-size:9px; color:#888; margin-right:5px;">(Gốc: ${item.bonus_damage || 0})</span>` : '';
     let hienThiGocHp = lvl > 0 ? `<span style="font-size:9px; color:#888; margin-right:5px;">(Gốc: ${item.bonus_hp || 0})</span>` : '';
-    let hienThiGocSpd = lvl > 0 ? `<span style="font-size:9px; color:#888; margin-right:5px;">(Gốc: ${item.bonus_speed || 0})</span>` : ''; // 🌟 HIỂN THỊ GỐC TỐC ĐỘ
+    let hienThiGocSpd = lvl > 0 ? `<span style="font-size:9px; color:#888; margin-right:5px;">(Gốc: ${item.bonus_speed || 0})</span>` : '';
 
+    // Gắn thông số và các Nút Hành Động
     detailBox.innerHTML = `
         <h3 style="color:${isEq ? 'gold' : '#00e5ff'}; margin:0 0 5px 0; text-transform:uppercase; font-size: 16px; text-shadow: 0 0 5px ${isEq ? 'gold' : 'cyan'};">${tenHienThi}</h3>
 
@@ -380,28 +373,13 @@ window.chonXemMonDo = function(item) {
             <div>⚡ Tốc Độ: <span style="color:#3498db; float:right; font-weight:bold;">${hienThiGocSpd} +${tocDoThucTe}</span></div>
         </div>
         
-
-
         ${btnHanhDong}
         ${btnBanRac}
     `;
 
-
-
-
-
-
-
-
-
-
-
-
     // 🌟 KÍCH HOẠT MÁY CHIẾU 3D
     hienThi3DTrongTui(item.model_url, item.item_type, parseInt(item.upgrade_level)||0);
 };
-
-
 
 
 
