@@ -1,11 +1,10 @@
 <?php
-// FILE: api/get_auctions.php (BẢN V4 - TÍCH HỢP MÁY QUÉT RÁC 24H)
 session_start(); header('Content-Type: application/json'); require_once '../db.php';
 
-// 1. MÁY QUÉT THỜI GIAN: Đẩy đồ quá 24H vào trạng thái 'expired' (Hộp thư rác)
+// 1. MÁY QUÉT 24H: Đẩy đồ treo quá 1 ngày vào Hộp Thư Rác
 $conn->query("UPDATE auction_house SET status = 'expired' WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 1 DAY)");
 
-// 2. LẤY DANH SÁCH HÀNG ĐANG BÁN (Bao gồm cả Đồ vật và Tiền tệ)
+// 2. Lấy danh sách đang bán (Hỗ trợ cả Vật phẩm và Tiền tệ)
 $sql = "SELECT a.id as auction_id, a.seller_name, a.item_id, a.price_gold, a.created_at, a.upgrade_level, a.item_type as auction_type,
                s.name, s.model_url, s.item_type, s.required_class, s.bonus_damage, s.bonus_hp 
         FROM auction_house a 
@@ -17,7 +16,7 @@ $res = $conn->query($sql);
 $data = [];
 while ($row = $res->fetch_assoc()) { $data[] = $row; }
 
-// 3. LẤY TÀI SẢN NGƯỜI XEM (Vàng & Linh Thạch)
+// 3. Lấy số dư 2 ví của người chơi (Vàng & Linh Thạch)
 $gold = 0; $linh_thach = 0;
 if (isset($_SESSION['user'])) {
     $user = $_SESSION['user'];
