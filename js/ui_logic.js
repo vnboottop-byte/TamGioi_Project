@@ -1518,3 +1518,6 @@ window.locChoDen = function(giaTri, kieuLoc, btnEl) {
     grid.innerHTML = html;
     setTimeout(() => { danhSachCanChup.forEach(task => { if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo); }); }, 50);
 };
+window.dongChoDen = function() { document.getElementById('auctionModal').style.display = 'none'; };
+
+
