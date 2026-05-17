@@ -1,5 +1,4 @@
 <?php
-// FILE: api/buy_auction.php (BẢN V6 - KHỚP LỆNH MUA MỘT PHẦN)
 session_start(); header('Content-Type: application/json'); require_once '../db.php';
 if (!isset($_SESSION['user'])) exit;
 
@@ -13,15 +12,15 @@ try {
     $stmt->bind_param("i", $auction_id); $stmt->execute();
     $auction = $stmt->get_result()->fetch_assoc();
 
-    if (!$auction) throw new Exception("Lô hàng đã bị nẫng tay trên hoặc đã hết!");
+    if (!$auction) throw new Exception("Lô hàng đã bị mua mất hoặc hết hạn!");
     if ($auction['seller_name'] === $buyer) throw new Exception("Không thể tự mua đồ của mình!");
 
     $seller = $auction['seller_name'];
 
     if ($auction['item_type'] === 'currency') {
-        // --- LUỒNG MUA LINH THẠCH (Trừ Vàng người mua, Trả LT người mua) ---
+        // --- KHỚP LỆNH MUA LINH THẠCH MỘT PHẦN ---
         $rate = intval($auction['price_gold']);
-        $lt_available = intval($auction['item_id']); // Số LT còn lại trên sàn
+        $lt_available = intval($auction['item_id']); 
         
         if ($buy_amount <= 0 || $buy_amount > $lt_available) throw new Exception("Số lượng mua không hợp lệ!");
         
@@ -33,18 +32,17 @@ try {
         $buyer_data = $stmtB->get_result()->fetch_assoc();
         
         if (!$buyer_data || $buyer_data['game_gold'] < $tongVangPhaiTra) throw new Exception("Không đủ Vàng để thanh toán ($tongVangPhaiTra Vàng)!");
-        
         $conn->query("UPDATE game_characters SET game_gold = game_gold - $tongVangPhaiTra WHERE username = '$buyer'");
         
-        // Cộng Linh Thạch cho người mua
+        // Cộng Linh Thạch người mua
         $conn->query("UPDATE users SET balance = balance + $buy_amount WHERE username = '$buyer'");
 
-        // Cộng Vàng cho người bán (Bị trừ 5% thuế trên số Vàng nhận được)
+        // Cộng Vàng người bán (Bị trừ 5% thuế sàn)
         $tax = intval($tongVangPhaiTra * 0.05);
         $vangThucNhan = $tongVangPhaiTra - $tax;
         $conn->query("UPDATE game_characters SET game_gold = game_gold + $vangThucNhan WHERE username = '$seller'");
 
-        // Cập nhật lại số LT còn lại trên sàn
+        // Cập nhật sàn (Nếu mua hết thì xóa, chưa hết thì cập nhật số dư)
         $lt_remaining = $lt_available - $buy_amount;
         if ($lt_remaining <= 0) {
             $conn->query("UPDATE auction_house SET status = 'sold', item_id = 0 WHERE id = $auction_id");
@@ -53,8 +51,24 @@ try {
         }
 
     } else {
-        // --- LUỒNG BÌNH THƯỜNG MUA ĐỒ BẰNG VÀNG ---
-        // (Sếp giữ nguyên phần trừ vàng cộng đồ vào túi như cũ nhé)
+        // --- KHỚP LỆNH MUA PHÁP BẢO ---
+        $price = intval($auction['price_gold']);
+        $stmtB = $conn->prepare("SELECT game_gold FROM game_characters WHERE username = ? FOR UPDATE");
+        $stmtB->bind_param("s", $buyer); $stmtB->execute();
+        $buyer_data = $stmtB->get_result()->fetch_assoc();
+
+        if (!$buyer_data || $buyer_data['game_gold'] < $price) throw new Exception("Không đủ Vàng!");
+        
+        $conn->query("UPDATE game_characters SET game_gold = game_gold - $price WHERE username = '$buyer'");
+        $tax = intval($price * 0.05);
+        $final_gold_to_seller = $price - $tax;
+        $conn->query("UPDATE game_characters SET game_gold = game_gold + $final_gold_to_seller WHERE username = '$seller'");
+
+        $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level) VALUES (?, ?, ?, 0, ?)");
+        $in->bind_param("sisi", $buyer, $auction['item_id'], $auction['item_type'], $auction['upgrade_level']);
+        $in->execute();
+
+        $conn->query("UPDATE auction_house SET status = 'sold' WHERE id = $auction_id");
     }
 
     $conn->commit(); echo json_encode(['status' => 'success']);
