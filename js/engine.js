@@ -3835,3 +3835,81 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
         }
     }).catch(e => {});
 };
+
+
+
+
+
+
+
+
+
+
+
+
+// =========================================================================
+// ⚔️ HÀM CẬP NHẬT VŨ KHÍ REAL-TIME KHÔNG LOAD TRANG (BẢN VÁ BỌC THÉP GM)
+// =========================================================================
+window.capNhatTrangBi3DNgayLapTuc = function(loaiItem, urlMoi, capDo = 0) {
+    if (loaiItem !== 'weapon') {
+        // Tạm thời tối ưu cho Vũ Khí Chính để Sếp test độ mượt, Thú cưỡi sẽ đi ở nhánh riêng sau
+        if (urlMoi !== '') window.location.reload(); 
+        return;
+    }
+
+    console.log(`🛠️ Engine nhận lệnh đổi Vũ khí ngầm: ${urlMoi} | Cấp: +${capDo}`);
+
+    // 1. THIÊU HỦY VŨ KHÍ CŨ TRÊN TAY ĐỂ GIẢI PHÓNG VRAM KHÔNG GIAN
+    if (window.vuKhiModel) {
+        if (typeof window.donRac3D === 'function') {
+            window.donRac3D(window.vuKhiModel);
+        } else {
+            if (window.vuKhiModel.parent) window.vuKhiModel.parent.remove(window.vuKhiModel);
+            scene.remove(window.vuKhiModel);
+        }
+        window.vuKhiModel = null;
+    }
+
+    // Cập nhật lại biến môi trường toàn cục cho hệ thống combat
+    window.WEAPON_URL = urlMoi;
+    window.WEAPON_LEVEL = capDo;
+
+    // 2. NẾU LÀ LỆNH THÁO ĐỒ (urlMoi rỗng) -> DỪNG TẠI ĐÂY
+    if (!urlMoi || urlMoi.trim() === "") {
+        console.log("❌ Đã gỡ vũ khí, nhân vật về trạng thái tay không!");
+        return;
+    }
+
+    // 3. NẾU LÀ LỆNH MẶC ĐỒ -> NẠP NGẦM FILE GLB MỚI
+    if (window.loaderSieuToc && window.nhanVatChinh) {
+        window.loaderSieuToc.load(urlMoi, function (gltfW) {
+            let vuKhiMoi = gltfW.scene; 
+            window.vuKhiModel = vuKhiMoi;
+
+            // Kích sáng chuẩn kim loại tinh thạch
+            if (typeof window.bocHDRI_NhanVat === 'function') window.bocHDRI_NhanVat(vuKhiMoi);
+            
+            // Dò tìm xương bàn tay phải (HAND_R) của nhân vật chính để hàn vào
+            let tayCam = null;
+            window.nhanVatChinh.traverse(c => { 
+                if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
+                    tayCam = c; 
+                } 
+            });
+
+            if (tayCam) {
+                tayCam.add(vuKhiMoi);
+                vuKhiMoi.position.set(0, 0, 0); 
+                console.log("⚔️ Đã hàn thành công Pháp Bảo mới vào xương tay:", tayCam.name);
+            } else {
+                window.nhanVatChinh.add(vuKhiMoi);
+                vuKhiMoi.position.set(1, 1, 0); 
+            }
+
+            // Gắn hiệu ứng phát sáng Neon thần thánh theo cấp độ đập đồ
+            if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
+                window.bocHaoQuang3D(vuKhiMoi, capDo);
+            }
+        });
+    }
+};
