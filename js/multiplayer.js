@@ -530,7 +530,7 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
             } catch (err) { loginBtn.disabled = false; }
         });
-        if (loginGate && loginGate.style.display === 'none') { setTimeout(() => { loginBtn.click(); }, 500); }
+       
     }
 
     setInterval(() => {
