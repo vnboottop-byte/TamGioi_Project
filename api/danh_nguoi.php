@@ -1,5 +1,5 @@
 <?php
-// File: api/danh_nguoi.php (TÒA ÁN PVP - CHỐNG BẤT TỬ KHI RỚT MẠNG)
+// File: api/danh_nguoi.php (TÒA ÁN PVP - ĐẠI ĐỒNG BỘ V2)
 session_start();
 header('Content-Type: application/json');
 require_once '../db.php'; 
@@ -9,16 +9,18 @@ if (!isset($_SESSION['user'])) exit;
 $attacker = $_SESSION['user'];
 $victim = isset($_POST['victim']) ? $_POST['victim'] : '';
 
-if ($attacker === $victim) exit; // Không tự tự sát
+if ($attacker === $victim) exit; // Không tự sát
 
 $conn->begin_transaction();
 try {
-    // 1. Lấy Damage thật của thằng Đánh
-    $stmt_att = $conn->prepare("SELECT damage, level FROM game_characters WHERE username = ?");
+    // 🌟 1. LẤY SÁT THƯƠNG TỔNG TỪ DATABASE (Đã được rom.php và thang_cap.php cập nhật sẵn)
+    $stmt_att = $conn->prepare("SELECT damage FROM game_characters WHERE username = ?");
     $stmt_att->bind_param("s", $attacker);
     $stmt_att->execute();
     $att_data = $stmt_att->get_result()->fetch_assoc();
-    $real_damage = $att_data['damage'] + ($att_data['level'] * 5); // Tự chỉnh công thức PvP
+    
+    // Gây dame trực tiếp luôn!
+    $real_damage = (int)$att_data['damage']; 
 
     // 2. Lấy Máu thật của Nạn nhân
     $stmt_vic = $conn->prepare("SELECT hp_current, hp_max, char_name FROM game_characters WHERE username = ? FOR UPDATE");
