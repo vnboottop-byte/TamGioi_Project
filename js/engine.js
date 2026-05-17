@@ -3846,20 +3846,20 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
 // =========================================================================
-// ⚔️ HÀM CẬP NHẬT VŨ KHÍ REAL-TIME KHÔNG LOAD TRANG (BẢN VÁ BỌC THÉP GM)
+// ⚔️ HÀM CẬP NHẬT PHÁP BẢO XOAY HỘ THỂ REAL-TIME (BẢN VÁ GM V3 - Xoay Tròn)
 // =========================================================================
 window.capNhatTrangBi3DNgayLapTuc = function(loaiItem, urlMoi, capDo = 0) {
+    // 🌟 Sếp lưu ý: Hàm này chỉ xử lý cho loại vũ khí (weapon) có dạng xoay.
+    // Nếu item type không phải weapon thì bỏ qua không xử lý ngầm.
     if (loaiItem !== 'weapon') {
-        // Tạm thời tối ưu cho Vũ Khí Chính để Sếp test độ mượt, Thú cưỡi sẽ đi ở nhánh riêng sau
         if (urlMoi !== '') window.location.reload(); 
         return;
     }
 
-    console.log(`🛠️ Engine nhận lệnh đổi Vũ khí ngầm: ${urlMoi} | Cấp: +${capDo}`);
+    console.log(`🛠️ Engine nhận lệnh đổi Pháp Bảo Hộ Thể ngầm: ${urlMoi} | Cấp: +${capDo}`);
 
-    // 1. THIÊU HỦY VŨ KHÍ CŨ TRÊN TAY ĐỂ GIẢI PHÓNG VRAM KHÔNG GIAN
+    // 1. THIÊU HỦY PHÁP BẢO CŨ ĐỂ GIẢI PHÓNG VRAM
     if (window.vuKhiModel) {
         if (typeof window.donRac3D === 'function') {
             window.donRac3D(window.vuKhiModel);
@@ -3870,46 +3870,85 @@ window.capNhatTrangBi3DNgayLapTuc = function(loaiItem, urlMoi, capDo = 0) {
         window.vuKhiModel = null;
     }
 
-    // Cập nhật lại biến môi trường toàn cục cho hệ thống combat
+    // Cập nhật lại biến môi trường toàn cục
     window.WEAPON_URL = urlMoi;
     window.WEAPON_LEVEL = capDo;
 
-    // 2. NẾU LÀ LỆNH THÁO ĐỒ (urlMoi rỗng) -> DỪNG TẠI ĐÂY
+    // 2. NẾU LÀ LỆNH THÁO ĐỒ -> DỪNG TẠI ĐÂY
     if (!urlMoi || urlMoi.trim() === "") {
-        console.log("❌ Đã gỡ vũ khí, nhân vật về trạng thái tay không!");
+        console.log("❌ Đã gỡ Pháp bảo hộ thể!");
         return;
     }
 
     // 3. NẾU LÀ LỆNH MẶC ĐỒ -> NẠP NGẦM FILE GLB MỚI
     if (window.loaderSieuToc && window.nhanVatChinh) {
         window.loaderSieuToc.load(urlMoi, function (gltfW) {
-            let vuKhiMoi = gltfW.scene; 
-            window.vuKhiModel = vuKhiMoi;
+            let phapBaoMoi = gltfW.scene; 
+            window.vuKhiModel = phapBaoMoi; // Lưu vào biến toàn cục để quản lý
 
-            // Kích sáng chuẩn kim loại tinh thạch
-            if (typeof window.bocHDRI_NhanVat === 'function') window.bocHDRI_NhanVat(vuKhiMoi);
+            // Kích sáng chuẩn kim loại
+            if (typeof window.bocHDRI_NhanVat === 'function') window.bocHDRI_NhanVat(phapBaoMoi);
             
-            // Dò tìm xương bàn tay phải (HAND_R) của nhân vật chính để hàn vào
-            let tayCam = null;
+            // 🎯 LOGIC MỚI: DÒ XƯƠNG GỐC (CHÍNH GIỮA NGƯỜI) ĐỂ XOAY XOAY
+            // Anh em mình sẽ dò xương Spine (Bụng) hoặc Hips (Hông)
+            let tâmXoay = null;
             window.nhanVatChinh.traverse(c => { 
-                if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
-                    tayCam = c; 
+                if (c.isBone && (c.name.toUpperCase().includes('SPINE') || c.name.toUpperCase().includes('HIPS'))) {
+                    tâmXoay = c; 
                 } 
             });
 
-            if (tayCam) {
-                tayCam.add(vuKhiMoi);
-                vuKhiMoi.position.set(0, 0, 0); 
-                console.log("⚔️ Đã hàn thành công Pháp Bảo mới vào xương tay:", tayCam.name);
+            if (tâmXoay) {
+                // Hàn pháp bảo vào xương gốc
+                tâmXoay.add(phapBaoMoi);
+                
+                // Thiết lập vị trí ban đầu: Bay lệch ra ngoài một chút
+                phapBaoMoi.position.set(0.7, 0.5, 0); // (X lệch ra 0.7m, Y cao lên 0.5m so với bụng)
+                console.log("⚔️ Đã hàn thành công Pháp Bảo vào xương gốc để xoay:", tâmXoay.name);
+            
             } else {
-                window.nhanVatChinh.add(vuKhiMoi);
-                vuKhiMoi.position.set(1, 1, 0); 
+                // Phòng hờ nếu nhân vật không có xương Spine
+                window.nhanVatChinh.add(phapBaoMoi);
+                phapBaoMoi.position.set(1, 1, 0); 
             }
 
             // Gắn hiệu ứng phát sáng Neon thần thánh theo cấp độ đập đồ
             if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
-                window.bocHaoQuang3D(vuKhiMoi, capDo);
+                window.bocHaoQuang3D(phapBaoMoi, capDo);
             }
         });
     }
 };
+
+// =========================================================================
+// 🔄 VIẾT CODE CHO CÂY GẬY NÓ XOAY BAY VÒNG TRÒN (NHÁT CẮT TRONG HÀM RENDER)
+// =========================================================================
+// Sếp lưu ý: Đoạn này Sếp cần tìm hàm `render()` hoặc `animate()` chính
+// của Engine (thường nằm ở giữa hoặc cuối file engine.js).
+// Sếp dán dòng code này vào bên trong hàm render() đó.
+
+/* // 🔍 Sếp TÌM TRONG FILE ENGINE.JS CÁI HÀM NÀY:
+function render() {
+    requestAnimationFrame(render);
+    
+    // ... code render cũ của Sếp ...
+    
+    // 🌟 SẾP DÁN ĐOẠN NÀY VÀO TRONG HÀM RENDER:
+    if (window.vuKhiModel && window.WEAPON_URL && window.WEAPON_URL.includes('mount')) {
+        // Nếu là Pháp Bảo Hộ Thể -> Cho nó xoay bay vòng tròn quanh chủ
+        // Lấy thời gian để tính toán góc xoay
+        let timer = Date.now() * 0.002; // Tốc độ xoay
+        
+        // Công thức lượng giác bay vòng tròn toán học AAA:
+        // Xoay quanh tâm (Spine) với bán kính 0.7 mét, cao độ 0.5 mét
+        window.vuKhiModel.position.x = Math.cos(timer) * 0.7;
+        window.vuKhiModel.position.z = Math.sin(timer) * 0.7;
+        window.vuKhiModel.position.y = 0.5; // Giữ nguyên độ cao ở bụng
+
+        // Bản thân cây gậy cũng tự xoay xung quanh nó cho đẹp
+        window.vuKhiModel.rotation.y += 0.05;
+    }
+
+    renderer.render(scene, camera);
+}
+*/
