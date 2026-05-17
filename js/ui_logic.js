@@ -1260,3 +1260,37 @@ window.tienHanhHopThanh = function() {
         });
     });
 };
+
+
+
+
+
+
+
+// Giao diện nhập bán Vàng
+window.hienFormBanVang = function() {
+    window.hienNhapLieuGame("Sếp muốn bán bao nhiêu Vàng?\n(Hệ thống tự động quy đổi: 1000 Vàng = 1 Linh Thạch. Phí lên sàn: 50 Vàng)", 10000, function (soVang) {
+        let vang = parseInt(soVang);
+        if (isNaN(vang) || vang < 1000) { window.hienThongBaoGame("❌ Tối thiểu phải bán 1000 Vàng!", false); return; }
+        
+        let giaLinhThach = Math.floor(vang / 1000);
+        window.hienXacNhanGame(`Sếp sẽ treo bán ${vang.toLocaleString('vi-VN')} Vàng để lấy ${giaLinhThach.toLocaleString('vi-VN')} Linh Thạch (VNĐ)?\nNgười mua sẽ trả Linh Thạch cho Sếp!`, function () {
+            let fd = new FormData(); 
+            fd.append('type_sell', 'currency');
+            fd.append('amount_gold', vang);
+            fd.append('price_linh_thach', giaLinhThach);
+            fetch('api/sell_auction.php', { method: 'POST', body: fd })
+                .then(res => res.json()).then(data => {
+                    if (data.status === 'success') {
+                        window.hienThongBaoGame("✔️ Đã treo lệnh Bán Vàng lên Chợ!", true);
+                        window.moChoDen();
+                    } else window.hienThongBaoGame("❌ Lỗi: " + data.msg, false);
+                });
+        });
+    });
+};
+
+// Gọi Hộp thư (Phần giao diện báo cáo, tính năng rút đồ sẽ cập nhật ở API sau)
+window.moHopThuChoDen = function() {
+    window.hienThongBaoGame("Tính năng Hộp Thư Rác đang xây dựng API...!", true);
+}
