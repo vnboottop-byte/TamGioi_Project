@@ -523,40 +523,38 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         }
     }
 
-    // Gửi yêu cầu mặc/tháo lên Server
     fetch('api/toggle_equip.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ inv_id: invId, action: action })
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
-            
-            // 🌟 ĐÃ XÓA LỆNH location.reload(); LÀM ĐEN MÀN HÌNH!
-            // THAY BẰNG: Gọi API lấy lại dữ liệu túi đồ ngầm dưới nền
+            // 🌟 TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
             .then(res2 => res2.json())
             .then(data2 => {
                 if(data2.status === 'success') {
-                    // Cập nhật lại kho dữ liệu trên RAM
                     window.khoDoData = data2.data; 
+                    window.renderTrangTuiDo(); // Cập nhật ô lưới túi đồ
                     
-                    // Vẽ lại các ô lưới (Để hiện/tắt tag [MẶC])
-                    window.renderTrangTuiDo(); 
-                    
-                    // Vẽ lại bảng thông tin bên phải (Để đổi nút Mặc thành Tháo)
                     let itemMoi = window.khoDoData.find(i => i.inv_id == invId);
-                    if (itemMoi) window.chonXemMonDo(itemMoi); 
-                    
-                    window.hienThongBaoGame("✔️ Thao tác trang bị thành công!", true);
+                    if (itemMoi) {
+                        window.chonXemMonDo(itemMoi); // Cập nhật bảng thông tin bên phải
+                        
+                        // 🔌 BẮN TÍN HIỆU SANG ENGINE ĐỂ ĐỔI ĐỒ 3D NGAY LẬP TỨC
+                        if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
+                            let url3D = action === 'equip' ? itemMoi.model_url : '';
+                            let capDoĐập = action === 'equip' ? (parseInt(itemMoi.upgrade_level) || 0) : 0;
+                            window.capNhatTrangBi3DNgayLapTuc(itemMoi.item_type, url3D, capDoĐập);
+                        }
+                    }
                 }
             });
-
         } else {
             window.hienThongBaoGame("Lỗi thay đồ!", false);
         }
     });
 };
-
 
 
 
