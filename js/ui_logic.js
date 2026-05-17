@@ -1267,30 +1267,254 @@ window.tienHanhHopThanh = function() {
 
 
 
-// Giao diện nhập bán Vàng
-window.hienFormBanVang = function() {
-    window.hienNhapLieuGame("Sếp muốn bán bao nhiêu Vàng?\n(Hệ thống tự động quy đổi: 1000 Vàng = 1 Linh Thạch. Phí lên sàn: 50 Vàng)", 10000, function (soVang) {
-        let vang = parseInt(soVang);
-        if (isNaN(vang) || vang < 1000) { window.hienThongBaoGame("❌ Tối thiểu phải bán 1000 Vàng!", false); return; }
-        
-        let giaLinhThach = Math.floor(vang / 1000);
-        window.hienXacNhanGame(`Sếp sẽ treo bán ${vang.toLocaleString('vi-VN')} Vàng để lấy ${giaLinhThach.toLocaleString('vi-VN')} Linh Thạch (VNĐ)?\nNgười mua sẽ trả Linh Thạch cho Sếp!`, function () {
-            let fd = new FormData(); 
-            fd.append('type_sell', 'currency');
-            fd.append('amount_gold', vang);
-            fd.append('price_linh_thach', giaLinhThach);
-            fetch('api/sell_auction.php', { method: 'POST', body: fd })
-                .then(res => res.json()).then(data => {
-                    if (data.status === 'success') {
-                        window.hienThongBaoGame("✔️ Đã treo lệnh Bán Vàng lên Chợ!", true);
-                        window.moChoDen();
-                    } else window.hienThongBaoGame("❌ Lỗi: " + data.msg, false);
-                });
+
+
+
+
+// ==========================================
+// 💹 HỆ THỐNG SÀN CHỨNG KHOÁN LINH THẠCH (P2P)
+// ==========================================
+
+// 1. Form Treo Bán Linh Thạch (2 Ô nhập liệu tự tính toán)
+window.hienFormBanLinhThach = function() {
+    let box = document.getElementById('gameCurrencyBox');
+    if (!box) {
+        box = document.createElement('div'); box.id = 'gameCurrencyBox';
+        box.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:1000009; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(5px);';
+        document.body.appendChild(box);
+    }
+
+    box.innerHTML = `
+        <div style="width: 500px; background: linear-gradient(135deg, #1a0b2e 0%, #000 100%); border: 2px solid #00ffcc; border-radius: 10px; padding: 25px; box-shadow: 0 0 40px rgba(0,255,204,0.4);">
+            <div style="font-size: 50px; text-align:center; margin-bottom: 10px; text-shadow: 0 0 20px #00ffcc;">💎</div>
+            <h2 style="color: #00ffcc; text-align:center; margin: 0 0 20px 0; text-transform: uppercase; letter-spacing:2px;">SÀN BÁN LINH THẠCH</h2>
+            
+            <div style="display:flex; gap:15px; margin-bottom:15px;">
+                <div style="flex:1;">
+                    <label style="color:#fff; font-size:12px; font-weight:bold;">SỐ LƯỢNG LINH THẠCH BÁN:</label>
+                    <input type="number" id="inpLTAmount" placeholder="VD: 10000" style="width:100%; box-sizing:border-box; padding:12px; font-size:20px; font-weight:bold; text-align:center; color:#00ffcc; background:#000; border:2px solid #00ffcc; border-radius:5px; margin-top:5px; outline:none;">
+                </div>
+                <div style="flex:1;">
+                    <label style="color:#fff; font-size:12px; font-weight:bold;">TỶ GIÁ (1 LT = ? VÀNG):</label>
+                    <input type="number" id="inpLTRate" placeholder="VD: 136" style="width:100%; box-sizing:border-box; padding:12px; font-size:20px; font-weight:bold; text-align:center; color:gold; background:#000; border:2px solid gold; border-radius:5px; margin-top:5px; outline:none;">
+                </div>
+            </div>
+
+            <div style="background:#111; border:1px dashed #555; padding:15px; border-radius:5px; margin-bottom:20px; text-align:center;">
+                <span style="color:#aaa; font-size:12px;">SAU KHI BÁN HẾT SẼ THU VỀ:</span><br>
+                <span id="txtTongVang" style="color:gold; font-size:30px; font-weight:900; text-shadow:0 0 10px gold;">0</span> <span style="color:gold; font-weight:bold;">VÀNG</span>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="btnXacNhanBanLT" style="flex: 1; background: #2ecc71; color: #000; font-weight: 900; font-size: 16px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 15px #2ecc71;">✔️ ĐĂNG LÊN SÀN</button>
+                <button onclick="document.getElementById('gameCurrencyBox').style.display='none'" style="flex: 1; background: #555; color: #fff; font-weight: bold; font-size: 16px; border: none; padding: 12px; border-radius: 5px; cursor: pointer;">HỦY BỎ</button>
+            </div>
+        </div>
+    `;
+    box.style.display = 'flex';
+
+    // Xử lý Tính toán Real-time
+    let inpAmount = document.getElementById('inpLTAmount');
+    let inpRate = document.getElementById('inpLTRate');
+    let txtTong = document.getElementById('txtTongVang');
+
+    function tinhTien() {
+        let sl = parseInt(inpAmount.value) || 0;
+        let tyGia = parseInt(inpRate.value) || 0;
+        txtTong.innerText = (sl * tyGia).toLocaleString('vi-VN');
+    }
+    inpAmount.addEventListener('input', tinhTien);
+    inpRate.addEventListener('input', tinhTien);
+
+    // Nút Xác nhận
+    document.getElementById('btnXacNhanBanLT').onclick = function() {
+        let sl = parseInt(inpAmount.value);
+        let tyGia = parseInt(inpRate.value);
+        if (!sl || sl <= 0 || !tyGia || tyGia <= 0) { window.hienThongBaoGame("❌ Dữ liệu nhập không hợp lệ!", false); return; }
+
+        let fd = new FormData();
+        fd.append('type_sell', 'currency');
+        fd.append('amount_lt', sl);
+        fd.append('rate', tyGia);
+
+        fetch('api/sell_auction.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {
+            if (data.status === 'success') {
+                box.style.display = 'none';
+                window.hienThongBaoGame("✔️ Đã treo Linh Thạch lên sàn thành công!", true);
+                window.moChoDen();
+            } else { window.hienThongBaoGame("❌ Lỗi: " + data.msg, false); }
+        });
+    };
+};
+
+// 2. Form Mua Một Phần Linh Thạch
+window.muaLinhThachSLL = function(aucId, maxLT, rate) {
+    let box = document.getElementById('gameCurrencyBox'); // Dùng chung div nền
+    if (!box) {
+        box = document.createElement('div'); box.id = 'gameCurrencyBox';
+        box.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:1000009; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(5px);';
+        document.body.appendChild(box);
+    }
+
+    box.innerHTML = `
+        <div style="width: 450px; background: linear-gradient(135deg, #4a0e0e 0%, #000 100%); border: 2px solid gold; border-radius: 10px; padding: 25px; box-shadow: 0 0 40px rgba(255,215,0,0.4);">
+            <h2 style="color: gold; text-align:center; margin: 0 0 10px 0; text-transform: uppercase;">MUA LINH THẠCH</h2>
+            <p style="color:#aaa; text-align:center; font-size:12px; margin-bottom:20px;">Tỷ giá lô này: <b style="color:#fff;">1 LT = ${rate.toLocaleString('vi-VN')} Vàng</b></p>
+            
+            <label style="color:#fff; font-size:12px; font-weight:bold;">SỐ LƯỢNG MUỐN MUA (Tối đa: ${maxLT.toLocaleString('vi-VN')} LT):</label>
+            <input type="number" id="inpBuyAmount" value="${maxLT}" max="${maxLT}" style="width:100%; box-sizing:border-box; padding:12px; font-size:24px; font-weight:bold; text-align:center; color:#00ffcc; background:#000; border:2px solid #00ffcc; border-radius:5px; margin-top:5px; outline:none;">
+            
+            <div style="background:#111; border:1px dashed #555; padding:15px; border-radius:5px; margin:top:15px; margin-bottom:20px; text-align:center; margin-top:15px;">
+                <span style="color:#aaa; font-size:12px;">TỔNG VÀNG CẦN TRẢ:</span><br>
+                <span id="txtTongTra" style="color:gold; font-size:30px; font-weight:900; text-shadow:0 0 10px gold;">${(maxLT * rate).toLocaleString('vi-VN')}</span>
+            </div>
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="btnXacNhanMuaLT" style="flex: 1; background: linear-gradient(90deg, #d35400, #e67e22); color: #fff; font-weight: 900; font-size: 16px; border: none; padding: 12px; border-radius: 5px; cursor: pointer; box-shadow: 0 0 15px rgba(230,126,34,0.5);">🛒 KHỚP LỆNH MUA</button>
+                <button onclick="document.getElementById('gameCurrencyBox').style.display='none'" style="flex: 1; background: #555; color: #fff; font-weight: bold; font-size: 16px; border: none; padding: 12px; border-radius: 5px; cursor: pointer;">HỦY BỎ</button>
+            </div>
+        </div>
+    `;
+    box.style.display = 'flex';
+
+    let inpBuy = document.getElementById('inpBuyAmount');
+    let txtTra = document.getElementById('txtTongTra');
+
+    inpBuy.addEventListener('input', function() {
+        let sl = parseInt(inpBuy.value) || 0;
+        if (sl > maxLT) { sl = maxLT; inpBuy.value = maxLT; } // Ép không cho mua lố
+        txtTra.innerText = (sl * rate).toLocaleString('vi-VN');
+    });
+
+    document.getElementById('btnXacNhanMuaLT').onclick = function() {
+        let sl = parseInt(inpBuy.value);
+        if (!sl || sl <= 0 || sl > maxLT) { window.hienThongBaoGame("❌ Số lượng không hợp lệ!", false); return; }
+
+        let fd = new FormData();
+        fd.append('auction_id', aucId);
+        fd.append('buy_amount', sl);
+
+        fetch('api/buy_auction.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {
+            if (data.status === 'success') {
+                box.style.display = 'none';
+                window.hienThongBaoGame("✔️ Khớp lệnh thành công!", true);
+                window.moChoDen();
+            } else { window.hienThongBaoGame("❌ Lỗi: " + data.msg, false); }
+        });
+    };
+};
+
+// 3. Hủy Bán Rút Đồ/Linh Thạch Về
+window.huyTreoChoDen = function(aucId) {
+    window.hienXacNhanGame("Sếp muốn HỦY GIAO DỊCH và rút hàng về?", function() {
+        let fd = new FormData(); fd.append('auction_id', aucId);
+        fetch('api/cancel_auction.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {
+            if(data.status === 'success') {
+                window.hienThongBaoGame("✔️ Đã rút hàng về túi / ví!", true);
+                window.moChoDen();
+            } else { window.hienThongBaoGame("❌ Lỗi: " + data.msg, false); }
         });
     });
 };
 
-// Gọi Hộp thư (Phần giao diện báo cáo, tính năng rút đồ sẽ cập nhật ở API sau)
-window.moHopThuChoDen = function() {
-    window.hienThongBaoGame("Tính năng Hộp Thư Rác đang xây dựng API...!", true);
-}
+
+
+
+
+
+
+
+
+
+
+
+window.locChoDen = function(giaTri, kieuLoc, btnEl) {
+    if (btnEl) {
+        document.querySelectorAll('.btn-auc-filter').forEach(b => { b.style.background = '#222'; b.style.color = '#aaa'; b.style.borderColor = '#444'; });
+        btnEl.style.background = 'linear-gradient(90deg, #8e44ad, #9b59b6)'; btnEl.style.color = 'white'; btnEl.style.borderColor = '#d2b4de';
+    }
+
+    const grid = document.getElementById('aucGrid');
+    const cache = window.auctionDataCache;
+    if (!cache || !cache.data) return;
+
+    let dataDaLoc = [];
+    if (kieuLoc === 'all') { dataDaLoc = cache.data; grid.style.display = 'grid'; } 
+    else if (kieuLoc === 'type') { 
+        dataDaLoc = cache.data.filter(it => it.auction_type === giaTri); 
+        // 🌟 CHỈNH SANG DẠNG LIST NẾU LÀ TIỀN TỆ
+        if (giaTri === 'currency') {
+            // Sắp xếp Tỷ giá (price_gold) từ CAO xuống THẤP
+            dataDaLoc.sort((a, b) => parseInt(b.price_gold) - parseInt(a.price_gold));
+            grid.style.display = 'block'; // Block tạo thành danh sách dọc
+        } else {
+            grid.style.display = 'grid';
+        }
+    } 
+    else if (kieuLoc === 'class') { 
+        dataDaLoc = cache.data.filter(it => it.required_class === giaTri && (it.auction_type === 'weapon' || it.auction_type === 'weapon2')); 
+        grid.style.display = 'grid';
+    }
+
+    if (dataDaLoc.length === 0) { grid.innerHTML = '<h3 style="color:#555; text-align:center; grid-column:1/-1; width:100%;">Thị trường đang khan hiếm mặt hàng này!</h3>'; return; }
+
+    let html = '';
+    let danhSachCanChup = [];
+
+    dataDaLoc.forEach(it => {
+        let isMine = (it.seller_name === cache.my_name);
+        
+        // 🌟 NẾU LÀ SÀN TIỀN TỆ (DẠNG LIST)
+        if (it.auction_type === 'currency') {
+            let btnListHanhDong = isMine 
+                ? `<button onclick="huyTreoChoDen(${it.auction_id})" style="padding:10px 20px; background:#e74c3c; color:white; border:none; font-weight:bold; border-radius:5px; cursor:pointer;">❌ HỦY BÁN</button>`
+                : `<button onclick="muaLinhThachSLL(${it.auction_id}, ${it.item_id}, ${it.price_gold})" style="padding:10px 25px; background:linear-gradient(90deg, #2ecc71, #27ae60); color:black; border:none; font-weight:900; border-radius:5px; cursor:pointer;">🛒 MUA</button>`;
+
+            html += `
+            <div style="background:#111; border:1px solid #00ffcc; border-radius:8px; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; box-shadow:0 0 10px rgba(0,255,204,0.1);">
+                <div style="flex:1; text-align:left;">
+                    <div style="color:#aaa; font-size:12px; margin-bottom:5px;">Người bán: <b style="color:white;">${it.seller_name}</b></div>
+                    <div style="color:#00ffcc; font-size:22px; font-weight:900; text-shadow:0 0 10px #00ffcc;">💎 ${parseInt(it.item_id).toLocaleString('vi-VN')} LT</div>
+                </div>
+                <div style="flex:1; text-align:center; border-left:1px dashed #444; border-right:1px dashed #444; padding:0 15px;">
+                    <div style="color:#aaa; font-size:12px; margin-bottom:5px;">Tỷ Giá Hối Đoái:</div>
+                    <div style="color:gold; font-size:20px; font-weight:bold;">1 LT = ${parseInt(it.price_gold).toLocaleString('vi-VN')} Vàng</div>
+                </div>
+                <div style="flex:1; text-align:right; padding-left:15px;">
+                    ${btnListHanhDong}
+                </div>
+            </div>`;
+        } 
+        // 🌟 NẾU LÀ ĐỒ VẬT BÌNH THƯỜNG (DẠNG GRID)
+        else {
+            let btnHanhDong = isMine 
+                ? `<button onclick="huyTreoChoDen(${it.auction_id})" style="width:100%; padding:8px; background:#e74c3c; color:white; border:none; font-weight:bold; border-radius:3px; cursor:pointer;">❌ RÚT VỀ</button>`
+                : `<button onclick="muaHangChoDen(${it.auction_id})" style="width:100%; padding:8px; background:linear-gradient(90deg, #d35400, #e67e22); color:white; border:none; font-weight:bold; border-radius:3px; cursor:pointer; box-shadow: 0 0 10px rgba(230,126,34,0.5);">🛒 MUA NGAY</button>`;
+
+            // ... Giữ nguyên phần Render Đồ vật 3D cũ ở đây ...
+            // (Đoạn fallbackEmoji, html += <div style="background:#111... cũ Sếp cứ để y nguyên nhé)
+            let fallbackEmoji = it.item_type === 'mount' ? '🐲' : (it.item_type === 'model' ? '👕' : (it.item_type === 'material' ? '💎' : '⚔️'));
+            let imgId = 'thumb_auc_' + it.auction_id; 
+            let iconHTML = `<div style="position: relative; width: 100px; height: 100px; margin: 5px auto;"><div id="emoji_${imgId}" style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:40px; transition:0.3s;">${fallbackEmoji}</div><img id="${imgId}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" style="position:absolute; top:0; left:0; width: 100px; height: 100px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.4)); transition: opacity 0.5s; opacity: 0; z-index: 2;"></div>`;
+            let lvl = parseInt(it.upgrade_level) || 0;
+            let badgeLvl = lvl > 0 ? `<div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); color:gold; border:1px solid gold; font-size:11px; padding:2px 6px; border-radius:4px; font-weight:900; z-index:10; box-shadow:0 0 8px gold;">+${lvl}</div>` : '';
+            let tenHienThi = lvl > 0 ? `${it.name} <span style="color:gold;">[+${lvl}]</span>` : it.name;
+
+            html += `
+            <div style="background:#111; border:1px solid #8e44ad; border-radius:8px; padding:15px; text-align:center; position:relative;">
+                ${badgeLvl} <span style="position:absolute; top:5px; left:5px; background:rgba(142,68,173,0.5); font-size:10px; padding:2px 5px; border-radius:3px; color:white;">Bán: ${it.seller_name}</span>
+                ${iconHTML}
+                <h4 style="color:#d2b4de; margin:0 0 5px 0; font-size: 14px;">${tenHienThi}</h4>
+                <div style="font-size:11px; color:#ff007f; margin-bottom:10px;">Hệ: ${it.required_class}</div>
+                <div style="font-size:18px; font-weight:bold; color:gold; margin-bottom:15px; text-shadow:0 0 5px gold;">
+                    ${parseInt(it.price_gold).toLocaleString('vi-VN')} <i class="fas fa-coins" style="font-size:14px;"></i>
+                </div>
+                ${btnHanhDong}
+            </div>`;
+            danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId, capDo: parseInt(it.upgrade_level)||0 });
+        }
+    });
+
+    grid.innerHTML = html;
+    setTimeout(() => { danhSachCanChup.forEach(task => { if(typeof window.taoThuNho3D === 'function') window.taoThuNho3D(task.url, task.type, task.id, task.capDo); }); }, 50);
+};
