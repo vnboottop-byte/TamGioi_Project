@@ -180,13 +180,24 @@
         return group;
     }
 
-    function taoVuNoCT(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(pos, banKinh * 0.5, 0xffaa00);
+    window.thoiDiemNoCuoiCungCT = window.thoiDiemNoCuoiCungCT || 0;
 
-        if (isRemote === false) gaySatThuongCT(pos, luongDame, banKinh);
-        else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
-        }
+    function taoVuNoCT(pos, isRemote = false, luongDame = 100, banKinh = 15) {
+    // 1. TÍNH DAME VẬT LÝ (LUÔN CHẠY)
+    if (isRemote === false) gaySatThuongCT(pos, luongDame, banKinh);
+    else if (typeof isRemote === 'number' && isRemote > 0) {
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+    }
+
+    // 2. VAN XẢ ĐỒ HỌA (MOBILE MỖI 0.3S CHỈ VẼ 1 LẦN NỔ)
+    let bayGio = Date.now();
+    if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungCT < 300) {
+        return; 
+    }
+    window.thoiDiemNoCuoiCungCT = bayGio;
+
+    // 3. GỌI HIỆU ỨNG
+    if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(pos, banKinh * 0.5, 0xffaa00);
     }
 
     function taoSaoBangCT(pos, dir) {
