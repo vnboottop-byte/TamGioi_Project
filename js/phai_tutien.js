@@ -132,7 +132,8 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 
 
     if (phim === 'Q') {
-        const soLuong = 30; const khoangCach = 4.0;
+        // 🌟 TỐI ƯU MOBILE: Giảm từ 30 kiếm xuống 5 kiếm
+        const soLuong = 5; const khoangCach = 4.0;
         for (let i = 0; i < soLuong; i++) {
             const sword = taoKiemChuan(0.5, vuKhiThucTe);
             // 🌟 Dùng upVector thay vì (0, 1, 0)
@@ -140,19 +141,23 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
             const offsetUp = upVector.clone();
             
             const spawnPos = viTriGoc.clone().sub(huongMat.clone().multiplyScalar(15));
-            spawnPos.add(offsetRight.clone().multiplyScalar(((i % 10) - 4.5) * khoangCach)); 
-            spawnPos.add(offsetUp.clone().multiplyScalar(Math.floor(i / 10) * khoangCach)); // Thay vì y +=
+            
+            // Xếp 5 kiếm thành 1 hàng ngang cân đối
+            spawnPos.add(offsetRight.clone().multiplyScalar((i - 2) * khoangCach)); 
             
             sword.position.copy(spawnPos); 
             sword.up.copy(upVector); // 🌟 Giữ cho kiếm không bị lật nghiêng
             sword.lookAt(mucTieu); scene.add(sword);
             
             if(typeof window.dangKyChieuThuc === 'function') window.dangKyChieuThuc(sword, 5000);
-            kyNangTuTien.push({ mesh: sword, speed: 4.0, life: 100, type: 'kiem_q', delay: 40 + i, targetPos: mucTieu.clone(), damage: dameGoc * 0.013, isRemote: isRemote });
+            
+            // 🌟 CÂN BẰNG DAME: 30 x 0.013 = 0.39 -> 5 x 0.078 = 0.39
+            kyNangTuTien.push({ mesh: sword, speed: 4.0, life: 100, type: 'kiem_q', delay: 40 + i, targetPos: mucTieu.clone(), damage: dameGoc * 0.078, isRemote: isRemote });
         }
     }
     else if (phim === 'E') {
-        const soLuong = 30; const banKinh = 10.0; 
+        // 🌟 TỐI ƯU MOBILE: Giảm từ 30 kiếm xuống 10 kiếm
+        const soLuong = 10; const banKinh = 10.0; 
         for (let i = 0; i < soLuong; i++) {
             const pivotGroup = new THREE.Group(); 
             pivotGroup.position.copy(viTriGoc).add(upVector.clone().multiplyScalar(2)); // Thay vì y + 2
@@ -165,7 +170,10 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
             pivotGroup.add(sword); scene.add(pivotGroup);
             
             if(typeof window.dangKyChieuThuc === 'function') window.dangKyChieuThuc(pivotGroup, 10000);
-            kyNangTuTien.push({ mesh: pivotGroup, swordMesh: sword, speed: 4.5, life: 300, type: 'kiem_e', caster: nguoiTungChieu, damage: dameGoc * 0.02, targetPos: mucTieu.clone(), isRemote: isRemote, delay: 120, fireDelay: i * 5, state: 'XOAY_QUAT' });
+            
+            // 🌟 CÂN BẰNG DAME: 30 x 0.02 = 0.6 -> 10 x 0.06 = 0.6
+            // Chỉnh lại fireDelay thành i * 15 để vòng lặp bắn kiếm vẫn kéo dài mượt mà như cũ
+            kyNangTuTien.push({ mesh: pivotGroup, swordMesh: sword, speed: 4.5, life: 300, type: 'kiem_e', caster: nguoiTungChieu, damage: dameGoc * 0.06, targetPos: mucTieu.clone(), isRemote: isRemote, delay: 120, fireDelay: i * 15, state: 'XOAY_QUAT' });
         }
     }
     else if (phim === 'F') {
