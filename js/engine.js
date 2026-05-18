@@ -2303,6 +2303,12 @@ window.xuLyLoadMapChunk = function (mapData) {
         mapData.mesh3D = mapMesh;
         mapData.isLoaded = true;
         mapData.isLoading = false;
+        
+        // 🌟 TỐI ƯU MOBILE RAM: Xóa sạch bộ nhớ đệm Cache thô của GLTF ngay khi map xuất xưởng
+        if (window.isMobile) {
+            THREE.Cache.clear();
+        }
+
         console.log(`🟢 THẾ GIỚI MỞ MƯỢT MÀ: [${mapData.name || mapData.id}] đã nạp xong không rớt 1 FPS!`);
         
     });
