@@ -9,15 +9,17 @@
 // ⏳ BỘ ĐẾM THỜI GIAN HỒI CHIÊU (Ms)
     const THOI_GIAN_HOI = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
-    // Âm thanh
-    const amThanhQ = new Audio('https://actions.google.com/sounds/v1/science_fiction/laser_blast.ogg');
-    const amThanhR = new Audio('https://actions.google.com/sounds/v1/science_fiction/sci_fi_laser_huge.ogg');
+
+
+   // ==========================================
+    // 🔊 ÂM THANH (ĐÃ VÔ HIỆU HÓA ĐỂ CỨU SỐNG TRÌNH DUYỆT MOBILE)
+    // ==========================================
+    // const amThanhQ = new Audio('https://actions.google.com/sounds/v1/science_fiction/laser_blast.ogg');
+    // const amThanhR = new Audio('https://actions.google.com/sounds/v1/science_fiction/sci_fi_laser_huge.ogg');
 
     function phatAmThanh(loai) {
-        try {
-            let a = (loai === 'R') ? amThanhR.cloneNode() : amThanhQ.cloneNode();
-            a.volume = 0.4; a.play().catch(e => {});
-        } catch(e) {}
+        // Tạm thời vô hiệu hóa Audio .OGG vì iOS không hỗ trợ và link Google đã chết gây sập trình duyệt!
+        return; 
     }
 
     // ==========================================
