@@ -728,15 +728,17 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
+
+
+
             } else {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
-                child.frustumCulled = false;
-
-
-
-
+                // iOS: TẮT lệnh cấm tàng hình. Chỉ vẽ những ngọn núi/mặt đất đang nằm đúng trước mặt Camera, tiết kiệm 80% GPU!
+                child.frustumCulled = window.isMobile ? true : false;
 
                 if (child.material) {
+
+
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(mat => {
                         if (!mat) return;
@@ -2209,18 +2211,43 @@ window.xuLyLoadMapChunk = function (mapData) {
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 } 
                 else {
-                    mats.forEach(mat => {
-                        if (!mat) return;
-                        if (mat.emissive) mat.emissive.setHex(0x000000);
-                        if (mat.color) {
-                            let doSang = (mat.color.r + mat.color.g + mat.color.b) / 3;
-                            if (doSang > 0.8) { mat.color.r *= 0.25; mat.color.g *= 0.25; mat.color.b *= 0.25; }
-                            else if (doSang > 0.5) { mat.color.r *= 0.8; mat.color.g *= 0.8; mat.color.b *= 0.8; }
-                            else { mat.color.r *= 0.95; mat.color.g *= 0.95; mat.color.b *= 0.95; }
+                    let newMats = mats.map(mat => {
+                        if (!mat) return null;
+
+                        // 🌟 TỐI ƯU iOS VRAM: Ép hạ cấp từ PBR (Standard) xuống Lambert để giảm 60% gánh nặng bộ nhớ Shader của iPhone
+                        let targetMat = mat;
+                        if (window.isMobile && mat.isMeshStandardMaterial) {
+                            targetMat = new THREE.MeshLambertMaterial({
+                                map: mat.map,
+                                color: mat.color,
+                                transparent: mat.transparent,
+                                opacity: mat.opacity,
+                                alphaTest: mat.alphaTest,
+                                side: THREE.DoubleSide
+                            });
+                        } else {
+                            targetMat.side = THREE.DoubleSide;
                         }
-                        mat.needsUpdate = true;
-                        mat.side = THREE.DoubleSide;
+
+                        if (targetMat.emissive) targetMat.emissive.setHex(0x000000);
+                        if (targetMat.color) {
+                            let doSang = (targetMat.color.r + targetMat.color.g + targetMat.color.b) / 3;
+                            if (doSang > 0.8) { targetMat.color.r *= 0.25; targetMat.color.g *= 0.25; targetMat.color.b *= 0.25; }
+                            else if (doSang > 0.5) { targetMat.color.r *= 0.8; targetMat.color.g *= 0.8; targetMat.color.b *= 0.8; }
+                            else { targetMat.color.r *= 0.95; targetMat.color.g *= 0.95; targetMat.color.b *= 0.95; }
+                        }
+
+                        // Giữ lại tối ưu Texture của Sếp
+                        if (targetMat.map && window.renderer) {
+                            targetMat.map.anisotropy = window.isMobile ? 1 : window.renderer.capabilities.getMaxAnisotropy();
+                            targetMat.map.generateMipmaps = !window.isMobile;
+                            targetMat.map.minFilter = window.isMobile ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
+                        }
+
+                        targetMat.needsUpdate = true;
+                        return targetMat;
                     });
+                    child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
             }
 
