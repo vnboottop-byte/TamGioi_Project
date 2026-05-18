@@ -222,8 +222,11 @@
     }
 
     function taoSaoBangCT(pos, dir) {
+        if (window.isMobile) return; // 🌟 TỐI ƯU MOBILE: Cấm tạo đuôi lửa theo sau mũi tên
         if (Math.random() > 0.5) return;
         const geo = new THREE.BufferGeometry();
+
+
         geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([pos.x, pos.y, pos.z]), 3));
 
         // 🌟 TẠO TÀN LỬA MÀU CAM VÀNG (Đã xóa màu xanh, hạt to vừa phải)
