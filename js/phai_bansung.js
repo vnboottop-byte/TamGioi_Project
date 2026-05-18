@@ -16,18 +16,23 @@
     // ==========================================
     // 🩸 LÕI SÁT THƯƠNG (BẢN VÁ: HITBOX HÌNH TRỤ 2D BỎ QUA TRỤC Y)
     // ==========================================
+    window.tongSoChuNoi_BS = 0;
     function taoSoSatThuongBS(pos3D, satThuong, mauSac = '#ff2222') {
         if (satThuong <= 0) return;
-        // 🌟 TỐI ƯU MOBILE CPU: Chặn đứng DOM Thrashing. Quá 5 số thì ngưng đẻ thêm HTML!
-        if (window.isMobile && window.tongSoChuNoi_BS > 5) return; 
+        // 🌟 KHÓA VAN MOBILE
+        if (window.isMobile && window.tongSoChuNoi_BS > 5) return;
+        window.tongSoChuNoi_BS++;
 
-        window.tongSoChuNoi_BS++; // Tăng biến đếm
         const div = document.createElement('div');
         div.innerText = "-" + Math.round(satThuong);
-        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000; pointer-events:none; z-index:9999;`;
+        let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000';
+        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
         document.body.appendChild(div);
         danhSachSoBayBS.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
+
+
+
 
 
     window.layMucTieuGanNhatBS = function(viTriGoc) {
@@ -587,7 +592,7 @@
             if (s.life <= 0) {
                 if (s.el.parentNode) s.el.parentNode.removeChild(s.el);
                 danhSachSoBayBS.splice(i, 1);
-                window.tongSoChuNoi_BS--; // 🌟 Hạ biến đếm để cho phép đẻ số mới
+                window.tongSoChuNoi_BS--; // 🌟 Xả van
             }
         }
 
