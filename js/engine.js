@@ -819,31 +819,64 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
 
 
-// 🌟 TỔNG KHO ASSET TOÀN CẦU (BẢN VÁ LỖI THIẾU CHỮ THREE.)
+// 🌟 TỔNG KHO ASSET TOÀN CẦU (BẢN CHỐNG SẬP iPHONE)
 window.tongKhoAsset3D = {};
+window.hangDoiAsset3D = {}; // 🌟 Hàng đợi Promise chống tải 50 con Boss cùng lúc gây tràn RAM
 
 window.taiHoacNhanBanAsset = function(url, callback) {
     if (!url || url.trim() === "") return;
     
-    // Nếu trong kho đã có -> Photocopy
+    // 1. Nếu trong kho đã có -> Photocopy ngay lập tức
     if (window.tongKhoAsset3D[url]) {
-        // 🌟 BẢN VÁ: Phải có chữ THREE. ở trước SkeletonUtils
         const cloneScene = THREE.SkeletonUtils.clone(window.tongKhoAsset3D[url].scene);
         callback(cloneScene, window.tongKhoAsset3D[url].animations);
         return;
     }
 
-    // Nếu chưa có thì tải về và cất vào kho
-    const loaderAsset = window.loaderSieuToc || new THREE.GLTFLoader();
-    loaderAsset.load(url, (gltf) => {
-        window.tongKhoAsset3D[url] = { scene: gltf.scene, animations: gltf.animations };
-        
-        // 🌟 BẢN VÁ: Phải có chữ THREE. ở trước SkeletonUtils
-        const cloneScene = THREE.SkeletonUtils.clone(gltf.scene);
-        callback(cloneScene, gltf.animations);
+    // 2. 🌟 TỐI ƯU MOBILE: Nếu file này đang được tải dở dang bởi 1 con Boss khác -> Xếp hàng chờ, KHÔNG kích hoạt tải lại để tránh x50 lần RAM!
+    if (window.hangDoiAsset3D[url]) {
+        window.hangDoiAsset3D[url].then((asset) => {
+            const cloneScene = THREE.SkeletonUtils.clone(asset.scene);
+            callback(cloneScene, asset.animations);
+        });
+        return;
+    }
+
+    // 3. Nếu chưa có ai tải -> Khởi tạo tiến trình tải và khóa Hàng đợi lại
+    window.hangDoiAsset3D[url] = new Promise((resolve) => {
+        const loaderAsset = window.loaderSieuToc || new THREE.GLTFLoader();
+        loaderAsset.load(url, (gltf) => {
+            
+            // 🌟 ÉP XUỐNG LAMBERT CHO QUÁI VÀ VŨ KHÍ TRÊN MOBILE ĐỂ CỨU GPU SHADER
+            if (window.isMobile) {
+                gltf.scene.traverse(child => {
+                    if (child.isMesh && child.material) {
+                        let mats = Array.isArray(child.material) ? child.material : [child.material];
+                        let newMats = mats.map(mat => {
+                            if (mat && mat.isMeshStandardMaterial) {
+                                let newMat = new THREE.MeshLambertMaterial({
+                                    map: mat.map, color: mat.color, transparent: mat.transparent, opacity: mat.opacity, side: THREE.DoubleSide
+                                });
+                                // Bắt buộc giữ lại Skinning cho xương quái vật để có thể đi lại
+                                if (child.isSkinnedMesh) newMat.skinning = true;
+                                return newMat;
+                            }
+                            if (child.isSkinnedMesh && mat) mat.skinning = true;
+                            return mat;
+                        });
+                        child.material = newMats.length === 1 ? newMats[0] : newMats;
+                    }
+                });
+            }
+
+            window.tongKhoAsset3D[url] = { scene: gltf.scene, animations: gltf.animations };
+            resolve(window.tongKhoAsset3D[url]); // Mở khóa cho các con Boss đang chờ copy
+            
+            const cloneScene = THREE.SkeletonUtils.clone(gltf.scene);
+            callback(cloneScene, gltf.animations);
+        });
     });
 };
-
 
 
 
