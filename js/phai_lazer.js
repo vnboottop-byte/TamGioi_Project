@@ -97,7 +97,7 @@
 
 
     function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        const soLuong = 60; const geo = new THREE.BufferGeometry(); 
+        const soLuong = 20; const geo = new THREE.BufferGeometry(); 
         const posArr = new Float32Array(soLuong * 3); const vels = [];
         for (let i = 0; i < soLuong; i++) {
             posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;

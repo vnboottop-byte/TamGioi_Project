@@ -42,7 +42,7 @@
         vfxGroup.position.copy(pos);
 
         // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
-        const soLuong = 400; // Đủ dày đặc để tạo thành một cục lửa nén
+        const soLuong = 20; // Đủ dày đặc để tạo thành một cục lửa nén
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
