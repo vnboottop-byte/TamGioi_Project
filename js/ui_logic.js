@@ -96,6 +96,9 @@ document.addEventListener('keydown', (e) => {
 window.moTuiDoVIP = function() {
     const modal = document.getElementById('inventoryModal');
     if (modal) modal.style.display = 'flex';
+    // 🌟 Gọi GPU thức dậy vẽ lại Túi đồ
+    if (typeof animateInv === 'function' && !window.inv3D.reqId) { animateInv(); }
+
     document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px; font-weight:bold;">Đang quét Không gian Giới Chỉ...</div>';
     
     fetch('api/get_inventory.php')
@@ -411,16 +414,28 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
             window.inv3D.scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
         }
 
+
+
+
         function animateInv() {
+            // 🌟 TỐI ƯU: Đóng băng render nếu bảng Túi đồ đang ẩn, cứu GPU khỏi việc vẽ ngầm
+            if (document.getElementById('inventoryModal').style.display === 'none') {
+                window.inv3D.reqId = null;
+                return;
+            }
+            
             window.inv3D.reqId = requestAnimationFrame(animateInv);
             let delta = window.inv3D.clock.getDelta();
             if (window.inv3D.mixer) window.inv3D.mixer.update(delta);
 
-            // 🌟 QUAY CÁI HỘP PIVOT CHỨ KHÔNG QUAY MODEL TRỰC TIẾP
             if (window.inv3D.pivot) window.inv3D.pivot.rotation.y += 0.015;
 
             window.inv3D.renderer.render(window.inv3D.scene, window.inv3D.cam);
         }
+
+
+
+
         animateInv();
     }
 
