@@ -44,20 +44,25 @@ renderer.toneMappingExposure = 1.0;
 
 document.body.appendChild(renderer.domElement);
 
+
+
+
+
+
 // 🌟 TẠO PHÒNG STUDIO VÔ HÌNH ĐỂ CHIẾU SÁNG KIM LOẠI TỨ PHÍA
 if (typeof THREE.RoomEnvironment !== 'undefined') {
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+    // 🌟 THUẬT TOÁN CỨU SỐNG iPHONE: Dùng xong phải vứt cỗ máy này vào lò đốt rác ngay, giải phóng 200MB VRAM!
+    pmremGenerator.dispose();
 }
 
+
+
+
+
+
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
-
-
-
-
-
-
-
 window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
     if (window.isDead) return; 
     window.isDead = true;
