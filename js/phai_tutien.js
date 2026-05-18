@@ -396,45 +396,47 @@ window.phatAmThanhNo = function () {
     const amThanh = new Audio('https://actions.google.com/sounds/v1/weapons/big_explosion_distant.ogg'); amThanh.volume = 1.0; amThanh.play().catch(e => { });
 };
 
-
-
-
+// Thêm 1 biến toàn cục ở ngoài để làm đồng hồ
+window.thoiDiemNoCuoiCungTT = window.thoiDiemNoCuoiCungTT || 0;
 
 window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
-    if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
-    // 🌟 TỐI ƯU MOBILE: Giảm từ 300 hạt lửa xuống còn 20 hạt
-    const soLuong = window.isMobile ? 20 : 300; 
-    const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
-    
-    // 🌟 TRÁI ĐẤT TRÒN: Căn chỉnh vụ nổ bung lên trời thay vì rớt xuống đáy biển
-    let upV = pos.clone().normalize(); 
-    let qNolo = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), upV);
-    let tamNo = pos.clone().add(upV.clone().multiplyScalar(2)); // Hơi nâng tâm nổ lên khỏi mặt đất
-
-    for (let i = 0; i < soLuong; i++) {
-        posArr[i * 3] = tamNo.x; posArr[i * 3 + 1] = tamNo.y; posArr[i * 3 + 2] = tamNo.z; 
-        
-        let vLocal = new THREE.Vector3((Math.random() - 0.5) * 15, Math.random() * 15, (Math.random() - 0.5) * 15);
-        vLocal.applyQuaternion(qNolo); // Ép văng tàn lửa lên phía trên bầu trời
-        vels.push(vLocal);
-    }
-    
-    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: 8.0, map: window.layTextureLua(), transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
-    const pts = new THREE.Points(geo, mat); scene.add(pts); hieuUngTuTien.push({ system: pts, velocities: vels, life: 60 });
-
+    // 1. TÍNH SÁT THƯƠNG NGẦM (Luôn luôn tính để không bị hụt dame của 30 thanh kiếm)
     if (isRemote === false) {
         if (typeof window.gaySatThuong === 'function') window.gaySatThuong(pos, luongDame, 15);
     }
     else if (typeof isRemote === 'number' && isRemote > 0) {
         if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, 15);
     }
+
+    // 2. VAN XẢ ĐỒ HỌA (MOBILE CHỈ ĐƯỢC VẼ 1 VỤ NỔ MỖI 0.3 GIÂY)
+    let bayGio = Date.now();
+    if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungTT < 300) {
+        return; // Đã quá tải hình ảnh, bỏ qua việc vẽ cháy nổ!
+    }
+    window.thoiDiemNoCuoiCungTT = bayGio; // Ghi nhận thời gian nổ
+
+    // 3. VẼ ĐỒ HỌA (Chỉ chạy khi Van Xả cho phép)
+    if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
+    
+    // 🌟 TỐI ƯU MOBILE: Giảm ép xung từ 20 hạt xuống 8 hạt tinh túy nhất
+    const soLuong = window.isMobile ? 8 : 300; 
+    const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
+    
+    let upV = pos.clone().normalize(); 
+    let qNolo = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), upV);
+    let tamNo = pos.clone().add(upV.clone().multiplyScalar(2)); 
+
+    for (let i = 0; i < soLuong; i++) {
+        posArr[i * 3] = tamNo.x; posArr[i * 3 + 1] = tamNo.y; posArr[i * 3 + 2] = tamNo.z; 
+        let vLocal = new THREE.Vector3((Math.random() - 0.5) * 15, Math.random() * 15, (Math.random() - 0.5) * 15);
+        vLocal.applyQuaternion(qNolo); 
+        vels.push(vLocal);
+    }
+    
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xffffff, size: window.isMobile ? 12.0 : 8.0, map: window.layTextureLua(), transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+    const pts = new THREE.Points(geo, mat); scene.add(pts); hieuUngTuTien.push({ system: pts, velocities: vels, life: window.isMobile ? 25 : 60 });
 };
-
-
-
-
-
 
 let nhacNenTuTien = null;
 window.addEventListener('click', () => {
