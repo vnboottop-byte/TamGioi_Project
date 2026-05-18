@@ -336,10 +336,27 @@ livekitScript.onload = async () => {
                                     if (window.remotePlayers[senderId].mesh) window.remotePlayers[senderId].mesh.visible = false;
                                     if (window.remotePlayers[senderId].tag) window.remotePlayers[senderId].tag.style.display = 'none';
                                 }
-                                return; // Khác Map thì không tính toán tọa độ làm gì cho mệt CPU
+                                return; 
+                            }
+
+                            // 🌟 TỐI ƯU MOBILE: Nếu người chơi khác ở quá xa (> 2500m), không cần tải/Render để tiết kiệm VRAM!
+                            let pX = data[1], pY = data[2], pZ = data[3];
+                            let khoangCachNguoiChoi = (window.playerModel) ? window.playerModel.position.distanceTo(new THREE.Vector3(pX, pY, pZ)) : 0;
+                            
+                            if (window.isMobile && khoangCachNguoiChoi > 2500) {
+                                if (window.remotePlayers[senderId] && window.remotePlayers[senderId].mesh) {
+                                    window.remotePlayers[senderId].mesh.visible = false;
+                                    if (window.remotePlayers[senderId].tag) window.remotePlayers[senderId].tag.style.display = 'none';
+                                }
+                                return; // Khất từ việc tải mô hình nếu họ ở quá xa
                             }
 
                             let mappedData = {
+
+
+
+
+
                                 type: 'vitri', x: data[1], y: data[2], z: data[3], rx: data[4], ry: data[5], rz: data[6],
                                 size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14],
                                 vuKhiHienThi: data[15]
@@ -656,28 +673,43 @@ window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
 
 
 // ==========================================
-// 📡 RADAR TÒA ÁN TỐI CAO V2.1 (Tương thích Mảng & Chống Nhân Bản)
+// 📡 RADAR TÒA ÁN TỐI CAO V2.1 (BẢN VÁ ÉP ĐẺ TỪ TỪ CHỐNG SẬP iPHONE)
 // ==========================================
 window.radarDongBoThucTe = function () {
     let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
     fetch('api/get_bosses.php?v=' + Date.now() + '&zone=' + currentZone).then(res => res.json()).then(data => {
         if (data.status === 'success' && window.danhSachQuaiVat) {
+            
+            let thoiGianTre = 0; // 🌟 Biến tạo khoảng nghỉ cho CPU
+
             data.data.forEach(bossSQL => {
                 let id = bossSQL.id;
                 let sqlHp = parseInt(bossSQL.hp);
                 
-                // Tìm boss trong mảng (Bằng ID gốc)
                 let bossLocal = window.danhSachQuaiVat.find(q => q.id == id);
                 
+                // 🌟 TỐI ƯU MOBILE: Đo khoảng cách, xa quá 2500m thì KHÔNG thèm tải Boss vào RAM!
+                let bossPos = new THREE.Vector3(parseFloat(bossSQL.pos_x), parseFloat(bossSQL.pos_y), parseFloat(bossSQL.pos_z));
+                let khoangCach = (window.playerModel) ? window.playerModel.position.distanceTo(bossPos) : 0;
+                let maxDist = window.isMobile ? 2500 : 8000;
+
                 // NẾU CHƯA CÓ MÀ MÁU > 0 -> BÀN TAY SÁNG THẾ ĐẺ RA!
-                if (!bossLocal && sqlHp > 0) {
-                    if (typeof window.sinhRaQuaiVat === 'function') {
-                        let scaleTuSQL = parseFloat(bossSQL.scale || 1.0);
-                        let classTuSQL = bossSQL.class_code || 'TU_TIEN';
-                        let levelTuSQL = parseInt(bossSQL.level || 1);
-                        window.sinhRaQuaiVat(parseFloat(bossSQL.pos_x), parseFloat(bossSQL.pos_z), bossSQL.name, levelTuSQL, parseInt(bossSQL.max_hp), scaleTuSQL, parseFloat(bossSQL.pos_y), true, id, bossSQL.model_url, sqlHp, 0, classTuSQL);
-                    }
+                if (!bossLocal && sqlHp > 0 && khoangCach <= maxDist) {
+                    
+                    thoiGianTre += window.isMobile ? 200 : 0; // 🌟 Mobile đẻ 1 con xong bắt CPU nghỉ thở 200ms mới đẻ con tiếp theo
+                    
+                    setTimeout(() => {
+                        if (typeof window.sinhRaQuaiVat === 'function') {
+                            let scaleTuSQL = parseFloat(bossSQL.scale || 1.0);
+                            let classTuSQL = bossSQL.class_code || 'TU_TIEN';
+                            let levelTuSQL = parseInt(bossSQL.level || 1);
+                            window.sinhRaQuaiVat(parseFloat(bossSQL.pos_x), parseFloat(bossSQL.pos_z), bossSQL.name, levelTuSQL, parseInt(bossSQL.max_hp), scaleTuSQL, parseFloat(bossSQL.pos_y), true, id, bossSQL.model_url, sqlHp, 0, classTuSQL);
+                        }
+                    }, thoiGianTre);
                 }
+
+
+
 
 
 
