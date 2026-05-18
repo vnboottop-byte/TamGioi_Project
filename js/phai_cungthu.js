@@ -15,18 +15,6 @@
     // ==========================================
     // ==========================================
     // ==========================================
-
-
-
-
-
-
-
-
-    
-
-
-
      window.layMucTieuGanNhatCT = function(viTriGoc) {
         let targetPos = null; let minD = 500; 
         if (typeof remotePlayers !== 'undefined') {
@@ -50,17 +38,6 @@
     };
 
 
-
-
-
-
-
-
-
-
-
-
-
     // ==========================================
     // 🩸 LÕI SÁT THƯƠNG & HIỆU ỨNG (ĐỘC LẬP)
     // ==========================================
@@ -78,11 +55,6 @@
         document.body.appendChild(div);
         danhSachSoBayCT.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
-
-
-
-
-
 
     function gaySatThuongCT(tamNo, luongSatThuong, banKinh) {
         // ==========================================
@@ -170,12 +142,6 @@
 
 
     
-
-
-
-
-
-
     function layMucTieuGanNhatCT(viTriGoc, huongMat) {
         let targetPos = null; let minD = 150; 
         if (typeof window.danhSachQuaiVat !== 'undefined') {
