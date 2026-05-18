@@ -613,9 +613,6 @@ camera.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 1, TOA_DO_SPAWN.z + 85);
 controls.target.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 2, TOA_DO_SPAWN.z);
 controls.update();
 
-
-
-
 const loader = new THREE.GLTFLoader();
 
 // Cỗ máy nén Xương & Đỉnh (Draco)
@@ -623,15 +620,8 @@ const dracoLoader = new THREE.DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/');
 loader.setDRACOLoader(dracoLoader);
 
-// 🌟 CỔ MÁY NÉN KTX2 TỐI THƯỢNG (Chống tràn VRAM Texture)
-const ktx2Loader = new THREE.KTX2Loader()
-    .setTranscoderPath('https://unpkg.com/three@0.128.0/examples/js/libs/basis/')
-    .detectSupport(window.renderer);
-loader.setKTX2Loader(ktx2Loader);
-
+// Game sẽ tự động nhận diện và giải nén siêu tốc ảnh WebP mà không cần KTX2Loader
 window.loaderSieuToc = loader;
-
-
 
 window.mixerNhanVatPhu = null; 
 // 🌟 TẠO BIẾN MIXER ĐỂ CHẠY ANIMATION MÂY
