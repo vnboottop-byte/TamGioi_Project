@@ -28,10 +28,16 @@ window.renderer = new THREE.WebGLRenderer({
 renderer.setSize(window.innerWidth, window.innerHeight);
 // Trên Mobile, mật độ điểm ảnh quá cao (Retina) sẽ giết chết GPU. Khóa chết ở mức 1.0!
 renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
+// 🌟 TỐI ƯU MOBILE: Tắt hoàn toàn hệ thống đổ bóng để giải phóng VRAM và Render Call
+renderer.shadowMap.enabled = !window.isMobile;
+
+
+
+
+
 
 
 renderer.outputEncoding = THREE.sRGBEncoding;
-
 // 🌟 BÍ QUYẾT GLTF-VIEWER: ĐỔI VỀ LINEAR TONE MAPPING
 renderer.toneMapping = THREE.LinearToneMapping; 
 renderer.toneMappingExposure = 1.0; 
