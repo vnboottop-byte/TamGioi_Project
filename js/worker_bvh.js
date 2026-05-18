@@ -20,11 +20,31 @@ self.onmessage = function(event) {
         // 3. Tiến hành đúc khuôn vật lý (Bao nhiêu mili-giây thì chỉ có Core 2 bị lag, Core 1 vẫn rảnh!)
         const bvh = new MeshBVHLib.MeshBVH(geometry);
 
+
+
+
+
         // 4. Đóng gói (Serialize) để trả về cho Core 1
         const serialized = MeshBVHLib.MeshBVH.serialize(bvh);
 
-        // 5. Ném hàng về!
-        self.postMessage({ id: data.id, serialized: serialized, status: 'success' });
+        // 5. Ném hàng về! (🌟 TỐI ƯU MOBILE: CHUYỂN NHƯỢNG VÙNG NHỚ KHÔNG COPY ĐỂ TRÁNH X2 RAM)
+        let buffersCanChuyen = [];
+        if (serialized.index) buffersCanChuyen.push(serialized.index.buffer);
+        if (serialized.roots) {
+            serialized.roots.forEach(r => { if (r && r.buffer) buffersCanChuyen.push(r.buffer); });
+        }
+        
+        self.postMessage(
+            { id: data.id, serialized: serialized, status: 'success' }, 
+            buffersCanChuyen // Tham số thứ 2 ép trình duyệt DỊCH CHUYỂN RAM thay vì COPY RAM
+        );
+
+
+
+
+
+
+
         
     } catch (e) {
         self.postMessage({ id: data.id, error: e.message, status: 'error' });
