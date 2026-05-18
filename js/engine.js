@@ -1178,17 +1178,23 @@ function hoanTatTaiModels() {
         // --- B. KIỂM TRA TRẠNG THÁI MAP THẬT ---
         if (!window.daNhanDanhSachMap) return; // Đợi SQL trả data
 
-        // Ép đúc map (Logic cũ giữ nguyên để đảm bảo mượt)
-        if (window.THONG_TIN_CAC_MAP) {
-            window.THONG_TIN_CAC_MAP.forEach(mapData => {
+    
+        // 🌟 TỐI ƯU MOBILE RAM: Chống tải song song nhiều Map cùng lúc gây nổ RAM (OOM)
+        let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
+        
+        if (window.THONG_TIN_CAC_MAP && !coMapDangLoad) {
+            // Chỉ Load đúng 1 Map duy nhất tại 1 thời điểm! (Tải Tuần Tự)
+            let rLoad = window.isMobile ? 3000 : 10000; // Khớp với bán kính Radar Mobile mới
+            let mapCanLoad = window.THONG_TIN_CAC_MAP.find(mapData => {
                 let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-                if (playerModel.position.distanceTo(mPos) < 10000 && !mapData.isLoaded && !mapData.isLoading) {
-                    window.xuLyLoadMapChunk(mapData);
-                }
+                return playerModel.position.distanceTo(mPos) < rLoad && !mapData.isLoaded && !mapData.isLoading;
             });
+            
+            if (mapCanLoad) {
+                window.xuLyLoadMapChunk(mapCanLoad);
+            }
         }
 
-        let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
         let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
         let vungDatNayCoMap = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0;
         
