@@ -31,79 +31,77 @@
 
     
 
-    // ==========================================
-    // 💥 TUYỆT KỸ VFX: BÃO LỬA HẠT CHUẨN BLOX FRUITS (LẤY GEN TỪ RỒNG)
-    // ==========================================
-    function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
-        if (isRemote === false) gaySatThuongPS(pos, luongDame, banKinh);
-        else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
-        }
-        if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
+    window.thoiDiemNoCuoiCungPS = window.thoiDiemNoCuoiCungPS || 0;
 
-        const vfxGroup = new THREE.Group();
-        vfxGroup.position.copy(pos);
-
-        // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
-        // 🌟 TỐI ƯU MOBILE: Bão lửa ép xung VRAM rất ác, giảm từ 400 xuống 25
-        const soLuong = window.isMobile ? 25 : 400; 
-        const geo = new THREE.BufferGeometry();
-
-        const posArr = new Float32Array(soLuong * 3);
-        const vels = [];
-
-        for (let i = 0; i < soLuong; i++) {
-            posArr[i * 3] = 0; 
-            posArr[i * 3 + 1] = 0; 
-            posArr[i * 3 + 2] = 0;
-            
-            // Căn hướng văng tung tóe 360 độ
-            let dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-            let speed = 2 + Math.random() * 6; // Văng cực mạnh lúc đầu
-            vels.push(dir.multiplyScalar(speed));
-        }
-
-        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-        
-        // 🌟 BÍ QUYẾT: DÙNG TEXTURE CỦA RỒNG
-        const texture = (typeof window.layTextureLua === 'function') ? window.layTextureLua() : null;
-        const mat = new THREE.PointsMaterial({ 
-            color: mauHex || 0xffddaa, // Trắng vàng chói lóa
-            size: 12.0, // 🌟 ĐÃ GIẢM TỪ 20 XUỐNG 12 ĐỂ BỚT CHOÁNG NGỢP
-            map: texture, 
-            transparent: true, 
-            opacity: 1.0, 
-            blending: THREE.AdditiveBlending, // Sáng rực
-            depthWrite: false 
-        });
-        
-        const pts = new THREE.Points(geo, mat);
-        vfxGroup.add(pts);
-
-        // --- LỚP 2: SÓNG XUNG KÍCH QUÉT MẶT ĐẤT ---
-        const geoSong = new THREE.RingGeometry(0.1, 2, 32);
-        const matSong = new THREE.MeshBasicMaterial({
-            color: mauHex || 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
-            blending: THREE.AdditiveBlending, depthWrite: false
-        });
-        const songXungKich = new THREE.Mesh(geoSong, matSong);
-        
-        let upV = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.up.clone() : new THREE.Vector3(0,1,0);
-        songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
-        songXungKich.position.add(upV.clone().multiplyScalar(0.5)); // Trồi lên mặt đất 1 tí
-        vfxGroup.add(songXungKich);
-
-        scene.add(vfxGroup);
-
-        vfxNoPhapSu.push({
-            group: vfxGroup,
-            pts: pts,
-            velocities: vels,
-            songXungKich: songXungKich,
-            life: 60, // Tồn tại khoảng 2 giây
-            maxScale: banKinh
-        });
+function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
+    // 1. TÍNH SÁT THƯƠNG NGẦM (KHÔNG BỎ SÓT DAME NÀO)
+    if (isRemote === false) gaySatThuongPS(pos, luongDame, banKinh);
+    else if (typeof isRemote === 'number' && isRemote > 0) {
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
     }
+
+    // 2. VAN XẢ ĐỒ HỌA CHỐNG LAG MOBILE (0.3s NỔ 1 LẦN)
+    let bayGio = Date.now();
+    if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungPS < 300) {
+        return; 
+    }
+    window.thoiDiemNoCuoiCungPS = bayGio;
+
+    // 3. XUẤT HIỆU ỨNG 3D
+    if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
+
+    const vfxGroup = new THREE.Group();
+    vfxGroup.position.copy(pos);
+
+    // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
+    // 🌟 Ép xung VRAM trên Mobile xuống mức tối thiểu (10 hạt)
+    const soLuong = window.isMobile ? 10 : 400; 
+    const geo = new THREE.BufferGeometry();
+
+    const posArr = new Float32Array(soLuong * 3);
+    const vels = [];
+
+    for (let i = 0; i < soLuong; i++) {
+        posArr[i * 3] = 0; posArr[i * 3 + 1] = 0; posArr[i * 3 + 2] = 0;
+        let dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+        let speed = 2 + Math.random() * 6;
+        vels.push(dir.multiplyScalar(speed));
+    }
+
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+    
+    const texture = (typeof window.layTextureLua === 'function') ? window.layTextureLua() : null;
+    const mat = new THREE.PointsMaterial({ 
+        color: mauHex || 0xffddaa,
+        size: window.isMobile ? 18.0 : 12.0, // Mobile hạt ít nên to lên xíu để bù đắp
+        map: texture, 
+        transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false 
+    });
+    
+    const pts = new THREE.Points(geo, mat);
+    vfxGroup.add(pts);
+
+    // --- LỚP 2: SÓNG XUNG KÍCH QUÉT MẶT ĐẤT ---
+    const geoSong = new THREE.RingGeometry(0.1, 2, 32);
+    const matSong = new THREE.MeshBasicMaterial({
+        color: mauHex || 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
+        blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const songXungKich = new THREE.Mesh(geoSong, matSong);
+    
+    let upV = (typeof window.playerModel !== 'undefined' && window.playerModel) ? window.playerModel.up.clone() : new THREE.Vector3(0,1,0);
+    songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
+    songXungKich.position.add(upV.clone().multiplyScalar(0.5)); 
+    vfxGroup.add(songXungKich);
+
+    scene.add(vfxGroup);
+
+    vfxNoPhapSu.push({
+        group: vfxGroup, pts: pts, velocities: vels, songXungKich: songXungKich,
+        life: window.isMobile ? 30 : 60, // Mobile tan nhanh hơn để giải phóng VRAM
+        maxScale: banKinh
+    });
+}
 
 
 
