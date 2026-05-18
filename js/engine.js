@@ -1442,19 +1442,24 @@ document.body.appendChild(bayHud);
 
 
 
-// =========================================================================
-// 🚀 VÒNG LẶP VẬT LÝ VÀ ĐỒNG BỘ (BẢN CHUẨN KÈM LƯỚI ĐIỆN KHÔNG GIAN)
-// =========================================================================
+window.lastFrameTime = performance.now();
 function animate() {
+    requestAnimationFrame(animate);
+    // 🌟 BỘ KHÓA KHUNG HÌNH (FPS THROTTLE) DÀNH RIÊNG CHO MOBILE
+    if (window.isMobile) {
+        let now = performance.now();
+        let elapsed = now - window.lastFrameTime;
+        // Bắt máy nghỉ ngơi, chỉ vẽ 30 khung hình / 1 giây (~33ms mỗi frame)
+        if (elapsed < 33) return; 
+        window.lastFrameTime = now - (elapsed % 33);
+    }
     window.CPU_START_TIME = performance.now();
-
     // 🌟 KIỂM TRA ĐẠP CHÂN VÀO SAFE ZONE & CỔNG DỊCH CHUYỂN
     if (typeof playerModel !== 'undefined' && playerModel) {
         let inSafe = false;
         if (typeof window.kiemTraSafeZone === 'function') {
             inSafe = window.kiemTraSafeZone(playerModel.position);
-        }
-        
+        }      
         if (inSafe !== window.IS_IN_SAFE_ZONE) {
             window.IS_IN_SAFE_ZONE = inSafe;
             let uiSZ = document.getElementById('uiVungAnToan');
@@ -1467,7 +1472,6 @@ function animate() {
             }
             uiSZ.style.display = inSafe ? 'block' : 'none';
         }
-
         if (!window.dangDichChuyen && window.DANH_SACH_CONG && window.DANH_SACH_CONG.length > 0) {
             for (let i = 0; i < window.DANH_SACH_CONG.length; i++) {
                 let cong = window.DANH_SACH_CONG[i];
@@ -1478,9 +1482,7 @@ function animate() {
             }
         }
     }
-
     requestAnimationFrame(animate);
-
     try {
         if (typeof playerModel !== 'undefined' && playerModel && window.ROLE === "admin") { window.mauBanThan = window.MAU_TOI_DA = 999999999; window.isDead = false; }
         const delta = typeof clock !== 'undefined' ? clock.getDelta() : 0.016;
