@@ -451,6 +451,7 @@ window.addEventListener('click', () => {
 const danhSachSoBay = [];
 window.tongSoChuNoi_TT = 0; // Biến đếm
 window.taoSoSatThuong = function (pos3D, satThuong) {
+    if (window.isMobile) return; // 🌟 CỨU SỐNG CPU MOBILE!
     if (satThuong <= 0) return;
     // 🌟 KHÓA VAN MOBILE: Quá 5 số thì cấm đẻ thêm HTML
     if (window.isMobile && window.tongSoChuNoi_TT > 5) return;
