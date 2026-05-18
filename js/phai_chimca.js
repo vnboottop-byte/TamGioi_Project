@@ -15,7 +15,7 @@ window.tungComboChimCa = function (chieu, dmgBoss, bOrigin, pTarget, bDir, tempI
 
 // HIỆU ỨNG CẬN CHIẾN: NHÁT CẮN TÉT MÁU
 function taoHieuUngCaoCau(targetPos, dir, dame, isRemote) {
-    const soLuong = 100;
+    const soLuong = 10;
     const geo = new THREE.BufferGeometry();
     const posArr = new Float32Array(soLuong * 3);
     const vels = [];
