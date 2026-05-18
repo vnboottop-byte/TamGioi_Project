@@ -165,7 +165,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
             pivotGroup.lookAt(mucTieu);
             
             const fanAngle = (i / soLuong) * (Math.PI * 2); pivotGroup.rotateZ(fanAngle);
-            const sword = taoKiemChuan(0.5, vuKhiThucTe);
+            const sword = taoKiemChuan(0.1, vuKhiThucTe);
             sword.rotateX(-Math.PI / 2); sword.position.y = banKinh;
             pivotGroup.add(sword); scene.add(pivotGroup);
             
