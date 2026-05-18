@@ -157,7 +157,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
     }
     else if (phim === 'E') {
         // 🌟 TỐI ƯU MOBILE: Giảm từ 30 kiếm xuống 10 kiếm
-        const soLuong = 10; const banKinh = 5.0; 
+        const soLuong = 10; const banKinh = 2.0; 
         for (let i = 0; i < soLuong; i++) {
             const pivotGroup = new THREE.Group(); 
             pivotGroup.position.copy(viTriGoc).add(upVector.clone().multiplyScalar(2)); // Thay vì y + 2
