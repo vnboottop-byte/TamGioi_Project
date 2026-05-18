@@ -1482,7 +1482,6 @@ function animate() {
             }
         }
     }
-    requestAnimationFrame(animate);
     try {
         if (typeof playerModel !== 'undefined' && playerModel && window.ROLE === "admin") { window.mauBanThan = window.MAU_TOI_DA = 999999999; window.isDead = false; }
         const delta = typeof clock !== 'undefined' ? clock.getDelta() : 0.016;
