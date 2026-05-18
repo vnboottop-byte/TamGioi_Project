@@ -42,8 +42,10 @@
         vfxGroup.position.copy(pos);
 
         // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
-        const soLuong = 20; // Đủ dày đặc để tạo thành một cục lửa nén
+        // 🌟 TỐI ƯU MOBILE: Bão lửa ép xung VRAM rất ác, giảm từ 400 xuống 25
+        const soLuong = window.isMobile ? 25 : 400; 
         const geo = new THREE.BufferGeometry();
+
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
 
