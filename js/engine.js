@@ -1206,7 +1206,7 @@ function hoanTatTaiModels() {
             daXongXuoiThatSu = true; // Map trống (Bắc Cực/Nam Cực) thì cho vào luôn
         }
 
-        // --- C. CHỐT HẠ: NHẢY VỌT LÊN 100% ---
+                // --- C. CHỐT HẠ: NHẢY VỌT LÊN 100% ---
         if (daXongXuoiThatSu || thoiGianChoInit >= 30000) {
             clearInterval(vongLapChoVaoGame);
             
@@ -1218,10 +1218,16 @@ function hoanTatTaiModels() {
             setTimeout(() => {
                 if (manHinhLoading) {
                     manHinhLoading.style.opacity = '0';
-                    setTimeout(() => { manHinhLoading.style.display = 'none'; }, 1500);
+                    setTimeout(() => { 
+                        manHinhLoading.style.display = 'none'; 
+                        // 🌟 TỐI ƯU MOBILE RAM: Vắt kiệt bộ nhớ đệm rác sau khi vào game!
+                        if (window.isMobile) THREE.Cache.clear();
+                    }, 1500);
                 }
             }, 500);
         }
+
+
     }, 500);
 }
 
