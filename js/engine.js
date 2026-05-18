@@ -2134,7 +2134,9 @@ window.xuLyLoadMapChunk = function (mapData) {
             let doCaoCuaMesh = toaDoThucTe.distanceTo(tamHanhTinh) - rHanhTinh;
             let laDatSatMatGround = doCaoCuaMesh < 15.0;
 
-            // --- A. BẺ CONG LÚN ĐẤT (BẢN VÁ TỐI THƯỢNG: THÁI MỎNG TỪNG ĐỈNH) ---
+
+
+            // --- A. BẺ CONG LÚN ĐẤT (TỐI ƯU MOBILE: CHỐNG CHẾT LÂM SÀNG CPU) ---
             if (window.KIEU_TRONG_LUC !== 'PHANG' && laMatDatKhongLo && laDatSatMatGround && child.geometry && child.geometry.attributes && child.geometry.attributes.position) {
 
                 let posAttr = child.geometry.attributes.position;
@@ -2142,7 +2144,8 @@ window.xuLyLoadMapChunk = function (mapData) {
                 let meshInverseMat = new THREE.Matrix4().copy(child.matrixWorld).invert();
 
                 let DO_LUN = 0.0; 
-                let BATCH_SIZE = 15000; 
+                // 🌟 TỐI ƯU: Băm siêu nhỏ khối lượng việc. PC quất 15000 đỉnh/lần, Mobile chỉ dám quất 3000 đỉnh/lần.
+                let BATCH_SIZE = window.isMobile ? 3000 : 15000; 
                 
                 for (let j = 0; j < posAttr.count; j += BATCH_SIZE) {
                     for (let k = j; k < j + BATCH_SIZE && k < posAttr.count; k++) {
@@ -2159,11 +2162,18 @@ window.xuLyLoadMapChunk = function (mapData) {
                         v_local.copy(v_world).applyMatrix4(meshInverseMat);
                         posAttr.setXYZ(k, v_local.x, v_local.y, v_local.z);
                     }
-                    await new Promise(resolve => setTimeout(resolve, 5));
+                    // 🌟 TỐI ƯU: Cho trình duyệt Mobile nghỉ 20ms để hệ điều hành dọn rác RAM, chống Crash. PC cho nghỉ 5ms.
+                    await new Promise(resolve => setTimeout(resolve, window.isMobile ? 20 : 5));
                 }
                 posAttr.needsUpdate = true;
+                
+                // Hàm tính toán Normal này cực tốn RAM, trên mobile nếu làm lag quá có thể bỏ qua, 
+                // nhưng tạm thời ta giữ lại và cho nghỉ nhịp trước khi chạy nó.
+                await new Promise(resolve => setTimeout(resolve, window.isMobile ? 30 : 5));
                 child.geometry.computeVertexNormals();
             }
+
+            
 
             // --- B. TÚT LẠI MÀU SẮC (MATERIAL) ---
             if (child.material) {
