@@ -106,26 +106,42 @@
 
 
 
-    function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        // 🌟 TỐI ƯU MOBILE: Ép hạt ánh sáng Lazer xuống còn 10
-        const soLuong = window.isMobile ? 10 : 60; const geo = new THREE.BufferGeometry();
+    window.thoiDiemNoCuoiCungLZ = window.thoiDiemNoCuoiCungLZ || 0;
 
-        const posArr = new Float32Array(soLuong * 3); const vels = [];
-        for (let i = 0; i < soLuong; i++) {
-            posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;
-            vels.push(new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 5, (Math.random() - 0.5) * 5));
-        }
-        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-        const mat = new THREE.PointsMaterial({ color: 0x00ffff, size: 3.0, transparent: true, opacity: 1, blending: THREE.AdditiveBlending });
-        const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngLazer.push({ system: pts, velocities: vels, life: 25, type: 'explosion' }); 
-        
-        if (isRemote === false) gaySatThuongLZ(pos, luongDame, banKinh);
-        else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
-        }
+function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
+    // 1. TÍNH DAME (LUÔN CHẠY)
+    if (isRemote === false) gaySatThuongLZ(pos, luongDame, banKinh);
+    else if (typeof isRemote === 'number' && isRemote > 0) {
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
     }
+
+    // 2. VAN CHỐNG LAG ĐỒ HỌA
+    let bayGio = Date.now();
+    if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungLZ < 250) {
+        return; 
+    }
+    window.thoiDiemNoCuoiCungLZ = bayGio;
+
+    // 3. VẼ ĐỒ HỌA
+    const soLuong = window.isMobile ? 5 : 60; // Mobile chỉ 5 hạt ánh sáng là đủ lóe mắt rồi
+    const geo = new THREE.BufferGeometry();
+
+    const posArr = new Float32Array(soLuong * 3); const vels = [];
+    for (let i = 0; i < soLuong; i++) {
+        posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;
+        vels.push(new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 5, (Math.random() - 0.5) * 5));
+    }
+    geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+    const mat = new THREE.PointsMaterial({ color: 0x00ffff, size: 4.0, transparent: true, opacity: 1, blending: THREE.AdditiveBlending, depthWrite: false });
+    const pts = new THREE.Points(geo, mat); scene.add(pts);
+    hieuUngLazer.push({ system: pts, velocities: vels, life: 20, type: 'explosion' }); 
+}
     
+
+
+
+
+
 
     // ==========================================
     // 🛠️ RADAR & MÔ HÌNH
