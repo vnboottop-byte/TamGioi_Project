@@ -615,19 +615,22 @@ camera.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 1, TOA_DO_SPAWN.z + 85);
 controls.target.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 2, TOA_DO_SPAWN.z);
 controls.update();
 
-// =========================================================
-// 📥 TẢI BẢN ĐỒ VÀ MÔ HÌNH
-// =========================================================
+
+
+
 const loader = new THREE.GLTFLoader();
+
 // Cỗ máy nén Xương & Đỉnh (Draco)
 const dracoLoader = new THREE.DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/');
 loader.setDRACOLoader(dracoLoader);
+
 // 🌟 CỔ MÁY NÉN KTX2 TỐI THƯỢNG (Chống tràn VRAM Texture)
 const ktx2Loader = new THREE.KTX2Loader()
     .setTranscoderPath('https://unpkg.com/three@0.128.0/examples/js/libs/basis/')
     .detectSupport(window.renderer);
 loader.setKTX2Loader(ktx2Loader);
+
 window.loaderSieuToc = loader;
 
 
