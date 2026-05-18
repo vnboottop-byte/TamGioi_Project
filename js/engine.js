@@ -1490,7 +1490,9 @@ function animate() {
 
                 let dangCuaDong = window.isMoving || window.isKeyboardMoving || (window.keys && (window.keys.space || window.keys.shift || window.keys.x || window.keys.c));
 
-                if (window.khungHinhRadar % 3 === 0 || window.khungHinhRadar < 20) {
+                // 🌟 TỐI ƯU MOBILE CPU: Giảm tần suất bắn tia Radar từ 3 frame xuống 10 frame trên Mobile
+                let nhipRadar = window.isMobile ? 10 : 3;
+                if (window.khungHinhRadar % nhipRadar === 0 || window.khungHinhRadar < 20) {
                     let tiaXuatPhat = playerModel.position.clone(); tiaXuatPhat.y += 50000;
                     window.radarTrongLuc.set(tiaXuatPhat, new THREE.Vector3(0, -1, 0));
                     window.radarTrongLuc.far = Infinity;
@@ -1620,7 +1622,9 @@ function animate() {
                 if (typeof window.khungHinhRadar === 'undefined') window.khungHinhRadar = 0; window.khungHinhRadar++;
                 let dangCuaDong = window.isMoving || window.isKeyboardMoving || (window.keys && (window.keys.space || window.keys.shift || window.keys.x || window.keys.c));
 
-                if (window.khungHinhRadar % 3 === 0 || window.khungHinhRadar < 20) {
+                // 🌟 TỐI ƯU MOBILE CPU: Giảm tần suất bắn tia Radar từ 3 frame xuống 10 frame trên Mobile
+                let nhipRadar = window.isMobile ? 10 : 3;
+                if (window.khungHinhRadar % nhipRadar === 0 || window.khungHinhRadar < 20) {
                     let tiaXuatPhat = tamHanhTinh.clone().add(huongLenTroiMoi.clone().multiplyScalar(50000));
                     window.radarTrongLuc.set(tiaXuatPhat, huongLenTroiMoi.clone().negate());
                     window.radarTrongLuc.far = Infinity;
@@ -1861,7 +1865,9 @@ function animate() {
                 let isAnimChanged = currentAnimName !== window.oldAnimLK; 
                 let lastSend = window.lastSendTime || 0;
 
-                if (!window.dangLuot && (now - lastSend > 3000 || ((isPosChanged || isAnimChanged) && now - lastSend > 80))) {
+                // 🌟 CHỐNG NÓNG MÁY MOBILE: Nới lỏng độ trễ mạng để Ăng-ten Wi-fi/4G được nghỉ ngơi
+                let doTreMang = window.isMobile ? 150 : 80;
+                if (!window.dangLuot && (now - lastSend > 3000 || ((isPosChanged || isAnimChanged) && now - lastSend > doTreMang))) {
                     window.oldAnimLK = currentAnimName; 
                     let animNguoiChoi = currentAnimName || 'IDLE';
                     if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") {
@@ -2358,17 +2364,27 @@ setInterval(() => {
         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
         let khoangCach = pPos.distanceTo(mPos);
 
+
+
+
+
+
+        // 🌟 BỘ LỌC BÁN KÍNH TỐI ƯU CHO MOBILE (Chống văng Game OOM)
+        let rLoad = window.isMobile ? 3000 : 10000;
+        let rBoss = window.isMobile ? 1500 : 5000;
+        let rUnload = window.isMobile ? 4500 : 12000; // Cách 1500m so với rLoad để chống giật lag do Load/Unload liên tục
+
         // ==========================================
-        // 🟢 TẦNG 1: LOAD ĐẤT ĐAI (LÁT CẮT 10.000m)
+        // 🟢 TẦNG 1: LOAD ĐẤT ĐAI
         // ==========================================
-        if (khoangCach < 10000 && !mapData.isLoaded && !mapData.isLoading) {
+        if (khoangCach < rLoad && !mapData.isLoaded && !mapData.isLoading) {
             window.xuLyLoadMapChunk(mapData);
         }
 
         // ==========================================
-        // 🟢 TẦNG 2: LOAD SINH THÁI & BOSS (LÁT CẮT 5.000m)
+        // 🟢 TẦNG 2: LOAD SINH THÁI & BOSS
         // ==========================================
-        if (khoangCach < 5000 && mapData.isLoaded && !mapData.daLoadBoss) {
+        if (khoangCach < rBoss && mapData.isLoaded && !mapData.daLoadBoss) {
             if (typeof window.taiBossTheoMap === 'function') {
                 window.taiBossTheoMap(mapData.id);
                 mapData.daLoadBoss = true;
@@ -2376,13 +2392,17 @@ setInterval(() => {
         }
 
         // ==========================================
-        // 🔴 TẦNG 3: LÒ ĐỐT RÁC VRAM (VƯỢT LÁT CẮT 12.000m)
+        // 🔴 TẦNG 3: LÒ ĐỐT RÁC VRAM 
         // ==========================================
-        if (khoangCach > 12000 && mapData.isLoaded) {
+        if (khoangCach > rUnload && mapData.isLoaded) {
             window.xuLyXoaMapChunk(mapData);
             window.xuLyXoaBossTheoMap(mapData.id);
             mapData.daLoadBoss = false;
         }
+
+
+
+
     });
 }, 2000);
 
