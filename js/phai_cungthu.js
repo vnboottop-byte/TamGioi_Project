@@ -64,15 +64,17 @@
     // ==========================================
     // 🩸 LÕI SÁT THƯƠNG & HIỆU ỨNG (ĐỘC LẬP)
     // ==========================================
+    window.tongSoChuNoi_CT = 0;
     function taoSoSatThuongCT(pos3D, satThuong, mauSac = '#ff2222') {
-        if (satThuong <= 0) return;
-        // 🌟 TỐI ƯU MOBILE CPU: Chặn đứng DOM Thrashing. Quá 5 số thì ngưng đẻ thêm HTML!
-        if (window.isMobile && window.tongSoChuNoi_BS > 5) return; 
+        if(satThuong <= 0) return;
+        // 🌟 KHÓA VAN MOBILE
+        if (window.isMobile && window.tongSoChuNoi_CT > 5) return;
+        window.tongSoChuNoi_CT++;
 
-        window.tongSoChuNoi_BS++; // Tăng biến đếm
         const div = document.createElement('div');
         div.innerText = "-" + Math.round(satThuong);
-        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000; pointer-events:none; z-index:9999;`;
+        let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000';
+        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
         document.body.appendChild(div);
         danhSachSoBayCT.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
@@ -524,12 +526,12 @@
                 item.el.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`;
                 item.el.style.top = `${(screenPos.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { item.el.style.display = 'none'; }
-            if (item.life < 20) item.el.style.opacity = item.life / 20;
-            if (item.life <= 0) {
-                item.el.remove(); danhSachSoBayCT.splice(i, 1);
-                window.tongSoChuNoi_BS--;
 
-            }
+            if (item.life < 20) item.el.style.opacity = item.life / 20;
+
+            if (item.life <= 0) { item.el.remove(); danhSachSoBayCT.splice(i, 1); window.tongSoChuNoi_CT--; } // 🌟 Xả van
+
+            
         }
     };
 
