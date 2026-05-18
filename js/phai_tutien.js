@@ -373,6 +373,7 @@ setInterval(window.updateCombatTuTien, 30);
 // CÁC HÀM TIỆN ÍCH CỦA SẾP (GIỮ NGUYÊN)
 // ==========================================
 window.taoSaoBangTuTien = function (pos, dir) {
+    if (window.isMobile) return; // 🌟 TỐI ƯU MOBILE: Tắt đuôi sao băng bay theo kiếm
     if (Math.random() > 0.5) return;
     const geo = new THREE.BufferGeometry(); const posArr = new Float32Array([pos.x, pos.y, pos.z]); geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
     const mat = new THREE.PointsMaterial({ color: 0xffaa00, size: 0.3, transparent: true, opacity: 1 });
@@ -398,7 +399,9 @@ window.phatAmThanhNo = function () {
 
 window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
     if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
-    const soLuong = 20; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
+    // 🌟 TỐI ƯU MOBILE: Giảm từ 300 hạt lửa xuống còn 20 hạt
+    const soLuong = window.isMobile ? 20 : 300; 
+    const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
     
     // 🌟 TRÁI ĐẤT TRÒN: Căn chỉnh vụ nổ bung lên trời thay vì rớt xuống đáy biển
     let upV = pos.clone().normalize(); 
