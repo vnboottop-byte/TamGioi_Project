@@ -619,21 +619,22 @@ controls.update();
 // 📥 TẢI BẢN ĐỒ VÀ MÔ HÌNH
 // =========================================================
 const loader = new THREE.GLTFLoader();
+// Cỗ máy nén Xương & Đỉnh (Draco)
 const dracoLoader = new THREE.DRACOLoader();
-// 🌟 NÂNG CẤP LÊN 1.4.3 ĐỂ ĐỌC ĐƯỢC FILE NÉN CỦA BLENDER!
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/');
 loader.setDRACOLoader(dracoLoader);
+// 🌟 CỔ MÁY NÉN KTX2 TỐI THƯỢNG (Chống tràn VRAM Texture)
+const ktx2Loader = new THREE.KTX2Loader()
+    .setTranscoderPath('https://unpkg.com/three@0.128.0/examples/js/libs/basis/')
+    .detectSupport(window.renderer);
+loader.setKTX2Loader(ktx2Loader);
 window.loaderSieuToc = loader;
 
+
+
 window.mixerNhanVatPhu = null; 
-
-
 // 🌟 TẠO BIẾN MIXER ĐỂ CHẠY ANIMATION MÂY
 window.mixerTraiDat = null;
-
-
-
-
 
 // 🌟 KÍCH HOẠT LÕI VẬT LÝ SIÊU TỐC BVH & KẾT NỐI NHÂN CPU SỐ 2
 if (typeof MeshBVHLib !== 'undefined') {
