@@ -548,8 +548,7 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
                     if (skill.progress >= 1) {
                         skill.life = 0;
-                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30);
-                        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 20, 0xff5500);
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 30, true, 20, 0xff5500);
                     }
                 }
             }
@@ -578,9 +577,10 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
                 // 4. Kiểm tra va chạm (Đâm trúng đích hoặc hết xăng)
                 if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 10 || skill.life < 5) {
                     // Nổ với bán kính 50, dame chuẩn 0.9 như Sếp đã cài
-                    taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50);
-                    if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(skill.targetPos, 25, 0xff5500);
-                    skill.life = 0; // Xóa sổ máy bay
+                    if (skill.mesh.position.distanceTo(skill.targetPos) < skill.speed + 10 || skill.life < 5) {
+                        taoVuNoBS(skill.targetPos, skill.isRemote, Math.round(skill.damage), 50, true, 25, 0xff5500);
+                        skill.life = 0; // Xóa sổ máy bay
+                    }
                 }
             }
 
