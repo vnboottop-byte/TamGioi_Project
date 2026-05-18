@@ -211,6 +211,8 @@ window.donRac3D = function (obj) {
         // Càn quét nếu nó là Mesh (Khối), Points (Hạt bụi/lửa), Line (Tia Lazer)
         if (child.isMesh || child.isPoints || child.isLine) {
             if (child.geometry) child.geometry.dispose(); // Thiêu rụi khung xương
+         
+
             if (child.material) {
                 if (Array.isArray(child.material)) {
                     child.material.forEach(m => m.dispose());
@@ -726,6 +728,10 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
                 child.frustumCulled = false;
 
+
+
+
+
                 if (child.material) {
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(mat => {
@@ -733,11 +739,19 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                         mat.side = THREE.DoubleSide;
                         mat.envMapIntensity = 0.0;
                         if (mat.map && window.renderer) {
-                            mat.map.anisotropy = window.renderer.capabilities.getMaxAnisotropy();
+                            // 🌟 TỐI ƯU MOBILE VRAM: Tắt Anisotropy và Mipmaps để chống tràn VRAM khi load Map
+                            mat.map.anisotropy = window.isMobile ? 1 : window.renderer.capabilities.getMaxAnisotropy();
+                            mat.map.generateMipmaps = !window.isMobile;
+                            mat.map.minFilter = window.isMobile ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
                         }
                         mat.needsUpdate = true;
                     });
                 }
+
+
+
+
+
 
                 if (child.geometry && typeof child.geometry.computeBoundsTree === 'function') {
                     child.geometry.computeBoundsTree();
