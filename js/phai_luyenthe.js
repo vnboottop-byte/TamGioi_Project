@@ -12,6 +12,7 @@
 
     window.tongSoChuNoi_LT = 0; // Biến đếm
     function taoSoSatThuongLT(pos3D, satThuong, mauSac = '#ff2222') {
+        if (window.isMobile) return; // 🌟 CỨU SỐNG CPU MOBILE!
         if(satThuong <= 0) return;
         // 🌟 KHÓA VAN MOBILE
         if (window.isMobile && window.tongSoChuNoi_LT > 5) return;
