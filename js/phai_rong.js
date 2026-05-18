@@ -80,7 +80,8 @@ function taoBuiLuaMienMan(origin, dir, dame, isRemote) {
 
 
 
-        const soLuong = window.isMobile ? 15 : 200; // Nhả cực nhiều hạt bụi
+        // 🌟 TỐI ƯU MOBILE: Khạc lửa liên tục, ép xuống 15 hạt/chu kỳ để cứu máy
+        const soLuong = window.isMobile ? 15 : 200; 
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];

@@ -15,8 +15,11 @@ window.tungComboChimCa = function (chieu, dmgBoss, bOrigin, pTarget, bDir, tempI
 
 // HIỆU ỨNG CẬN CHIẾN: NHÁT CẮN TÉT MÁU
 function taoHieuUngCaoCau(targetPos, dir, dame, isRemote) {
-    const soLuong = 10;
+    // 🌟 TỐI ƯU MOBILE: Hạ máu văng xuống còn 15 tia
+    const soLuong = window.isMobile ? 15 : 100;
     const geo = new THREE.BufferGeometry();
+
+
     const posArr = new Float32Array(soLuong * 3);
     const vels = [];
 
