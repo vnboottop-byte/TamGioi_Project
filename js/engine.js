@@ -2292,15 +2292,25 @@ window.xuLyLoadMapChunk = function (mapData) {
 
             if (!window.danhSachMap) window.danhSachMap = [];
             window.danhSachMap.push(child);
+
+
+
+
             
             if (!mapData.matDatMeshes) mapData.matDatMeshes = [];
             mapData.matDatMeshes.push(child);
 
-            if (window.renderer && typeof scene !== 'undefined') {
+            // 🌟 CHỐNG SỐC GPU iPHONE: Cấm ép Mobile biên dịch Shader của cả Map trong 1 Frame!
+            // Đây chính là nguyên nhân làm iPhone bị nghẹn, ép tải lại trang 2 lần rồi sập. Chỉ cho PC làm việc này.
+            if (window.renderer && typeof scene !== 'undefined' && !window.isMobile) {
                 window.renderer.compile(child, camera, scene);
             }
 
             await new Promise(resolve => {
+
+
+
+
                 requestAnimationFrame(() => {
                     let thoiGianHienTai = performance.now();
                     let thoiGian1Frame = thoiGianHienTai - thoiGianĐoFPS;
