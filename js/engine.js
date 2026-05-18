@@ -741,16 +741,15 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 // iOS: TẮT lệnh cấm tàng hình. Chỉ vẽ những ngọn núi/mặt đất đang nằm đúng trước mặt Camera, tiết kiệm 80% GPU!
                 child.frustumCulled = window.isMobile ? true : false;
 
+
                 if (child.material) {
-
-
                     let mats = Array.isArray(child.material) ? child.material : [child.material];
                     mats.forEach(mat => {
                         if (!mat) return;
                         mat.side = THREE.DoubleSide;
                         mat.envMapIntensity = 0.0;
                         if (mat.map && window.renderer) {
-                            // 🌟 TỐI ƯU MOBILE VRAM: Tắt Anisotropy và Mipmaps để chống tràn VRAM khi load Map
+                            // 🌟 TỐI ƯU MOBILE VRAM: Ép giảm chất lượng Texture của Map Gốc
                             mat.map.anisotropy = window.isMobile ? 1 : window.renderer.capabilities.getMaxAnisotropy();
                             mat.map.generateMipmaps = !window.isMobile;
                             mat.map.minFilter = window.isMobile ? THREE.LinearFilter : THREE.LinearMipmapLinearFilter;
@@ -759,18 +758,31 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     });
                 }
 
-
-
-
-
-
-                if (child.geometry && typeof child.geometry.computeBoundsTree === 'function') {
-                    child.geometry.computeBoundsTree();
+                if (child.geometry) {
+                    // 🌟 TỐI ƯU MOBILE CPU: KHÔNG đúc vật lý đồng bộ trên luồng chính gây Crash iOS!
+                    // Phân luồng cho BVH Worker làm việc này giống hệt như Map Chunk
+                    if (window.isMobile && window.myBvhWorker && child.geometry.attributes && child.geometry.attributes.position) {
+                        let jobId = window.jobIdCounter++;
+                        window.bvhJobs[jobId] = { 
+                            resolve: (serializedBVH) => { child.geometry.boundsTree = MeshBVHLib.MeshBVH.deserialize(serializedBVH, child.geometry); },
+                            reject: (err) => { console.error("Lỗi đúc BVH Map Gốc:", err); }
+                        };
+                        window.myBvhWorker.postMessage({ 
+                            id: jobId, 
+                            positions: child.geometry.attributes.position.array, 
+                            indices: child.geometry.index ? child.geometry.index.array : null 
+                        });
+                    } else if (typeof child.geometry.computeBoundsTree === 'function') {
+                        // PC nhai tốt nên cho tự đúc
+                        child.geometry.computeBoundsTree();
+                    }
                 }
 
                 if (!window.danhSachMap) window.danhSachMap = [];
                 window.danhSachMap.push(child);
-                window.matDatHanhTinhGoc.push(child); // 🌟 Lưu lại lưới va chạm
+                window.matDatHanhTinhGoc.push(child);
+
+
             }
         }
     });
