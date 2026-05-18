@@ -19,13 +19,17 @@ if (window.ZONE_ID && window.ZONE_ID !== 'TRUNG_CHAU') {
 
 
 
+// 🌟 TỐI ƯU HÓA CẤU HÌNH GPU TẬN GỐC
 window.renderer = new THREE.WebGLRenderer({
-    antialias: !window.isMobile,
-    // 🌟 BẬT LOGARITHMIC CHO PC ĐỂ CHỐNG LỖI XƯỚC ĐEN MÔ HÌNH Ở MAP RỘNG
-    logarithmicDepthBuffer: !window.isMobile
+    antialias: !window.isMobile, 
+    logarithmicDepthBuffer: !window.isMobile,
+    powerPreference: "high-performance" // Bắt buộc HĐH dồn sức mạnh cao nhất cho Canvas
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.isMobile ? 1 : window.devicePixelRatio); 
+// Trên Mobile, mật độ điểm ảnh quá cao (Retina) sẽ giết chết GPU. Khóa chết ở mức 1.0!
+renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
+
+
 renderer.outputEncoding = THREE.sRGBEncoding;
 
 // 🌟 BÍ QUYẾT GLTF-VIEWER: ĐỔI VỀ LINEAR TONE MAPPING
