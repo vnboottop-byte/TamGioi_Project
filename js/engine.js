@@ -1,7 +1,8 @@
 // ==========================================
 // 🌍 ĐỘNG CƠ CỐT LÕI (CORE ENGINE) - TÍCH HỢP MOBILE MODE
 // ==========================================
-THREE.Cache.enabled = true;
+// 🌟 CỨU SỐNG RAM MOBILE: Tắt Cache trên điện thoại để nó không ngậm file 3D khổng lồ
+THREE.Cache.enabled = !window.isMobile; 
 window.scene = new THREE.Scene();
 window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.01, 3000);
 
@@ -15,9 +16,6 @@ if (window.ZONE_ID && window.ZONE_ID !== 'TRUNG_CHAU') {
 } else {
     window.KIEU_TRONG_LUC = 'CAU';
 }
-
-
-
 
 // 🌟 TỐI ƯU HÓA CẤU HÌNH GPU TẬN GỐC
 window.renderer = new THREE.WebGLRenderer({
@@ -2979,6 +2977,12 @@ window.thucHienTruyenTong = function (congData) {
 
             let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
             let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
+
+
+
+
+
+
             
             // 2. ĐIỀU KIỆN MỞ MẮT THÔNG MINH:
             // - Đã kéo xong Data + Đã đúc xong ít nhất 1 Map + Không còn Map nào dang dở.
