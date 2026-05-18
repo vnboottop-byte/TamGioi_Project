@@ -380,47 +380,45 @@ setInterval(() => {
 
 
 
-const renderScene = new THREE.RenderPass(scene, camera);
-
-// 🌟 THÔNG SỐ CHUẨN CHỐNG CHÓI LÓA TẠI ĐÂY:
-const bloomPass = new THREE.UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.25,   // 1. STRENGTH (Cường độ): Giảm xuống 0.5 - 0.8 để bớt chói.
-    0.8,   // 2. RADIUS (Độ lan tỏa): 0.4 là vừa đẹp.
-    0.98   // 3. THRESHOLD (Ngưỡng): TĂNG LÊN 0.85 hoặc 0.9. (Cái này cực quan trọng: Nó giúp mặt đất không bị phát sáng, chỉ có Lazer/Skill mới có hào quang!)
-);
 
 
 
 
-window.composer = new THREE.EffectComposer(renderer);
-composer.addPass(renderScene);
-composer.addPass(bloomPass);
+// 🌟 TỐI ƯU MOBILE VRAM: KHÔNG SỬ DỤNG COMPOSER VÀ BLOOM TRÊN DI ĐỘNG
+window.composer = null;
 
-// Lớp Khử Răng Cưa
-if (!window.isMobile && typeof THREE.SMAAPass !== 'undefined') {
-    const smaaPass = new THREE.SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
-    composer.addPass(smaaPass);
+if (!window.isMobile) {
+    const renderScene = new THREE.RenderPass(scene, camera);
+
+    // 🌟 THÔNG SỐ CHUẨN CHỐNG CHÓI LÓA TẠI ĐÂY:
+    const bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.25,   
+        0.8,   
+        0.98   
+    );
+
+    window.composer = new THREE.EffectComposer(renderer);
+    window.composer.addPass(renderScene);
+    window.composer.addPass(bloomPass);
+
+    // Lớp Khử Răng Cưa (Chỉ PC)
+    if (typeof THREE.SMAAPass !== 'undefined') {
+        const smaaPass = new THREE.SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
+        window.composer.addPass(smaaPass);
+    }
+
+    // 🌟 BẢN VÁ AAA: PHỤC HỒI ÁNH SÁNG THỰC (Chỉ PC)
+    if (typeof THREE.GammaCorrectionShader !== 'undefined') {
+        const gammaPass = new THREE.ShaderPass(THREE.GammaCorrectionShader);
+        window.composer.addPass(gammaPass);
+    }
 }
+// Nếu là Mobile, window.composer sẽ = null. 
+// Động cơ ở cuối file sẽ tự động nhận biết và dùng "renderer.render(scene, camera);" trực tiếp, tiết kiệm ~400MB VRAM!
 
-// 🌟 BẢN VÁ AAA: PHỤC HỒI ÁNH SÁNG THỰC (BẮT BUỘC PHẢI NẰM CUỐI CÙNG)
-if (typeof THREE.GammaCorrectionShader !== 'undefined') {
-    const gammaPass = new THREE.ShaderPass(THREE.GammaCorrectionShader);
-    composer.addPass(gammaPass);
-}
 
 let mixer, playerModel, currentAction;
-
-
-
-
-
-
-
-
-
-
-
 let currentAnimName = ''; 
 let animationsMap = {}; 
 window.isMoving = false;
