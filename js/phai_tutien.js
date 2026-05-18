@@ -155,6 +155,9 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
             kyNangTuTien.push({ mesh: sword, speed: 4.0, life: 100, type: 'kiem_q', delay: 40 + i, targetPos: mucTieu.clone(), damage: dameGoc * 0.078, isRemote: isRemote });
         }
     }
+
+
+
     else if (phim === 'E') {
         // 🌟 TỐI ƯU MOBILE: Giảm từ 30 kiếm xuống 10 kiếm
         const soLuong = 10; const banKinh = 2.0; 
@@ -257,14 +260,31 @@ window.updateCombatTuTien = function () {
             window.kiemHoThe.rotateZ(window.gocTuXoay);
         }
 
+
+
+
+
         for (let i = kyNangTuTien.length - 1; i >= 0; i--) {
             let skill = kyNangTuTien[i];
-            if (skill.delay > 0 && skill.type !== 'kiem_e') { skill.delay--; continue; }
+            
+            // 🌟 TỐI ƯU CHIÊU Q: Cho kiếm xoay tít thò lò như mũi khoan lúc chờ xuất kích!
+            if (skill.delay > 0 && skill.type !== 'kiem_e') { 
+                if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
+                skill.delay--; 
+                continue; 
+            }
+            
             skill.life--;
 
             if (skill.type === 'kiem_q' || skill.type === 'kiem_r') {
+                // 🌟 Xoay cả lúc đang lao đi cho thêm phần uy lực
+                if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
+
                 // 🌟 TẦM NHIỆT (HOMING) CHO Q VÀ R
                 if (skill.targetPos) {
+
+
+
                     if (!skill.isRemote) {
                         const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
                         const mucTieuMoi = window.layMucTieuGanNhatTT(skill.mesh.position, fwd);
