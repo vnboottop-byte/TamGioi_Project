@@ -14,14 +14,17 @@
 
     
 
-    // ==========================================
-    // 🩸 LÕI SÁT THƯƠNG & HIỆU ỨNG ĐỘC LẬP
-    // ==========================================
+    window.tongSoChuNoi_PS = 0;
     function taoSoSatThuongPS(pos3D, satThuong, mauSac = '#00ffff') {
         if (satThuong <= 0) return;
+        // 🌟 KHÓA VAN MOBILE
+        if (window.isMobile && window.tongSoChuNoi_PS > 5) return;
+        window.tongSoChuNoi_PS++;
+
         const div = document.createElement('div');
         div.innerText = "-" + Math.round(satThuong);
-        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000; pointer-events:none; z-index:9999;`;
+        let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000';
+        div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
         document.body.appendChild(div);
         danhSachSoBayPS.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
@@ -475,8 +478,9 @@
         for (let i = danhSachSoBayPS.length - 1; i >= 0; i--) {
             let it = danhSachSoBayPS[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
+
             if (p.z < 1) { it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`; it.el.style.opacity = it.life / 60; }
-            if (it.life <= 0) { it.el.remove(); danhSachSoBayPS.splice(i, 1); }
+            if (it.life <= 0) { it.el.remove(); danhSachSoBayPS.splice(i, 1); window.tongSoChuNoi_PS--; } // 🌟 Xả van
         }
     };
 
