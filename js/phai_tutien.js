@@ -398,7 +398,7 @@ window.phatAmThanhNo = function () {
 
 window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
     if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
-    const soLuong = 300; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
+    const soLuong = 20; const geo = new THREE.BufferGeometry(); const posArr = new Float32Array(soLuong * 3); const vels = [];
     
     // 🌟 TRÁI ĐẤT TRÒN: Căn chỉnh vụ nổ bung lên trời thay vì rớt xuống đáy biển
     let upV = pos.clone().normalize(); 
