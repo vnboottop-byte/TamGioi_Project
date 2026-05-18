@@ -147,3 +147,34 @@ window.layHitbox = function (mesh) {
     tamNguc.y += (mesh.chieuCao / 2);
     return { tamNguc: tamNguc, banKinh: mesh.chieuRong / 2, chieuCao: mesh.chieuCao };
 };
+
+
+
+
+// ==========================================
+// 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
+// ==========================================
+if (window.isMobile) {
+    const originalAppendChild = document.body.appendChild;
+    document.body.appendChild = function (element) {
+        // Nhận diện thẻ Div hiển thị sát thương (Có dấu trừ và có hiệu ứng bóng chữ)
+        if (element.tagName === 'DIV' && element.innerText && element.innerText.startsWith('-') && element.style.textShadow) {
+            let soLuongChuNoi = 0;
+            if (typeof danhSachSoBay !== 'undefined') soLuongChuNoi += danhSachSoBay.length;
+            if (typeof danhSachSoBayBS !== 'undefined') soLuongChuNoi += danhSachSoBayBS.length;
+            if (typeof danhSachSoBayCT !== 'undefined') soLuongChuNoi += danhSachSoBayCT.length;
+            if (typeof danhSachSoBayLZ !== 'undefined') soLuongChuNoi += danhSachSoBayLZ.length;
+            if (typeof danhSachSoBayLT !== 'undefined') soLuongChuNoi += danhSachSoBayLT.length;
+            if (typeof danhSachSoBayPS !== 'undefined') soLuongChuNoi += danhSachSoBayPS.length;
+
+            // Nếu trên màn hình đã có 5 số nhảy, chặn ngay không cho vẽ thêm nữa!
+            if (soLuongChuNoi > 5) {
+                return element; 
+            }
+            
+            // Giảm độ gắt của bóng chữ để GPU Mobile render mượt hơn
+            element.style.textShadow = '1px 1px 0px #000';
+        }
+        return originalAppendChild.call(this, element);
+    };
+}
