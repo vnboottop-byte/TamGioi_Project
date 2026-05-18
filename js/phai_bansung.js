@@ -98,12 +98,36 @@
     }
 
 
-    function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (isRemote === false) gaySatThuongBS(pos, luongDame, banKinh);
-        else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
-        }
+
+
+
+
+
+    window.thoiDiemNoCuoiCungBS = window.thoiDiemNoCuoiCungBS || 0;
+
+function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUngNo = false, sizeNo = 20, colorNo = 0xff5500) {
+    // 1. TÍNH SÁT THƯƠNG NGẦM
+    if (isRemote === false) gaySatThuongBS(pos, luongDame, banKinh);
+    else if (typeof isRemote === 'number' && isRemote > 0) {
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
     }
+
+    // 2. VAN XẢ ĐỒ HỌA CHỐNG LAG
+    if (hieuUngNo && typeof window.taoHieuUngNo === 'function') {
+        let bayGio = Date.now();
+        if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungBS < 300) {
+            return;
+        }
+        window.thoiDiemNoCuoiCungBS = bayGio;
+        window.taoHieuUngNo(pos, sizeNo, colorNo);
+    }
+}
+
+
+
+
+
+
 
 
     function taoSaoBangBS(pos, dir) {
