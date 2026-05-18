@@ -352,6 +352,7 @@ window.updateCombatTuTien = function () {
             }
         }
 
+
         if (typeof danhSachSoBay !== 'undefined') {
             for (let i = danhSachSoBay.length - 1; i >= 0; i--) {
                 let item = danhSachSoBay[i]; item.offsetY += 0.05; item.life--;
@@ -360,9 +361,11 @@ window.updateCombatTuTien = function () {
                     item.el.style.left = `${(screenPos.x * 0.5 + 0.5) * window.innerWidth}px`; item.el.style.top = `${(screenPos.y * -0.5 + 0.5) * window.innerHeight}px`;
                 } else { item.el.style.display = 'none'; }
                 if (item.life < 20) item.el.style.opacity = item.life / 20;
-                if (item.life <= 0) { item.el.remove(); danhSachSoBay.splice(i, 1); }
+                if (item.life <= 0) { item.el.remove(); danhSachSoBay.splice(i, 1); window.tongSoChuNoi_TT--; } // 🌟 Xả van
             }
         }
+
+
     } catch (e) { }
 };
 
@@ -438,11 +441,22 @@ window.addEventListener('click', () => {
     if (!nhacNenTuTien) { nhacNenTuTien = new Audio('uploads/nhac_nen.mp3'); nhacNenTuTien.loop = true; nhacNenTuTien.volume = 0.1; nhacNenTuTien.play().catch(e => { }); } else if (nhacNenTuTien.paused) nhacNenTuTien.play();
 }, { once: true });
 
+
+
+
+
+
 const danhSachSoBay = [];
+window.tongSoChuNoi_TT = 0; // Biến đếm
 window.taoSoSatThuong = function (pos3D, satThuong) {
     if (satThuong <= 0) return;
+    // 🌟 KHÓA VAN MOBILE: Quá 5 số thì cấm đẻ thêm HTML
+    if (window.isMobile && window.tongSoChuNoi_TT > 5) return;
+    window.tongSoChuNoi_TT++;
+
     const div = document.createElement('div'); div.innerText = "-" + Math.round(satThuong);
-    div.style.cssText = 'position:absolute; color:#ff2222; font-weight:900; font-size:35px; text-shadow:0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000; pointer-events:none; z-index:9999;';
+    let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000';
+    div.style.cssText = `position:absolute; color:#ff2222; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
     document.body.appendChild(div); danhSachSoBay.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
 };
 
