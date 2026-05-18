@@ -522,7 +522,11 @@
                 item.el.style.top = `${(screenPos.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { item.el.style.display = 'none'; }
             if (item.life < 20) item.el.style.opacity = item.life / 20;
-            if (item.life <= 0) { item.el.remove(); danhSachSoBayCT.splice(i, 1); }
+            if (item.life <= 0) {
+                item.el.remove(); danhSachSoBayCT.splice(i, 1);
+                window.tongSoChuNoi_BS--;
+
+            }
         }
     };
 
