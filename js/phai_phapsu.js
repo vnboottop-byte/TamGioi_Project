@@ -16,6 +16,7 @@
 
     window.tongSoChuNoi_PS = 0;
     function taoSoSatThuongPS(pos3D, satThuong, mauSac = '#00ffff') {
+        if (window.isMobile) return; // 🌟 CỨU SỐNG CPU MOBILE!
         if (satThuong <= 0) return;
         // 🌟 KHÓA VAN MOBILE
         if (window.isMobile && window.tongSoChuNoi_PS > 5) return;
