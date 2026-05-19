@@ -234,8 +234,14 @@
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return; // Chưa hồi thì nghỉ
             choHoiChieu[phim] = bayGio; // Ghi nhận thời gian tung chiêu
 
-            let tenAnimation = 'CHIEU' + phim; 
+            // 🌟 ĐÓNG DẤU BẢN QUYỀN CUNG THỦ
+            let tenAnimation = 'CHIEU' + phim + '_CUNGTHU'; 
             window.dangMuaChieu = true;
+
+
+
+
+
 
             // Gọi lệnh bắt nhân vật múa
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
