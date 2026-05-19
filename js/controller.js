@@ -1,10 +1,10 @@
 // ==========================================
-// 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN (BẢN VÁ LỖI CUỐI CÙNG)
+// 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN (BẢN VÁ LỖI TÊN BIẾN)
 // ==========================================
 
-// 🌟 ĐỒNG HỒ THỜI GIAN HỒI CHIÊU (Gắn vào window để mọi file đều thấy)
-window.thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
-window.thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
+// 🌟 Đã đổi tên biến thành "cd_thongSo" để KHÔNG ĐỤNG HÀNG với 6 file môn phái của Sếp!
+window.cd_thongSoHoi = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
+window.cd_thoiDiemBopCo = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
 function batDauHoiChieu(phim) {
     const slot = document.getElementById('slot-' + phim);
@@ -12,7 +12,7 @@ function batDauHoiChieu(phim) {
     const overlay = slot.querySelector('.cd-overlay');
     const text = slot.querySelector('.cd-text');
     
-    let tgHoi = window.thoiGianHoiChieu[phim], tgBatDau = Date.now();
+    let tgHoi = window.cd_thongSoHoi[phim], tgBatDau = Date.now();
     overlay.style.height = '100%'; text.style.display = 'block';
     
     const interval = setInterval(() => {
@@ -30,10 +30,10 @@ function batDauHoiChieu(phim) {
 window.dangMuaChieu = false; 
 
 window.addEventListener('keydown', (e) => {
-    // 🌟 Sử dụng window.playerModel để không bao giờ bị undefined
+    // Gọi thẳng window.playerModel để không bao giờ bị lỗi
     if (e.repeat || !window.playerModel || window.isDead) return; 
     
-    // 🌟 Bắt phím di chuyển W A S D (Ghi thẳng vào window.keys)
+    // Bắt phím di chuyển W A S D
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
         window.keys[e.code.replace('Key', '').toLowerCase()] = true;
     }
@@ -44,31 +44,31 @@ window.addEventListener('keydown', (e) => {
 
     let phimUpper = e.code.replace('Key', '');
 
-    // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
+    // 🎯 XỬ LÝ 4 CHIÊU THỨC
     if (['Q', 'E', 'R', 'F'].includes(phimUpper)) {
         
         // 1. CHẶN PHÍM KHI ĐANG GÕ CHAT
         if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
 
-        // 2. 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
+        // 2. LÁ CHẮN VÙNG AN TOÀN
         if (window.IS_IN_SAFE_ZONE) {
             if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Ở đây cấm ẩu đả Sếp ơi!", "#f1c40f");
             return; 
         }
 
-        // 3. XỬ LÝ XẢ CHIÊU & ĐẾM NGƯỢC COOLDOWN
+        // 3. XỬ LÝ ĐẾM NGƯỢC COOLDOWN BẰNG BIẾN ĐỘC LẬP
         let bayGio = Date.now();
-        if (bayGio - window.thoiDiemTungChieu[phimUpper] >= window.thoiGianHoiChieu[phimUpper]) {
-            window.thoiDiemTungChieu[phimUpper] = bayGio; 
+        if (bayGio - window.cd_thoiDiemBopCo[phimUpper] >= window.cd_thongSoHoi[phimUpper]) {
+            window.cd_thoiDiemBopCo[phimUpper] = bayGio; 
             
-            // Truyền tín hiệu cho Hệ Phái xuất chiêu (isRemote = false)
+            // 🌟 Gọi sang file hệ phái (Lúc này các file phái sẽ tự xử lý mượt mà vì không bị trùng biến nữa)
             if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
                 window.HePhaiHienTai.tungChieu(phimUpper, false);
             }
-            batDauHoiChieu(phimUpper); // Nhảy số đồng hồ UI
+            batDauHoiChieu(phimUpper); 
         } else {
             // Báo lỗi bằng số Vàng nảy lên đầu
-            let timeConLai = ((window.thoiGianHoiChieu[phimUpper] - (bayGio - window.thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
+            let timeConLai = ((window.cd_thongSoHoi[phimUpper] - (bayGio - window.cd_thoiDiemBopCo[phimUpper])) / 1000).toFixed(1);
             if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
                 window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
             }
@@ -85,15 +85,13 @@ window.addEventListener('keyup', (e) => {
     if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') window.keys['shift'] = false;
 });
 
-// Biến lưu góc liếc của Camera (Giới hạn 40 độ)
+// Biến lưu góc liếc của Camera
 window.camRotY = 0; 
 
-// Sự kiện: Giữ chuột phải để liếc ngang (hoặc Sếp có thể bỏ điều kiện buttons để liếc tự do)
+// Sự kiện: Giữ chuột phải để liếc ngang
 document.addEventListener('mousemove', (e) => {
     if (e.buttons === 2 || document.pointerLockElement) { 
-        window.camRotY -= e.movementX * 0.005; // Tốc độ xoay chuột
-        
-        // KHÓA GÓC: 40 độ tương đương khoảng 0.7 Radian
+        window.camRotY -= e.movementX * 0.005; 
         window.camRotY = Math.max(-0.7, Math.min(0.7, window.camRotY)); 
     }
 });
