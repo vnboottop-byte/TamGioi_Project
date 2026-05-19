@@ -1237,136 +1237,125 @@ function cayMatAdmin(modelGoc) {
 let idleTimer = null; 
 
 
-
-
-
-
-
 // ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA BẮT ĐẦU 
 // ==========================================
-// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V42 - PHÂN LUỒNG TUYỆT ĐỐI NGƯỜI & THÚ)
+// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V43 - PHÂN NGỮ HỆ ANH/VIỆT TÁCH BIỆT)
 // ==========================================
 function playAnim(animName) {
-    // 🛑 CHỐT CHẶN F10: Nếu Admin đang Test Animation, cấm Engine đổi tư thế nhân vật!
     if (window.isTestingAnimation) return;
-    /////////////////////////////////
+    
     let upName = animName.toUpperCase();
 
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm mọi hành động đi/chạy/bay chen ngang
-    if (window.dangMuaChieu && !upName.includes('CHIEU') && !upName.includes('ATTACK') && upName !== 'DIE' && upName !== 'DEATH') {
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
+    let laChieuTanCong = upName.includes('CHIEU');
+    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE') {
         return;
     }
     
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
-    let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName === 'TANCONG' || upName === 'SKILL';
-    let laHanhDongNguoi = laChieuTanCong || upName === 'DIE' || upName === 'DEATH';
+
+    // ==========================================
+    // 🛠️ HÀM CỨU CÁNH: LẤY HOẠT ẢNH NGƯỜI CHƠI (HỆ TIẾNG VIỆT)
+    // ==========================================
+    function getActionNguoiChoi(tenViet) {
+        let map = dangCuoiThu ? window.animationsMapChar : animationsMap;
+        if (!map) return null;
+        
+        let action = map[tenViet];
+        // 🌟 LUẬT DỰ PHÒNG CỦA SẾP: Không có chân (thiếu DIBO, CHAYBO, NHANROI) thì dồn về BAY!
+        if (!action && !tenViet.includes('CHIEU') && tenViet !== 'CHET' && tenViet !== 'DIE') {
+            action = map['BAY'];
+        }
+        return action;
+    }
 
     // ==========================================
     // 🐎 NHÁNH 1: ĐANG CƯỠI THÚ
     // ==========================================
     if (dangCuoiThu) {
-        
-        // --- A. LỆNH CHO NGƯỜI CƯỠI ---
-        if (laHanhDongNguoi) {
-            // Chống spam: Nếu đang múa chiêu dở dang thì chặn chiêu mới lại
-            if (window.dangMuaChieu && !laChieuTanCong && upName !== 'DIE' && upName !== 'DEATH') return;
-            
-            if (window.animationsMapChar) {
-                let actionChar = window.animationsMapChar[upName];
-                if (!actionChar && laChieuTanCong) actionChar = window.animationsMapChar['ATTACK'] || window.animationsMapChar['ATTACK1'] || window.animationsMapChar['SKILL'];
-                if (!actionChar) actionChar = window.animationsMapChar['NHANROI'] || window.animationsMapChar['IDLE'] || Object.values(window.animationsMapChar)[0];
-
-                if (actionChar) {
-                    if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
-                    window.currentActionChar = actionChar;
-                    window.currentActionChar.reset().fadeIn(0.2).play();
-                    window.currentAnimNameChar = upName;
-                    
-                    // Kích hoạt lá chắn khiên chống đè animation
-                    if (laChieuTanCong) {
-                        window.thoiGianAnimHienTai = actionChar.getClip().duration * 1000;
-                        kichHoatKhiencAnimation(window.thoiGianAnimHienTai);
-                    }
+        // --- A. NGƯỜI CƯỠI TRÊN LƯNG (TIẾNG VIỆT) ---
+        if (laChieuTanCong || upName === 'CHET' || upName === 'DIE') {
+            let actNguoi = getActionNguoiChoi(upName);
+            if (actNguoi) {
+                if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
+                window.currentActionChar = actNguoi;
+                window.currentActionChar.reset().fadeIn(0.2).play();
+                window.currentAnimNameChar = upName;
+                
+                if (laChieuTanCong) {
+                    window.thoiGianAnimHienTai = actNguoi.getClip().duration * 1000;
+                    kichHoatKhiencAnimation(window.thoiGianAnimHienTai);
                 }
             }
-            // THÚ KHÔNG NHẬN LỆNH ĐÁNH NHAU -> KẾT THÚC!
-            return; 
+            return; // Thú không đánh nhau, ngắt luôn luồng lệnh tại đây!
         } 
         else {
-            // --- B. LỆNH DI CHUYỂN (CHO CẢ THÚ VÀ NGƯỜI) ---
-            // Người: Phải ngồi im trên yên ngựa (Ép về NHANROI/IDLE), TRỪ KHI Sếp đang bận múa chiêu
-            if (!window.dangMuaChieu && window.animationsMapChar) {
-                let lenhNguoi = 'NHANROI';
-                if (window.currentAnimNameChar !== lenhNguoi) {
-                    let actionChar = window.animationsMapChar[lenhNguoi] || window.animationsMapChar['IDLE'] || Object.values(window.animationsMapChar)[0];
-                    if (actionChar) {
-                        if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
-                        window.currentActionChar = actionChar;
-                        window.currentActionChar.reset().fadeIn(0.2).play();
-                        window.currentAnimNameChar = lenhNguoi;
-                    }
+            // Lệnh di chuyển: Người ngồi im (NHANROI)
+            if (!window.dangMuaChieu) {
+                let actNguoi = getActionNguoiChoi('NHANROI');
+                if (actNguoi && window.currentAnimNameChar !== 'NHANROI') {
+                    if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
+                    window.currentActionChar = actNguoi;
+                    window.currentActionChar.reset().fadeIn(0.2).play();
+                    window.currentAnimNameChar = 'NHANROI';
                 }
             }
-            // Thú: Được phép lọt qua cửa ải này để đi xuống phần chạy lệnh BAY/CHAYBO bên dưới!
+
+            // --- B. CON THÚ DƯỚI ĐẤT (DỊCH SANG TIẾNG ANH) ---
+            let checkName = upName;
+            if (upName === 'NHANROI') checkName = 'IDLE';
+            else if (upName === 'CHAYBO' || upName === 'DIBO') checkName = 'RUN';
+            else if (upName === 'BAY') checkName = 'FLY';
+            else if (upName === 'CHET' || upName === 'DIE') checkName = 'DIE';
+
+            if (currentAnimName === checkName) return; 
+            
+            let action = animationsMap[checkName];
+            // Vét máng cho Thú trên mạng
+            if (!action) {
+                if (checkName === 'RUN') action = animationsMap['WALK'] || animationsMap['FLY'];
+                else if (checkName === 'IDLE') action = animationsMap['WAIT'] || animationsMap['FLY'];
+                else if (checkName === 'FLY') action = animationsMap['JUMP'] || animationsMap['RUN'];
+            }
+            
+            if (action) {
+                if (currentAction) currentAction.fadeOut(0.2); 
+                currentAction = action; 
+                currentAction.reset().fadeIn(0.2).play(); 
+                currentAnimName = checkName;
+            }
         }
     } 
     else {
         // ==========================================
-        // 🏃 NHÁNH 2: KHÔNG CƯỠI THÚ
+        // 🏃 NHÁNH 2: NGƯỜI CHƠI ĐI BỘ DƯỚI ĐẤT (FULL TIẾNG VIỆT)
         // ==========================================
-        // Đang múa chiêu thì cấm di chuyển chạy/bay chen ngang
-        if (window.dangMuaChieu && !laHanhDongNguoi) return; 
+        if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE') return;
+
+        if (currentAnimName === upName) return; 
         
-        if (laChieuTanCong) {
-            let action = animationsMap[upName] || animationsMap['ATTACK'] || animationsMap['SKILL'];
-            if (action) {
+        let action = getActionNguoiChoi(upName);
+        
+        if (action) {
+            if (currentAction) currentAction.fadeOut(0.2); 
+            currentAction = action; 
+            currentAction.reset().fadeIn(0.2).play(); 
+            currentAnimName = upName;
+
+            if (laChieuTanCong) {
                 window.thoiGianAnimHienTai = action.getClip().duration * 1000;
                 kichHoatKhiencAnimation(window.thoiGianAnimHienTai);
             }
         }
     }
-    
-    // ==========================================
-    // XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI HOẶC NGƯỜI ĐI BỘ
-    // ==========================================
-    
-    // 🌟 ĐỒNG BỘ TỪ ĐIỂN ĐỂ CHỐNG LỖI GIẬT KHUNG HÌNH (TWITCH FIX)
-    let checkName = upName;
-    if (checkName === 'IDLE') checkName = 'NHANROI';
-    if (checkName === 'RUN' || checkName === 'WALK') checkName = 'CHAYBO';
-    if (checkName === 'FLY') checkName = 'BAY';
-    
-    // Nếu lệnh mới giống hệt trạng thái hiện tại thì bỏ qua, chống Restart Animation
-    if (currentAnimName === checkName) return; 
-    
-    let action = animationsMap[upName];
-    if (!action) {
-        if (checkName === 'CHAYBO') action = animationsMap['RUN'] || animationsMap['DIBO'] || animationsMap['BAY'] || animationsMap['CHAYBO'];
-        else if (laChieuTanCong) action = animationsMap['ATTACK'] || animationsMap['ATTACK1'] || animationsMap['ATTACK01'] || animationsMap['BITE'] || animationsMap['SKILL'];
-        else if (checkName === 'NHANROI') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['BAY'] || animationsMap['NHANROI'];
-        else if (checkName === 'BAY') action = animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'] || animationsMap['BAY'];
-        else if (checkName === 'DIE' || checkName === 'DEATH') action = animationsMap['DEATH'] || animationsMap['DIE'];
-    }
-    
-    // Vét máng: Nếu không có gì sất thì lấy cái đầu tiên
-    if (!action && animationsMap && Object.keys(animationsMap).length > 0) {
-        action = animationsMap['TAKE 001'] || Object.values(animationsMap)[0];
-    }
-    if (!action) return; 
-    
-    if (currentAction) currentAction.fadeOut(0.2); 
-    currentAction = action; 
-    currentAction.reset().fadeIn(0.2).play(); 
-    currentAnimName = checkName; // Lưu tên đã chuẩn hóa
 }
 
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     window.dangMuaChieu = true;
-    
     let thoiGianKhoa = thoiGianTheoAnim || 1500;
-    if (thoiGianKhoa < 500) thoiGianKhoa = 500;   // Khóa tay ít nhất 0.5s
-    if (thoiGianKhoa > 2000) thoiGianKhoa = 1500; // Tối đa 1.5s để Sếp không bị đơ
+    if (thoiGianKhoa < 500) thoiGianKhoa = 500;   
+    if (thoiGianKhoa > 2000) thoiGianKhoa = 1500; 
     
     if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
     window.khoaAnimTimeout = setTimeout(() => {
@@ -1376,11 +1365,7 @@ function kichHoatKhiencAnimation(thoiGianTheoAnim) {
 // ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
 
 
-
-
-
 window.epNhanVatMua = playAnim; 
-
 function playIdle() {
     if (idleTimer) clearInterval(idleTimer); playAnim('NHANROI'); 
     idleTimer = setInterval(() => { if (!window.isMoving && !window.isKeyboardMoving) playAnim('NHANROI'); }, 8000); 
