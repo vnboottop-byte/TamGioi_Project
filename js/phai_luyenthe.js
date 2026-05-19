@@ -267,9 +267,8 @@
                     if (khoangCach > 2.2) {
                         // 💨 ĐANG LƯỚT: Lerp nội suy tốc độ cao (0.25)
                         nvc.position.lerp(diemDen, 0.25); 
-                        
-                        // 🎥 CAMERA SOFT-LOCK: Trượt nhẹ theo lưng nhân vật
-                        if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
+                        // 🌟 Đã tháo xích Camera: Trả lại quyền zoom/xoay cho Engine xử lý đồng bộ!
+                    
                     } 
                     else {
 
