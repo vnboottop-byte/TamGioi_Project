@@ -749,18 +749,15 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
     scene.add(mapHanhTinh);
 
-    // 🌟 BỘ KIỂM SOÁT MAP GỐC: TỰ ĐỘNG TÀNG HÌNH KHI QUA BÍ CẢNH
     window.kiemSoatHanhTinhGoc = function () {
         if (!window.HANH_TINH_GOC) return;
         if (window.KIEU_TRONG_LUC === 'PHANG') {
             window.HANH_TINH_GOC.visible = false;
-            // Gỡ khỏi Radar để Sếp không bị vấp phải mặt đất tàng hình
             if (window.danhSachMap && window.matDatHanhTinhGoc) {
                 window.danhSachMap = window.danhSachMap.filter(m => !window.matDatHanhTinhGoc.includes(m));
             }
         } else {
             window.HANH_TINH_GOC.visible = true;
-            // Trả lại Radar khi về Trung Châu
             if (window.danhSachMap && window.matDatHanhTinhGoc) {
                 window.matDatHanhTinhGoc.forEach(m => {
                     if (!window.danhSachMap.includes(m)) window.danhSachMap.push(m);
