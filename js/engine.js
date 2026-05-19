@@ -414,9 +414,19 @@ window.thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
 document.addEventListener('keydown', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
     if (['w', 'a', 's', 'd', 'space', 'shift'].includes(k)) keys[k] = true;
-    // 🌟 ĐÃ GỠ LỆNH XẢ SKILL KÉP TẠI ĐÂY! Controller.js sẽ gánh vác toàn bộ việc tính toán Cooldown.
-});
+    let phimChieng = e.key.toUpperCase();
+    if (['Q', 'E', 'R', 'F'].includes(phimChieng)) {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
 
+        // 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
+        if (window.IS_IN_SAFE_ZONE) {
+            window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Cất vũ khí đi Sếp!", "#f1c40f");
+            return; // Cắt đứt mạch điện, skill tịt ngòi lập tức!
+        }
+
+        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') window.HePhaiHienTai.tungChieu(phimChieng);
+    }
+});
 
 
 
