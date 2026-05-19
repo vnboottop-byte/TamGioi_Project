@@ -77,12 +77,6 @@
                     }
                 }
             }
-
-
-
-
-
-            
         });
 
         // 🌟 BẮT BUỘC PHẢI CÓ SỰ KIỆN NHẢ PHÍM ĐỂ NÓ KHÔNG BAY LÊN TẬN VŨ TRỤ
