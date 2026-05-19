@@ -430,14 +430,8 @@ livekitScript.onload = async () => {
                                     rp.currentAnim = mappedData.anim;
                                 }
 
-
-
-
                             }
                         }
-
-
-
 
                         // ==========================================
                         // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
