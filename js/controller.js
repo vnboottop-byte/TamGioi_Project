@@ -1,13 +1,13 @@
-// ==========================================
-        // 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN
-        // ==========================================
-        // 🌟 Nối dây mạng: Kéo tham chiếu phím bấm từ Engine.js sang đây để dùng!
-        const keys = window.keys; 
-        
-        // 🌟 Phục hồi Đồng hồ Thời Gian Hồi Chiêu
-        const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
-        const thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
-        function batDauHoiChieu(phim) {
+            // ==========================================
+            // 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN
+            // ==========================================
+            // 🌟 Nối dây mạng: Kéo tham chiếu phím bấm từ Engine.js sang đây để dùng!
+            const keys = window.keys; 
+            // 🌟 Phục hồi Đồng hồ Thời Gian Hồi Chiêu (Gắn vào window để mọi file đều thấy)
+            window.thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
+            window.thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
+            function batDauHoiChieu(phim) {
+   
             const slot = document.getElementById('slot-' + phim);
             if (!slot) return;
             const overlay = slot.querySelector('.cd-overlay');
