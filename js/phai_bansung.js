@@ -467,7 +467,8 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
                     if (typeof window.playAnimGocBS === 'function') {
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
-                            window.playAnimGocBS('ATTACK');
+                            // 🌟 ĐÓNG DẤU BẢN QUYỀN XẠ THỦ CHO CHIÊU Q AUTO
+                            window.playAnimGocBS('CHIEUQ_XATHU');
                             window.lastAnimTimeBS = Date.now();
                         }
                     }
@@ -521,9 +522,9 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
                     if (skill.fireDelay <= 0) {
                         skill.state = 'DANG_BAY';
 
-                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG
+                        // 🌟 DẠY NHÂN VẬT GIẬT SÚNG THEO BẢN QUYỀN
                         if (!skill.isRemote && typeof window.playAnim === 'function') {
-                            window.playAnim('ATTACK');
+                            window.playAnim('CHIEUR_XATHU');
                         }
 
                         if (!skill.isRemote && typeof playerModel !== 'undefined' && playerModel) {
