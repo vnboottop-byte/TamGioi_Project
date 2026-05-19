@@ -150,15 +150,30 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
     // 🛠️ RADAR & MÔ HÌNH
     // ==========================================
     function taoTiaLazerLienTuc(startPos, endPos, radius, colorHex) {
+        // 🌟 BẢN VÁ AAA CHỐNG CRASH iOS: Loại bỏ TubeGeometry gây lỗi NaN
         const group = new THREE.Group();
-        const path = new THREE.LineCurve3(startPos, endPos);
-        const geoLoi = new THREE.TubeGeometry(path, 1, radius * 0.4, 8, false);
+        
+        let dist = startPos.distanceTo(endPos);
+        if (dist < 0.1) dist = 0.1; // Chống lỗi khoảng cách 0
+
+        // Dùng CylinderGeometry lật ngang thay vì TubeGeometry để cứu GPU Mobile
+        const geoLoi = new THREE.CylinderGeometry(radius * 0.4, radius * 0.4, dist, 8);
+        geoLoi.rotateX(Math.PI / 2); // Bẻ trụ nằm ngang chĩa về trục Z
         const matLoi = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0 });
         const loi = new THREE.Mesh(geoLoi, matLoi);
-        const geoVo = new THREE.TubeGeometry(path, 1, radius, 8, false);
+        
+        const geoVo = new THREE.CylinderGeometry(radius, radius, dist, 8);
+        geoVo.rotateX(Math.PI / 2);
         const matVo = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false });
         const vo = new THREE.Mesh(geoVo, matVo);
+        
         group.add(loi); group.add(vo);
+
+        // Đặt ở giữa 2 điểm và nhìn về đích
+        let midPoint = new THREE.Vector3().lerpVectors(startPos, endPos, 0.5);
+        group.position.copy(midPoint);
+        group.lookAt(endPos);
+
         return group;
     }
 
@@ -282,9 +297,20 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
             eGroup.add(tiaChinh); 
             taoVuNoLZ(mucTieu, isRemote, dameGoc * 0.2, 5); // Tia chính 0.2
 
+
+
             // 🌟 VẬT LÝ KHÔNG GIAN: Dùng upVector thay vì (0,1,0) để tính toán 4 tia phụ không bị lệch
-            const vecRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5);
+            let vecRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
+            
+            // 🌟 CHỐNG LỖI NaN: Nếu hướng nhìn trùng với trục đứng (Nhìn thẳng lên/xuống)
+            if (vecRight.lengthSq() < 0.001) {
+                vecRight = new THREE.Vector3(1, 0, 0).cross(upVector).normalize();
+            }
+            vecRight.multiplyScalar(1.5);
             const vecUp = upVector.clone().multiplyScalar(1.5);
+
+
+
             
             const cacDiemDich = [
                 mucTieu.clone().add(vecRight).add(vecUp), 
