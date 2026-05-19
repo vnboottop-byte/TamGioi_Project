@@ -202,13 +202,11 @@
             );
             let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
             if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
-
-
-
             
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
-            taoSongXungKichLT(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
+            taoVuNoLT(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
+
         }
     };
 
