@@ -44,11 +44,8 @@
 
             let phimUpper = e.code.replace('Key', '');
 
-
-
-
-                // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
-                if (['Q', 'E', 'R', 'F'].includes(phimUpper)) {
+                 // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
+            if (['Q', 'E', 'R', 'F'].includes(phimUpper)) {
                 
                 // 1. CHẶN PHÍM KHI ĐANG GÕ CHAT
                 if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
@@ -76,6 +73,10 @@
                         window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
                     }
                 }
+            
+
+
+                
             }
         });
 
