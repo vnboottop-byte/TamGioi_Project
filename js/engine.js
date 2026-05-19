@@ -969,29 +969,18 @@ function tienHanhTaiNhanVat() {
                     if (window.currentActionChar) { window.currentActionChar.play(); window.currentAnimNameChar = 'IDLE'; }
                 }
 
-
-
-
-
-
-
-
                 // 1. ĐÃ XÓA `c.isBone` ĐỂ QUÉT ĐƯỢC MỌI LOẠI YÊN NGỰA!
                 let xuongYenNgua = null;
                 thuCuoi.traverse(c => { if (c.name.toUpperCase().includes('YENNGUA')) xuongYenNgua = c; });
                 let chaCuaNhanVat = xuongYenNgua ? xuongYenNgua : thuCuoi;
-
                 // ==========================================
                 // 🛑 BẢN VÁ LỖI "CON KIẾN CƯỠI VŨ KHÍ" (THAY THẾ BƯỚC 2, 3, 4 CŨ)
                 // ==========================================
-
                 // Ký sinh nhân vật vào yên ngựa (hoặc thân thú cưỡi)
                 chaCuaNhanVat.add(nhanVat);
-
                 // Bơm kháng sinh: Lấy thẳng tỷ lệ gốc của thú cưỡi để tính toán, 
                 // bỏ qua hàm getWorldScale() hay bị lỗi của Three.js
                 let tyLeThuCuoi = thuCuoi.scale.x === 0 ? 1 : thuCuoi.scale.x;
-
                 // Lấy tỷ lệ hiện tại của nhân vật chia ngược lại cho tỷ lệ của thú cưỡi
                 nhanVat.scale.set(
                     nhanVat.scale.x / tyLeThuCuoi,
@@ -999,7 +988,6 @@ function tienHanhTaiNhanVat() {
                     nhanVat.scale.z / tyLeThuCuoi
                 );
                 // ==========================================
-
                 // 5. BÍ THUẬT QUATERNION: ÉP MẶT NHÌN THEO THÂN RỒNG (Chống nằm sấp)
                 nhanVat.position.set(0, 0, 0);
                 let gocThuCuoi = new THREE.Quaternion();
@@ -1007,12 +995,6 @@ function tienHanhTaiNhanVat() {
                 let gocYenNgua = new THREE.Quaternion();
                 chaCuaNhanVat.getWorldQuaternion(gocYenNgua);
                 nhanVat.quaternion.copy(gocYenNgua.invert().multiply(gocThuCuoi));
-
-
-
-
-
-
                 if (typeof window.fixHieuUngDenThui === 'function') window.fixHieuUngDenThui(nhanVat);
                 if (typeof window.bocHDRI_NhanVat === 'function') window.bocHDRI_NhanVat(nhanVat);
                 if (typeof cayMatAdmin === 'function') cayMatAdmin(nhanVat);
@@ -1024,10 +1006,7 @@ function tienHanhTaiNhanVat() {
         loader.load(window.CURRENT_MODEL_URL, function (gltfChar) {
             // 🌟 CẮT ĐỨT DÂY THẦN KINH NGƯỜI CHƠI (CHỐNG BOSS MIMIC)
             playerModel = window.playerModel = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(gltfChar.scene) : gltfChar.scene.clone();
-
             window.nhanVatChinh = playerModel;
-
-            
             let doCao = (window.ADMIN_NAME === "Admin") ? 2.5 : 2.5;
             chuanHoaKichThuoc(playerModel, doCao);
             playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
@@ -1043,58 +1022,30 @@ function tienHanhTaiNhanVat() {
     }
 }
 
-
-
-
-function loadVuKhiChoNhanVat(nhanVatDich) {
-    // 🛑 LỆNH CẤM: Cung Thủ và Xạ Thủ tự có kịch bản vũ khí riêng, Engine không được can thiệp!
-    // 🛑 LỆNH CẤM: Engine không được can thiệp vào Vũ khí của Phái tầm xa và Pháp Sư!
+function loadVuKhiChoNhanVat(nhanVatDich) {  
+    // 🛑 LỆNH CẤM: Engine không được can thiệp vào Vũ khí 
     if (window.SCRIPT_PHAI_CUA_TOI) {
         if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) {
             return;
         }
     }
 
-
-
-
-
-
-
-
-
-
-
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
         loader.load(window.WEAPON_URL, function (gltfW) {
             let vuKhi = gltfW.scene; 
             window.vuKhiModel = vuKhi;
 
-            // 🌟 BẢN VÁ: KÍCH SÁNG KIM LOẠI CHO VŨ KHÍ
             if (typeof window.bocHDRI_NhanVat === 'function') {
                 window.bocHDRI_NhanVat(vuKhi);
             }
             
             let tayCam = null;
 
-
-
-
-
-
-
-
             nhanVatDich.traverse(c => { 
                 if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
                     tayCam = c; 
                 } 
             });
-
-
-
-
-
-
 
             if (tayCam) {
                 tayCam.add(vuKhi);
@@ -1105,20 +1056,13 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
                 vuKhi.position.set(1, 1, 0); 
             }
 
-
             if (window.WEAPON_LEVEL && window.WEAPON_LEVEL > 0) {
                 window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL);
             }
-
-
-
-
             
         });
     }
 }
-
-
 
 function hoanTatTaiModels() {
     if (window.ADMIN_NAME === "Admin") { window.MAU_TOI_DA = 999999999; window.mauBanThan = 999999999; }
@@ -1224,18 +1168,12 @@ function hoanTatTaiModels() {
     }, 500);
 }
 
-
-
 function cayMatAdmin(modelGoc) {
-
     // Đã xóa bỏ chức năng gọi đôi mắt khổng lồ cho Admin
-
     return;
-
 }
 
 let idleTimer = null; 
-
 
 // ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA BẮT ĐẦU 
 // ==========================================
@@ -1363,7 +1301,6 @@ function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     }, thoiGianKhoa);
 }
 // ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
-
 
 window.epNhanVatMua = playAnim; 
 function playIdle() {
