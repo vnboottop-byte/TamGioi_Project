@@ -47,36 +47,36 @@
 
 
 
-            // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
+                // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
                 if (['Q', 'E', 'R', 'F'].includes(phimUpper)) {
+                
+                // 1. CHẶN PHÍM KHI ĐANG GÕ CHAT
+                if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+
+                // 2. 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
+                if (window.IS_IN_SAFE_ZONE) {
+                    if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Ở đây cấm ẩu đả Sếp ơi!", "#f1c40f");
+                    return; 
+                }
+
+                // 3. XỬ LÝ XẢ CHIÊU & ĐẾM NGƯỢC COOLDOWN
+                let bayGio = Date.now();
+                if (bayGio - window.thoiDiemTungChieu[phimUpper] >= window.thoiGianHoiChieu[phimUpper]) {
+                    window.thoiDiemTungChieu[phimUpper] = bayGio; 
                     
-                    // 1. CHẶN PHÍM KHI ĐANG GÕ CHAT
-                    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
-
-                    // 2. 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
-                    if (window.IS_IN_SAFE_ZONE) {
-                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Ở đây cấm ẩu đả Sếp ơi!", "#f1c40f");
-                        return; 
+                    // Truyền tín hiệu cho Hệ Phái xuất chiêu (isRemote = false)
+                    if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
+                        window.HePhaiHienTai.tungChieu(phimUpper, false);
                     }
-
-                    // 3. XỬ LÝ XẢ CHIÊU & ĐẾM NGƯỢC COOLDOWN
-                    let bayGio = Date.now();
-                    if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
-                        thoiDiemTungChieu[phimUpper] = bayGio; 
-                        
-                        // Truyền tín hiệu cho Hệ Phái xuất chiêu
-                        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
-                            window.HePhaiHienTai.tungChieu(phimUpper);
-                        }
-                        batDauHoiChieu(phimUpper); // Nhảy số đồng hồ UI
-                    } else {
-                        // Báo lỗi bằng số Vàng nảy lên đầu
-                        let timeConLai = ((thoiGianHoiChieu[phimUpper] - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
-                        if (typeof taoSoSatThuong === 'function') {
-                            taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
-                        }
+                    batDauHoiChieu(phimUpper); // Nhảy số đồng hồ UI
+                } else {
+                    // Báo lỗi bằng số Vàng nảy lên đầu
+                    let timeConLai = ((window.thoiGianHoiChieu[phimUpper] - (bayGio - window.thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
+                    if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
+                        window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
                     }
                 }
+            }
 
 
 
