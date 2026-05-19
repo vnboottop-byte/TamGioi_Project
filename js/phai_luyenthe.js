@@ -51,26 +51,57 @@
         return targetQuai;
     }
 
+
+
+
+
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
+        // 1. Quét người chơi khác (PVP - Đồ Sát)
+        if (typeof remotePlayers !== 'undefined') {
+            for (let id in remotePlayers) {
+                let rp = remotePlayers[id];
+                if (rp.status === 'ready' && rp.mesh) {
+                    let hit = window.layHitbox(rp.mesh);
+                    if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
+                        taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00');
+                        // 🌟 BÁO CÁO LÊN TÒA ÁN PVP
+                        if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
+                    }
+                }
+            }
+        }
+        
+        // 2. Quét Quái / Boss (PVE)
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh);
-                    // Sát thương tỏa ra từ tâm ngực địch, bán kính quét xung quanh
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
-                        quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
-                        if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
-                        if (quai.hp <= 0) {
-                            quai.isDead = true; if (typeof quai.playAnim === 'function') quai.playAnim('DIE'); else quai.mesh.visible = false;
-                            if (quai.tagEl) quai.tagEl.style.display = 'none';
-                            if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(500);
-                            setTimeout(() => { quai.hp = quai.maxHp || 4000; quai.isDead = false; if (typeof quai.playAnim === 'function') quai.playAnim('IDLE'); else quai.mesh.visible = true; if (quai.tagEl) { quai.tagEl.querySelector('.hp-bar').style.width = '100%'; quai.tagEl.style.display = 'block'; } }, 5000);
-                        } else { if (typeof quai.playAnim === 'function') quai.playAnim('HIT'); }
+                        // 🌟 NẾU LÀ BOSS KHỔNG LỒ (ĐÁNH SÁT THƯƠNG THẬT LÊN MẠNG)
+                        if (quai.isBoss) {
+                            taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
+                            if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
+                        } 
+                        // 🌟 NẾU LÀ QUÁI THƯỜNG
+                        else {
+                            quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
+                            if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
+                            if (quai.hp <= 0) {
+                                quai.isDead = true; if (typeof quai.playAnim === 'function') quai.playAnim('DIE'); else quai.mesh.visible = false;
+                                if (quai.tagEl) quai.tagEl.style.display = 'none';
+                                if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(500);
+                                setTimeout(() => { quai.hp = quai.maxHp || 4000; quai.isDead = false; if (typeof quai.playAnim === 'function') quai.playAnim('IDLE'); else quai.mesh.visible = true; if (quai.tagEl) { quai.tagEl.querySelector('.hp-bar').style.width = '100%'; quai.tagEl.style.display = 'block'; } }, 5000);
+                            } else { if (typeof quai.playAnim === 'function') quai.playAnim('HIT'); }
+                        }
                     }
                 }
             });
         }
     }
+
+
+
 
     function taoSongXungKichLT(viTri, upV, mauSac = 0xff3300, scaleMax = 20) {
         const geo = new THREE.RingGeometry(0.1, 2, 32);

@@ -178,3 +178,41 @@ if (window.isMobile) {
         return originalAppendChild.call(this, element);
     };
 }
+
+
+
+
+
+
+// ==========================================
+// ⏳ HỆ THỐNG ĐỒNG HỒ ĐẾM NGƯỢC SKILL UI
+// ==========================================
+window.batDauHoiChieuUI = function(phim) {
+    const slot = document.getElementById('slot-' + phim);
+    if (!slot) return;
+    
+    // Gỡ bỏ CSS Transition cũ (nếu có) để nhường chỗ cho Text đếm ngược
+    const overlay = slot.querySelector('.cd-overlay');
+    if (overlay) { overlay.style.transition = 'none'; overlay.style.height = '100%'; }
+    
+    const text = slot.querySelector('.cd-text');
+    if (text) text.style.display = 'block';
+    
+    let tgHoi = window.thoiGianHoiChieu[phim] || 1500;
+    let tgBatDau = Date.now();
+    
+    // Dọn nhịp tim cũ nếu Sếp spam nút
+    if (slot.cdInterval) clearInterval(slot.cdInterval);
+    
+    slot.cdInterval = setInterval(() => {
+        let conLai = tgHoi - (Date.now() - tgBatDau);
+        if (conLai <= 0) {
+            clearInterval(slot.cdInterval); 
+            if (overlay) overlay.style.height = '0%'; 
+            if (text) text.style.display = 'none';
+        } else {
+            if (overlay) overlay.style.height = (conLai / tgHoi * 100) + '%';
+            if (text) text.innerText = (conLai / 1000).toFixed(1); 
+        }
+    }, 50); 
+};
