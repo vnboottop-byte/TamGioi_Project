@@ -71,13 +71,11 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
         try { let slotUI = document.getElementById('slot-' + phim); if (slotUI) { let overlay = slotUI.querySelector('.cd-overlay'); if (overlay) { overlay.style.transition = 'none'; overlay.style.height = '100%'; setTimeout(() => { overlay.style.transition = `height ${window.thongSoHoiChieu[phim]}ms linear`; overlay.style.height = '0%'; }, 50); } } } catch(e) {}
     }
 
-    if (!isRemote && typeof playAnim === 'function') playAnim('TANCONG'); 
 
-
-
-
-
-
+// 🌟 ĐÓNG DẤU BẢN QUYỀN MÔN PHÁI: Tự động gọi CHIEUQ_TUTIEN, CHIEUE_TUTIEN...
+    if (!isRemote && typeof playAnim === 'function') {
+        playAnim('CHIEU' + phim + '_TUTIEN');
+    }
 
 
     let viTriGoc, huongMat, mucTieu, nguoiTungChieu;
