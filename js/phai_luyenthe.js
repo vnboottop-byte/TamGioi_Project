@@ -16,7 +16,7 @@
 
     window.tongSoChuNoi_LT = 0; 
     function taoSoSatThuongLT(pos3D, satThuong, mauSac = '#ff2222') {
-        if (window.isMobile && window.tongSoChuNoi_LT > 5) return;
+        if (window.isMobile) return; // 🌟 CỨU SỐNG CPU MOBILE! Khóa 100% số nổi như các phái khác
         if(satThuong <= 0) return;
         window.tongSoChuNoi_LT++;
 
@@ -106,7 +106,7 @@
     window.thoiDiemNoCuoiCungLT = window.thoiDiemNoCuoiCungLT || 0;
 
     function taoVuNoLT(pos, upV, mauHex, banKinh) {
-        // VAN XẢ ĐỒ HỌA CHỐNG LAG
+        // VAN XẢ ĐỒ HỌA CHỐNG LAG MOBILE
         let bayGio = Date.now();
         if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungLT < 300) return;
         window.thoiDiemNoCuoiCungLT = bayGio;
@@ -117,7 +117,7 @@
         vfxGroup.position.copy(pos);
 
         // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
-        const soLuong = window.isMobile ? 10 : 250;
+        const soLuong = window.isMobile ? 5 : 125; // 🔻 Giảm 50% số lượng hạt
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
@@ -125,43 +125,45 @@
         for (let i = 0; i < soLuong; i++) {
             posArr[i * 3] = 0; posArr[i * 3 + 1] = 0; posArr[i * 3 + 2] = 0;
             let dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-            let speed = 2 + Math.random() * 6;
+            let speed = 1 + Math.random() * 3; // 🔻 Giảm 50% tốc độ văng xa
             vels.push(dir.multiplyScalar(speed));
         }
 
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
         const texture = (typeof window.layTextureLua === 'function') ? window.layTextureLua() : null;
-        const mat = new THREE.PointsMaterial({
+        const mat = new THREE.PointsMaterial({ 
             color: mauHex || 0xffddaa,
-            size: window.isMobile ? 18.0 : 12.0,
-            map: texture,
-            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+            size: window.isMobile ? 9.0 : 6.0, // 🔻 Giảm 50% kích cỡ của từng tia lửa
+            map: texture, 
+            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false 
         });
-
+        
         const pts = new THREE.Points(geo, mat);
         vfxGroup.add(pts);
 
         // --- LỚP 2: SÓNG XUNG KÍCH ---
-        const geoSong = new THREE.RingGeometry(0.1, 2, 32);
-        const matSong = new THREE.MeshBasicMaterial({
-            color: mauHex || 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
-            blending: THREE.AdditiveBlending, depthWrite: false
-        });
-        const songXungKich = new THREE.Mesh(geoSong, matSong);
-
-        songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
-        songXungKich.position.add(upV.clone().multiplyScalar(0.5));
-        vfxGroup.add(songXungKich);
+        let songXungKich = null;
+        // 🌟 KHÓA TRÊN MOBILE: Di động tắt luôn cái vòng tròn quét đất đi cho mượt
+        if (!window.isMobile) {
+            const geoSong = new THREE.RingGeometry(0.1, 2, 32);
+            const matSong = new THREE.MeshBasicMaterial({
+                color: mauHex || 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
+                blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            songXungKich = new THREE.Mesh(geoSong, matSong);
+            songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
+            songXungKich.position.add(upV.clone().multiplyScalar(0.5)); 
+            vfxGroup.add(songXungKich);
+        }
 
         scene.add(vfxGroup);
 
         hieuUngLuyenThe.push({
             group: vfxGroup, pts: pts, velocities: vels, songXungKich: songXungKich,
-            life: window.isMobile ? 30 : 60,
+            life: window.isMobile ? 20 : 40, // 🔻 Giảm 50% thời gian sống của vụ nổ 
             maxScale: banKinh
         });
     }
-
 
 
 
@@ -313,8 +315,11 @@
                     }
                 }
 
+
+
+
                 // ===================================================
-                // ♻️ DỌN DẸP RÁC ĐỒ HỌA (BÃO LỬA CẬN CHIẾN)
+                // ♻️ DỌN DẸP RÁC ĐỒ HỌA (BÃO LỬA CẬN CHIẾN V2)
                 // ===================================================
                 for (let i = hieuUngLuyenThe.length - 1; i >= 0; i--) {
                     let vfx = hieuUngLuyenThe[i];
@@ -326,28 +331,30 @@
                         posArr[j * 3] += vfx.velocities[j].x;
                         posArr[j * 3 + 1] += vfx.velocities[j].y;
                         posArr[j * 3 + 2] += vfx.velocities[j].z;
-
+                        
                         // Lực cản không khí
-                        vfx.velocities[j].x *= 0.85;
+                        vfx.velocities[j].x *= 0.85; 
                         vfx.velocities[j].y *= 0.85;
                         vfx.velocities[j].z *= 0.85;
                     }
                     vfx.pts.geometry.attributes.position.needsUpdate = true;
-
+                    
                     // 2. Tàn lửa mờ dần và hóa thành khói đen
-                    vfx.pts.material.size += 0.4;
-                    vfx.pts.material.opacity = vfx.life / 60;
-                    if (vfx.life < 40) vfx.pts.material.color.setHex(0xff3300); // Đỏ rực
-                    if (vfx.life < 15) {
+                    vfx.pts.material.size += 0.2; // 🔻 Giảm 50% tốc độ phình to
+                    vfx.pts.material.opacity = vfx.life / 40;
+                    if (vfx.life < 25) vfx.pts.material.color.setHex(0xff3300); // Đỏ rực
+                    if (vfx.life < 10) {
                         vfx.pts.material.color.setHex(0x111111); // Hóa khói
                         vfx.pts.material.blending = THREE.NormalBlending;
                     }
 
-                    // 3. Phình to sóng xung kích
-                    let tienTrinh = 1 - (vfx.life / 60);
-                    let scaleSong = vfx.maxScale * (tienTrinh * 1.5);
-                    vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
-                    vfx.songXungKich.material.opacity = (vfx.life / 60) * 0.6;
+                    // 3. Phình to sóng xung kích (PC mới có)
+                    if (vfx.songXungKich) {
+                        let tienTrinh = 1 - (vfx.life / 40);
+                        let scaleSong = vfx.maxScale * (tienTrinh * 0.75); // 🔻 Giảm 50% độ to của sóng quét mặt đất
+                        vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
+                        vfx.songXungKich.material.opacity = (vfx.life / 40) * 0.6;
+                    }
 
                     // 4. Thiêu rụi VRAM
                     if (vfx.life <= 0) {
@@ -356,6 +363,11 @@
                         hieuUngLuyenThe.splice(i, 1);
                     }
                 }
+
+
+
+
+                
 
                 for (let i = danhSachSoBayLT.length - 1; i >= 0; i--) {
                     let item = danhSachSoBayLT[i];
