@@ -192,11 +192,15 @@
                         if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
                     } 
                     else {
-                        // 💥 CHẠM MẶT -> ĐẤM!
+
+
+
+                       // 💥 CHẠM MẶT -> ĐẤM!
                         window.trangThaiLT.state = 'HITTING';
                         
                         // 1. KHO ANIMATION NGẪU NHIÊN: Chỉ Lọc các chiêu Tấn công
-                        let pool = Object.keys(window.animationsMapChar || {}).filter(k => 
+                        let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
+                        let pool = Object.keys(mapAnim || {}).filter(k => 
                             k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
                         );
                         let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
