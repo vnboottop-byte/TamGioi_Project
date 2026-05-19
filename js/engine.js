@@ -927,7 +927,6 @@ function tienHanhTaiNhanVat() {
                 animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); 
             });
             // ==========================================
-
             loader.load(window.CURRENT_MODEL_URL, function(gltfChar) {
 
                 // 🌟 CẮT ĐỨT DÂY THẦN KINH NGƯỜI CHƠI (CHỐNG BOSS MIMIC)
@@ -936,13 +935,6 @@ function tienHanhTaiNhanVat() {
                 window.nhanVatChinh = nhanVat;
 
                 chuanHoaKichThuoc(nhanVat, 2.5); 
-
-
-
-
-
-
-
 
                 window.mixerNhanVatPhu = new THREE.AnimationMixer(nhanVat);
 
@@ -1001,13 +993,18 @@ function tienHanhTaiNhanVat() {
             let doCao = (window.ADMIN_NAME === "Admin") ? 2.5 : 2.5;
             chuanHoaKichThuoc(playerModel, doCao);
             playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
+
             scene.add(playerModel);
-            mixer = new THREE.AnimationMixer(playerModel); animationsMap = {};
+            mixer = new THREE.AnimationMixer(playerModel); 
+            animationsMap = {}; 
+            window.animationsMap = animationsMap; // 🌟 MỞ KHÓA: Công khai rương chiêu thức cho phái Luyện Thể đọc!
+            
             gltfChar.animations.forEach((clip) => { 
                 // 🛑 BẢN VÁ: Tẩy não Tỷ lệ (Scale) chống teo rút
                 clip.tracks = clip.tracks.filter(track => !track.name.includes('.scale'));
                 animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); 
             });
+
             cayMatAdmin(playerModel); loadVuKhiChoNhanVat(playerModel); hoanTatTaiModels();
         });
     }
@@ -1176,8 +1173,9 @@ function playAnim(animName) {
     let upName = animName.toUpperCase();
 
 
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm mọi hành động đi/chạy/bay chen ngang
-    if (window.dangMuaChieu && !upName.includes('CHIEU') && !upName.includes('ATTACK') && !upName.includes('PUNCH') && !upName.includes('KICK') && !upName.includes('SKILL') && !upName.includes('COMBO') && upName !== 'DIE' && upName !== 'DEATH') {
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
+    let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('SKILL');
+    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE') {
         return;
     }
 
