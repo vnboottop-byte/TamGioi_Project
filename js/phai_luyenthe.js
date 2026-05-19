@@ -87,6 +87,16 @@
                         // 🌟 NẾU LÀ QUÁI THƯỜNG
                         else {
                             quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
+                            
+                            // 🩸 NỘI TẠI LUYỆN THỂ: Hút 5% máu dựa trên sát thương
+                            let nvc = window.playerModel || window.nhanVatChinh;
+                            if (nvc && nvc.hp < (nvc.maxHp || 1000)) {
+                                nvc.hp = Math.min((nvc.maxHp || 1000), nvc.hp + (luongSatThuong * 0.05));
+                                // Cập nhật thanh máu UI của người chơi nếu có
+                                if (document.getElementById('health-bar')) document.getElementById('health-bar').style.width = (nvc.hp / (nvc.maxHp || 1000) * 100) + '%';
+                            }
+
+
                             if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
                             if (quai.hp <= 0) {
                                 quai.isDead = true; if (typeof quai.playAnim === 'function') quai.playAnim('DIE'); else quai.mesh.visible = false;
