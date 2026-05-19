@@ -288,7 +288,7 @@
                         
                         // 2. TẠO VÙNG SÁT THƯƠNG 2M (Bám theo tâm ngực địch)
                         let banKinhNo = (window.trangThaiLT.skillKey === 'F') ? 15 : 5;
-                        taoSongXungKichLT(tHit.tamNguc, new THREE.Vector3(0,1,0), 0xffaa00, banKinhNo);
+                        taoVuNoLT(tHit.tamNguc, nvc.up.clone().normalize(), 0xffaa00, banKinhNo);
                         gaySatThuongLT(tHit.tamNguc, (window.DAME_CUA_TOI || 200) * window.trangThaiLT.dameRatio, banKinhNo);
                         
                         // 3. GENSHIN HIT-STOP: Khựng thời gian 0.1s để tạo uy lực
@@ -314,19 +314,49 @@
                 }
 
                 // ===================================================
-                // ♻️ DỌN DẸP RÁC ĐỒ HỌA
+                // ♻️ DỌN DẸP RÁC ĐỒ HỌA (BÃO LỬA CẬN CHIẾN)
                 // ===================================================
                 for (let i = hieuUngLuyenThe.length - 1; i >= 0; i--) {
-                    let h = hieuUngLuyenThe[i];
-                    h.life -= 0.05;
-                    let scaleSize = h.scaleMax * (1 - h.life);
-                    h.mesh.scale.set(scaleSize, scaleSize, scaleSize);
-                    h.mesh.material.opacity = h.life;
-                    if (h.life <= 0) { 
-                        if (typeof window.donRac3D === 'function') window.donRac3D(h.mesh); 
-                        hieuUngLuyenThe.splice(i, 1); 
+                    let vfx = hieuUngLuyenThe[i];
+                    vfx.life--;
+
+                    // 1. Bay hạt lửa
+                    let posArr = vfx.pts.geometry.attributes.position.array;
+                    for (let j = 0; j < posArr.length / 3; j++) {
+                        posArr[j * 3] += vfx.velocities[j].x;
+                        posArr[j * 3 + 1] += vfx.velocities[j].y;
+                        posArr[j * 3 + 2] += vfx.velocities[j].z;
+
+                        // Lực cản không khí
+                        vfx.velocities[j].x *= 0.85;
+                        vfx.velocities[j].y *= 0.85;
+                        vfx.velocities[j].z *= 0.85;
+                    }
+                    vfx.pts.geometry.attributes.position.needsUpdate = true;
+
+                    // 2. Tàn lửa mờ dần và hóa thành khói đen
+                    vfx.pts.material.size += 0.4;
+                    vfx.pts.material.opacity = vfx.life / 60;
+                    if (vfx.life < 40) vfx.pts.material.color.setHex(0xff3300); // Đỏ rực
+                    if (vfx.life < 15) {
+                        vfx.pts.material.color.setHex(0x111111); // Hóa khói
+                        vfx.pts.material.blending = THREE.NormalBlending;
+                    }
+
+                    // 3. Phình to sóng xung kích
+                    let tienTrinh = 1 - (vfx.life / 60);
+                    let scaleSong = vfx.maxScale * (tienTrinh * 1.5);
+                    vfx.songXungKich.scale.set(scaleSong, scaleSong, 1);
+                    vfx.songXungKich.material.opacity = (vfx.life / 60) * 0.6;
+
+                    // 4. Thiêu rụi VRAM
+                    if (vfx.life <= 0) {
+                        if (typeof window.donRac3D === 'function') window.donRac3D(vfx.group);
+                        else scene.remove(vfx.group);
+                        hieuUngLuyenThe.splice(i, 1);
                     }
                 }
+
                 for (let i = danhSachSoBayLT.length - 1; i >= 0; i--) {
                     let item = danhSachSoBayLT[i];
                     item.offsetY += 0.05; item.life--;
