@@ -1528,11 +1528,16 @@ function animate() {
                         playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
                         tocDoHienTaiThucTe = currentSprint;
                     }
+
+
                 } else if (window.isMoving && typeof window.targetPosition !== 'undefined') {
                     let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, playerModel.position);
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
+                        // 🌟 TÁCH BIỆT THEO LỆNH SẾP: CLICK CHUỘT LÀ ĐI BỘ
+                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'DIBO');
+
+
                         
                         // 🌟 CHẠY CHUỘT BỊ CHẶN BỞI BẦU TRỜI
                         if (!kiemTraVaChamKetGioi(huongBayThang, currentSprint + 2.0)) {
@@ -1672,14 +1677,18 @@ function animate() {
                         playerModel.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.2);
                         tocDoHienTaiThucTe = currentSprint;
                     }
+
+
                 } else if (window.isMoving && typeof window.targetPosition !== 'undefined') {
                     let viTriHienTai = playerModel.position.clone();
                     let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, viTriHienTai);
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
+                        // 🌟 TÁCH BIỆT THEO LỆNH SẾP: CLICK CHUỘT LÀ ĐI BỘ
+                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'DIBO');    
+
+
                         let tocDoThucTe = currentSprint;
-                        
                         if (!kiemTraVaChamKetGioi(huongBayThang, tocDoThucTe + 2.0)) {
                             playerModel.position.add(huongBayThang.multiplyScalar(tocDoThucTe)); 
                             tocDoHienTaiThucTe = tocDoThucTe;
