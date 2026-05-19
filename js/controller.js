@@ -1,15 +1,12 @@
-
-        // ==========================================
+// ==========================================
         // 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN
         // ==========================================
-        // 🌟 ĐÃ XÓA CÁC BIẾN keys VÀ isKeyboardMoving TRÙNG LẶP (Vì engine.js đã lo việc này rồi)
+        // 🌟 Nối dây mạng: Kéo tham chiếu phím bấm từ Engine.js sang đây để dùng!
+        const keys = window.keys; 
         
-        const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'F': 8000, 'R': 15000 };
-
-
-
-
-
+        // 🌟 Phục hồi Đồng hồ Thời Gian Hồi Chiêu
+        const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
+        const thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
         function batDauHoiChieu(phim) {
             const slot = document.getElementById('slot-' + phim);
             if (!slot) return;

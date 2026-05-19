@@ -5,10 +5,6 @@
 (function() {
     console.log("📱 Đã tải lõi Controller Mobile!");
     
-    // Khai báo biến ảo lừa Engine.js
-    window.keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
-    window.isKeyboardMoving = false;
-    window.dangMuaChieu = false; 
 
     // Hệ Thống Thời Gian Hồi Chiêu
     const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
