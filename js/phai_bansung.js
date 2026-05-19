@@ -266,11 +266,12 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('ATTACK');
-
+            // 🌟 ĐÓNG DẤU BẢN QUYỀN XẠ THỦ CHO CÁC CHIÊU E, R, F
+            if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('CHIEU' + phim + '_XATHU');
             // 🌟 ĐỒNG HỒ SÚNG
             window.thoiGianTatSung = Date.now() + 1500;
         }
+
 
         let viTriGoc, huongMat, mucTieu;
         const dameGoc = window.DAME_CUA_TOI || 120;
