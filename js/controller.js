@@ -1,14 +1,14 @@
 
-
         // ==========================================
         // 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN
         // ==========================================
-         window.keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
-        const keys = window.keys;
-        window.isKeyboardMoving = false;
+        // 🌟 ĐÃ XÓA CÁC BIẾN keys VÀ isKeyboardMoving TRÙNG LẶP (Vì engine.js đã lo việc này rồi)
         
         const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'F': 8000, 'R': 15000 };
-        const thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'F': 0, 'R': 0 };
+
+
+
+
 
         function batDauHoiChieu(phim) {
             const slot = document.getElementById('slot-' + phim);
