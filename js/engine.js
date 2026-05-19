@@ -1189,22 +1189,35 @@ function playAnim(animName) {
     // 🌟 TỔNG HỢP NHẬN DIỆN CHIÊU TẤN CÔNG CỦA MỌI HỆ PHÁI VÀ MODEL SKETCHFAB
     let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('COMBO') || upName === 'TANCONG' || upName.includes('SKILL');
 
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
-    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE' && upName !== 'DEATH') {
 
-        // 🌟 CHỈ LUYỆN THỂ MỚI CÓ ĐẶC QUYỀN: Bấm di chuyển là bẻ gãy ngang đòn múa để lướt đi
-        if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
-            if (window.isKeyboardMoving || (window.isMoving && (upName === 'DIBO' || upName === 'CHAYBO' || upName === 'BAY'))) {
-                window.dangMuaChieu = false; // Ngắt chiêu tự do
-            } else {
-                return; // Đứng yên thì tiếp tục khóa để giữ thế thủ oai nghiêm
+
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang (V46 - PURE ANIMATION FILTER)
+    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE' && upName !== 'DEATH') {
+        
+        // 🏃 Chỉ xử lý khi hoạt ảnh tiếp theo được gọi là hoạt ảnh di chuyển (CHAYBO, DIBO, BAY)
+        if (upName === 'CHAYBO' || upName === 'DIBO' || upName === 'BAY') {
+            
+            // 🌟 1. RIÊNG LUYỆN THỂ: Hoạt ảnh di chuyển được phép chém ngang ngắt chiêu lập tức!
+            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
+                window.dangMuaChieu = false; 
+            } 
+            // 🌌 2. MẤY PHÁI ĐÁNH XA KIA: Hoạt ảnh di chuyển chỉ được ngắt khi hoạt ảnh chiêu đã diễn ra ít nhất 1.5 giây!
+            else {
+                let thoiGianDaQua = Date.now() - (window.thoiDiemBatDauMua || 0);
+                if (thoiGianDaQua >= 1500) {
+                    window.dangMuaChieu = false; // Đã múa xong 1.5s, cho phép đổi sang hoạt ảnh chạy/bay
+                } else {
+                    return; // Chưa múa đủ 1.5s -> Cấm đổi hoạt ảnh di chuyển để bảo toàn đường đạn!
+                }
             }
-        }
-        // 🌌 CÁC PHÁI ĐÁNH XA KHÁC: Tuân thủ tuyệt đối luật cũ của Động cơ, mở khóa theo thời gian thực của clip
-        else {
-            return;
+        } else {
+            return; // Các hoạt ảnh khác (như NHANROI / IDLE) không được tự ý ngắt tiến trình múa chiêu
         }
     }
+
+
+
+
     
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
 
@@ -1306,22 +1319,20 @@ function playAnim(animName) {
 }
 
 
-
-
-// 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
+// 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA (V46 - THUỒN TIMING ANIMATION)
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     window.dangMuaChieu = true;
+    window.thoiDiemBatDauMua = Date.now(); // ⏱️ Ghi lại thời gian bắt đầu múa hoạt ảnh này
+    
     let thoiGianKhoa = thoiGianTheoAnim || 1500;
-
-    // 🌟 ĐẶC QUYỀN LUYỆN THỂ: Đứng yên thì ép thủ đúng 2 giây.
-    // Các phái đánh xa khác sẽ tự động mở khóa theo đúng thời lượng ngắn của Clip gốc để xả chiêu liên tục!
+    
+    // Kiểm tra hệ phái hiện tại để set thời gian khóa hoạt ảnh tối đa khi đứng yên
     if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
-        thoiGianKhoa = 2000;
+        thoiGianKhoa = 2000; // Luyện Thể đứng yên múa/thủ trọn vẹn 2 giây
     } else {
-        if (thoiGianKhoa < 500) thoiGianKhoa = 500;
-        if (thoiGianKhoa > 2000) thoiGianKhoa = 1500;
+        if (thoiGianKhoa < 1500) thoiGianKhoa = 1500; // Các phái khác giữ hoạt ảnh ít nhất 1.5 giây
     }
-
+    
     if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
     window.khoaAnimTimeout = setTimeout(() => {
         window.dangMuaChieu = false;
