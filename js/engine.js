@@ -404,22 +404,45 @@ window.keys = { w: false, a: false, s: false, d: false, space: false, shift: fal
 const keys = window.keys;
 window.isKeyboardMoving = false;
 
+
+
+window.thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
+window.thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
+
 document.addEventListener('keydown', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
     if (['w', 'a', 's', 'd', 'space', 'shift'].includes(k)) keys[k] = true;
     let phimChieng = e.key.toUpperCase();
+    
     if (['Q', 'E', 'R', 'F'].includes(phimChieng)) {
         if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
         
         // 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
         if (window.IS_IN_SAFE_ZONE) {
             window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Cất vũ khí đi Sếp!", "#f1c40f");
-            return; // Cắt đứt mạch điện, skill tịt ngòi lập tức!
+            return;
         }
 
-        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') window.HePhaiHienTai.tungChieu(phimChieng);
+        // ⏳ BỘ KHÓA HỒI CHIÊU TOÀN CẦU CHUẨN XÁC
+        let bayGio = Date.now();
+        if (bayGio - window.thoiDiemTungChieu[phimChieng] >= window.thoiGianHoiChieu[phimChieng]) {
+            window.thoiDiemTungChieu[phimChieng] = bayGio;
+            
+            // Kích hoạt UI đếm ngược (Phát huy trên cả PC và Mobile)
+            if (typeof window.batDauHoiChieuUI === 'function') window.batDauHoiChieuUI(phimChieng);
+            
+            // Phóng chiêu
+            if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') window.HePhaiHienTai.tungChieu(phimChieng);
+        } else {
+            // Cố bấm khi chưa hồi xong thì báo lỗi rớt số vàng trên đỉnh đầu
+            let timeConLai = ((window.thoiGianHoiChieu[phimChieng] - (bayGio - window.thoiDiemTungChieu[phimChieng])) / 1000).toFixed(1);
+            if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
+                window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Đang hồi (" + timeConLai + "s)", '#f1c40f');
+            }
+        }
     }
 });
+
 
 document.addEventListener('keyup', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
