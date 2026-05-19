@@ -769,12 +769,6 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
     tienHanhTaiNhanVat();
 });
-    
-
-
-
-
-
 
 // 🌟 TỔNG KHO ASSET TOÀN CẦU (BẢN CHỐNG SẬP iPHONE)
 window.tongKhoAsset3D = {};
