@@ -103,14 +103,63 @@
 
 
 
-    function taoSongXungKichLT(viTri, upV, mauSac = 0xff3300, scaleMax = 20) {
-        const geo = new THREE.RingGeometry(0.1, 2, 32);
-        const mat = new THREE.MeshBasicMaterial({ color: mauSac, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-        const mesh = new THREE.Mesh(geo, mat);
-        mesh.position.copy(viTri).add(upV.clone().multiplyScalar(0.5)); 
-        mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
-        scene.add(mesh);
-        hieuUngLuyenThe.push({ mesh: mesh, life: 1.0, scaleMax: scaleMax, type: 'shockwave' });
+    window.thoiDiemNoCuoiCungLT = window.thoiDiemNoCuoiCungLT || 0;
+
+    function taoVuNoLT(pos, upV, mauHex, banKinh) {
+        // VAN XẢ ĐỒ HỌA CHỐNG LAG
+        let bayGio = Date.now();
+        if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungLT < 300) return;
+        window.thoiDiemNoCuoiCungLT = bayGio;
+
+        if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
+
+        const vfxGroup = new THREE.Group();
+        vfxGroup.position.copy(pos);
+
+        // --- LỚP 1: BÃO LỬA HẠT (PARTICLES) ---
+        const soLuong = window.isMobile ? 10 : 250;
+        const geo = new THREE.BufferGeometry();
+        const posArr = new Float32Array(soLuong * 3);
+        const vels = [];
+
+        for (let i = 0; i < soLuong; i++) {
+            posArr[i * 3] = 0; posArr[i * 3 + 1] = 0; posArr[i * 3 + 2] = 0;
+            let dir = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+            let speed = 2 + Math.random() * 6;
+            vels.push(dir.multiplyScalar(speed));
+        }
+
+        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+        const texture = (typeof window.layTextureLua === 'function') ? window.layTextureLua() : null;
+        const mat = new THREE.PointsMaterial({
+            color: mauHex || 0xffddaa,
+            size: window.isMobile ? 18.0 : 12.0,
+            map: texture,
+            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+
+        const pts = new THREE.Points(geo, mat);
+        vfxGroup.add(pts);
+
+        // --- LỚP 2: SÓNG XUNG KÍCH ---
+        const geoSong = new THREE.RingGeometry(0.1, 2, 32);
+        const matSong = new THREE.MeshBasicMaterial({
+            color: mauHex || 0xffaa00, side: THREE.DoubleSide, transparent: true, opacity: 0.8,
+            blending: THREE.AdditiveBlending, depthWrite: false
+        });
+        const songXungKich = new THREE.Mesh(geoSong, matSong);
+
+        songXungKich.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), upV);
+        songXungKich.position.add(upV.clone().multiplyScalar(0.5));
+        vfxGroup.add(songXungKich);
+
+        scene.add(vfxGroup);
+
+        hieuUngLuyenThe.push({
+            group: vfxGroup, pts: pts, velocities: vels, songXungKich: songXungKich,
+            life: window.isMobile ? 30 : 60,
+            maxScale: banKinh
+        });
     }
 
 
