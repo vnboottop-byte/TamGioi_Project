@@ -386,18 +386,53 @@ livekitScript.onload = async () => {
                                     rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
                                 }
 
+
+
                                 if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
                                     let upAnim = mappedData.anim.toUpperCase();
-                                    if (rp.anims && Object.keys(rp.anims).length > 0) {
-                                        let action = rp.anims[upAnim] || rp.anims['IDLE'] || Object.values(rp.anims)[0];
-                                        if (action) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = action; rp.activeAction.reset().fadeIn(0.2).play(); }
-                                    }
+                                    
+                                    // 🌟 NÃO BỘ NGƯỜI CHƠI BẢN SAO (HỆ TIẾNG VIỆT)
                                     if (rp.animsChar && Object.keys(rp.animsChar).length > 0) {
-                                        let actionChar = rp.animsChar[upAnim] || rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
+                                        let actionChar = rp.animsChar[upAnim];
+                                        // Luật dự phòng: Không có chân thì dồn về BAY
+                                        if (!actionChar && !upAnim.includes('CHIEU') && upAnim !== 'CHET' && upAnim !== 'DIE') {
+                                            actionChar = rp.animsChar['BAY'];
+                                        }
+                                        if (!actionChar) actionChar = rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
+                                        
                                         if (actionChar) { if (rp.activeActionChar) rp.activeActionChar.fadeOut(0.2); rp.activeActionChar = actionChar; rp.activeActionChar.reset().fadeIn(0.2).play(); }
                                     }
+
+                                    // 🌟 NÃO BỘ THÚ CƯỠI BẢN SAO (HỆ TIẾNG ANH)
+                                    if (rp.anims && Object.keys(rp.anims).length > 0) {
+                                        let checkNameThu = upAnim;
+                                        // Dịch thuật từ gói tin Tiếng Việt sang Tiếng Anh cho thú hiểu
+                                        if (upAnim === 'NHANROI') checkNameThu = 'IDLE';
+                                        else if (upAnim === 'CHAYBO' || upAnim === 'DIBO') checkNameThu = 'RUN';
+                                        else if (upAnim === 'BAY') checkNameThu = 'FLY';
+                                        else if (upAnim === 'CHET' || upAnim === 'DIE') checkNameThu = 'DIE';
+                                        
+                                        let actionThu = rp.anims[checkNameThu];
+                                        // Vét máng dự phòng nếu Model Thú trên mạng đặt tên tào lao
+                                        if (!actionThu) {
+                                            if (checkNameThu === 'RUN') actionThu = rp.anims['WALK'] || rp.anims['FLY'];
+                                            else if (checkNameThu === 'IDLE') actionThu = rp.anims['WAIT'] || rp.anims['FLY'];
+                                            else if (checkNameThu === 'FLY') actionThu = rp.anims['JUMP'] || rp.anims['RUN'];
+                                        }
+                                        if (!actionThu) actionThu = rp.anims['IDLE'] || Object.values(rp.anims)[0];
+
+                                        // Thú chỉ diễn cảnh Di chuyển/Đứng/Chết. Bỏ qua các lệnh Múa Chiêu!
+                                        if (!upAnim.includes('CHIEU') || checkNameThu === 'DIE') {
+                                            if (actionThu) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = actionThu; rp.activeAction.reset().fadeIn(0.2).play(); }
+                                        }
+                                    }
+
                                     rp.currentAnim = mappedData.anim;
                                 }
+
+
+
+
                             }
                         }
 
