@@ -53,14 +53,16 @@
 
  
     function kichHoatKyNang(phimUpper) {
-        if (!window.playerModel || window.isDead || window.dangMuaChieu) return;
+        // 🌟 MỞ KHÓA: Đã xóa điều kiện || window.dangMuaChieu
+        if (!window.playerModel || window.isDead) return;
         let bayGio = Date.now();
         if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
             thoiDiemTungChieu[phimUpper] = bayGio; 
-            window.dangMuaChieu = true;
-            setTimeout(() => { window.dangMuaChieu = false; }, 1000); 
+            // 🌟 MỞ KHÓA: Đã xóa lệnh đóng băng 1 giây
             if (window.HePhaiHienTai) window.HePhaiHienTai.tungChieu(phimUpper);
-            batDauHoiChieu(phimUpper); 
+            batDauHoiChieu(phimUpper);
+
+
         } else {
             let sec = ((thoiGianHoiChieu[phimUpper] - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
             if (typeof taoSoSatThuong === 'function') taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), sec+"s", '#e74c3c');
