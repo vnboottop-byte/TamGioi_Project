@@ -47,32 +47,45 @@
 
             let phimUpper = e.code.replace('Key', '');
 
+
+
+
             // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
-            if (['Q', 'E', 'F', 'R'].includes(phimUpper)) {
-                
-                // 2. Kiểm tra thời gian hồi của riêng chiêu này
-                let bayGio = Date.now();
-                if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
+                if (['Q', 'E', 'R', 'F'].includes(phimUpper)) {
                     
-                    // Cập nhật lại thời gian vừa bấm
-                    thoiDiemTungChieu[phimUpper] = bayGio; 
-                    
-                    // 🌟 MỞ KHÓA GIỚI HẠN SỨC MẠNH: Đã xóa lệnh khóa window.dangMuaChieu!
-                    // Kỹ năng giờ đây hoàn toàn tuân theo Cooldown chuẩn của từng phái.
+                    // 1. CHẶN PHÍM KHI ĐANG GÕ CHAT
+                    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
 
-                    // 🔌 GIAO TIẾP VỚI CARD RỜI (JS CỦA PHÁI)
+                    // 2. 🛑 LÁ CHẮN BẠO LỰC: CẤM XUẤT CHIÊU KHI ĐỨNG Ở SAFE ZONE
+                    if (window.IS_IN_SAFE_ZONE) {
+                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("🕊️ VÙNG AN TOÀN: Ở đây cấm ẩu đả Sếp ơi!", "#f1c40f");
+                        return; 
+                    }
 
-                    // 🔌 GIAO TIẾP VỚI CARD RỜI (JS CỦA PHÁI)
-                    if (window.HePhaiHienTai) window.HePhaiHienTai.tungChieu(phimUpper);
-                    batDauHoiChieu(phimUpper); 
-                } else {
-                    // 🌟 NẾU ĐANG COOLDOWN MÀ CỐ SPAM -> BÁO CHỮ VÀNG LÊN ĐẦU
-                    let timeConLai = ((thoiGianHoiChieu[phimUpper] - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
-                    if (typeof taoSoSatThuong === 'function') {
-                        taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
+                    // 3. XỬ LÝ XẢ CHIÊU & ĐẾM NGƯỢC COOLDOWN
+                    let bayGio = Date.now();
+                    if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
+                        thoiDiemTungChieu[phimUpper] = bayGio; 
+                        
+                        // Truyền tín hiệu cho Hệ Phái xuất chiêu
+                        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
+                            window.HePhaiHienTai.tungChieu(phimUpper);
+                        }
+                        batDauHoiChieu(phimUpper); // Nhảy số đồng hồ UI
+                    } else {
+                        // Báo lỗi bằng số Vàng nảy lên đầu
+                        let timeConLai = ((thoiGianHoiChieu[phimUpper] - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
+                        if (typeof taoSoSatThuong === 'function') {
+                            taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
+                        }
                     }
                 }
-            }
+
+
+
+
+
+            
         });
 
         // 🌟 BẮT BUỘC PHẢI CÓ SỰ KIỆN NHẢ PHÍM ĐỂ NÓ KHÔNG BAY LÊN TẬN VŨ TRỤ
