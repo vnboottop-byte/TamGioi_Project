@@ -139,13 +139,17 @@
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc && !isRemote) return;
 
-        // 🌟 BỘ LỌC CHỐNG SPAM
+
         if (!isRemote) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim); 
+            // 🌟 ĐÓNG DẤU BẢN QUYỀN LUYỆN THỂ
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim + '_LUYENTHE'); 
         }
+
+
+
 
         let viTriGoc, upVector;
         const dameGoc = window.DAME_CUA_TOI || 200; // Cận chiến dame tay luôn to hơn 
