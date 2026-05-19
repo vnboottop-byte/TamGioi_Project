@@ -1172,16 +1172,17 @@ function playAnim(animName) {
     
     let upName = animName.toUpperCase();
 
-
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
-    let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('SKILL');
-    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE') {
-        return;
-    }
-
-    let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
+    // 🌟 TỔNG HỢP NHẬN DIỆN CHIÊU TẤN CÔNG CỦA MỌI HỆ PHÁI VÀ MODEL SKETCHFAB
     let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('COMBO') || upName === 'TANCONG' || upName.includes('SKILL');
 
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
+    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE' && upName !== 'DEATH') {
+        return;
+    }
+    
+    let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
+
+    
     // ==========================================
     // 🛠️ HÀM CỨU CÁNH: LẤY HOẠT ẢNH NGƯỜI CHƠI (HỆ TIẾNG VIỆT)
     // ==========================================
