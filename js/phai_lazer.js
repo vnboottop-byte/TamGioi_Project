@@ -214,9 +214,8 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
 
 
    
-        // Gọi thẳng tên chiêu, Engine sẽ tự biết cách tìm hoặc dùng hàng dự phòng!
-        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('CHIEU' + phim);
-
+        // 🌟 ĐÓNG DẤU BẢN QUYỀN LAZER
+        if (!isRemote && typeof window.playAnim === 'function') window.playAnim('CHIEU' + phim + '_LAZER');
 
 
 
@@ -224,10 +223,7 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
         
-        // ... (Giữ nguyên toàn bộ phần lấy tọa độ và xuất chiêu Q E R F bên dưới) ...
-
-
-
+         
 
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
