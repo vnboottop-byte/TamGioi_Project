@@ -56,7 +56,19 @@
 
 
 
+
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
+        
+        // 🩸 HÀM NỘI TẠI DÙNG CHUNG: HÚT MÁU KHI ĐẤM TRÚNG ĐÍCH
+        function kichHoatHutMau() {
+            let nvc = window.playerModel || window.nhanVatChinh;
+            if (nvc && nvc.hp < (nvc.maxHp || 1000)) {
+                // Hút 5% lượng sát thương gây ra
+                nvc.hp = Math.min((nvc.maxHp || 1000), nvc.hp + (luongSatThuong * 0.05));
+                if (document.getElementById('health-bar')) document.getElementById('health-bar').style.width = (nvc.hp / (nvc.maxHp || 1000) * 100) + '%';
+            }
+        }
+
         // 1. Quét người chơi khác (PVP - Đồ Sát)
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
@@ -66,7 +78,9 @@
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
                         taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00');
-                        // 🌟 BÁO CÁO LÊN TÒA ÁN PVP
+                        
+                        kichHoatHutMau(); // 🌟 Bơm máu khi đấm trúng Người chơi
+                        
                         if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
                     }
                 }
@@ -79,23 +93,17 @@
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
-                        // 🌟 NẾU LÀ BOSS KHỔNG LỒ (ĐÁNH SÁT THƯƠNG THẬT LÊN MẠNG)
+                        
+                        // 🌟 NẾU LÀ BOSS KHỔNG LỒ 
                         if (quai.isBoss) {
                             taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
+                            kichHoatHutMau(); // 🌟 Bơm máu khi đấm trúng Boss
                             if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
                         } 
                         // 🌟 NẾU LÀ QUÁI THƯỜNG
                         else {
                             quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
-                            
-                            // 🩸 NỘI TẠI LUYỆN THỂ: Hút 5% máu dựa trên sát thương
-                            let nvc = window.playerModel || window.nhanVatChinh;
-                            if (nvc && nvc.hp < (nvc.maxHp || 1000)) {
-                                nvc.hp = Math.min((nvc.maxHp || 1000), nvc.hp + (luongSatThuong * 0.05));
-                                // Cập nhật thanh máu UI của người chơi nếu có
-                                if (document.getElementById('health-bar')) document.getElementById('health-bar').style.width = (nvc.hp / (nvc.maxHp || 1000) * 100) + '%';
-                            }
-
+                            kichHoatHutMau(); // 🌟 Bơm máu khi đấm trúng Quái
 
                             if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
                             if (quai.hp <= 0) {
@@ -110,6 +118,9 @@
             });
         }
     }
+
+
+
 
 
 
