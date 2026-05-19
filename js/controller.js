@@ -1,8 +1,8 @@
 // ==========================================
-// 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN (V3 - SACH SE)
+// 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN (BẢN VÁ LỖI CUỐI CÙNG)
 // ==========================================
 
-// 🌟 Phục hồi Đồng hồ Thời Gian Hồi Chiêu (Gắn vào window để mọi file đều thấy)
+// 🌟 ĐỒNG HỒ THỜI GIAN HỒI CHIÊU (Gắn vào window để mọi file đều thấy)
 window.thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
 window.thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
@@ -30,10 +30,10 @@ function batDauHoiChieu(phim) {
 window.dangMuaChieu = false; 
 
 window.addEventListener('keydown', (e) => {
-    // Gọi thẳng window.playerModel để không bao giờ bị lỗi không tìm thấy
+    // 🌟 Sử dụng window.playerModel để không bao giờ bị undefined
     if (e.repeat || !window.playerModel || window.isDead) return; 
     
-    // Bắt phím di chuyển W A S D (Ghi thẳng vào window.keys)
+    // 🌟 Bắt phím di chuyển W A S D (Ghi thẳng vào window.keys)
     if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
         window.keys[e.code.replace('Key', '').toLowerCase()] = true;
     }
