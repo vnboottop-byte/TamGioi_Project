@@ -82,6 +82,10 @@
         hieuUngLuyenThe.push({ mesh: mesh, life: 1.0, scaleMax: scaleMax, type: 'shockwave' });
     }
 
+
+
+
+
     window.tungComboLuyenThe = function (phim, isRemote = false) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc || isRemote) return;
@@ -104,14 +108,23 @@
             window.trangThaiLT.target = targetQuai;
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
+
+
+
         } else {
             // 🌟 NẾU KHÔNG CÓ QUÁI: ĐẤM VÀO KHÔNG KHÍ
             window.trangThaiLT.state = 'IDLE'; 
-            let pool = Object.keys(window.animationsMapChar || {}).filter(k => 
+            
+            // 🌟 BẢN VÁ: Tìm đúng rương chiêu thức (Cưỡi thú thì MapChar, đi bộ thì Map gốc)
+            let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
+            let pool = Object.keys(mapAnim || {}).filter(k => 
                 k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
             );
             let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
             if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
+
+
+
             
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
