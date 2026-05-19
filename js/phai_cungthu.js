@@ -238,11 +238,6 @@
             let tenAnimation = 'CHIEU' + phim + '_CUNGTHU'; 
             window.dangMuaChieu = true;
 
-
-
-
-
-
             // Gọi lệnh bắt nhân vật múa
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
             else if (typeof window.playAnim === 'function') window.playAnim(tenAnimation);
@@ -252,9 +247,6 @@
                 window.cungTrenTay.visible = true; 
             }
             
-            // 🌟 ĐỒNG HỒ HẸN GIỜ: 1.5 GIÂY SAU CẤT CUNG VÀ MỞ KHÓA CHO ENGINE CHẠY TIẾP
-
-
             // Lấy chỉ số thời gian chính xác từ Cảm Biến của Engine
                 let thoiGianĐoi = window.thoiGianAnimHienTai || 1500;
 
