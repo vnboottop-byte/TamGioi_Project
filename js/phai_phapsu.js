@@ -30,8 +30,6 @@
         danhSachSoBayPS.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    
-
     window.thoiDiemNoCuoiCungPS = window.thoiDiemNoCuoiCungPS || 0;
 
 function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
@@ -234,12 +232,15 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
     window.tungComboPhapSu = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         if (!window.playerModel && !isRemote) return;
 
+
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim);
+            // 🌟 ĐÓNG DẤU BẢN QUYỀN PHÁP SƯ
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim + '_PHAPSU');
         }
+
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
