@@ -1191,7 +1191,19 @@ function playAnim(animName) {
 
     // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
     if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE' && upName !== 'DEATH') {
-        return;
+
+        // 🌟 CHỈ LUYỆN THỂ MỚI CÓ ĐẶC QUYỀN: Bấm di chuyển là bẻ gãy ngang đòn múa để lướt đi
+        if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
+            if (window.isKeyboardMoving || (window.isMoving && (upName === 'DIBO' || upName === 'CHAYBO' || upName === 'BAY'))) {
+                window.dangMuaChieu = false; // Ngắt chiêu tự do
+            } else {
+                return; // Đứng yên thì tiếp tục khóa để giữ thế thủ oai nghiêm
+            }
+        }
+        // 🌌 CÁC PHÁI ĐÁNH XA KHÁC: Tuân thủ tuyệt đối luật cũ của Động cơ, mở khóa theo thời gian thực của clip
+        else {
+            return;
+        }
     }
     
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
