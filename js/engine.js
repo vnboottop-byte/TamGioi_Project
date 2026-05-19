@@ -2928,12 +2928,6 @@ window.loadSafeZonesVaTeleports = function() {
                     window.loaderSieuToc.load(tp.model_url, function (gltf) {
                         let congGroup = new THREE.Group();
                         congGroup.position.copy(pos);
-
-
-
-
-
-
                         let upDir = new THREE.Vector3(0, 1, 0);
                         if (window.KIEU_TRONG_LUC !== 'PHANG') {
                             let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
@@ -2941,11 +2935,6 @@ window.loadSafeZonesVaTeleports = function() {
                             if (upDir.lengthSq() < 0.001) upDir.set(0, 1, 0); else upDir.normalize();
                         }
                         congGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upDir);
-
-
-
-
-
                         let mesh = gltf.scene;
                         let scale = parseFloat(tp.scale) || 1;
                         mesh.scale.set(scale, scale, scale);
@@ -2973,28 +2962,6 @@ window.loadSafeZonesVaTeleports = function() {
         }
     });
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // =================================================================
 // 🤖 AUTO HUNT V8: ĐIỀU HƯỚNG NATIVE - TRẢ LẠI TỐC ĐỘ GỐC & ĐỘ MƯỢT AAA
@@ -3029,10 +2996,6 @@ window.toggleAutoTreoMay = function() {
         if (window.vongMucTieu) window.vongMucTieu.visible = false;
     }
 };
-
-
-
-
 
 // ==========================================
 // 🌟 MÁY ĐỒNG BỘ & TỰ ĐỘNG HỒI SINH BOSS TỪ SERVER (HEARTBEAT 10s)
@@ -3093,18 +3056,6 @@ setInterval(() => {
         });
 
 }, 10000); // 10000 ms = Cứ 10 giây chạy 1 lần
-
-
-
-
-
-
-
-
-
-
-
-
 
 // =================================================================
 // 🤖 AUTO HUNT V16: BẮN TỈA TẦM XA (CHUẨN TẦM ĐÁNH > 100M)
@@ -3251,14 +3202,6 @@ window.botAutoTimer = setInterval(() => {
     }
 }, 200);
 
-
-
-
-
-
-
-
-
 // =========================================================================
 // 🛠️ HỆ THỐNG ĐỘ VŨ KHÍ TOÀN CẦU (DÀNH RIÊNG CHO ADMIN - BẤM F9)
 // =========================================================================
@@ -3364,18 +3307,6 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 })();
-
-
-
-
-
-
-
-
-
-
-
-
 
 // =========================================================================
 // 🎬 HỆ THỐNG SOI ANIMATION TỪNG MILIGIÂY (DÀNH CHO ADMIN - BẤM F10)
@@ -3603,10 +3534,6 @@ window.botAutoTimer = setInterval(() => {
     });
 })();
 
-
-
-
-
 // =========================================================================
 // 👁️ MẮT THẦN X-QUANG V2: BẢN CHỐNG LAG QUÉT TRONG BÁN KÍNH 50M (BẤM END)
 // =========================================================================
@@ -3692,24 +3619,6 @@ window.botAutoTimer = setInterval(() => {
         }
     });
 })();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ==================================================
 // 🖋️ HÀM TẠO CHỮ NỔI GACHA (ĐỘC LẬP - MIỄN NHIỄM VỚI LỖI -NaN)
@@ -3881,11 +3790,4 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
         }
     }).catch(e => {});
 };
-
-
-
-
-
-
-
 
