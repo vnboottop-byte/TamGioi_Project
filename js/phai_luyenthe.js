@@ -213,12 +213,25 @@
     };
 
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe')) {
+
+
+
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
             khoiTao: function () {
                 console.log("🔥 Bá Vương Cận Chiến Luyện Thể Đã Sẵn Sàng!");
+                
+                // 🌟 BƠM THUỐC TĂNG TRƯỞNG BÙ TRỪ LỖI XƯƠNG CỦA MODEL
+                if (window.playerModel && (!window.MOUNT_URL || window.MOUNT_URL.trim() === "")) {
+                    // Ép tỷ lệ to lên 1.6 lần để bằng kích cỡ các phái khác
+                    window.playerModel.scale.multiplyScalar(1.6); 
+                }
+
                 const vuKhiLoader = new THREE.GLTFLoader();
                 if (window.loaderSieuToc) vuKhiLoader.setDRACOLoader(window.loaderSieuToc);
+
+
+
 
                 vuKhiLoader.load(window.WEAPON_URL || 'uploads/anims/BAOTAY.glb', (gltf) => {
                     window.vuKhiModel = gltf.scene;
