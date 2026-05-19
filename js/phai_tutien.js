@@ -33,17 +33,9 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
     return viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
 }
 
-
-
-
-
-
-
-// TẠI FILE: phai_tutien.js
 // TÁC DỤNG: Bốc vũ khí từ kho Asset thay vì xài chung window.phiKiemModel
 function taoKiemChuan(scaleSize, weaponUrl) {
     const stdSword = new THREE.Group(); 
-    
     // 🌟 CHỮA BỆNH "MƯỢN ĐỒ": Tuyệt đối không xài window.WEAPON_URL ở đây
     let urlCanTai = (weaponUrl && weaponUrl.trim() !== '') ? weaponUrl : 'uploads/anims/PHIKIEM.glb';
     
