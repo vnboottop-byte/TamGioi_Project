@@ -1,5 +1,5 @@
 // ==========================================
-// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V20 - BẠO CHÚA CẬN CHIẾN & GENSHIN CAMERA)
+// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V21 - BẠO CHÚA CẬN CHIẾN & GENSHIN CAMERA)
 // ==========================================
 
 (function() {
@@ -21,7 +21,7 @@
         window.tongSoChuNoi_LT++;
 
         const div = document.createElement('div');
-        div.innerText = "-" + satThuong;
+        div.innerText = "-" + Math.round(satThuong);
         let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000';
         div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999; transition: 0.1s;`;
         document.body.appendChild(div);
@@ -92,11 +92,11 @@
 
         let viTriGoc = nvc.position.clone();
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
+        
+        // ✂️ ANIMATION CANCELING: Phá khóa để lướt ngay lập tức
+        window.dangMuaChieu = false; 
 
         if (targetQuai) {
-            // ✂️ ANIMATION CANCELING: Phá khóa để lướt ngay lập tức
-            window.dangMuaChieu = false; 
-            
             const dameChiTiet = { 'Q': 0.4, 'E': 0.5, 'R': 0.8, 'F': 1.5 };
             
             // Chuyển trạng thái sang Lướt
@@ -104,6 +104,18 @@
             window.trangThaiLT.target = targetQuai;
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
+        } else {
+            // 🌟 NẾU KHÔNG CÓ QUÁI: ĐẤM VÀO KHÔNG KHÍ
+            window.trangThaiLT.state = 'IDLE'; 
+            let pool = Object.keys(window.animationsMapChar || {}).filter(k => 
+                k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
+            );
+            let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
+            if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
+            
+            let nvcUp = nvc.up.clone().normalize();
+            let banKinhNo = (phim === 'F') ? 15 : 5;
+            taoSongXungKichLT(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
         }
     };
 
@@ -120,7 +132,7 @@
                     let xuongTayPhai = null;
                     let modelNguoi = window.nhanVatChinh || window.playerModel; 
                     modelNguoi.traverse(c => {
-                        if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand'))) {
+                        if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand') || c.name.toLowerCase().includes('hand.r'))) {
                             xuongTayPhai = c;
                         }
                     });
@@ -170,11 +182,10 @@
                         // 💥 CHẠM MẶT -> ĐẤM!
                         window.trangThaiLT.state = 'HITTING';
                         
-                        // 1. KHO ANIMATION NGẪU NHIÊN CHUẨN XÁC (Chỉ bốc chiêu Tấn công)
+                        // 1. KHO ANIMATION NGẪU NHIÊN: Chỉ Lọc các chiêu Tấn công
                         let pool = Object.keys(window.animationsMapChar || {}).filter(k => 
-                            k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK')
+                            k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
                         );
-                        // Cứu cánh nếu model tải trên mạng về đặt tên không chuẩn
                         let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
                         
                         // Kích hoạt múa ngay lập tức

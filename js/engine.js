@@ -1175,13 +1175,14 @@ function playAnim(animName) {
     
     let upName = animName.toUpperCase();
 
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang
-    let laChieuTanCong = upName.includes('CHIEU');
-    if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE') {
+
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm mọi hành động đi/chạy/bay chen ngang
+    if (window.dangMuaChieu && !upName.includes('CHIEU') && !upName.includes('ATTACK') && !upName.includes('PUNCH') && !upName.includes('KICK') && !upName.includes('SKILL') && !upName.includes('COMBO') && upName !== 'DIE' && upName !== 'DEATH') {
         return;
     }
-    
+
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
+    let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('COMBO') || upName === 'TANCONG' || upName.includes('SKILL');
 
     // ==========================================
     // 🛠️ HÀM CỨU CÁNH: LẤY HOẠT ẢNH NGƯỜI CHƠI (HỆ TIẾNG VIỆT)
