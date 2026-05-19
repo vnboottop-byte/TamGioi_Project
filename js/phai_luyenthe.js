@@ -170,10 +170,11 @@
                         // 💥 CHẠM MẶT -> ĐẤM!
                         window.trangThaiLT.state = 'HITTING';
                         
-                        // 1. KHO ANIMATION NGẪU NHIÊN: Lọc bỏ các chiêu đi/chạy/bay
+                        // 1. KHO ANIMATION NGẪU NHIÊN CHUẨN XÁC (Chỉ bốc chiêu Tấn công)
                         let pool = Object.keys(window.animationsMapChar || {}).filter(k => 
-                            !['NHANROI','DIBO','CHAYBO','BAY','CHET','DIE'].includes(k)
+                            k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK')
                         );
+                        // Cứu cánh nếu model tải trên mạng về đặt tên không chuẩn
                         let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
                         
                         // Kích hoạt múa ngay lập tức
