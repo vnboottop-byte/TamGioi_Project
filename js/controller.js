@@ -47,12 +47,9 @@
 
             let phimUpper = e.code.replace('Key', '');
 
-            // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM)
+            // 🎯 XỬ LÝ 4 CHIÊU THỨC (CÓ Ổ KHÓA CHỐNG SPAM VÀ COOLDOWN)
             if (['Q', 'E', 'F', 'R'].includes(phimUpper)) {
                 
-                // 1. Kiểm tra xem có đang bận múa chiêu khác không?
-                if (window.dangMuaChieu) return;
-
                 // 2. Kiểm tra thời gian hồi của riêng chiêu này
                 let bayGio = Date.now();
                 if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
@@ -60,9 +57,10 @@
                     // Cập nhật lại thời gian vừa bấm
                     thoiDiemTungChieu[phimUpper] = bayGio; 
                     
-                    // 🌟 BẬT KHÓA TOÀN CỤC (Khóa tay trong 1 giây để múa cho xong chiêu, tránh bấm 4 chiêu cùng lúc)
-                    window.dangMuaChieu = true;
-                    setTimeout(() => { window.dangMuaChieu = false; }, 1000); 
+                    // 🌟 MỞ KHÓA GIỚI HẠN SỨC MẠNH: Đã xóa lệnh khóa window.dangMuaChieu!
+                    // Kỹ năng giờ đây hoàn toàn tuân theo Cooldown chuẩn của từng phái.
+
+                    // 🔌 GIAO TIẾP VỚI CARD RỜI (JS CỦA PHÁI)
 
                     // 🔌 GIAO TIẾP VỚI CARD RỜI (JS CỦA PHÁI)
                     if (window.HePhaiHienTai) window.HePhaiHienTai.tungChieu(phimUpper);
