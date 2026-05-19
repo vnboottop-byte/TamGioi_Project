@@ -33,7 +33,8 @@
         danhSachSoBayLT.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    const THOI_GIAN_HOI = { 'Q': 1000, 'E': 3000, 'R': 5000, 'F': 10000 };
+    // ⏳ HỆ 16 GIÂY (2 VÒNG COMBO): Tất cả các chiêu đều hồi 8 giây để tạo vòng lặp mượt mà
+    const THOI_GIAN_HOI = { 'Q': 8000, 'E': 8000, 'R': 8000, 'F': 8000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     function layQuaiVatGanNhatLT(viTriGoc) {
