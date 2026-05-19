@@ -267,8 +267,9 @@
                     if (khoangCach > 2.2) {
                         // 💨 ĐANG LƯỚT: Lerp nội suy tốc độ cao (0.25)
                         nvc.position.lerp(diemDen, 0.25); 
-                        // 🌟 Đã tháo xích Camera: Trả lại quyền zoom/xoay cho Engine xử lý đồng bộ!
-                    
+                        
+                        // 🎥 CAMERA SOFT-LOCK: Trượt nhẹ theo lưng nhân vật
+                        if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
                     } 
                     else {
 
@@ -298,7 +299,16 @@
                             setTimeout(() => { if(window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
                         }
                         
-                        // 🌟 Đã gỡ bỏ Camera Shake (Rung màn hình) để đồng bộ tuyệt đối với các phái khác!
+                        // 4. CAMERA SHAKE: Rung màn hình khi vung nắm đấm
+                        let camY = camera.position.y; let camX = camera.position.x;
+                        let shake = setInterval(() => { 
+                            camera.position.y = camY + (Math.random()-0.5) * 1.5; 
+                            camera.position.x = camX + (Math.random()-0.5) * 1.5; 
+                        }, 20);
+                        setTimeout(() => { 
+                            clearInterval(shake); 
+                            camera.position.y = camY; camera.position.x = camX; 
+                        }, 120);
                         
                         // Xả trạng thái để chờ nhấp phím mới (Cancel Anim)
                         setTimeout(() => { if(window.trangThaiLT.state === 'HITTING') window.trangThaiLT.state = 'IDLE'; }, 300);
