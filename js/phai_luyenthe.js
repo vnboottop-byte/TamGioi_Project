@@ -184,7 +184,10 @@
         window.dangMuaChieu = false; 
 
         if (targetQuai) {
-            const dameChiTiet = { 'Q': 0.4, 'E': 0.5, 'R': 0.8, 'F': 1.5 };
+            // 💥 CHIA ĐỀU SÁT THƯƠNG: 8 nhịp đấm x 1.25 = 10.0 (Gây 1000 Dame nếu Dame Gốc là 100)
+            const dameChiTiet = { 'Q': 1.25, 'E': 1.25, 'R': 1.25, 'F': 1.25 };
+            
+            // Chuyển trạng thái sang Lướt
             
             // Chuyển trạng thái sang Lướt
             window.trangThaiLT.state = 'DASHING';
