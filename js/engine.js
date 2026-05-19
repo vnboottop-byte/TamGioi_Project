@@ -1,4 +1,4 @@
-// 🌍 ĐỘNG CƠ CỐT LÕI (CORE ENGINE) - TÍCH HỢP MOBILE MODE,,,,,,,,,,,
+// 🌍 ĐỘNG CƠ CỐT LÕI (CORE ENGINE) - TÍCH HỢP MOBILE MODE
 THREE.Cache.enabled = !window.isMobile; 
 window.scene = new THREE.Scene();
 window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.01, 3000);
