@@ -3195,33 +3195,70 @@ window.botAutoTimer = setInterval(() => {
                 window.isMoving = false;
             }
         } 
+
+
+
+        // =================================================================
+        // 🤖 AUTO HUNT V16: BẮN TỈA TẦM XA (ĐÃ ĐỒNG BỘ COOLDOWN HỆ 16 GIÂY)
+        // =================================================================
+
+        // ... (Các đoạn tìm mồi và di chuyển của quaiTotNhat giữ nguyên)
+
         else if (window.botState === 'ATTACKING') {
-            // Boss văng ra xa quá   thì lết theo
+            // Boss văng ra xa quá thì lết theo
             if (dist > RANGE_CHASE) {
                 window.botState = 'CHASING';
                 window.targetPosition.copy(targetPos);
                 window.isMoving = true;
             } else {
-                // Đứng trong vòng   thì chôn chân tại chỗ xả đạn
+                // Đứng trong vòng thì chôn chân tại chỗ xả đạn
                 window.isMoving = false;
-                
+
                 let huongNhin = new THREE.Vector3().subVectors(targetPos, nvc.position).projectOnPlane(nvc.up).normalize();
                 let targetMat = new THREE.Matrix4().lookAt(nvc.position, nvc.position.clone().sub(huongNhin), nvc.up);
                 nvc.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.3);
 
-                // TỰ ĐỘNG BẤM SKILL
-                let now = Date.now();
-                if (now - window.thoiGianSpam > 1000) {
-                    window.thoiGianSpam = now;
-                    window.mucTieuHienTai = quaiTotNhat; 
-                    
-                    let keys = ['Q', 'E', 'R', 'F'];
-                    let k = keys[Math.floor(Math.random() * keys.length)];
-                    document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: 'Key' + k }));
-                    setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code: 'Key' + k })), 100);
+                // 🎯 TỰ ĐỘNG BẤM SKILL THÔNG MINH
+                let bayGioMạng = Date.now();
+                if (bayGioMạng - window.thoiGianSpam > 1000) {
+                    window.thoiGianSpam = bayGioMạng;
+                    window.mucTieuHienTai = quaiTotNhat;
+
+                    let danhSachPhim = ['Q', 'E', 'R', 'F'];
+
+                    // 🌟 QUÉT THỜI GIAN THỰC: Chỉ chọn phím nào đã hồi chiêu xong xuôi ở Bộ Điều Khiển
+                    let chiChonPhimDaHoi = danhSachPhim.filter(p => {
+                        let thoiDiemTruoc = window.cd_thoiDiemBopCo ? (window.cd_thoiDiemBopCo[p] || 0) : 0;
+                        let thoiGianCho = window.cd_thongSoHoi ? (window.cd_thongSoHoi[p] || 1500) : 1500;
+                        return (bayGioMạng - thoiDiemTruoc >= thoiGianCho);
+                    });
+
+                    // Nếu có chiêu sẵn sàng, lập tức bóp cò xuất kích!
+                    if (chiChonPhimDaHoi.length > 0) {
+                        let k = chiChonPhimDaHoi[Math.floor(Math.random() * chiChonPhimDaHoi.length)];
+
+                        // Cập nhật dấu thời gian bóp cò ảo
+                        if (window.cd_thoiDiemBopCo) window.cd_thoiDiemBopCo[k] = bayGioMạng;
+
+                        // Kích hoạt xuất chiêu trực tiếp xuống mạch đồ họa môn phái
+                        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
+                            window.HePhaiHienTai.tungChieu(k, false);
+                        }
+
+                        // Đẩy hiệu ứng làm đen nút và đếm ngược số giây lên UI màn hình
+                        if (typeof batDauHoiChieu === 'function') {
+                            batDauHoiChieu(k);
+                        }
+                    }
                 }
             }
         }
+
+
+
+
+
+
     } else {
         window.botState = 'IDLE';
         if (window.isMoving) window.isMoving = false;
