@@ -1293,13 +1293,23 @@ function playAnim(animName) {
     }
 }
 
+
+
+
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     window.dangMuaChieu = true;
     let thoiGianKhoa = thoiGianTheoAnim || 1500;
-    if (thoiGianKhoa < 500) thoiGianKhoa = 500;   
-    if (thoiGianKhoa > 2000) thoiGianKhoa = 1500; 
-    
+
+    // 🌟 ĐẶC QUYỀN LUYỆN THỂ: Đứng yên thì ép thủ đúng 2 giây.
+    // Các phái đánh xa khác sẽ tự động mở khóa theo đúng thời lượng ngắn của Clip gốc để xả chiêu liên tục!
+    if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
+        thoiGianKhoa = 2000;
+    } else {
+        if (thoiGianKhoa < 500) thoiGianKhoa = 500;
+        if (thoiGianKhoa > 2000) thoiGianKhoa = 1500;
+    }
+
     if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
     window.khoaAnimTimeout = setTimeout(() => {
         window.dangMuaChieu = false;
