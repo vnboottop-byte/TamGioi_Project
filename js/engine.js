@@ -1,64 +1,32 @@
-// ==========================================
 // 🌍 ĐỘNG CƠ CỐT LÕI (CORE ENGINE) - TÍCH HỢP MOBILE MODE
-// ==========================================
-// 🌟 CỨU SỐNG RAM MOBILE: Tắt Cache trên điện thoại để nó không ngậm file 3D khổng lồ
 THREE.Cache.enabled = !window.isMobile; 
 window.scene = new THREE.Scene();
 window.camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.01, 3000);
-
-// 🌟 NHẬN DIỆN ĐIỆN THOẠI
 window.isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-// 🌟 BẢN VÁ: Vừa vào game phải nhìn ZONE_ID để gạt cần số vật lý ngay lập tức, không để nó tự nhận là CAU gây lỗi đẩy 10.000m!
 if (window.ZONE_ID && window.ZONE_ID !== 'TRUNG_CHAU') {
     window.KIEU_TRONG_LUC = 'PHANG';
-    window.toaDoMatDat = window.SPAWN_Y || 0; // Chống rơi tự do trước khi nạp Map
+    window.toaDoMatDat = window.SPAWN_Y || 0;  
 } else {
     window.KIEU_TRONG_LUC = 'CAU';
 }
-
-// 🌟 TỐI ƯU HÓA CẤU HÌNH GPU TẬN GỐC
 window.renderer = new THREE.WebGLRenderer({
     antialias: !window.isMobile, 
     logarithmicDepthBuffer: !window.isMobile,
-    powerPreference: "high-performance" // Bắt buộc HĐH dồn sức mạnh cao nhất cho Canvas
+    powerPreference: "high-performance" 
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
-// Trên Mobile, mật độ điểm ảnh quá cao (Retina) sẽ giết chết GPU. Khóa chết ở mức 1.0!
 renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
-// 🌟 TỐI ƯU MOBILE: Tắt hoàn toàn hệ thống đổ bóng để giải phóng VRAM và Render Call
 renderer.shadowMap.enabled = !window.isMobile;
-
-
-
-
-
-
-
 renderer.outputEncoding = THREE.sRGBEncoding;
-// 🌟 BÍ QUYẾT GLTF-VIEWER: ĐỔI VỀ LINEAR TONE MAPPING
 renderer.toneMapping = THREE.LinearToneMapping; 
-renderer.toneMappingExposure = 1.0; 
-
+renderer.toneMappingExposure = 1.0;
 document.body.appendChild(renderer.domElement);
 
-
-
-
-
-
-// 🌟 TẠO PHÒNG STUDIO VÔ HÌNH ĐỂ CHIẾU SÁNG KIM LOẠI TỨ PHÍA
 if (typeof THREE.RoomEnvironment !== 'undefined') {
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-    // 🌟 THUẬT TOÁN CỨU SỐNG iPHONE: Dùng xong phải vứt cỗ máy này vào lò đốt rác ngay, giải phóng 200MB VRAM!
     pmremGenerator.dispose();
 }
-
-
-
-
-
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.3));
 window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
