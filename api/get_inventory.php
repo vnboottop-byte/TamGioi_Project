@@ -10,8 +10,9 @@ $username = $_SESSION['user'];
 $stmt_gold = $conn->query("SELECT game_gold FROM game_characters WHERE username = '$username'");
 $game_gold = ($stmt_gold && $stmt_gold->num_rows > 0) ? $stmt_gold->fetch_assoc()['game_gold'] : 0;
 
-// Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
-// Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
+// 🌟 BẢN VÁ: Lấy thêm Ví Linh Thạch (balance) từ bảng users giống bên Chợ Đen
+$stmt_bal = $conn->query("SELECT balance FROM users WHERE username = '$username'");
+$balance = ($stmt_bal && $stmt_bal->num_rows > 0) ? $stmt_bal->fetch_assoc()['balance'] : 0;
 // Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
 $sql = "SELECT inv.id as inv_id, inv.item_id, inv.item_type, inv.is_equipped, inv.upgrade_level,
                shop.name, shop.model_url, shop.required_class, shop.bonus_damage, shop.bonus_hp, shop.bonus_speed, shop.price 
@@ -26,5 +27,5 @@ $res = $stmt->get_result();
 $items = [];
 while ($row = $res->fetch_assoc()) { $items[] = $row; }
 
-echo json_encode(['status' => 'success', 'data' => $items, 'game_gold' => $game_gold]);
+echo json_encode(['status' => 'success', 'data' => $items, 'game_gold' => $game_gold, 'balance' => $balance]);
 ?>
