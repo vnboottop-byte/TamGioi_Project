@@ -3222,6 +3222,11 @@ window.botAutoTimer = setInterval(() => {
                 let now = Date.now();
                 let delaySpam = laCanChien ? 1200 : 1000;
 
+                // 🛡️ CHỐT CHẶN BẤT TỬ: Tự động bơm lại đồng hồ nếu bị mất, cấm tuyệt đối sinh ra lỗi NaN!
+                if (typeof window.thoiGianSpam === 'undefined' || isNaN(window.thoiGianSpam)) {
+                    window.thoiGianSpam = 0;
+                }
+
                 if (now - window.thoiGianSpam > delaySpam && !dangLuotLT) {
                     window.thoiGianSpam = now;
                     window.mucTieuHienTai = quaiTotNhat;
@@ -3229,14 +3234,13 @@ window.botAutoTimer = setInterval(() => {
                     let keys = ['Q', 'E', 'R', 'F'];
                     let k = keys[Math.floor(Math.random() * keys.length)];
 
-                    // 👉 KÍCH HOẠT TUYỆT CHIÊU TRỰC TIẾP (100% THÀNH CÔNG, KHÔNG SỢ LIỆT PHÍM ẢO)
+                    // 👉 KÍCH HOẠT TUYỆT CHIÊU TRỰC TIẾP 
                     if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
                         window.HePhaiHienTai.tungChieu(k, false);
                     } else {
-                        // Dự phòng cho các phái khác
-                        let keyCode = k.charCodeAt(0);
-                        document.dispatchEvent(new KeyboardEvent('keydown', { key: k.toLowerCase(), code: 'Key' + k, keyCode: keyCode, which: keyCode, bubbles: true }));
-                        setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k.toLowerCase(), code: 'Key' + k, keyCode: keyCode, which: keyCode, bubbles: true })), 100);
+                        // 🌟 PHỤC HỒI CHUẨN MÃ PHÍM CHO CÁC PHÁI CÒN LẠI (Chữ hoa Q, E, R, F)
+                        document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: 'Key' + k, bubbles: true }));
+                        setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code: 'Key' + k, bubbles: true })), 100);
                     }
                 }
             }
