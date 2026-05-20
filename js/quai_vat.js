@@ -168,12 +168,9 @@ window.chemTrungBoss = function (bossId, dame) {
                 }
             }).catch(e => { });
 
-
-
-
             window.dameGomChoBoss[bossId] = 0;
             window.bossSyncTimer[bossId] = null;
-        }, 300);
+        }, 1000);
     }
 };
 
