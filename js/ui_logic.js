@@ -564,13 +564,21 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         body: JSON.stringify({ inv_id: invId, action: action })
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
+
+
+
             // 🌟 TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
-            .then(res2 => res2.json())
-            .then(data2 => {
-                if(data2.status === 'success') {
-                    window.khoDoData = data2.data; 
-                    window.renderTrangTuiDo(); // Cập nhật ô lưới túi đồ
+                .then(res2 => res2.json())
+                .then(data2 => {
+                    if (data2.status === 'success') {
+                        window.khoDoData = data2.data;
+                        if (document.getElementById('gameGoldUI')) document.getElementById('gameGoldUI').innerText = parseInt(data2.game_gold).toLocaleString();
+                        if (document.getElementById('gameBalanceUI')) document.getElementById('gameBalanceUI').innerText = parseInt(data2.balance || 0).toLocaleString();
+                        window.renderTrangTuiDo(); // Cập nhật ô lưới túi đồ
+
+
+
                     
                     let itemMoi = window.khoDoData.find(i => i.inv_id == invId);
                     if (itemMoi) {
