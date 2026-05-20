@@ -1004,30 +1004,50 @@ function tienHanhTaiNhanVat() {
             });
         });
     } else {
-        loader.load(window.CURRENT_MODEL_URL, function (gltfChar) {
-            // 🌟 CẮT ĐỨT DÂY THẦN KINH NGƯỜI CHƠI (CHỐNG BOSS MIMIC)
-            playerModel = window.playerModel = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(gltfChar.scene) : gltfChar.scene.clone();
-            window.nhanVatChinh = playerModel;
-            let doCao = (window.ADMIN_NAME === "Admin") ? 2.5 : 2.5;
-            chuanHoaKichThuoc(playerModel, doCao);
-            playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
+        loader.load(
+            window.CURRENT_MODEL_URL, 
+            function (gltfChar) {
+                // 🌟 CẮT ĐỨT DÂY THẦN KINH NGƯỜI CHƠI (CHỐNG BOSS MIMIC)
+                playerModel = window.playerModel = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(gltfChar.scene) : gltfChar.scene.clone();
+                window.nhanVatChinh = playerModel;
+                let doCao = (window.ADMIN_NAME === "Admin") ? 2.5 : 2.5;
+                chuanHoaKichThuoc(playerModel, doCao);
+                playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
 
-            scene.add(playerModel);
-            mixer = new THREE.AnimationMixer(playerModel); 
-            animationsMap = {}; 
-            window.animationsMap = animationsMap; // 🌟 MỞ KHÓA: Công khai rương chiêu thức cho phái Luyện Thể đọc!
-            
-            gltfChar.animations.forEach((clip) => { 
-                // 🛑 BẢN VÁ: Tẩy não Tỷ lệ (Scale) chống teo rút
-                clip.tracks = clip.tracks.filter(track => !track.name.includes('.scale'));
-                animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); 
-            });
+                scene.add(playerModel);
+                mixer = new THREE.AnimationMixer(playerModel); 
+                animationsMap = {}; 
+                window.animationsMap = animationsMap; 
+                
+                gltfChar.animations.forEach((clip) => { 
+                    clip.tracks = clip.tracks.filter(track => !track.name.includes('.scale'));
+                    animationsMap[clip.name.toUpperCase()] = mixer.clipAction(clip); 
+                });
 
-            cayMatAdmin(playerModel); loadVuKhiChoNhanVat(playerModel); hoanTatTaiModels();
-        });
+                cayMatAdmin(playerModel); loadVuKhiChoNhanVat(playerModel); hoanTatTaiModels();
+            },
+            undefined,
+            function (error) {
+                // 🛡️ LÁ CHẮN BẤT TỬ: Nếu Sếp lỡ tay xóa mất Model Nhân vật (mimi_3d.glb)
+                console.error("❌ LỖI: Mất file Nhân vật chính " + window.CURRENT_MODEL_URL + " !");
+                alert("Cảnh báo: Không tìm thấy ngoại hình nhân vật! Game sẽ load một khối vuông tạm thời.");
+                
+                // Nặn tạm 1 cục gạch đỏ cho Sếp vào game chạy bộ
+                let geoFallback = new THREE.BoxGeometry(1, 2.5, 1);
+                let matFallback = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                playerModel = window.playerModel = window.nhanVatChinh = new THREE.Mesh(geoFallback, matFallback);
+                playerModel.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y, TOA_DO_SPAWN.z);
+                
+                scene.add(playerModel);
+                mixer = new THREE.AnimationMixer(playerModel); 
+                animationsMap = {}; window.animationsMap = animationsMap;
+                
+                loadVuKhiChoNhanVat(playerModel); 
+                hoanTatTaiModels(); // 🌟 Ép gọi hàm này để vượt qua 0% Loading
+            }
+        );
     }
-}
-
+};
 function loadVuKhiChoNhanVat(nhanVatDich) {
     if (window.SCRIPT_PHAI_CUA_TOI) {
         if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) {
