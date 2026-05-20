@@ -1211,37 +1211,43 @@ let idleTimer = null;
 // ==========================================
 // 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V43 - PHÂN NGỮ HỆ ANH/VIỆT TÁCH BIỆT)
 // ==========================================
+// ==========================================
+// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V48 - BẢO VỆ CHIÊU CHUẨN 2 GIÂY)
+// ==========================================
 function playAnim(animName) {
     if (window.isTestingAnimation) return;
-    
+
     let upName = animName.toUpperCase();
 
-    // 🌟 TỔNG HỢP NHẬN DIỆN CHIÊU TẤN CÔNG CỦA MỌI HỆ PHÁI VÀ MODEL SKETCHFAB
+    // 🌟 TỔNG HỢP NHẬN DIỆN CHIÊU TẤN CÔNG
     let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('COMBO') || upName === 'TANCONG' || upName.includes('SKILL');
 
-
-
-    // 🛡️ LÁ CHẮN MÚA CHIÊU: Đang múa thì cấm đi/chạy/bay/nhàn rỗi chen ngang (V46 - PURE ANIMATION FILTER)
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Chỉ bảo vệ trong thời gian múa
     if (window.dangMuaChieu && !laChieuTanCong && upName !== 'CHET' && upName !== 'DIE' && upName !== 'DEATH') {
-        
-        // 🏃 Chỉ xử lý khi hoạt ảnh tiếp theo được gọi là hoạt ảnh di chuyển (CHAYBO, DIBO, BAY)
+
         if (upName === 'CHAYBO' || upName === 'DIBO' || upName === 'BAY') {
-            
-            // 🌟 1. RIÊNG LUYỆN THỂ: Hoạt ảnh di chuyển được phép chém ngang ngắt chiêu lập tức!
-            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") {
-                window.dangMuaChieu = false; 
-            } 
-            // 🌌 2. MẤY PHÁI ĐÁNH XA KIA: Hoạt ảnh di chuyển chỉ được ngắt khi hoạt ảnh chiêu đã diễn ra ít nhất 1.5 giây!
+
+            let dangCuaDongTay = window.isKeyboardMoving || window.isMoving;
+
+            // Cho phép Sếp tự bấm phím di chuyển để ngắt chiêu (Cancel Anim) dưới mặt đất
+            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể" && !window.isAutoAFK && upName !== 'BAY' && dangCuaDongTay) {
+                window.dangMuaChieu = false;
+            }
+            // 🌌 TRƯỜNG HỢP CÒN LẠI (Đang Bay, Đang Auto...)
             else {
                 let thoiGianDaQua = Date.now() - (window.thoiDiemBatDauMua || 0);
-                if (thoiGianDaQua >= 1500) {
-                    window.dangMuaChieu = false; // Đã múa xong 1.5s, cho phép đổi sang hoạt ảnh chạy/bay
+
+                // 🌟 BẢN VÁ: Cấm tuyệt đối gọi BAY/CHẠY trong đúng 2 GIÂY (2000ms) lúc tung chiêu!
+                let tgCho = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") ? 2000 : 1500;
+
+                if (thoiGianDaQua >= tgCho) {
+                    window.dangMuaChieu = false; // Xong 2 giây -> Mở khóa cho phép BAY tiếp để Auto rượt Boss!
                 } else {
-                    return; // Chưa múa đủ 1.5s -> Cấm đổi hoạt ảnh di chuyển để bảo toàn đường đạn!
+                    return; // Vẫn đang trong 2 giây múa -> BỎ QUA lệnh BAY/CHẠY
                 }
             }
         } else {
-            return; // Các hoạt ảnh khác (như NHANROI / IDLE) không được tự ý ngắt tiến trình múa chiêu
+            return; // Các hoạt ảnh khác (như IDLE) bị cấm chen ngang
         }
     }
 
