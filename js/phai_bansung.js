@@ -300,8 +300,13 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
         }
 
         if (phim === 'Q') {
-            const dan = taoVienDanXin(1.5);
+            // 🌟 BẢN VÁ: Truyền vũ khí 1 (Đạn) vào cỗ máy đúc đạn
+            let vuKhiThucTe = weaponUrl;
+            if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL;
+            
+            const dan = taoVienDanXin(1.5, vuKhiThucTe);
             let offset = new THREE.Vector3((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 0);
+
             dan.position.copy(viTriGoc).add(offset); dan.lookAt(mucTieu); scene.add(dan);
             // 💥 TĂNG DAME Q LÊN 1.5
             kyNangBanSung.push({ mesh: dan, type: 'Q', speed: 10.0, life: 50, targetPos: mucTieu, damage: dameGoc * 0.08, isRemote: isRemote });
@@ -673,12 +678,17 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
 
 
-            // 🌟 ĐỒNG BỘ FINAL: ĐỔI TÊN BIẾN THÀNH sungXungKich ĐỂ KHÔNG ĐỤNG HÀNG ENGINE
             khoiTao: function () {
                 console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, độc lập với Engine!");
-                let urlVuKhi = 'uploads/anims/GUN.glb';
+                // 🌟 BẢN VÁ: Nhận diện Súng là Vũ Khí 2
+                let urlVuKhi = window.WEAPON2_URL; 
+                
+                // Nếu không trang bị súng, thì nghỉ, không load Model nào cả
+                if (!urlVuKhi || urlVuKhi.trim() === '') return;
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
+
+
                     window.taiHoacNhanBanAsset(urlVuKhi, (sungGoc) => {
                         window.sungWrapper = new THREE.Group();
                         window.sungWrapper.add(sungGoc);
