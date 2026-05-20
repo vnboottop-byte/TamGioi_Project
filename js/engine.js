@@ -3219,32 +3219,65 @@ window.botAutoTimer = setInterval(() => {
                     nvc.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.3);
                 }
 
-                // 🌟 TỰ ĐỘNG BẤM SKILL (BẢN VÁ: GỌI THẲNG VÀO API HỆ PHÁI)
+
+
+
+                // 🌟 TỰ ĐỘNG BẤM SKILL (BẢN VÁ AAA: VÒNG LẶP COMBO & QUÉT HỒI CHIÊU TỪ UI)
                 let now = Date.now();
-                let delaySpam = laCanChien ? 1200 : 1000;
+                
+                // ⏱️ CHỜ MÚA CHIÊU: Luyện Thể 2 giây, Phái khác 1.5 giây
+                let delaySpam = laCanChien ? 2000 : 1500; 
 
-                // 🛡️ CHỐT CHẶN BẤT TỬ: Tự động bơm lại đồng hồ nếu bị mất, cấm tuyệt đối sinh ra lỗi NaN!
-                if (typeof window.thoiGianSpam === 'undefined' || isNaN(window.thoiGianSpam)) {
-                    window.thoiGianSpam = 0;
-                }
+                // 🛡️ Khởi tạo bộ nhớ cho Bot nếu chưa có
+                if (typeof window.thoiGianSpam === 'undefined' || isNaN(window.thoiGianSpam)) window.thoiGianSpam = 0;
+                if (typeof window.botComboIndex === 'undefined') window.botComboIndex = 0; // Biến nhớ vị trí chiêu (Q, E, R, F)
 
+                // ⏳ Đã múa xong (đủ 2s hoặc 1.5s) -> Bắt đầu quét chiêu mới
                 if (now - window.thoiGianSpam > delaySpam && !dangLuotLT) {
-                    window.thoiGianSpam = now;
-                    window.mucTieuHienTai = quaiTotNhat;
-
+                    
                     let keys = ['Q', 'E', 'R', 'F'];
-                    let k = keys[Math.floor(Math.random() * keys.length)];
+                    let chieuDuocChon = null;
+                    
+                    // 🔍 BỘ QUÉT THÔNG MINH: Quét 1 vòng (4 phím) tìm chiêu đang sáng đèn
+                    for (let i = 0; i < 4; i++) {
+                        let testKey = keys[window.botComboIndex];
+                        
+                        // "Hỏi thăm" cái nút UI trên màn hình xem nó có đang bị khóa đếm ngược không
+                        let btn = document.getElementById('btn' + testKey) || document.getElementById('skill' + testKey);
+                        let dangHoiChieu = false;
+                        if (btn && btn.style.pointerEvents === 'none') {
+                            dangHoiChieu = true;
+                        }
+                        
+                        // Lên đạn cho nhịp quét tiếp theo (Tròn vòng Q -> E -> R -> F -> Q)
+                        window.botComboIndex++;
+                        if (window.botComboIndex > 3) window.botComboIndex = 0;
 
-                    // 👉 KÍCH HOẠT TUYỆT CHIÊU TRỰC TIẾP 
-                    if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
-                        window.HePhaiHienTai.tungChieu(k, false);
-                    } else {
-                        // 🌟 PHỤC HỒI CHUẨN MÃ PHÍM CHO CÁC PHÁI CÒN LẠI (Chữ hoa Q, E, R, F)
-                        document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: 'Key' + k, bubbles: true }));
-                        setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code: 'Key' + k, bubbles: true })), 100);
+                        // Nếu chiêu này SÁNG (Không bị khóa) -> Chốt đơn và thoát vòng quét!
+                        if (!dangHoiChieu) {
+                            chieuDuocChon = testKey; 
+                            break; 
+                        }
+                    }
+                    
+                    // 🎯 TÌM THẤY CHIÊU HỒI XONG -> TUNG RA NGAY LẬP TỨC!
+                    if (chieuDuocChon !== null) {
+                        window.thoiGianSpam = now; // Cập nhật lại đồng hồ chờ múa
+                        window.mucTieuHienTai = quaiTotNhat; 
+                        
+                        // 👉 KÍCH HOẠT TUYỆT CHIÊU
+                        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
+                            window.HePhaiHienTai.tungChieu(chieuDuocChon, false);
+                        } else {
+                            document.dispatchEvent(new KeyboardEvent('keydown', { key: chieuDuocChon, code: 'Key' + chieuDuocChon, bubbles: true }));
+                            setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: chieuDuocChon, code: 'Key' + chieuDuocChon, bubbles: true })), 100);
+                        }
                     }
                 }
             }
+
+
+
         }
     } else {
         window.botState = 'IDLE';
