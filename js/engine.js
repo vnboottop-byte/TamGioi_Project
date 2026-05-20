@@ -769,6 +769,9 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 window.tongKhoAsset3D = {};
 window.hangDoiAsset3D = {}; // 🌟 Hàng đợi Promise chống tải 50 con Boss cùng lúc gây tràn RAM
 
+
+
+
 window.taiHoacNhanBanAsset = function(url, callback) {
     if (!url || url.trim() === "") return;
     
@@ -788,41 +791,61 @@ window.taiHoacNhanBanAsset = function(url, callback) {
         return;
     }
 
+
+
+
     // 3. Nếu chưa có ai tải -> Khởi tạo tiến trình tải và khóa Hàng đợi lại
     window.hangDoiAsset3D[url] = new Promise((resolve) => {
         const loaderAsset = window.loaderSieuToc || new THREE.GLTFLoader();
-        loaderAsset.load(url, (gltf) => {
-            
-            // 🌟 ÉP XUỐNG LAMBERT CHO QUÁI VÀ VŨ KHÍ TRÊN MOBILE ĐỂ CỨU GPU SHADER
-            if (window.isMobile) {
-                gltf.scene.traverse(child => {
-                    if (child.isMesh && child.material) {
-                        let mats = Array.isArray(child.material) ? child.material : [child.material];
-                        let newMats = mats.map(mat => {
-                            if (mat && mat.isMeshStandardMaterial) {
-                                let newMat = new THREE.MeshLambertMaterial({
-                                    map: mat.map, color: mat.color, transparent: mat.transparent, opacity: mat.opacity, side: THREE.DoubleSide
-                                });
-                                // Bắt buộc giữ lại Skinning cho xương quái vật để có thể đi lại
-                                if (child.isSkinnedMesh) newMat.skinning = true;
-                                return newMat;
-                            }
-                            if (child.isSkinnedMesh && mat) mat.skinning = true;
-                            return mat;
-                        });
-                        child.material = newMats.length === 1 ? newMats[0] : newMats;
-                    }
-                });
-            }
+        loaderAsset.load(
+            url, 
+            (gltf) => {
+                // 🌟 ÉP XUỐNG LAMBERT CHO QUÁI VÀ VŨ KHÍ TRÊN MOBILE ĐỂ CỨU GPU SHADER
+                if (window.isMobile) {
+                    gltf.scene.traverse(child => {
+                        if (child.isMesh && child.material) {
+                            let mats = Array.isArray(child.material) ? child.material : [child.material];
+                            let newMats = mats.map(mat => {
+                                if (mat && mat.isMeshStandardMaterial) {
+                                    let newMat = new THREE.MeshLambertMaterial({
+                                        map: mat.map, color: mat.color, transparent: mat.transparent, opacity: mat.opacity, side: THREE.DoubleSide
+                                    });
+                                    if (child.isSkinnedMesh) newMat.skinning = true;
+                                    return newMat;
+                                }
+                                if (child.isSkinnedMesh && mat) mat.skinning = true;
+                                return mat;
+                            });
+                            child.material = newMats.length === 1 ? newMats[0] : newMats;
+                        }
+                    });
+                }
 
-            window.tongKhoAsset3D[url] = { scene: gltf.scene, animations: gltf.animations };
-            resolve(window.tongKhoAsset3D[url]); // Mở khóa cho các con Boss đang chờ copy
-            
-            const cloneScene = THREE.SkeletonUtils.clone(gltf.scene);
-            callback(cloneScene, gltf.animations);
-        });
+                window.tongKhoAsset3D[url] = { scene: gltf.scene, animations: gltf.animations };
+                resolve(window.tongKhoAsset3D[url]); // Mở khóa cho các con Boss đang chờ copy
+                
+                const cloneScene = THREE.SkeletonUtils.clone(gltf.scene);
+                callback(cloneScene, gltf.animations);
+            },
+            undefined, // Bỏ qua onProgress
+            (error) => {
+                // 🛡️ LÁ CHẮN TỐI CAO: Xử lý khi file bị xóa (404)
+                console.error("❌ MẤT TÍCH FILE 3D: " + url + " | Đã kích hoạt vật thể tàng hình thay thế!");
+                let fallbackGroup = new THREE.Group(); // Tạo cục không khí tàng hình
+                window.tongKhoAsset3D[url] = { scene: fallbackGroup, animations: [] };
+                resolve(window.tongKhoAsset3D[url]);
+                callback(new THREE.Group(), []); // Bơm cục tàng hình vào cho Game chạy tiếp
+            }
+        );
     });
 };
+
+
+
+
+
+
+
 
 
 
