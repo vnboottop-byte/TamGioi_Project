@@ -13,9 +13,14 @@ window.congKinhNghiem = function (soExp, targetLevel = 1) {
         .then(data => {
             if (data.status === 'success') {
                 // Cập nhật UI Thanh Kinh Nghiệm
-                document.getElementById('uiLevel').innerText = "LV." + data.level;
-                document.getElementById('soExpHienTai').innerText = data.exp + " / " + data.exp_can_thiet + " EXP";
-                document.getElementById('thanhExpHienTai').style.width = (data.exp / data.exp_can_thiet * 100) + '%';
+                let uiLevel = document.getElementById('uiLevel');
+                if (uiLevel) uiLevel.innerText = "LV." + data.level;
+                
+                let soExp = document.getElementById('soExpHienTai');
+                if (soExp) soExp.innerText = data.exp + " / " + data.exp_can_thiet + " EXP";
+                
+                let thanhExp = document.getElementById('thanhExpHienTai');
+                if (thanhExp) thanhExp.style.width = (data.exp / data.exp_can_thiet * 100) + '%';
 
                 // 🌟 NẾU ĐỘT PHÁ CẢNH GIỚI (THĂNG CẤP)
                 if (data.thang_cap) {
@@ -41,7 +46,11 @@ window.congKinhNghiem = function (soExp, targetLevel = 1) {
                         let life = 1.0;
                         function bayAura() {
                             life -= 0.02;
-                            if (life <= 0) { scene.remove(aura); return; }
+                            if (life <= 0) { 
+                                scene.remove(aura); 
+                                if(typeof window.donRac3D === 'function') window.donRac3D(aura);
+                                return; 
+                            }
                             aura.scale.x += 0.05; aura.scale.z += 0.05;
                             aura.material.opacity = life;
                             requestAnimationFrame(bayAura);
@@ -50,13 +59,20 @@ window.congKinhNghiem = function (soExp, targetLevel = 1) {
                     }
 
                     // Thông báo chữ nổi
-                    if (typeof taoSoSatThuong === 'function' && typeof window.playerModel !== 'undefined') {
-                        taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 10, 0)), "LEVEL UP!");
+                    if (typeof window.taoSoSatThuong === 'function' && typeof window.playerModel !== 'undefined') {
+                        window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 10, 0)), "LEVEL UP!", "#f1c40f");
                     }
                 }
             }
+        })
+        .catch(err => {
+            // 🛡️ LÁ CHẮN: Nếu Server đơ, mạng đứt, bỏ qua lỗi để không sập vòng lặp Animate!
+            console.warn("⚠️ Bỏ qua lỗi tăng Kinh nghiệm do Server kẹt: ", err);
         });
 };
+
+    
+
 
 // ==========================================
 // 🎒 HỆ THỐNG TÚI ĐỒ "GIỚI CHỈ" VIP (CYBERPUNK x TU TIÊN)
