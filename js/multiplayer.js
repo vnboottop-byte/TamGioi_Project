@@ -48,9 +48,15 @@ function taoBanSaoNguoiChoi(identity, data) {
     document.body.appendChild(tag);
     rp.tag = tag;
 
+
+
     // TẬN DỤNG TỔNG KHO ASSET
     const mountUrl = data.mount;
-    const charUrl = data.model || 'uploads/anims/mimi_3d.glb';
+    const charUrl = data.model;
+    // 🌟 BẢN VÁ: Trust 100% SQL, không có model thì hủy tạo Clone
+    if (!charUrl || charUrl.trim() === '') return;
+
+
 
     if (mountUrl && mountUrl.trim() !== "") {
         // 1. TẢI RỒNG
@@ -90,11 +96,14 @@ function taoBanSaoNguoiChoi(identity, data) {
 
 
 
-                // 3. 🌟 TẢI VŨ KHÍ (TRẢ LẠI QUYỀN ĐIỀU KHIỂN CHO CÁC FILE HỆ PHÁI)
                 let isCungThu = data.phai && data.phai.toLowerCase().includes('cungthu');
-                let linkVuKhi = isCungThu ? 'uploads/anims/CUNG.glb' : data.weapon;
+                // 🌟 BẢN VÁ: Gọt sạch CUNG.glb. Dùng trực tiếp data mạng truyền về!
+                let linkVuKhi = data.weapon;
 
                 if (linkVuKhi && linkVuKhi.trim() !== "") {
+
+
+
                     window.taiHoacNhanBanAsset(linkVuKhi, (vuKhi) => {
                         vuKhi.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
                         let tayCam = null;
