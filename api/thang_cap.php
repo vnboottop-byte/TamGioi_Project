@@ -14,6 +14,9 @@ $username = $_SESSION['user'];
 $exp_goc = (int)$_POST['exp_nhan_vao'];
 $target_level = isset($_POST['target_level']) ? (int)$_POST['target_level'] : 1; 
 
+// 🌟 BẢN VÁ: Mở khóa Session ngay lập tức để chống đứng Server!
+session_write_close();
+
 $conn->begin_transaction();
 try {
     $stmt = $conn->prepare("SELECT level, exp FROM game_characters WHERE username = ? FOR UPDATE");
