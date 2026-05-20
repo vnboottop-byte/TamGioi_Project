@@ -651,16 +651,45 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
     }, 30);
 };
 
+// ==========================================
+// 🎙️ HỆ THỐNG PUSH-TO-TALK (NHẤN ĐỂ NÓI)
+// ==========================================
 const micBtn = document.getElementById('micButton');
 let isMicOn = false;
-micBtn.addEventListener('click', async () => {
-    if (!window.room || window.room.state !== 'connected') return;
+
+// 🟢 Hàm BẬT Mic khi đè tay
+async function batMic(e) {
+    if (e && e.cancelable) e.preventDefault(); // Chống lỗi zoom/scroll màn hình trên Mobile
+    if (!window.room || window.room.state !== 'connected' || isMicOn) return;
     try {
-        isMicOn = !isMicOn;
-        await window.room.localParticipant.setMicrophoneEnabled(isMicOn);
-        if (isMicOn) { micBtn.classList.add('active'); } else { micBtn.classList.remove('active'); }
+        isMicOn = true;
+        await window.room.localParticipant.setMicrophoneEnabled(true);
+        micBtn.classList.add('active');
+        micBtn.style.transform = 'scale(1.1)'; // Hiệu ứng phình to khi đang đè nút
     } catch (err) { isMicOn = false; micBtn.classList.remove('active'); }
-});
+}
+
+// 🔴 Hàm TẮT Mic khi buông tay
+async function tatMic(e) {
+    if (e && e.cancelable) e.preventDefault();
+    if (!window.room || window.room.state !== 'connected' || !isMicOn) return;
+    try {
+        isMicOn = false;
+        await window.room.localParticipant.setMicrophoneEnabled(false);
+        micBtn.classList.remove('active');
+        micBtn.style.transform = 'scale(1)'; // Trả nút về bình thường
+    } catch (err) { }
+}
+
+// 🖱️ BẮT SỰ KIỆN TRÊN MÁY TÍNH (CHUỘT)
+micBtn.addEventListener('mousedown', batMic);
+micBtn.addEventListener('mouseup', tatMic);
+micBtn.addEventListener('mouseleave', tatMic); // Lỡ kéo chuột ra khỏi nút cũng tự tắt cho an toàn
+
+// 📱 BẮT SỰ KIỆN TRÊN ĐIỆN THOẠI (CẢM ỨNG)
+micBtn.addEventListener('touchstart', batMic, {passive: false});
+micBtn.addEventListener('touchend', tatMic);
+micBtn.addEventListener('touchcancel', tatMic);
 
 
 
