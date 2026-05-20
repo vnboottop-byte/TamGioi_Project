@@ -574,11 +574,22 @@ if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_tuti
     window.HePhaiHienTai = {
         tenPhai: "Tu Tiên",
         khoiTao: function () {
-            const vuKhiLoader = new THREE.GLTFLoader(); const dracoLoaderVuKhi = new THREE.DRACOLoader();
+            const vuKhiLoader = new THREE.GLTFLoader();
+
+            const dracoLoaderVuKhi = new THREE.DRACOLoader();
             dracoLoaderVuKhi.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/'); vuKhiLoader.setDRACOLoader(dracoLoaderVuKhi);
-            const linkKiem = (typeof window.WEAPON_URL !== 'undefined' && window.WEAPON_URL !== "") ? window.WEAPON_URL : 'uploads/anims/PHIKIEM.glb';
+            
+            const linkKiem = window.WEAPON_URL;
+            if (!linkKiem || linkKiem.trim() === "") {
+                window.phiKiemModel = new THREE.Group(); // Không có kiếm thì gán Group rỗng để tránh lỗi
+                window.TUTIEN_WEAPON_LOADED = true;
+                return;
+            }
+            
             vuKhiLoader.load(linkKiem, (gltf) => { window.phiKiemModel = gltf.scene; window.TUTIEN_WEAPON_LOADED = true; });
         },
+
+
         tungChieu: function (phim, isRemote = false, origin = null, target = null, dir = null, casterId = null, weaponUrl = null) {
             if (typeof window.tungComboTuTien === 'function') window.tungComboTuTien(phim, isRemote, origin, target, dir, casterId, weaponUrl);
         },
