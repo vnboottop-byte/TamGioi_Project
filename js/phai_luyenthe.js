@@ -199,31 +199,32 @@
         choHoiChieu[phim] = bayGio;
 
         // ========================================================
-        // 🌟 BẢN VÁ UI: ÉP ĐỒNG HỒ HỒI CHIÊU CHẠY TRÊN MÀN HÌNH
+        // 🌟 BẢN VÁ UI V2: ÉP ĐỒNG HỒ CHẠY (CHỐNG MẤT PHÍM ẢO)
         // ========================================================
         if (!isRemote) {
-            // Tự động quét tìm nút bấm kỹ năng (Q, E, R, F) ở góc phải
+            // Tự động quét tìm nút bấm kỹ năng
             let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
             if (!nutKyNang) {
                 let cacNut = document.querySelectorAll('div, button');
                 for (let n of cacNut) {
-                    if (n.innerText && n.innerText.trim() === phim.toUpperCase() && (n.style.borderRadius === '50%' || n.className.includes('skill'))) {
+                    if (n.innerText && n.innerText.trim().toUpperCase() === phim.toUpperCase() && (n.style.borderRadius === '50%' || n.className.includes('skill'))) {
                         nutKyNang = n; break;
                     }
                 }
             }
 
-            // Nếu tìm thấy nút, phủ một lớp xám đen và cho chạy đếm lùi
             if (nutKyNang) {
                 nutKyNang.style.pointerEvents = 'none'; // Khóa cấm bấm nhồi
-                nutKyNang.style.filter = 'brightness(0.3) grayscale(100%)'; // Làm đen nút
+                nutKyNang.style.filter = 'brightness(0.4) grayscale(100%)'; // Làm đen nút
                 
-                let soDemNguoc = nutKyNang.querySelector('.cd-text-lt');
+                // TUYỆT ĐỐI KHÔNG ĐỤNG VÀO POSITION CỦA NÚT ĐỂ CHỐNG BAY MÀU!
+
+                let idDongHo = 'dongho_lt_' + phim;
+                let soDemNguoc = document.getElementById(idDongHo);
                 if (!soDemNguoc) {
                     soDemNguoc = document.createElement('div');
-                    soDemNguoc.className = 'cd-text-lt';
-                    soDemNguoc.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:16px; font-weight:900; text-shadow:0 0 5px #000; z-index:10; pointer-events:none;';
-                    nutKyNang.style.position = 'relative';
+                    soDemNguoc.id = idDongHo;
+                    soDemNguoc.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:18px; font-weight:900; text-shadow:0px 0px 6px #000, 1px 1px 2px #000; z-index:999; pointer-events:none;';
                     nutKyNang.appendChild(soDemNguoc);
                 }
                 
@@ -234,9 +235,13 @@
                     thoiGian -= 0.1;
                     if (thoiGian <= 0) {
                         clearInterval(demDongHo);
-                        soDemNguoc.innerText = '';
-                        nutKyNang.style.filter = 'none'; // 🌟 Sáng lại rực rỡ
-                        nutKyNang.style.pointerEvents = 'auto'; // Mở khóa
+                        // 🌟 Dọn dẹp sạch sẽ rác thẻ div đếm ngược
+                        if (soDemNguoc && soDemNguoc.parentNode) {
+                            soDemNguoc.parentNode.removeChild(soDemNguoc); 
+                        }
+                        // 🌟 Trả lại màu sắc và khả năng bấm y như gốc (Dùng chuỗi rỗng)
+                        nutKyNang.style.filter = ''; 
+                        nutKyNang.style.pointerEvents = ''; 
                     } else {
                         soDemNguoc.innerText = thoiGian.toFixed(1);
                     }
