@@ -198,7 +198,58 @@
         if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
         choHoiChieu[phim] = bayGio;
 
+        // ========================================================
+        // 🌟 BẢN VÁ UI: ÉP ĐỒNG HỒ HỒI CHIÊU CHẠY TRÊN MÀN HÌNH
+        // ========================================================
+        if (!isRemote) {
+            // Tự động quét tìm nút bấm kỹ năng (Q, E, R, F) ở góc phải
+            let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
+            if (!nutKyNang) {
+                let cacNut = document.querySelectorAll('div, button');
+                for (let n of cacNut) {
+                    if (n.innerText && n.innerText.trim() === phim.toUpperCase() && (n.style.borderRadius === '50%' || n.className.includes('skill'))) {
+                        nutKyNang = n; break;
+                    }
+                }
+            }
+
+            // Nếu tìm thấy nút, phủ một lớp xám đen và cho chạy đếm lùi
+            if (nutKyNang) {
+                nutKyNang.style.pointerEvents = 'none'; // Khóa cấm bấm nhồi
+                nutKyNang.style.filter = 'brightness(0.3) grayscale(100%)'; // Làm đen nút
+                
+                let soDemNguoc = nutKyNang.querySelector('.cd-text-lt');
+                if (!soDemNguoc) {
+                    soDemNguoc = document.createElement('div');
+                    soDemNguoc.className = 'cd-text-lt';
+                    soDemNguoc.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:16px; font-weight:900; text-shadow:0 0 5px #000; z-index:10; pointer-events:none;';
+                    nutKyNang.style.position = 'relative';
+                    nutKyNang.appendChild(soDemNguoc);
+                }
+                
+                let thoiGian = THOI_GIAN_HOI[phim] / 1000;
+                soDemNguoc.innerText = thoiGian.toFixed(1);
+                
+                let demDongHo = setInterval(() => {
+                    thoiGian -= 0.1;
+                    if (thoiGian <= 0) {
+                        clearInterval(demDongHo);
+                        soDemNguoc.innerText = '';
+                        nutKyNang.style.filter = 'none'; // 🌟 Sáng lại rực rỡ
+                        nutKyNang.style.pointerEvents = 'auto'; // Mở khóa
+                    } else {
+                        soDemNguoc.innerText = thoiGian.toFixed(1);
+                    }
+                }, 100);
+            }
+        }
+        // ========================================================
+
         let viTriGoc = nvc.position.clone();
+
+
+
+
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
         
         // ✂️ ANIMATION CANCELING: Phá khóa để lướt ngay lập tức
