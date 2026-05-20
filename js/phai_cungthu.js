@@ -575,9 +575,12 @@
                 }
 
                 // 2. TẢI MŨI TÊN & ĐO KÍCH THƯỚC CHUẨN MỘT LẦN DUY NHẤT
-                let linkMuiTen = window.WEAPON_URL || 'uploads/anims/MUITEN.glb';
+                let linkMuiTen = window.WEAPON_URL;
+                if (!linkMuiTen || linkMuiTen.trim() === '') return;
+
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(linkMuiTen, (gltfTen) => {
+
                         window.vuKhiModel = gltfTen;
 
                         gltfTen.updateMatrixWorld(true);
