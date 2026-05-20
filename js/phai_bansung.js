@@ -144,9 +144,13 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
 
 
-    function taoVienDanXin(scaleSize) {
+    function taoVienDanXin(scaleSize, weaponUrl) {
         const group = new THREE.Group();
-        let urlCanTai = window.VIENDAN_URL || 'uploads/anims/VIENDAN.glb';
+        // 🌟 BẢN VÁ: Dùng Vũ khí 1 làm viên đạn
+        let urlCanTai = weaponUrl || window.WEAPON_URL; 
+        
+        // Nếu cởi truồng không trang bị đạn, trả về group rỗng (bắn ra không khí)
+        if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
