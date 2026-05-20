@@ -3103,7 +3103,7 @@ setInterval(() => {
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
 // =================================================================
-
+window.thoiGianSpam = 0;
 if (window.botAutoTimer) clearInterval(window.botAutoTimer); 
 
 window.isAutoAFK = false;
