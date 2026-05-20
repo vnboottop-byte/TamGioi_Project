@@ -247,9 +247,6 @@
 
         let viTriGoc = nvc.position.clone();
 
-
-
-
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
         
         // ✂️ ANIMATION CANCELING: Phá khóa để lướt ngay lập tức
