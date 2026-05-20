@@ -1005,8 +1005,7 @@ function tienHanhTaiNhanVat() {
     }
 }
 
-function loadVuKhiChoNhanVat(nhanVatDich) {  
-    // 🛑 LỆNH CẤM: Engine không được can thiệp vào Vũ khí 
+function loadVuKhiChoNhanVat(nhanVatDich) {
     if (window.SCRIPT_PHAI_CUA_TOI) {
         if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) {
             return;
@@ -1014,36 +1013,43 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
     }
 
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
-        loader.load(window.WEAPON_URL, function (gltfW) {
-            let vuKhi = gltfW.scene; 
-            window.vuKhiModel = vuKhi;
+        // 🌟 BẢN VÁ: Thêm callback bắt lỗi 404 để cứu luồng JS không bị crash
+        loader.load(
+            window.WEAPON_URL,
+            function (gltfW) {
+                let vuKhi = gltfW.scene;
+                window.vuKhiModel = vuKhi;
 
-            if (typeof window.bocHDRI_NhanVat === 'function') {
-                window.bocHDRI_NhanVat(vuKhi);
+                if (typeof window.bocHDRI_NhanVat === 'function') {
+                    window.bocHDRI_NhanVat(vuKhi);
+                }
+
+                let tayCam = null;
+                nhanVatDich.traverse(c => {
+                    if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
+                        tayCam = c;
+                    }
+                });
+
+                if (tayCam) {
+                    tayCam.add(vuKhi);
+                    vuKhi.position.set(0, 0, 0);
+                    console.log("⚔️ Đã gắn vũ khí vào xương:", tayCam.name);
+                } else {
+                    nhanVatDich.add(vuKhi);
+                    vuKhi.position.set(1, 1, 0);
+                }
+
+                if (window.WEAPON_LEVEL && window.WEAPON_LEVEL > 0) {
+                    window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL);
+                }
+            },
+            undefined, // Bỏ qua onProgress
+            function (error) {
+                // 🛡️ LÁ CHẮN TỐI CAO: File lỗi hoặc 404 thì bỏ qua vũ khí, cho Đại hiệp tay không vào game chạy tiếp!
+                console.error("⚠️ [CẢNH BÁO ENGINE]: Không tìm thấy file vũ khí 3D tại: " + window.WEAPON_URL + ". Đã kích hoạt chế độ Tay Không Bắt Giặc chống treo máy.");
             }
-            
-            let tayCam = null;
-
-            nhanVatDich.traverse(c => { 
-                if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
-                    tayCam = c; 
-                } 
-            });
-
-            if (tayCam) {
-                tayCam.add(vuKhi);
-                vuKhi.position.set(0, 0, 0); 
-                console.log("⚔️ Đã gắn vũ khí vào xương:", tayCam.name);
-            } else {
-                nhanVatDich.add(vuKhi);
-                vuKhi.position.set(1, 1, 0); 
-            }
-
-            if (window.WEAPON_LEVEL && window.WEAPON_LEVEL > 0) {
-                window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL);
-            }
-            
-        });
+        );
     }
 }
 
