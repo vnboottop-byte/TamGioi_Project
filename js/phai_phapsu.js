@@ -104,14 +104,15 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
 
 
 
-    // ==========================================
-    // 🪃 HÀM TẠO VŨ KHÍ BAY (PHI VÒNG PHÉP KÈM TEXTURE GỐC)
-    // ==========================================
     function taoVuKhiBayPS(weaponUrl, mauSac, scaleSize, isUpright = false) {
         const group = new THREE.Group();
-        let urlCanTai = weaponUrl || 'uploads/anims/vong_phep.glb';
+        // 🌟 BẢN VÁ: Ép dùng Vũ Khí 1. Nếu cởi đồ thì quăng ra không khí
+        let urlCanTai = weaponUrl || window.WEAPON_URL;
+        if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
+
+
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 
                 // Giữ nguyên hình hài, chỉ phủ thêm lớp Hào quang nhẹ theo màu Chiêu thức
