@@ -6,6 +6,9 @@ require_once '../db.php';
 
 if (!isset($_SESSION['user'])) { echo json_encode(['status' => 'error']); exit; }
 
+// 🌟 BẢN VÁ: Mở khóa Session ngay lập tức để không làm kẹt các API khác!
+session_write_close();
+
 $boss_id = isset($_POST['boss_id']) ? intval($_POST['boss_id']) : 0;
 $damage = isset($_POST['damage']) ? floatval($_POST['damage']) : 0;
 
