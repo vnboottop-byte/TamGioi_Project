@@ -255,11 +255,15 @@
                 const vuKhiLoader = new THREE.GLTFLoader();
                 if (window.loaderSieuToc) vuKhiLoader.setDRACOLoader(window.loaderSieuToc);
 
+                // 🌟 BẢN VÁ: Dùng Vũ Khí 1. Nếu cởi găng thì đánh đấm bằng tay trần
+                let linkBaoTay = window.WEAPON_URL;
+                if (!linkBaoTay || linkBaoTay.trim() === '') return; 
 
-
-
-                vuKhiLoader.load(window.WEAPON_URL || 'uploads/anims/BAOTAY.glb', (gltf) => {
+                vuKhiLoader.load(linkBaoTay, (gltf) => {
                     window.vuKhiModel = gltf.scene;
+
+
+
                     let xuongTayPhai = null;
                     let modelNguoi = window.nhanVatChinh || window.playerModel; 
                     modelNguoi.traverse(c => {
