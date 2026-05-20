@@ -116,14 +116,18 @@ window.moTuiDoVIP = function() {
     if (typeof animateInv === 'function' && !window.inv3D.reqId) { animateInv(); }
 
     document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px; font-weight:bold;">Đang quét Không gian Giới Chỉ...</div>';
+
     
     fetch('api/get_inventory.php')
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === 'success') {
-            window.khoDoData = data.data;
-            document.getElementById('gameGoldUI').innerText = parseInt(data.game_gold).toLocaleString();
-            document.getElementById('invCountUI').innerText = window.khoDoData.length;
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.khoDoData = data.data;
+                document.getElementById('gameGoldUI').innerText = parseInt(data.game_gold).toLocaleString();
+                // 🌟 BẢN VÁ: Cập nhật số dư Linh Thạch (KNB) vào Túi đồ
+                if (document.getElementById('gameBalanceUI')) document.getElementById('gameBalanceUI').innerText = parseInt(data.balance || 0).toLocaleString();
+                document.getElementById('invCountUI').innerText = window.khoDoData.length;
+
             window.trangHienTai = 1;
             renderTrangTuiDo();
             
