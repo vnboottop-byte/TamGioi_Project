@@ -3100,10 +3100,49 @@ setInterval(() => {
 
 }, 10000); // 10000 ms = Cứ 10 giây chạy 1 lần
 
+
+
+
+
+// =================================================================
+// 🤖 AUTO HUNT V8: ĐIỀU HƯỚNG NATIVE - TRẢ LẠI TỐC ĐỘ GỐC & ĐỘ MƯỢT AAA
+// =================================================================
+
+window.isAutoAFK = false;
+window.tamQuetMax = 10000;   // Radar quét xa 10km
+window.tamXaXungDot = 500;    // Tầm xả chiêu 
+window.tamThaDieu = 300;      // Tầm thả diều 40m
+window.thoiGianSpam = 0;
+
+window.toggleAutoTreoMay = function () {
+    window.isAutoAFK = !window.isAutoAFK;
+    let btn = document.getElementById('btnAutoAFK');
+    let txt = document.getElementById('textAuto');
+
+    if (window.isAutoAFK) {
+        btn.style.borderColor = '#2ecc71';
+        btn.style.boxShadow = '0 0 15px #2ecc71';
+        txt.innerText = 'Auto: BẬT';
+        txt.style.color = '#2ecc71';
+        if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
+            window.taoSoSatThuong(window.playerModel.position.clone(), "AUTO SĂN BOSS: BẮT ĐẦU!", '#2ecc71');
+        }
+    } else {
+        btn.style.borderColor = '#7f8c8d';
+        btn.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+        txt.innerText = 'Auto: TẮT';
+        txt.style.color = '#fff';
+        window.isMoving = false; // Dừng xe
+        window.mucTieuHienTai = null; // Hủy khóa mục tiêu
+        if (window.vongMucTieu) window.vongMucTieu.visible = false;
+    }
+};
+
+
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
 // =================================================================
-window.thoiGianSpam = 0;
+
 if (window.botAutoTimer) clearInterval(window.botAutoTimer); 
 
 window.isAutoAFK = false;
