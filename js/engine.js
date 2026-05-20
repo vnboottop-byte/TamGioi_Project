@@ -1251,13 +1251,8 @@ function playAnim(animName) {
         }
     }
 
-
-
-
-    
     let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
 
-    
     // ==========================================
     // 🛠️ HÀM CỨU CÁNH: LẤY HOẠT ẢNH NGƯỜI CHƠI (HỆ TIẾNG VIỆT)
     // ==========================================
