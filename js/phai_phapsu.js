@@ -509,9 +509,12 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 
 
                 // 🔮 2. TẢI VŨ KHÍ CẦM TAY (Vòng phép nhỏ lơ lửng ở tay phải - WEAPON 1)
-                let urlVuKhi = window.WEAPON_URL || 'uploads/anims/vong_phep.glb'; 
-                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                let urlVuKhi = window.WEAPON_URL; 
+                
+                // Nếu có vũ khí thì mới tải và gắn vào tay
+                if (urlVuKhi && urlVuKhi.trim() !== '' && typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset(urlVuKhi, (vuKhiGoc) => {
+
                         window.vuKhiPhapSu = vuKhiGoc;
                         
                         // Thước đo chuẩn mực: Ép to đúng 0.3 mét
@@ -537,9 +540,12 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 }
 
                 // 🪄 3. TẢI TRƯỢNG PHÉP BAY QUANH NGƯỜI (VŨ KHÍ 2)
-                let urlTruong = window.WEAPON2_URL || 'uploads/anims/truongphep.glb';
-                if (urlTruong.trim() !== "" && typeof window.taiHoacNhanBanAsset === 'function') {
+                let urlTruong = window.WEAPON2_URL;
+                if (urlTruong && urlTruong.trim() !== "" && typeof window.taiHoacNhanBanAsset === 'function') {
+
+
                     window.taiHoacNhanBanAsset(urlTruong, (truongGoc) => {
+
                         window.truongHoThe = truongGoc;
 
                         // Ép chuẩn: Trượng dài tầm 1.8 mét cho ngầu
