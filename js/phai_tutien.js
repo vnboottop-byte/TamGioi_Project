@@ -35,11 +35,15 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 
 // TÁC DỤNG: Bốc vũ khí từ kho Asset thay vì xài chung window.phiKiemModel
 function taoKiemChuan(scaleSize, weaponUrl) {
+
     const stdSword = new THREE.Group(); 
-    // 🌟 CHỮA BỆNH "MƯỢN ĐỒ": Tuyệt đối không xài window.WEAPON_URL ở đây
-    let urlCanTai = (weaponUrl && weaponUrl.trim() !== '') ? weaponUrl : 'uploads/anims/PHIKIEM.glb';
+    // 🌟 BẢN VÁ: Dùng trực tiếp Vũ Khí 1. Nếu tháo vũ khí thì đánh chưởng bằng tay không!
+    let urlCanTai = weaponUrl || window.WEAPON_URL;
+    if (!urlCanTai || urlCanTai.trim() === '') return stdSword;
     
     if (typeof window.taiHoacNhanBanAsset === 'function') {
+
+
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
             vuKhi.position.set(0, 0, 0); 
             vuKhi.rotation.set(0, 0, 0); // CHUẨN BLENDER
