@@ -905,13 +905,15 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: 0, classCode: bot.fakePhai };
                 }
 
-                // 🌟 BẢN VÁ: Phantom bắn chay bằng tay không, nhường việc vẽ hiệu ứng cho hạt Particles
-                            let phantomWeapon = null;
-                            if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(data.chieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                            else if (phaiDung === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(data.chieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                            else if (phaiDung === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(data.chieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                            else if (phaiDung === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(data.chieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                            else if (phaiDung === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(data.chieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                // 🌟 BẢN VÁ: Phantom đánh chay, miễn nhiễm lỗi xóa file
+                let phantomWeapon = null;
+                if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                else if (phaiDung === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                else if (phaiDung === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                else if (phaiDung === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                else if (phaiDung === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+
+
                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 100);
 
                 let khoangCachDenSep = bOrigin.distanceTo(playerModel.position);
