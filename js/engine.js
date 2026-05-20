@@ -3103,42 +3103,6 @@ setInterval(() => {
 
 
 
-
-// =================================================================
-// 🤖 AUTO HUNT V8: ĐIỀU HƯỚNG NATIVE - TRẢ LẠI TỐC ĐỘ GỐC & ĐỘ MƯỢT AAA
-// =================================================================
-
-window.isAutoAFK = false;
-window.tamQuetMax = 10000;   // Radar quét xa 10km
-window.tamXaXungDot = 500;    // Tầm xả chiêu 
-window.tamThaDieu = 300;      // Tầm thả diều 40m
-window.thoiGianSpam = 0;
-
-window.toggleAutoTreoMay = function () {
-    window.isAutoAFK = !window.isAutoAFK;
-    let btn = document.getElementById('btnAutoAFK');
-    let txt = document.getElementById('textAuto');
-
-    if (window.isAutoAFK) {
-        btn.style.borderColor = '#2ecc71';
-        btn.style.boxShadow = '0 0 15px #2ecc71';
-        txt.innerText = 'Auto: BẬT';
-        txt.style.color = '#2ecc71';
-        if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
-            window.taoSoSatThuong(window.playerModel.position.clone(), "AUTO SĂN BOSS: BẮT ĐẦU!", '#2ecc71');
-        }
-    } else {
-        btn.style.borderColor = '#7f8c8d';
-        btn.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-        txt.innerText = 'Auto: TẮT';
-        txt.style.color = '#fff';
-        window.isMoving = false; // Dừng xe
-        window.mucTieuHienTai = null; // Hủy khóa mục tiêu
-        if (window.vongMucTieu) window.vongMucTieu.visible = false;
-    }
-};
-
-
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
 // =================================================================
@@ -3190,8 +3154,8 @@ window.botAutoTimer = setInterval(() => {
 
     // 🌟 BẢN VÁ AAA: NHẬN DIỆN CẬN CHIẾN ĐỂ THU HẸP TẦM ĐÁNH
     let laCanChien = window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe');
-    let RANGE_CHASE = laCanChien ? 60 : window.tamXaXungDot;  // Luyện thể: Boss văng xa 60m là lết theo
-    let RANGE_STOP = laCanChien ? 40 : window.tamDungHinh;    // Luyện thể: Chạy vào sát 40m mới thắng gấp để Lướt (Dash)
+    let RANGE_CHASE = laCanChien ? 20 : window.tamXaXungDot;  // 🌟 Thu hẹp: Boss văng 20m là lết theo
+    let RANGE_STOP = laCanChien ? 12 : window.tamDungHinh;    // 🌟 Thu hẹp: Chạy vào sát nách 12m mới tung chiêu Lướt
 
     // --- BƯỚC 1: KIỂM TRA MỒI CŨ ---
     if (window.botMucTieuId) {
@@ -3199,12 +3163,9 @@ window.botAutoTimer = setInterval(() => {
         if (quaiTotNhat) {
             let hopLe = (!quaiTotNhat.death_time || quaiTotNhat.death_time == 0 || quaiTotNhat.death_time === "0");
             if (quaiTotNhat.hp <= 0 || quaiTotNhat.isDead || (quaiTotNhat.mesh && quaiTotNhat.mesh.userData.ignore) || !hopLe || nvc.position.distanceTo(quaiTotNhat.mesh.position) > window.tamQuetMax) {
-                quaiTotNhat = null; 
-                window.botMucTieuId = null;
+                quaiTotNhat = null; window.botMucTieuId = null;
             }
-        } else {
-            window.botMucTieuId = null; 
-        }
+        } else { window.botMucTieuId = null; }
     }
 
     // --- BƯỚC 2: TÌM MỒI MỚI ---
@@ -3215,34 +3176,24 @@ window.botAutoTimer = setInterval(() => {
                 let hopLe = (!q.death_time || q.death_time == 0 || q.death_time === "0");
                 if (hopLe) {
                     let d = nvc.position.distanceTo(q.mesh.position);
-                    if (d < khoangCachMin) {
-                        khoangCachMin = d;
-                        quaiTotNhat = q;
-                    }
+                    if (d < khoangCachMin) { khoangCachMin = d; quaiTotNhat = q; }
                 }
             }
         });
-        
-        if (quaiTotNhat) {
-            window.botMucTieuId = quaiTotNhat.id;
-            window.botState = 'CHASING'; 
-        }
+        if (quaiTotNhat) { window.botMucTieuId = quaiTotNhat.id; window.botState = 'CHASING'; }
     }
 
     // --- BƯỚC 3: CHIẾN THUẬT TÙY MÔN PHÁI ---
     if (quaiTotNhat) {
         let targetPos = quaiTotNhat.mesh.position.clone();
         let dist = nvc.position.distanceTo(targetPos);
-        
+
         window.mucTieuHienTai = quaiTotNhat;
         if (window.vongMucTieu) window.vongMucTieu.visible = true;
 
-        // 🌟 CHỐNG GIẬT ANIMATION: Nhận diện Luyện Thể đang Lướt (Dash/Hit)
+        // CHỐNG GIẬT ANIMATION: Nhận diện Luyện Thể đang Lướt (Dash/Hit)
         let dangLuotLT = laCanChien && window.trangThaiLT && window.trangThaiLT.state !== 'IDLE';
-        if (dangLuotLT) {
-            // Khóa mõm Engine, không cho nó đè hiệu ứng Đứng Im (IDLE) vào lúc ta đang lướt/múa!
-            window.dangMuaChieu = true; 
-        }
+        if (dangLuotLT) { window.dangMuaChieu = true; }
 
         if (window.botState === 'CHASING') {
             if (dist > RANGE_STOP && !dangLuotLT) {
@@ -3252,35 +3203,41 @@ window.botAutoTimer = setInterval(() => {
                 window.botState = 'ATTACKING';
                 window.isMoving = false;
             }
-        } 
+        }
         else if (window.botState === 'ATTACKING') {
             if (dist > RANGE_CHASE && !dangLuotLT) {
                 window.botState = 'CHASING';
                 window.targetPosition.copy(targetPos);
                 window.isMoving = true;
             } else {
-                // Ngưng di chuyển thường để Đánh
                 if (!dangLuotLT) window.isMoving = false;
-                
+
                 if (!dangLuotLT) {
                     let huongNhin = new THREE.Vector3().subVectors(targetPos, nvc.position).projectOnPlane(nvc.up).normalize();
                     let targetMat = new THREE.Matrix4().lookAt(nvc.position, nvc.position.clone().sub(huongNhin), nvc.up);
                     nvc.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.3);
                 }
 
-                // TỰ ĐỘNG BẤM SKILL
+                // 🌟 TỰ ĐỘNG BẤM SKILL (BẢN VÁ: GỌI THẲNG VÀO API HỆ PHÁI)
                 let now = Date.now();
-                // Nếu là Luyện Thể, giãn nhịp đánh ra một chút (1.2s) để nó có đủ thời gian lướt và đấm xong, tránh đứt đoạn combo
-                let delaySpam = laCanChien ? 1200 : 1000; 
+                let delaySpam = laCanChien ? 1200 : 1000;
 
                 if (now - window.thoiGianSpam > delaySpam && !dangLuotLT) {
                     window.thoiGianSpam = now;
-                    window.mucTieuHienTai = quaiTotNhat; 
-                    
+                    window.mucTieuHienTai = quaiTotNhat;
+
                     let keys = ['Q', 'E', 'R', 'F'];
                     let k = keys[Math.floor(Math.random() * keys.length)];
-                    document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: 'Key' + k }));
-                    setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k, code: 'Key' + k })), 100);
+
+                    // 👉 KÍCH HOẠT TUYỆT CHIÊU TRỰC TIẾP (100% THÀNH CÔNG, KHÔNG SỢ LIỆT PHÍM ẢO)
+                    if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
+                        window.HePhaiHienTai.tungChieu(k, false);
+                    } else {
+                        // Dự phòng cho các phái khác
+                        let keyCode = k.charCodeAt(0);
+                        document.dispatchEvent(new KeyboardEvent('keydown', { key: k.toLowerCase(), code: 'Key' + k, keyCode: keyCode, which: keyCode, bubbles: true }));
+                        setTimeout(() => document.dispatchEvent(new KeyboardEvent('keyup', { key: k.toLowerCase(), code: 'Key' + k, keyCode: keyCode, which: keyCode, bubbles: true })), 100);
+                    }
                 }
             }
         }
