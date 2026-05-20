@@ -587,10 +587,8 @@ window.capNhatAIQuaiVat = function (delta) {
                         let tempId = "BOSS_" + quai.id;
                         if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
 
+                        // 🌟 BẢN VÁ: Tạm thời Boss chưởng tàng hình, sát thương và Particle nổ vẫn hoạt động tốt!
                         let bossWeapon = null;
-                        if (quai.classCode === 'TU_TIEN') bossWeapon = 'uploads/anims/PHIKIEM.glb';
-                        else if (quai.classCode === 'CUNG_THU') bossWeapon = 'uploads/anims/CUNGTEN.glb';
-                        else if (quai.classCode === 'PHAP_SU') bossWeapon = 'uploads/anims/vong_phep.glb';
 
                         if (quai.classCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                         else if (quai.classCode === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
@@ -598,7 +596,6 @@ window.capNhatAIQuaiVat = function (delta) {
                         else if (quai.classCode === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                         else if (quai.classCode === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                         else if (quai.classCode === 'LUYEN_THE' && typeof window.tungComboLuyenThe === 'function') window.tungComboLuyenThe(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        
                         
 
                         else if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
