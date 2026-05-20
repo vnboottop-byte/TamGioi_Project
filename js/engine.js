@@ -3878,3 +3878,57 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
     }).catch(e => {});
 };
 
+
+
+
+
+
+
+
+
+
+
+// =================================================================
+// 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
+// =================================================================
+(function khoiTaoChongNguDong() {
+    // 1. CHẶN KẾT XUẤT ĐỒ HỌA KHI ẨN TAB (Chống nổ VRAM)
+    if (typeof window.renderer !== 'undefined' && window.renderer) {
+        const renderGoc = window.renderer.render.bind(window.renderer);
+        window.renderer.render = function(scene, camera) {
+            // Trình duyệt ẩn -> Khỏi vẽ, chỉ tính toán số liệu cho nhẹ máy!
+            if (!document.hidden) renderGoc(scene, camera);
+        };
+    }
+
+    // 2. CHẶN HÀNG ĐỢI GÂY LAG CHẾT MÁY KHI QUAY LẠI TAB
+    const rAF_goc = window.requestAnimationFrame;
+    window.requestAnimationFrame = function(callback) {
+        if (document.hidden) return 0; // Vứt lệnh vào sọt rác, không cho xếp hàng
+        return rAF_goc.call(window, callback);
+    };
+
+    // 3. TẠO NHÂN CPU ẢO (WEB WORKER) - Miễn nhiễm với lệnh đóng băng!
+    let codeWorker = `
+        setInterval(() => { postMessage('TICK'); }, 16); // Đập nhịp 60 FPS
+    `;
+    let blob = new Blob([codeWorker], { type: 'application/javascript' });
+    let worker = new Worker(URL.createObjectURL(blob));
+
+    worker.onmessage = function() {
+        // Khi trình duyệt bị ẩn đi, Worker sẽ ép hàm animate() chạy ngầm 
+        // để Bot vẫn tính toán vật lý, lướt và đấm Boss bình thường!
+        if (document.hidden && typeof animate === 'function') {
+            animate(); 
+        }
+    };
+
+    // 4. MỒI LỬA LẠI KHI SẾP QUAY VỀ TAB (MỞ MÀN HÌNH LÊN)
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && typeof animate === 'function') {
+            animate(); // Khởi động lại vòng lặp 3D gốc ngay lập tức
+        }
+    });
+
+    console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
+})();
