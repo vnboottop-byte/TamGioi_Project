@@ -157,16 +157,18 @@
         return null;
     }
 
-    // TẠI FILE: phai_cungthu.js (Dòng 114)
-    // TÁC DỤNG: Dùng hàm tải siêu tốc Sếp vừa nặn ra trong engine.js để bốc đúng file Vũ Khí ra làm cung tên (Không thèm bốc Phi Kiếm nữa).
-    // TẠI FILE: phai_cungthu.js
-    // TÁC DỤNG: Hàm tạo mũi tên lúc xuất chiêu. Đã được cấy "Tỷ lệ chuẩn"
+    
     function taoMuiTenXin(scaleSize, weaponUrl) {
         const group = new THREE.Group();
 
-        let urlCanTai = weaponUrl || window.WEAPON_URL || 'uploads/anims/MUITEN.glb'; // Đổi RONGDEN thành MUITEN cho đúng nghĩa
+        // 🌟 BẢN VÁ: Nhận diện Mũi Tên là Vũ Khí 1. Nếu tháo vũ khí thì bắn ra không khí!
+        let urlCanTai = weaponUrl || window.WEAPON_URL; 
+        if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
+
+
+
             window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
                 vuKhi.position.set(0, 0, 0);
                 vuKhi.rotation.set(0, 0, 0);
@@ -524,11 +526,13 @@
 
 
             khoiTao: function () {
-                // 1. TẢI CÁNH CUNG (GẮN CHẾT VÀO TAY TRÁI)
-                let linkCung = window.WEAPON2_URL || 'uploads/anims/CUNG.glb';
-                if (!linkCung || linkCung.includes('KHIEN')) linkCung = 'uploads/anims/CUNG.glb';
+                // 1. TẢI CÁNH CUNG (VŨ KHÍ 2) - GẮN VÀO TAY TRÁI
+                let linkCung = window.WEAPON2_URL;
+                // Nếu tháo Cung ra thì không load gì cả
+                if (!linkCung || linkCung.trim() === '' || linkCung.includes('KHIEN')) return;
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
+
                     window.taiHoacNhanBanAsset(linkCung, (cungModel) => {
                         let xuongTayTrai = null;
                         let modelNguoi = window.nhanVatChinh || window.playerModel;
