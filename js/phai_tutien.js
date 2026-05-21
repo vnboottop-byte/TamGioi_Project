@@ -593,7 +593,15 @@ if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_tuti
                 return;
             }
             
-            vuKhiLoader.load(linkKiem, (gltf) => { window.phiKiemModel = gltf.scene; window.TUTIEN_WEAPON_LOADED = true; });
+            vuKhiLoader.load(linkKiem, (gltf) => { 
+                window.phiKiemModel = gltf.scene; 
+                
+                // 🌟 BƠM HÀO QUANG CHO KIẾM QUAY QUANH NGƯỜI
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
+
+                window.TUTIEN_WEAPON_LOADED = true; 
+            });
+            
         },
 
 
