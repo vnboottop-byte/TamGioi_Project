@@ -969,9 +969,9 @@ window.capNhatGiaoDienLo = function() {
 
 
 
-        // 🌟 CHI PHÍ LÒ RÈN: 1000 ĐIỂM = 1 VÀNG
-        let chiPhi = Math.floor(tongDiemDa / 100);
-        if (chiPhi < 1 && tongDiemDa > 0) chiPhi = 1; // Tối thiểu 1 Vàng
+        // 🌟 CHI PHÍ LÒ RÈN KIẾM THẾ: 1 Điểm Đá = 1 Vàng
+        // Bỏ bao nhiêu điểm Huyền Tinh vào thì tốn bấy nhiêu Vàng!
+        let chiPhi = Math.floor(tongDiemDa);
         if (tongDiemDa === 0) chiPhi = 0;
 
         rateUI.innerText = phanTramHienThi.toFixed(1) + "%";

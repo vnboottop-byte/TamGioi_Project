@@ -94,8 +94,8 @@ try {
     
 
 
-    // 6. Tính Phí Luyện Hóa: 1000 ĐIỂM = 1 VÀNG
-    $cost = floor($total_stone_score / 1000);
+    // 6. Tính Phí Luyện Hóa KIẾM THẾ: 1 Điểm = 1 Vàng
+    $cost = floor($total_stone_score);
     if ($cost < 1 && $total_stone_score > 0) $cost = 1;
     if ($total_stone_score == 0) $cost = 0;
 
