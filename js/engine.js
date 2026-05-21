@@ -4178,8 +4178,6 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
-
 // ==========================================
 // 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V2 (CHỐNG ẢO GIÁC XƯƠNG TÀNG HÌNH)
 // ==========================================
