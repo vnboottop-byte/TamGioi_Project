@@ -59,7 +59,8 @@ try {
             $item_id = $item['id'];
             $item_type = $item['item_type'];
             
-            $insert = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped) VALUES (?, ?, ?, 0)");
+            // 🌟 ĐỒ NHẶT TỪ QUÁI LÀ ĐỒ CHƯA GIÁM ĐỊNH (Mặc định 0,0,0)
+            $insert = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, 0, 0, 0, 0)");
             $insert->bind_param("sis", $user, $item_id, $item_type);
             $insert->execute();
 
