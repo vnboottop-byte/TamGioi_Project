@@ -14,13 +14,21 @@ $game_gold = ($stmt_gold && $stmt_gold->num_rows > 0) ? $stmt_gold->fetch_assoc(
 $stmt_bal = $conn->query("SELECT balance FROM users WHERE username = '$username'");
 $balance = ($stmt_bal && $stmt_bal->num_rows > 0) ? $stmt_bal->fetch_assoc()['balance'] : 0;
 // Lấy đồ đạc kèm theo Chỉ số và Yêu cầu Phái
+
+
+
+
+// 🌟 MÓC CHỈ SỐ THỰC TẾ (ĐÃ GIÁM ĐỊNH) TỪ TÚI ĐỒ THAY VÌ TỪ SHOP
 $sql = "SELECT inv.id as inv_id, inv.item_id, inv.item_type, inv.is_equipped, inv.upgrade_level,
-               shop.name, shop.model_url, shop.required_class, shop.bonus_damage, shop.bonus_hp, shop.bonus_speed, shop.price 
+               inv.bonus_damage, inv.bonus_hp, inv.bonus_speed,
+               shop.name, shop.model_url, shop.required_class, shop.price 
         FROM user_inventory inv
-       
         JOIN shop_items shop ON inv.item_id = shop.id 
         WHERE inv.username = ? 
         ORDER BY inv.is_equipped DESC, inv.id DESC";
+
+
+
 
 $stmt = $conn->prepare($sql); $stmt->bind_param("s", $username); $stmt->execute();
 $res = $stmt->get_result();
