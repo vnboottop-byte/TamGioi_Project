@@ -128,26 +128,31 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 
-
-
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX)
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V2)
 // ==========================================
 window.layHitbox = function (mesh) {
-    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 10, chieuCao: 10 };
+    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 10 };
+    
     if (!mesh.chieuCao) {
         let box = new THREE.Box3().setFromObject(mesh);
         mesh.chieuCao = (box.max.y - box.min.y);
-        mesh.chieuRong = (box.max.x - box.min.x);
-        // Nếu model chưa load kịp, lấy scale x 10 làm dự phòng chuẩn!
+        
+        // 🌟 BẢN VÁ: Cố định chiều rộng (banKinh) thay vì lấy theo Box3. 
+        // Box3 bị dính vũ khí dài sẽ làm Hitbox to như cái sân vận động, đánh đâu cũng trúng!
+        mesh.chieuRong = 4.0; 
+        
         if (mesh.chieuCao < 1) mesh.chieuCao = (mesh.scale.y || 1) * 10;
-        if (mesh.chieuRong < 1) mesh.chieuRong = (mesh.scale.x || 1) * 10;
     }
+    
     let tamNguc = mesh.position.clone();
-    tamNguc.y += (mesh.chieuCao / 2);
+    
+    // 🌟 BẢN VÁ: Phải đẩy lên theo trục Up của nhân vật (Hành tinh cầu), không được đẩy thẳng lên Y!
+    let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+    tamNguc.add(upV.multiplyScalar(mesh.chieuCao / 2));
+    
     return { tamNguc: tamNguc, banKinh: mesh.chieuRong / 2, chieuCao: mesh.chieuCao };
 };
-
 
 
 
