@@ -216,20 +216,22 @@ window.xuLyHangDoiChupAnh = function() {
         window.taiHoacNhanBanAsset(url, (model) => {
             let pivot = new THREE.Group(); window.thumb3D.scene.add(pivot); pivot.add(model);
 
-            model.updateMatrixWorld(true);
-            const bbox = new THREE.Box3().setFromObject(model);
-            const size = bbox.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-            let scale = 8.5 / maxDim; 
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 11.5 / maxDim; 
-            model.scale.setScalar(scale);
 
-            model.updateMatrixWorld(true);
-            const bboxScaled = new THREE.Box3().setFromObject(model);
-            const centerScaled = bboxScaled.getCenter(new THREE.Vector3());
 
-            model.position.x -= centerScaled.x; model.position.y -= centerScaled.y; model.position.z -= centerScaled.z;
+
+
+            // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO THUMBNAIL (Studio chụp ảnh chợ đen, lò rèn, ô túi đồ)
+            let targetSize = 8.5;
+            if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 11.5;
+            
+            if (typeof window.canBangModelUI === 'function') {
+                window.canBangModelUI(model, targetSize);
+            }
+
+
+
+
 
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
             else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0); 
@@ -489,26 +491,16 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
             window.inv3D.mixer.clipAction(gltf.animations[0]).play();
         }
 
-        model.scale.setScalar(1);
-        model.position.set(0, 0, 0);
-        model.updateMatrixWorld(true);
 
-        const bbox = new THREE.Box3().setFromObject(model);
-        const size = bbox.getSize(new THREE.Vector3());
-        const center = bbox.getCenter(new THREE.Vector3());
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-        let scale = 16 / maxDim;
-        if (loaiDo === 'weapon' || loaiDo === 'weapon2') scale = 22 / maxDim;
-        model.scale.setScalar(scale);
 
-        model.updateMatrixWorld(true);
-        const bboxScaled = new THREE.Box3().setFromObject(model);
-        const centerScaled = bboxScaled.getCenter(new THREE.Vector3());
-
-        model.position.x -= centerScaled.x;
-        model.position.y -= centerScaled.y;
-        model.position.z -= centerScaled.z;
+        // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO KHUNG 3D TÚI ĐỒ (CỘT PHẢI)
+        let targetSize = 16;
+        if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 22;
+        
+        if (typeof window.canBangModelUI === 'function') {
+            window.canBangModelUI(model, targetSize);
+        }
 
 
 
