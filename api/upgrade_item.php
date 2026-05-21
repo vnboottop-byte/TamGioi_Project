@@ -104,12 +104,16 @@ try {
     // 7. MÁY QUAY XỔ SỐ CHỐNG HACK
     $rand_val = rand(1, 10000) / 100; 
     $is_success = ($rand_val <= $phanTramThucTe);
-    
+
+
+
+
     $new_lvl = $current_lvl;
     $drop_level = false;
 
     // 🌟 BIẾN LƯU TRỮ CHỈ SỐ GIÁM ĐỊNH MỚI
     $new_bonus_dmg = null; $new_bonus_hp = null; $new_bonus_spd = null;
+    $is_giam_dinh = false; $diem_giam_dinh = 0; // Thêm Biến soi nhân phẩm
 
     if ($is_success) {
         $new_lvl = $current_lvl + 1; 
@@ -117,6 +121,12 @@ try {
         // 🌟 LÕI GIÁM ĐỊNH NGẪU NHIÊN: CHỈ KÍCH HOẠT KHI TỪ +0 LÊN +1
         if ($current_lvl == 0) {
             $tongDiemTiemNang = rand(80, 120); // 120 là Cực phẩm
+            $is_giam_dinh = true;
+            $diem_giam_dinh = $tongDiemTiemNang;
+     
+     
+     
+     
             $r1 = rand(1, 99); $r2 = rand(1, 99);
             $minR = min($r1, $r2); $maxR = max($r1, $r2);
 
