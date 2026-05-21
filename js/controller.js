@@ -1,7 +1,26 @@
+function batDauHoiChieuThucTe(phim, tgHoiThucTe) {
+    const slot = document.getElementById('slot-' + phim);
+    if (!slot) return;
+    const overlay = slot.querySelector('.cd-overlay');
+    const text = slot.querySelector('.cd-text');
+    
+    let tgBatDau = Date.now();
+    overlay.style.height = '100%'; text.style.display = 'block';
+    
+    const interval = setInterval(() => {
+        let conLai = tgHoiThucTe - (Date.now() - tgBatDau);
+        if (conLai <= 0) {
+            clearInterval(interval); overlay.style.height = '0%'; text.style.display = 'none';
+        } else {
+            overlay.style.height = (conLai / tgHoiThucTe * 100) + '%';
+            text.innerText = (conLai / 1000).toFixed(1); 
+        }
+    }, 50); 
+}
+
 // ==========================================
 // 🎮 BỘ ĐIỀU KHIỂN & HỆ THỐNG COOLDOWN (BẢN VÁ LỖI TÊN BIẾN)
 // ==========================================
-
 // 🌟 Đã đổi tên biến thành "cd_thongSo" để KHÔNG ĐỤNG HÀNG với 6 file môn phái của Sếp!
 window.cd_thongSoHoi = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
 window.cd_thoiDiemBopCo = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
@@ -56,23 +75,34 @@ window.addEventListener('keydown', (e) => {
             return; 
         }
 
-        // 3. XỬ LÝ ĐẾM NGƯỢC COOLDOWN BẰNG BIẾN ĐỘC LẬP
+
+
+
+        // 3. XỬ LÝ ĐẾM NGƯỢC COOLDOWN KẾT HỢP TỐC ĐỘ ĐÁNH CỦA VŨ KHÍ
         let bayGio = Date.now();
-        if (bayGio - window.cd_thoiDiemBopCo[phimUpper] >= window.cd_thongSoHoi[phimUpper]) {
+        let thoiGianHoiGoc = window.cd_thongSoHoi[phimUpper];
+        
+        // 🌟 ÉP TỐC ĐÁNH: Giảm thời gian chờ dựa trên chỉ số Speed của vũ khí
+        let tyLeGiam = window.GIAM_HOI_CHIEU || 0; // VD: 0.15 (Giảm 15%)
+        let thoiGianThucTe = thoiGianHoiGoc * (1.0 - tyLeGiam); 
+
+        if (bayGio - window.cd_thoiDiemBopCo[phimUpper] >= thoiGianThucTe) {
             window.cd_thoiDiemBopCo[phimUpper] = bayGio; 
             
-            // 🌟 Gọi sang file hệ phái (Lúc này các file phái sẽ tự xử lý mượt mà vì không bị trùng biến nữa)
             if (window.HePhaiHienTai && typeof window.HePhaiHienTai.tungChieu === 'function') {
                 window.HePhaiHienTai.tungChieu(phimUpper, false);
             }
-            batDauHoiChieu(phimUpper); 
+            
+            // 🌟 Truyền thời gian thực tế vào hàm vẽ UI cho đồng hồ đếm ngược chạy nhanh hơn
+            batDauHoiChieuThucTe(phimUpper, thoiGianThucTe); 
         } else {
-            // Báo lỗi bằng số Vàng nảy lên đầu
-            let timeConLai = ((window.cd_thongSoHoi[phimUpper] - (bayGio - window.cd_thoiDiemBopCo[phimUpper])) / 1000).toFixed(1);
+            let timeConLai = ((thoiGianThucTe - (bayGio - window.cd_thoiDiemBopCo[phimUpper])) / 1000).toFixed(1);
             if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
                 window.taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + timeConLai + "s)", '#f1c40f');
             }
         }
+
+
     }
 });
 
