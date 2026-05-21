@@ -98,12 +98,8 @@ try {
     $cost = floor($total_stone_score);
     if ($cost < 1 && $total_stone_score > 0) $cost = 1;
     if ($total_stone_score == 0) $cost = 0;
-
-
-
-
-
     if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
+
 
     // 7. MÁY QUAY XỔ SỐ CHỐNG HACK
     $rand_val = rand(1, 10000) / 100; 
