@@ -812,11 +812,11 @@ let isAdmin = (tenCuaToi === "admin" || tenCuaToi === "kidlo" || window.ROLE ===
 
 if (isAdmin) {
     // 👑 ADMIN: Tầm nhìn của vị thần
-    controls.maxDistance = 8; // Cho phép lăn chuột ra xa tít mù tắp để nhìn cả bản đồ
+    controls.maxDistance = 5; // Cho phép lăn chuột ra xa tít mù tắp để nhìn cả bản đồ
     controls.minDistance = 2;    // Không cho zoom quá gần để tránh chui vào trong bụng Titan
 } else {
     // 👤 NGƯỜI THƯỜNG: Giữ nguyên như cũ
-    controls.maxDistance = 8;   // Chỉ cho phép nhìn quanh quẩn nhân vật
+    controls.maxDistance = 5;   // Chỉ cho phép nhìn quanh quẩn nhân vật
     controls.minDistance = 2;     // Có thể nhìn sát mặt nhân vật
 }
 
