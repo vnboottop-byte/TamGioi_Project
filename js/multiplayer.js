@@ -610,30 +610,23 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                         if (!rp.chieuCaoThuc) {
                             targetMesh.updateMatrixWorld(true);
                             const box = new THREE.Box3().setFromObject(targetMesh);
-                            const center = new THREE.Vector3(); box.getCenter(center);
-
-                            rp.tamThucTeLocal = targetMesh.worldToLocal(center);
                             rp.chieuCaoThuc = box.max.y - box.min.y;
                             if (rp.chieuCaoThuc < 0.1 || !isFinite(rp.chieuCaoThuc)) rp.chieuCaoThuc = 2.5;
+                            
+                            // 🌟 BẢN VÁ 1: Ép cứng tâm X và Z = 0 để không bị lệch do Vũ khí cầm tay dài!
+                            rp.tamThucTeLocal = new THREE.Vector3(0, rp.chieuCaoThuc / 2, 0);
                         }
 
                         // Tọa độ vàng: Tâm người + đẩy lên đỉnh đầu kỵ sĩ
                         const tagPos = rp.tamThucTeLocal.clone().applyMatrix4(targetMesh.matrixWorld);
-                        tagPos.y += (rp.chieuCaoThuc / 2) + 0.5;
-
-
-
+                        
+                        // 🌟 BẢN VÁ 2: Dùng trục Up của nhân vật (Hành tinh cầu) thay vì trục Y thế giới!
+                        let upV = rp.mesh.up ? rp.mesh.up.clone().normalize() : new THREE.Vector3(0,1,0);
+                        tagPos.add(upV.multiplyScalar((rp.chieuCaoThuc / 2) + 0.5));
 
                         // 🌟 LƯU TÂM THỰC TẾ (Để Skill/Boss nhắm thẳng vào ngực thằng này mà bắn)
-                        rp.hitCenterWorld = tagPos.clone().sub(new THREE.Vector3(0, 0.5, 0));
+                        rp.hitCenterWorld = tagPos.clone().sub(upV.clone().multiplyScalar(0.5));
 
-
-
-
-
-
-
-                        
                         tagPos.project(camera);
                         if (tagPos.z < 1) {
                             rp.tag.style.left = `${(tagPos.x * 0.5 + 0.5) * window.innerWidth}px`;
