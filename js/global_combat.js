@@ -128,31 +128,34 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V3 - FIX LỆCH TÂM)
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4 - THEO Ý SẾP)
 // ==========================================
 window.layHitbox = function (mesh) {
-    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 5 };
+    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 2.5 };
     
-    if (!mesh.chieuCao) {
-        let box = new THREE.Box3().setFromObject(mesh);
-        mesh.chieuCao = (box.max.y - box.min.y);
-        
-        // 🌟 ÉP CỨNG CHIỀU RỘNG: Tránh việc thanh kiếm dài quơ ra phía trước làm tâm Hitbox bị dời đi!
-        mesh.chieuRong = 4.0; 
-        
-        if (mesh.chieuCao < 1 || !isFinite(mesh.chieuCao)) mesh.chieuCao = (mesh.scale.y || 1) * 5;
-        if (mesh.chieuCao > 15) mesh.chieuCao = 15; // Giới hạn không cho đo trúng Mây/Rồng quá to
+    // 🌟 Lấy đúng tọa độ lòng bàn chân của Model! Cấm xài Box3 gây lệch tâm!
+    let footPos = mesh.position.clone();
+    let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+    
+    // Chiều cao mặc định cho Người đi bộ
+    let chieuCao = 2.5; 
+    let chieuRong = 4.0; // Chốt cứng bán kính va chạm là 2m để chống đánh lan quá lố
+    
+    // Nếu là Remote Player đang cưỡi thú (Dò tìm yên ngựa)
+    let isMount = false;
+    mesh.traverse(c => { if (c.name && c.name.toUpperCase().includes('YENNGUA')) isMount = true; });
+    if (isMount) chieuCao = 4.5;
+
+    // Nếu là Quái/Boss (Đã được Engine bơm chiều cao thực tế lúc đẻ ra)
+    if (mesh.userData && mesh.userData.chieuCaoThuc) {
+        chieuCao = mesh.userData.chieuCaoThuc;
+        chieuRong = chieuCao * 1.5; // Boss bự thì vòng bụng bự theo
     }
     
-    // 🌟 BẢN VÁ AAA: Phải dùnggetWorldPosition để lấy tọa độ Tuyệt đối của thế giới. 
-    // Dùng mesh.position sẽ bị sai nếu model nằm trong Group!
-    let tamNguc = new THREE.Vector3();
-    mesh.getWorldPosition(tamNguc); 
+    // 🌟 Tâm Ngực = Từ lòng bàn chân đẩy thẳng lên 1/2 chiều cao
+    let tamNguc = footPos.clone().add(upV.multiplyScalar(chieuCao / 2));
     
-    let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-    tamNguc.add(upV.multiplyScalar(mesh.chieuCao / 2));
-    
-    return { tamNguc: tamNguc, banKinh: mesh.chieuRong / 2, chieuCao: mesh.chieuCao };
+    return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
 };
 
 // ==========================================
