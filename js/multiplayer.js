@@ -604,26 +604,31 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
                     if (rp.tag && typeof camera !== 'undefined') {
-                        // 🌟 BẢN VÁ THEO LỆNH SẾP: Bỏ thuật toán Box3, đo trực tiếp từ lòng bàn chân (Root Position)
-                        const footPos = rp.mesh.position.clone();
+                        // 🌟 BẢN VÁ: QUÉT TRỰC TIẾP TỌA ĐỘ GỐC CỦA MESH
+                        const footPos = new THREE.Vector3();
+                        rp.mesh.getWorldPosition(footPos); 
+
                         let upV = rp.mesh.up ? rp.mesh.up.clone().normalize() : new THREE.Vector3(0,1,0);
 
-                        // Phát hiện có cưỡi thú hay không (meshChar nằm bên trong mesh gốc)
+                        // Giữ lại Hitbox ngực để Sếp đánh nhau không bị hụt
                         let isMount = (rp.meshChar && rp.meshChar !== rp.mesh);
-                        let tagHeight = isMount ? 4.5 : 2.5; // Chiều cao chuẩn 2.5m
-
-                        // Tâm ngực: Từ lòng bàn chân đẩy lên 1 nửa
+                        let tagHeight = isMount ? 4.5 : 2.5;
                         rp.hitCenterWorld = footPos.clone().add(upV.clone().multiplyScalar(tagHeight / 2));
 
-                        // Bảng tên: Từ lòng bàn chân đẩy lên đỉnh đầu + 0.5m khoảng không
-                        const tagPos = footPos.clone().add(upV.clone().multiplyScalar(tagHeight + 0.5));
+                        // 🌟 DÁN BẢNG TÊN VÀO GÓT CHÂN (Bỏ cộng chiều cao)
+                        const tagPos = footPos.clone(); 
 
                         tagPos.project(camera);
                         if (tagPos.z < 1) {
                             rp.tag.style.left = `${(tagPos.x * 0.5 + 0.5) * window.innerWidth}px`;
                             rp.tag.style.top = `${(tagPos.y * -0.5 + 0.5) * window.innerHeight}px`;
+                            
+                            // 🌟 Ép CSS không nhô lên nữa, đè bẹp xuống đất luôn
+                            rp.tag.style.transform = 'translate(-50%, 0%)'; 
                             rp.tag.style.display = 'block';
-                        } else rp.tag.style.display = 'none';
+                        } else {
+                            rp.tag.style.display = 'none';
+                        }
                     }
 
 
