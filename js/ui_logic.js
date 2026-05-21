@@ -439,14 +439,20 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
 
 
 
-        function animateInv() {
-            // 🌟 TỐI ƯU: Đóng băng render nếu bảng Túi đồ đang ẩn, cứu GPU khỏi việc vẽ ngầm
+        if (typeof THREE.RoomEnvironment !== 'undefined') {
+            const pmremGenerator = new THREE.PMREMGenerator(window.inv3D.renderer);
+            window.inv3D.scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        }
+
+        // 🌟 Đã sửa: Nâng cấp thành Hàm Toàn Cầu
+        window.animateInv = function() {
+            // 🌟 TỐI ƯU: Đóng băng render nếu bảng Túi đồ đang ẩn, cứu GPU
             if (document.getElementById('inventoryModal').style.display === 'none') {
                 window.inv3D.reqId = null;
                 return;
             }
             
-            window.inv3D.reqId = requestAnimationFrame(animateInv);
+            window.inv3D.reqId = requestAnimationFrame(window.animateInv);
             let delta = window.inv3D.clock.getDelta();
             if (window.inv3D.mixer) window.inv3D.mixer.update(delta);
 
@@ -455,10 +461,7 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
             window.inv3D.renderer.render(window.inv3D.scene, window.inv3D.cam);
         }
 
-
-
-
-        animateInv();
+        window.animateInv(); // Kích nổ động cơ
     }
 
     window.inv3D.cam.aspect = box.clientWidth / box.clientHeight;
