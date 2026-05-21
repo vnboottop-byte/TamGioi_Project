@@ -970,7 +970,7 @@ window.capNhatGiaoDienLo = function() {
 
 
         // 🌟 CHI PHÍ LÒ RÈN: 1000 ĐIỂM = 1 VÀNG
-        let chiPhi = Math.floor(tongDiemDa / 1000);
+        let chiPhi = Math.floor(tongDiemDa / 100);
         if (chiPhi < 1 && tongDiemDa > 0) chiPhi = 1; // Tối thiểu 1 Vàng
         if (tongDiemDa === 0) chiPhi = 0;
 
