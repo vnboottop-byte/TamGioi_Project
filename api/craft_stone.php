@@ -44,16 +44,23 @@ try {
 
     if ($cap1 !== $cap2 || $cap2 !== $cap3) throw new Exception("Tẩu hỏa nhập ma! 3 viên Tinh thạch phải có cấp độ y hệt nhau!");
 
-    // 4. Trừ tiền ghép đá (Bù giá trị chênh lệch x 5 Vàng)
+
+
+
+    // 4. Trừ tiền ghép đá KIẾM THẾ (Bù giá trị chênh lệch x 5 Vàng)
+    $new_level = $cap1 + 1;
     $diemDaCu = pow(10/3, $cap1 - 1) * 100;
     $diemDaMoi = pow(10/3, $cap1) * 100;
     $diemChenhLech = $diemDaMoi - ($diemDaCu * 3);
     
     $cost = floor($diemChenhLech * 5);
-    if ($cost <= 0) $cost = 100;
+    if ($cost <= 0) $cost = 100; // Tối thiểu 100 Vàng
     
     $new_gold = $current_gold - $cost;
     $conn->query("UPDATE game_characters SET game_gold = $new_gold WHERE username = '$user'");
+    
+
+
     
     
 
