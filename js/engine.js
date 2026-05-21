@@ -292,31 +292,61 @@ window.bocHDRI_NhanVat = function (model) {
 };
 
 // ==========================================
-// 🛠️ BẢN VÁ AAA: THUỐC ĐẶC TRỊ "CHÓI MÙ MẮT" CHO NHÂN VẬT & THÚ CƯỠI
+// 🛠️ BẢN VÁ AAA: AI CÂN BẰNG SÁNG TỰ ĐỘNG (SMART EXPOSURE)
 // ==========================================
 window.fixHieuUngDenThui = function (model) {
     if (!model) return;
 
     model.traverse(function (child) {
         if (child.isMesh && child.material) {
-            // Có những model xài nhiều chất liệu cùng lúc (Array)
             let mats = Array.isArray(child.material) ? child.material : [child.material];
 
             mats.forEach(mat => {
-                // 1. Tắt công tắc Tự Phát Sáng (Hung thủ chính gây ra màu trắng lóa)
+                // 1. AI CÂN BẰNG MÀU SẮC GỐC (Base Color)
+                if (mat.color) {
+                    // Công thức tính độ chói theo thị giác mắt người (Luminance)
+                    let doSang = (mat.color.r * 0.299 + mat.color.g * 0.587 + mat.color.b * 0.114);
+
+                    if (doSang > 0.8) {
+                        // Quá chói lóa -> Bóp sáng mạnh (Giảm còn 40%)
+                        mat.color.multiplyScalar(0.4);
+                    } else if (doSang > 0.5) {
+                        // Hơi chói -> Giảm nhẹ (Còn 75%)
+                        mat.color.multiplyScalar(0.75);
+                    } else if (doSang < 0.1) {
+                        // Quá tối (Đen thui) -> Kéo sáng lên nhẹ nhàng để không bị bệt màu
+                        mat.color.r = Math.min(1.0, mat.color.r + 0.15);
+                        mat.color.g = Math.min(1.0, mat.color.g + 0.15);
+                        mat.color.b = Math.min(1.0, mat.color.b + 0.15);
+                    }
+                }
+
+                // 2. KÌM HÃM HÀO QUANG (Emissive)
                 if (mat.emissive) {
-                    mat.emissive.setHex(0x000000);
-                    mat.emissiveIntensity = 0;
+                    let doSangEmissive = (mat.emissive.r * 0.299 + mat.emissive.g * 0.587 + mat.emissive.b * 0.114);
+                    // Nếu có tự phát sáng, không tắt hẳn mà khóa van lại ở mức dịu mắt (0.3)
+                    if (doSangEmissive > 0) {
+                        mat.emissiveIntensity = Math.min(mat.emissiveIntensity || 1, 0.3);
+
+                        // Nếu bản thân cái màu phát sáng nó chói quá thì bóp bớt màu lại
+                        if (doSangEmissive > 0.5) {
+                            mat.emissive.multiplyScalar(0.5);
+                        }
+                    }
                 }
 
-                // 2. Chữa bệnh "Bóng bẩy như Gương"
+                // 3. XỬ LÝ ĐỘ BÓNG VÀ KIM LOẠI (Standard/Physical Materials)
                 if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
-                    mat.metalness = 0.1;       // Gọt bớt tính chất kim loại (Tránh phản chiếu ánh sáng môi trường)
-                    mat.roughness = 0.8;       // Tăng độ nhám bề mặt lên để ánh sáng tán đều
-                    mat.envMapIntensity = 0.5; // Hạ mức độ hấp thụ ánh sáng từ bầu trời (Environment Map)
+                    // Không cho phép bóng như cái gương (Giới hạn Metalness max là 0.4)
+                    if (mat.metalness !== undefined && mat.metalness > 0.5) mat.metalness = 0.4;
+
+                    // Không cho phép trơn tuột như bôi mỡ (Giới hạn Roughness min là 0.5 để tán sáng đều)
+                    if (mat.roughness !== undefined && mat.roughness < 0.4) mat.roughness = 0.5;
+
+                    // Giảm nhẹ cường độ hắt sáng từ bầu trời
+                    mat.envMapIntensity = 0.8;
                 }
 
-                // Chốt áp dụng thay đổi
                 mat.needsUpdate = true;
             });
         }
