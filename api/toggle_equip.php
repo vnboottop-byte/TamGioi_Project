@@ -52,7 +52,7 @@ try {
         $buff_hp += (int)$wp['bonus_hp'] * $heSoCong;
         $buff_dmg += (int)$wp['bonus_damage'] * $heSoCong;
     }
-  }
+  
 
     $stmt_user = $conn->prepare("SELECT level FROM game_characters WHERE username = ?");
     $stmt_user->bind_param("s", $username); $stmt_user->execute();
