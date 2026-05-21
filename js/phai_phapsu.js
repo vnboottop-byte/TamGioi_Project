@@ -106,47 +106,40 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
 
     function taoVuKhiBayPS(weaponUrl, mauSac, scaleSize, isUpright = false) {
         const group = new THREE.Group();
-        // 🌟 BẢN VÁ: Ép dùng Vũ Khí 1. Nếu cởi đồ thì quăng ra không khí
         let urlCanTai = weaponUrl || window.WEAPON_URL;
         if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
-
-
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                
-                // Giữ nguyên hình hài, chỉ phủ thêm lớp Hào quang nhẹ theo màu Chiêu thức
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
                         c.material = c.material.clone();
-                        c.material.side = THREE.DoubleSide; // Nhìn được cả 2 mặt khi xoay
+                        c.material.side = THREE.DoubleSide; 
                         c.material.transparent = true;
-                        
-                        // Phủ thêm màu hào quang nhẹ nhàng (0.5), KHÔNG làm mất vân Texture gốc!
                         c.material.emissive = new THREE.Color(mauSac);
                         c.material.emissiveIntensity = 0.5; 
                     }
                 });
                 
-                // 📏 BỘ THƯỚC ĐO TỰ ĐỘNG CHUẨN XÁC
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-                // 🌟 CHỖ NÀY ĐỂ NẮN LẠI GÓC CỦA MODEL TRƯỚC KHI PHÓNG
-                // Nếu ném ra bị lệch, Sếp thử bật/tắt hoặc chỉnh thông số các dòng này:
-                v.rotation.x = Math.PI / 2; // Xoay 90 độ trục X
+                v.rotation.x = Math.PI / 2; 
                 v.rotation.y = 0;
                 v.rotation.z = 0;
+
+                // 🌟 BƠM HÀO QUANG CHO VÒNG PHÉP KHI NÉM RA
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(v, window.WEAPON_LEVEL || 0);
+
                 group.add(v);
             });
         }
         
-        // Nắn trục quay
         if (!isUpright) group.rotation.x = -Math.PI / 2;
-        else group.rotation.x = 0; // Để nó dựng đứng như cái bánh xe
+        else group.rotation.x = 0; 
 
         return group;
     }
@@ -542,19 +535,18 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 // 🪄 3. TẢI TRƯỢNG PHÉP BAY QUANH NGƯỜI (VŨ KHÍ 2)
                 let urlTruong = window.WEAPON2_URL;
                 if (urlTruong && urlTruong.trim() !== "" && typeof window.taiHoacNhanBanAsset === 'function') {
-
-
                     window.taiHoacNhanBanAsset(urlTruong, (truongGoc) => {
-
                         window.truongHoThe = truongGoc;
 
-                        // Ép chuẩn: Trượng dài tầm 1.8 mét cho ngầu
                         truongGoc.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(truongGoc);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
                         let tiLeChuan = 1.8 / maxDim; 
                         truongGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+
+                        // 🌟 BƠM HÀO QUANG CHO TRƯỢNG SAU LƯNG
+                        if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(truongGoc, window.WEAPON_LEVEL || 0);
 
                         scene.add(truongGoc);
                         isTruongPhepSetup = true;
