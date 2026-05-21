@@ -207,10 +207,8 @@ window.donRac3D = function (obj) {
 
 
 
-
-
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX TRỘN BỤI LỬA CHÁY & THUẬT TOÁN ĐA TÂM PIVOT)
+// ✨ BỘ LỌC HÀO QUANG VỦ KHÍ (VFX LỬA THẦN BINH GỢN SÓNG - PHIÊN BẢN AAA)
 // ==========================================
 window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || []; 
 
@@ -239,14 +237,13 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
     else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
 
-    // 🌟 THÊM SẮC HỎA DIỆM: Màu cam lửa cháy bập bùng phụ họa cho Tiên Khí
+    // Sắc hỏa diệm phụ họa cho tro tàn bay gợn gợn
     let mauLua = 0xff5500; 
 
     // LÀM SÁNG LỚP VỎ VŨ KHÍ
     meshVuKhi.traverse(child => {
         if (child.isMesh && !child.userData.isAura) {
             
-            // 🌟 ĐO KHUÔN ĐA TÂM: Tính toán Bounding Box nội bộ của riêng mảnh Mesh này
             child.geometry.computeBoundingBox();
             let localBox = child.geometry.boundingBox;
             if (!localBox) return;
@@ -256,8 +253,6 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             let sizeZ = localBox.max.z - localBox.min.z;
             let maxDim = Math.max(sizeX, sizeY, sizeZ) || 1;
 
-            // 🌟 TUYỆT CHIÊU ĐỒNG BỘ: Giữ nguyên scale 1.0, phủ Additive lấp lánh 
-            // bọc toàn bộ bề mặt đa giác, triệt tiêu hoàn toàn lỗi lệch tâm do chuôi/mũi kiếm!
             let voAura = new THREE.Mesh(
                 child.geometry.clone(),
                 new THREE.MeshBasicMaterial({
@@ -266,7 +261,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                     opacity: capDo >= 15 ? 0.6 : 0.35,
                     blending: THREE.AdditiveBlending, 
                     depthWrite: false,
-                    wireframe: capDo >= 10 // Đồ cấp cao chạy đường tơ lưới điện ma mị
+                    wireframe: capDo >= 10 
                 })
             );
             voAura.userData.isAura = true;
@@ -283,38 +278,32 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                 child.add(loiAura);
             }
 
-            // 2. 🌟 BẢN VÁ PHÂN PHỐI HẠT BỤI TIÊN KHÍ KẾT HỢP BỤI LỬA CHÁY (TỪ +7 TRỞ LÊN)
+            // 2. 🔥 TẠO MẠNG HẠT LỬA MỊN MÀNG (BĂM NHỎ HẠT - TĂNG SỐ LƯỢNG)
             if (capDo >= 7) {
-                const soHat = window.isMobile ? 20 : 55; 
+                const soHat = window.isMobile ? 35 : 90; // 🌟 Tăng mật độ hạt để tạo làn khói lửa mịn màng
                 const geoBui = new THREE.BufferGeometry();
                 const posBui = new Float32Array(soHat * 3);
-                const colorsBui = new Float32Array(soHat * 3); // Mảng màu hỗn hợp trộn bụi lửa
+                const colorsBui = new Float32Array(soHat * 3); 
                 const velBui = [];
 
                 let cAura = new THREE.Color(mauAura);
                 let cLua = new THREE.Color(mauLua);
 
                 for (let i = 0; i < soHat; i++) {
-                    // 🌟 KHÓA TỌA ĐỘ LOCAL: Sinh ngẫu nhiên vị trí hạt chạy dọc theo localBox thực tế của kiếm!
-                    // Bất chấp tọa độ mỏ neo 0x0y0z nằm ở đuôi, ở đầu hay ở giữa, hạt vẫn rải đều lưỡi kiếm!
-                    let localX = localBox.min.x + Math.random() * sizeX;
-                    let localY = localBox.min.y + Math.random() * sizeY;
-                    let localZ = localBox.min.z + Math.random() * sizeZ;
+                    // Rải hạt phân bổ ngẫu nhiên dựa theo hộp chứa của riêng mảnh mesh đó
+                    posBui[i * 3] = localBox.min.x + Math.random() * sizeX;
+                    posBui[i * 3 + 1] = localBox.min.y + Math.random() * sizeY;
+                    posBui[i * 3 + 2] = localBox.min.z + Math.random() * sizeZ;
 
-                    // Cho hạt bao bọc quanh thân kiếm dôi ra một chút biên độ nhẹ
-                    posBui[i * 3] = localX + (Math.random() - 0.5) * (sizeX * 0.1);
-                    posBui[i * 3 + 1] = localY + (Math.random() - 0.5) * (sizeY * 0.1);
-                    posBui[i * 3 + 2] = localZ + (Math.random() - 0.5) * (sizeZ * 0.1);
-
-                    // Vận tốc trôi nổi lập lờ
+                    // Lực phát tán hỗn loạn ban đầu
                     velBui.push(new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.012,
-                        (Math.random() - 0.5) * 0.012,
-                        (Math.random() - 0.5) * 0.012
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.01,
+                        (Math.random() - 0.5) * 0.01
                     ));
 
-                    // 🌟 MIX NHÂN PHẨM: 60% hạt mang màu phái, 40% hạt là bụi lửa cháy đỏ cam rực rỡ!
-                    let cChon = (Math.random() < 0.4) ? cLua : cAura;
+                    // Hòa trộn sắc lửa bập bùng
+                    let cChon = (Math.random() < 0.45) ? cLua : cAura;
                     colorsBui[i * 3] = cChon.r;
                     colorsBui[i * 3 + 1] = cChon.g;
                     colorsBui[i * 3 + 2] = cChon.b;
@@ -325,12 +314,12 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                 
                 const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
                 const matBui = new THREE.PointsMaterial({
-                    size: maxDim * (window.isMobile ? 0.07 : 0.045), 
+                    size: maxDim * (window.isMobile ? 0.05 : 0.035), // 🌟 Thu nhỏ size hạt lại để đạt độ "Mịn" tiên khí
                     map: texture,
                     transparent: true,
-                    opacity: 0.85,
+                    opacity: 0.9,
                     blending: THREE.AdditiveBlending,
-                    vertexColors: true, // Bật tính năng hiển thị đa màu sắc cho từng hạt bụi riêng lẻ
+                    vertexColors: true, 
                     depthWrite: false
                 });
 
@@ -345,6 +334,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                     sizeX: sizeX,
                     sizeY: sizeY,
                     sizeZ: sizeZ,
+                    maxDim: maxDim,
                     seed: Math.random() * 100 
                 });
             }
@@ -353,12 +343,19 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
 };
 
 // ==========================================
-// 🌪️ VÒNG LẶP ANIMATION BỤI TIÊN KHÍ CHỚP NHÁY
+// 🌪️ VÒNG LẶP ĐỘNG LỰC HỌC: ÉP LỬA BAY THẲNG LÊN TRỜI & GỢN SÓNG HÌNH SIN
 // ==========================================
 if (!window.loopBuiTienKhi) {
     window.loopBuiTienKhi = true;
     setInterval(() => {
         let now = Date.now();
+        
+        // 🌍 LẤY TRỤC ĐỨNG HƯỚNG LÊN TRỜI THỰC TẾ (Hỗ trợ cả địa cầu cầu lẫn map phẳng)
+        let worldUp = new THREE.Vector3(0, 1, 0);
+        if (window.playerModel && window.playerModel.up) {
+            worldUp.copy(window.playerModel.up).normalize();
+        }
+
         for (let i = window.danhSachBuiTienKhi.length - 1; i >= 0; i--) {
             let bui = window.danhSachBuiTienKhi[i];
             
@@ -380,26 +377,42 @@ if (!window.loopBuiTienKhi) {
             let positions = bui.pts.geometry.attributes.position.array;
             let box = bui.localBox;
 
-            for (let j = 0; j < positions.length / 3; j++) {
-                positions[j * 3] += bui.vels[j].x;
-                positions[j * 3 + 1] += bui.vels[j].y;
-                positions[j * 3 + 2] += bui.vels[j].z;
+            // 📐 BÍ THUẬT QUATERNION: Đột phá ma trận, chuyển hướng "Trời" thành hướng Local của lưỡi kiếm
+            let qWorld = new THREE.Quaternion();
+            bui.pts.getWorldQuaternion(qWorld);
+            let localUp = worldUp.clone().applyQuaternion(qWorld.invert()).normalize();
+            
+            // Tạo trục ngang vuông góc để bẻ lái làn khói gợn gợn sóng nước
+            let localSide = new THREE.Vector3(1, 0, 0).cross(localUp).normalize();
+            if (localSide.lengthSq() < 0.001) localSide.set(0, 0, 1).cross(localUp).normalize();
 
-                // 🌟 LÒ GIAM HẠT: Đo chuẩn theo hộp tọa độ thực tế của riêng mesh đó. 
-                // Bay lọt ra rìa núi kiếm quá 0.5 mét là bế cổ quăng ngược về lòng hộp ngẫu nhiên!
-                if (positions[j * 3] < box.min.x - 0.5 || positions[j * 3] > box.max.x + 0.5 || 
-                    positions[j * 3 + 1] < box.min.y - 0.5 || positions[j * 3 + 1] > box.max.y + 0.5 || 
-                    positions[j * 3 + 2] < box.min.z - 0.5 || positions[j * 3 + 2] > box.max.z + 0.5) {
+            // Vận tốc bốc lên nhẹ nhàng tỷ lệ theo chiều dài kiếm
+            let speedRise = bui.maxDim * 0.008; 
+
+            for (let j = 0; j < positions.length / 3; j++) {
+                // 🌊 THUẬT TOÁN GỢN LỬA CHÁY: Ép hạt uốn lượn theo hàm Sin thời gian real-time
+                let wave = Math.sin(now * 0.008 + j * 0.4) * bui.maxDim * 0.012;
+
+                positions[j * 3] += localUp.x * speedRise + localSide.x * wave + bui.vels[j].x * 0.2;
+                positions[j * 3 + 1] += localUp.y * speedRise + localSide.y * wave + bui.vels[j].y * 0.2;
+                positions[j * 3 + 2] += localUp.z * speedRise + localSide.z * wave + bui.vels[j].z * 0.2;
+
+                // 🛑 LỒNG ĐỐT THÔNG MINH: Nếu ngọn lửa bay quá cao khỏi tầm lưỡi kiếm (+0.6m) -> Tự tắt và đẻ lại từ dưới mặt kiếm
+                if (positions[j * 3] < box.min.x - 0.6 || positions[j * 3] > box.max.x + 0.6 || 
+                    positions[j * 3 + 1] < box.min.y - 0.6 || positions[j * 3 + 1] > box.max.y + 0.6 || 
+                    positions[j * 3 + 2] < box.min.z - 0.6 || positions[j * 3 + 2] > box.max.z + 0.6) {
                     
+                    // Đầu thai lại ngẫu nhiên trên toàn bộ trục lưỡi kiếm để tạo dòng chảy liên tục
                     positions[j * 3] = box.min.x + Math.random() * bui.sizeX;
                     positions[j * 3 + 1] = box.min.y + Math.random() * bui.sizeY;
                     positions[j * 3 + 2] = box.min.z + Math.random() * bui.sizeZ;
                 }
             }
             bui.pts.geometry.attributes.position.needsUpdate = true;
-            bui.pts.material.opacity = 0.3 + Math.abs(Math.sin(now * 0.003 + bui.seed)) * 0.7;
+            // Chớp nháy bập bùng dạng tần số lửa cháy vật lý
+            bui.pts.material.opacity = 0.4 + Math.abs(Math.sin(now * 0.005 + bui.seed)) * 0.6;
         }
-    }, 50);
+    }, 33); // 33ms tương đương nhịp kết xuất 30fps siêu mượt cho mảng khói hạt bay lên
 }
 
 // =================================================================
@@ -428,7 +441,6 @@ if (!window.loopBuiTienKhi) {
     });
     console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
 })();
-
 
 
 
