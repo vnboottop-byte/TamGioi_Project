@@ -1188,9 +1188,20 @@ window.capNhatGiaoDienHopThanh = function() {
     let costUI = document.getElementById('craftCost');
     let resultUI = document.getElementById('cResult');
 
+
+
+
     if (count === 3) {
         let capMoi = window.hopThanhData.targetLevel + 1;
-        let chiPhi = capMoi * 3; // 🌟 PHÍ GHÉP ĐÁ: Cấp mục tiêu x 3 Vàng
+        
+        // 🌟 PHÍ GHÉP ĐÁ KIẾM THẾ: Bù giá trị chênh lệch (1 Điểm chênh = 5 Vàng)
+        let diemDaCu = Math.pow(10/3, window.hopThanhData.targetLevel - 1) * 100;
+        let diemDaMoi = Math.pow(10/3, capMoi - 1) * 100;
+        
+        let diemChenhLech = diemDaMoi - (diemDaCu * 3);
+        let chiPhi = Math.floor(diemChenhLech * 5); // Nhân 5 để siết bớt tiền Vàng
+        if (chiPhi <= 0) chiPhi = 100; // Tối thiểu 100 Vàng
+        
         costUI.innerText = chiPhi.toLocaleString('vi-VN');
 
         // ==========================================
