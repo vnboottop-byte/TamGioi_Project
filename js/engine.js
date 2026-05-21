@@ -206,17 +206,16 @@ window.donRac3D = function (obj) {
 };
 
 
-
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX LỬA THẦN BINH & LUỒNG SÉT CO GIẬT PLASMA V3)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (QUY HOẠCH CHUẨN RPG TỪ +1 ĐẾN +15)
 // ==========================================
 window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || []; 
-window.danhSachSetVuKhi = window.danhSachSetVuKhi || []; // 🌟 Kho chứa tia sét lưới điện toàn map
+window.danhSachSetVuKhi = window.danhSachSetVuKhi || []; 
 
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
-    if (!meshVuKhi) return;
+    if (!meshVuKhi || capDo < 1) return; // 🌟 Bắt đầu phát sáng ngay từ +1
 
-    // 1. XOÁ SẠCH HÀO QUANG VÀ HẠT CŨ TRƯỚC KHI BƠM MỚI
+    // XOÁ SẠCH HÀO QUANG VÀ HẠT CŨ TRƯỚC KHI BƠM MỚI
     let racCu = [];
     meshVuKhi.traverse(child => {
         if (child.userData && child.userData.isAura) racCu.push(child);
@@ -229,19 +228,17 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             else r.material.dispose();
         }
     });
-    // Dọn lọc lại mảng chứa sấm sét cũ của riêng cây kiếm này
     window.danhSachSetVuKhi = window.danhSachSetVuKhi.filter(s => s && s.parent && s.parent.parent === meshVuKhi);
 
-    if (capDo < 4) return; // Dưới +4 mộc mạc không phát sáng
+    // 🌟 QUY HOẠCH MÀU SẮC MỚI CỦA SẾP
+    let mauAura = 0x2ecc71; // +1 đến +3: Lá
+    if (capDo >= 4 && capDo <= 6) mauAura = 0x00e5ff;        // +4 đến +6: Lam
+    else if (capDo >= 7 && capDo <= 9) mauAura = 0x9b59b6;   // +7 đến +9: Tím
+    else if (capDo >= 10 && capDo <= 12) mauAura = 0xffaa00; // +10 đến +12: Vàng
+    else if (capDo >= 13) mauAura = 0xff3300;                // +13 đến +15: Đỏ
 
-    let mauAura = 0x00ff00; // +4 đến +6: Khói Xanh
-    if (capDo >= 7 && capDo <= 9) mauAura = 0x9b59b6;      // +7 đến +9: Tím Huyền Bí
-    else if (capDo >= 10 && capDo <= 12) mauAura = 0xff3300; // +10 đến +12: Đỏ Rực (Hỏa Diệm)
-    else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
-    else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
-
-    // Sắc hỏa diệm bập bùng
     let mauLua = 0xff5500; 
+    let tyLeManh = capDo / 15.0; // 🌟 Chỉ số sức mạnh (Từ 0.06 đến 1.0) dùng để buff hiệu ứng
 
     // LÀM SÁNG LỚP VỎ VŨ KHÍ
     meshVuKhi.traverse(child => {
@@ -256,13 +253,13 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             let sizeZ = localBox.max.z - localBox.min.z;
             let maxDim = Math.max(sizeX, sizeY, sizeZ) || 1;
 
-            // Lớp vỏ bọc phát sáng dạng sương mù mềm mại nền ở dưới
+            // 1. NỀN HÀO QUANG (Sương mù bọc vũ khí)
             let voAura = new THREE.Mesh(
                 child.geometry.clone(),
                 new THREE.MeshBasicMaterial({
                     color: mauAura,
                     transparent: true,
-                    opacity: capDo >= 15 ? 0.4 : 0.25,
+                    opacity: 0.1 + (tyLeManh * 0.35), // Cấp càng cao sương mù càng đặc
                     blending: THREE.AdditiveBlending, 
                     depthWrite: false,
                     wireframe: false 
@@ -271,39 +268,39 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             voAura.userData.isAura = true;
             child.add(voAura);
 
-            // 🌟 ĐÚC RIÊNG LỚP TIA SÉT MA TRẬN CO GIẬT ĐIÊN CUỒNG (TỪ +10 TRỞ LÊN)
-            if (capDo >= 10) {
-                let luoiSet = new THREE.Mesh(
-                    child.geometry.clone(),
-                    new THREE.MeshBasicMaterial({
-                        color: mauAura,
-                        transparent: true,
-                        opacity: 0.8,
-                        blending: THREE.AdditiveBlending,
-                        depthWrite: false,
-                        wireframe: true // Kích hoạt lưới đa chéo bọc ngoài thân kiếm
-                    })
-                );
-                luoiSet.userData.isAura = true;
-                luoiSet.userData.mauGoc = mauAura; // Ghi nhớ màu gốc phái để AI bẻ lái màu sét
-                child.add(luoiSet);
-                window.danhSachSetVuKhi.push(luoiSet); // Đẩy vào lò vận hành sấm sét ngầm
-            }
+            // 2. 🌟 SẤM SÉT VÀ LƯỚI ĐIỆN (Có từ cấp 1, nhưng cấp thấp mờ nhạt, cấp 15 gắt chói)
+            let luoiSet = new THREE.Mesh(
+                child.geometry.clone(),
+                new THREE.MeshBasicMaterial({
+                    color: mauAura,
+                    transparent: true,
+                    opacity: 0.1 + (tyLeManh * 0.7), // Độ nét của đường chéo
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false,
+                    wireframe: true 
+                })
+            );
+            luoiSet.userData.isAura = true;
+            luoiSet.userData.mauGoc = mauAura; 
+            luoiSet.userData.capDo = capDo; // Truyền cấp vào cho vòng lặp lấy ra xài
+            child.add(luoiSet);
+            window.danhSachSetVuKhi.push(luoiSet);
 
+            // 3. LÕI CHÓI LÓA (Chỉ xuất hiện ở +13 trở lên)
             if (capDo >= 13) {
                 let loiAura = new THREE.Mesh(
                     child.geometry.clone(),
                     new THREE.MeshBasicMaterial({
-                        color: 0xffffff, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false
+                        color: 0xffffff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false
                     })
                 );
                 loiAura.userData.isAura = true;
                 child.add(loiAura);
             }
 
-            // TẠO MẠNG HẠT LỬA MỊN MÀNG (Giữ nguyên tối ưu gợn sóng của sếp)
-            if (capDo >= 7) {
-                const soHat = window.isMobile ? 35 : 90; 
+            // 4. 🔥 HỆ THỐNG BỤI TIÊN VÀ LỬA TÀN TĂNG DẦN THEO CẤP
+            const soHat = Math.floor((window.isMobile ? 2.5 : 5) * capDo); // Cấp 1 có 3 hạt, Cấp 15 có 75 hạt
+            if (soHat > 0) {
                 const geoBui = new THREE.BufferGeometry();
                 const posBui = new Float32Array(soHat * 3);
                 const colorsBui = new Float32Array(soHat * 3); 
@@ -323,7 +320,9 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                         (Math.random() - 0.5) * 0.01
                     ));
 
-                    let cChon = (Math.random() < 0.45) ? cLua : cAura;
+                    // Lửa xuất hiện nhiều hơn ở cấp cao (Cấp 15 chiếm 40% là màu lửa cháy)
+                    let tyLeXuatHienLua = tyLeManh * 0.4;
+                    let cChon = (Math.random() < tyLeXuatHienLua) ? cLua : cAura;
                     colorsBui[i * 3] = cChon.r;
                     colorsBui[i * 3 + 1] = cChon.g;
                     colorsBui[i * 3 + 2] = cChon.b;
@@ -363,41 +362,47 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
 };
 
 // ==========================================
-// 🌪️ VÒNG LẶP ĐỘNG LỰC HỌC: ÉP LỬA BAY LÊN & KÍCH HOẠT SẤM SÉT PHÓNG ĐIỆN LIÊN TỤC
+// 🌪️ VÒNG LẶP ĐỘNG LỰC HỌC: SẤM SÉT & KHÓI LỬA NÂNG CẤP CHUẨN LEVEL
 // ==========================================
 if (!window.loopBuiTienKhi) {
     window.loopBuiTienKhi = true;
     setInterval(() => {
         let now = Date.now();
         
-        // 🌟 A. THUẬT TOÁN PHÓNG SẤM SÉT CO GIẬT ĐIÊN CUỒNG (PLASMA FREQUENCY EFFECT)
+        // 🌟 A. THUẬT TOÁN SẤM SÉT TỶ LỆ THEO CẤP ĐỘ
         for (let i = window.danhSachSetVuKhi.length - 1; i >= 0; i--) {
             let setMesh = window.danhSachSetVuKhi[i];
             
-            // Nếu kiếm bị gỡ ra -> Tự giải phóng bộ nhớ ngầm
             if (!setMesh || !setMesh.parent) {
                 window.danhSachSetVuKhi.splice(i, 1);
                 continue;
             }
 
-            // Tạo độ giật rung lắc gai góc siêu tốc quanh lưỡi kiếm
-            let giatX = 1.0 + (Math.random() - 0.5) * 0.04;
-            let giatY = 1.0 + (Math.random() - 0.5) * 0.04;
-            let giatZ = 1.0 + (Math.random() - 0.5) * 0.04;
+            let capDo = setMesh.userData.capDo || 1;
+            let tyLeManh = capDo / 15.0;
+
+            // 1. Cấp càng cao, giật càng văng mạnh (Từ 0.003 đến 0.05)
+            let bienDoGiat = tyLeManh * 0.05; 
+            let giatX = 1.0 + (Math.random() - 0.5) * bienDoGiat;
+            let giatY = 1.0 + (Math.random() - 0.5) * bienDoGiat;
+            let giatZ = 1.0 + (Math.random() - 0.5) * bienDoGiat;
             setMesh.scale.set(giatX, giatY, giatZ);
 
-            // Phóng điện chớp tắt hỗn mang: 70% thời gian hiện tia điện rực sáng, 30% tối sầm chớp nhoáng
-            setMesh.material.opacity = Math.random() > 0.3 ? (0.3 + Math.random() * 0.7) : 0.0;
+            // 2. Chớp nháy: Cấp thấp thỉnh thoảng mới nháy. Cấp cao chớp xẹt liên tục
+            let baseOpacity = tyLeManh * 0.25; 
+            let coHoiChop = 0.1 + (tyLeManh * 0.8); // Cấp 1 = 15%, Cấp 15 = 90%
+            
+            setMesh.material.opacity = Math.random() < coHoiChop ? (baseOpacity + Math.random() * 0.6) : baseOpacity * 0.3;
 
-            // 🌟 HIỆU ỨNG THIÊN ĐÌNH: 15% cơ hội luồng điện lóe lên sắc Trắng Bạch Kim chói lóa như sét giật thật!
-            if (Math.random() < 0.15) {
+            // 3. Cơ hội lóe sáng Trắng Bạch Kim (Chỉ từ cấp 10 trở lên mới rõ)
+            if (capDo >= 10 && Math.random() < (tyLeManh * 0.2)) {
                 setMesh.material.color.setHex(0xffffff);
             } else {
                 setMesh.material.color.setHex(setMesh.userData.mauGoc);
             }
         }
 
-        // 🌟 B. ĐỘNG LỰC HỌC KHÓA TRỤC TRỜI: LỬA BỐC LÊN KHÔNG GIAN CONG CONG
+        // 🌟 B. ĐỘNG LỰC HỌC LỬA VÀ KHÓI
         let worldUp = new THREE.Vector3(0, 1, 0);
         if (window.playerModel && window.playerModel.up) {
             worldUp.copy(window.playerModel.up).normalize();
@@ -481,7 +486,6 @@ if (!window.loopBuiTienKhi) {
     });
     console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
 })();
-
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
 hemiLight.position.set(0, 50, 0);
