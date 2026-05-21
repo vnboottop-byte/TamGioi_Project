@@ -604,28 +604,28 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
                     if (rp.tag && typeof camera !== 'undefined') {
-                        // 🌟 CHỈ SOI X-QUANG VÀO NGƯỜI (BỎ QUA RỒNG)
                         let targetMesh = rp.meshChar || rp.mesh;
 
                         if (!rp.chieuCaoThuc) {
                             targetMesh.updateMatrixWorld(true);
                             const box = new THREE.Box3().setFromObject(targetMesh);
                             rp.chieuCaoThuc = box.max.y - box.min.y;
+                            // Ép trần: Tránh cánh dài làm chiều cao lố
                             if (rp.chieuCaoThuc < 0.1 || !isFinite(rp.chieuCaoThuc)) rp.chieuCaoThuc = 2.5;
-                            
-                            // 🌟 BẢN VÁ 1: Ép cứng tâm X và Z = 0 để không bị lệch do Vũ khí cầm tay dài!
-                            rp.tamThucTeLocal = new THREE.Vector3(0, rp.chieuCaoThuc / 2, 0);
+                            if (rp.chieuCaoThuc > 10) rp.chieuCaoThuc = 10; 
                         }
 
-                        // Tọa độ vàng: Tâm người + đẩy lên đỉnh đầu kỵ sĩ
-                        const tagPos = rp.tamThucTeLocal.clone().applyMatrix4(targetMesh.matrixWorld);
+                        // 🌟 BẢN VÁ AAA: KHÔNG DÙNG LOCAL NỮA! Lấy trực tiếp tọa độ ROOT dưới chân!
+                        const rootPos = new THREE.Vector3();
+                        rp.mesh.getWorldPosition(rootPos); 
                         
-                        // 🌟 BẢN VÁ 2: Dùng trục Up của nhân vật (Hành tinh cầu) thay vì trục Y thế giới!
                         let upV = rp.mesh.up ? rp.mesh.up.clone().normalize() : new THREE.Vector3(0,1,0);
-                        tagPos.add(upV.multiplyScalar((rp.chieuCaoThuc / 2) + 0.5));
 
-                        // 🌟 LƯU TÂM THỰC TẾ (Để Skill/Boss nhắm thẳng vào ngực thằng này mà bắn)
-                        rp.hitCenterWorld = tagPos.clone().sub(upV.clone().multiplyScalar(0.5));
+                        // 🌟 TÂM NGỰC: Đẩy thẳng từ chân lên 1/2 chiều cao
+                        rp.hitCenterWorld = rootPos.clone().add(upV.clone().multiplyScalar(rp.chieuCaoThuc / 2));
+
+                        // 🌟 BẢNG TÊN: Đẩy lên đỉnh đầu + 0.5m
+                        const tagPos = rootPos.clone().add(upV.clone().multiplyScalar(rp.chieuCaoThuc + 0.5));
 
                         tagPos.project(camera);
                         if (tagPos.z < 1) {
