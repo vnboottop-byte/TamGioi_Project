@@ -207,10 +207,8 @@ window.donRac3D = function (obj) {
 
 
 
-
-
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX ÔM KHÍT THÂN KIẾM - CHỐNG BUNG MŨI)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX KHÓA TRỤC CHIỀU DÀI - CHỐNG BUNG MŨI KIẾM)
 // ==========================================
 window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || [];
 
@@ -255,8 +253,22 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             );
             voAura.userData.isAura = true;
 
-            let scaleBung = 1.03 + (capDo * 0.002); // 🌟 Bóp nhỏ độ phình vỏ (từ 1.05 xuống 1.03) để ôm khít lưỡi kiếm
-            voAura.scale.set(scaleBung, scaleBung, scaleBung);
+            // 🌟 THUẬT TOÁN ĐO TRỤC: Tìm xem thanh kiếm đang nằm dài theo hướng nào
+            child.geometry.computeBoundingBox();
+            let bBox = child.geometry.boundingBox;
+            let sizeX = bBox.max.x - bBox.min.x;
+            let sizeY = bBox.max.y - bBox.min.y;
+            let sizeZ = bBox.max.z - bBox.min.z;
+            let maxAxis = Math.max(sizeX, sizeY, sizeZ);
+
+            let scaleBung = 1.04 + (capDo * 0.002);
+
+            // 🌟 LỆNH KHÓA TRỤC: Trục nào dài nhất (mũi kiếm) thì GIỮ NGUYÊN tỉ lệ 1.0, chỉ phình bề ngang lưỡi dao!
+            let scX = (sizeX === maxAxis) ? 1.0 : scaleBung;
+            let scY = (sizeY === maxAxis) ? 1.0 : scaleBung;
+            let scZ = (sizeZ === maxAxis) ? 1.0 : scaleBung;
+
+            voAura.scale.set(scX, scY, scZ);
 
             if (capDo >= 13) {
                 let loiAura = new THREE.Mesh(
@@ -265,7 +277,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                         color: 0xffffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false
                     })
                 );
-                loiAura.scale.set(1.01, 1.01, 1.01);
+                loiAura.scale.set((sizeX === maxAxis) ? 1.0 : 1.01, (sizeY === maxAxis) ? 1.0 : 1.01, (sizeZ === maxAxis) ? 1.0 : 1.01);
                 loiAura.userData.isAura = true;
                 child.add(loiAura);
             }
@@ -273,7 +285,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         }
     });
 
-    // 2. 🌟 TẠO HẠT BỤI ÁNH SÁNG ÔM KHÍT FORM KIẾM (TỪ +7 TRỞ LÊN)
+    // 2. TẠO HẠT BỤI ÁNH SÁNG ÔM KHÍT FORM KIẾM (TỪ +7 TRỞ LÊN)
     if (capDo >= 7) {
         meshVuKhi.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(meshVuKhi);
@@ -286,10 +298,10 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         const velBui = [];
 
         for (let i = 0; i < soHat; i++) {
-            // 🌟 BẢN VÁ THEO LỆNH SẾP: Rải hạt theo kích thước THỰC TẾ từng trục X, Y, Z thay vì chơi khối vuông bừa bãi!
-            posBui[i * 3] = (Math.random() - 0.5) * size.x * 1.1;
-            posBui[i * 3 + 1] = (Math.random() - 0.5) * size.y * 1.1;
-            posBui[i * 3 + 2] = (Math.random() - 0.5) * size.z * 1.1;
+            // 🌟 GIỚI HẠN BIÊN ĐỘ HẠT: Trục dài nhất chỉ nhân 0.95 (thu ngắn lại), các trục dày nhân 1.2 cho bung rộng bao quanh
+            posBui[i * 3] = (Math.random() - 0.5) * size.x * (size.x === maxDim ? 0.95 : 1.3);
+            posBui[i * 3 + 1] = (Math.random() - 0.5) * size.y * (size.y === maxDim ? 0.95 : 1.3);
+            posBui[i * 3 + 2] = (Math.random() - 0.5) * size.z * (size.z === maxDim ? 0.95 : 1.3);
 
             velBui.push(new THREE.Vector3(
                 (Math.random() - 0.5) * 0.01,
@@ -303,7 +315,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
         const matBui = new THREE.PointsMaterial({
             color: mauAura,
-            size: maxDim * (window.isMobile ? 0.08 : 0.06), // 🌟 Thu nhỏ hạt bụi lại cho tinh tế lấp lặn, chống vón cục ở mũi
+            size: maxDim * (window.isMobile ? 0.08 : 0.06),
             map: texture,
             transparent: true,
             opacity: 0.8,
@@ -318,14 +330,15 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         window.danhSachBuiTienKhi.push({
             pts: heThongBui,
             vels: velBui,
-            size: size.clone(), // Ghi nhớ kích thước khung kiếm để kiểm soát đường bay
+            size: size.clone(),
+            maxDim: maxDim,
             seed: Math.random() * 100
         });
     }
 };
 
 // ==========================================
-// 🌪️ VÒNG LẶP ANIMATION BỤI TIÊN KHÍ CHỚP NHÁY (BẢN GIỚI HẠN BIÊN ĐỘ TIGHT)
+// 🌪️ VÒNG LẶP ANIMATION BỤI TIÊN KHÍ CHỚP NHÁY
 // ==========================================
 if (!window.loopBuiTienKhi) {
     window.loopBuiTienKhi = true;
@@ -350,19 +363,21 @@ if (!window.loopBuiTienKhi) {
             }
 
             let positions = bui.pts.geometry.attributes.position.array;
+            let maxDim = bui.maxDim;
+
             for (let j = 0; j < positions.length / 3; j++) {
                 positions[j * 3] += bui.vels[j].x;
                 positions[j * 3 + 1] += bui.vels[j].y;
                 positions[j * 3 + 2] += bui.vels[j].z;
 
-                // 🌟 CHỐT CHẶN MIỄN DICH: Kiểm tra nếu hạt bay lọt ra khỏi ranh giới mỏng của thanh kiếm là hồi mã thương nhốt lại liền!
-                if (Math.abs(positions[j * 3]) > bui.size.x * 0.6 ||
-                    Math.abs(positions[j * 3 + 1]) > bui.size.y * 0.6 ||
-                    Math.abs(positions[j * 3 + 2]) > bui.size.z * 0.6) {
+                // 🌟 LƯỚI KHÓA HẠT: Đo chuẩn theo từng trục X, Y, Z riêng biệt để nhốt hạt không bay lọt khỏi mũi kiếm
+                if (Math.abs(positions[j * 3]) > bui.size.x * (bui.size.x === maxDim ? 0.48 : 0.7) ||
+                    Math.abs(positions[j * 3 + 1]) > bui.size.y * (bui.size.y === maxDim ? 0.48 : 0.7) ||
+                    Math.abs(positions[j * 3 + 2]) > bui.size.z * (bui.size.z === maxDim ? 0.48 : 0.7)) {
 
-                    positions[j * 3] = (Math.random() - 0.5) * bui.size.x * 0.5;
-                    positions[j * 3 + 1] = (Math.random() - 0.5) * bui.size.y * 0.5;
-                    positions[j * 3 + 2] = (Math.random() - 0.5) * bui.size.z * 0.5;
+                    positions[j * 3] = (Math.random() - 0.5) * bui.size.x * (bui.size.x === maxDim ? 0.9 : 0.1);
+                    positions[j * 3 + 1] = (Math.random() - 0.5) * bui.size.y * (bui.size.y === maxDim ? 0.9 : 0.1);
+                    positions[j * 3 + 2] = (Math.random() - 0.5) * bui.size.z * (bui.size.z === maxDim ? 0.9 : 0.1);
                 }
             }
             bui.pts.geometry.attributes.position.needsUpdate = true;
@@ -370,6 +385,35 @@ if (!window.loopBuiTienKhi) {
         }
     }, 50);
 }
+
+// =================================================================
+// 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
+// =================================================================
+(function khoiTaoChongNguDong() {
+    if (typeof window.renderer !== 'undefined' && window.renderer) {
+        const renderGoc = window.renderer.render.bind(window.renderer);
+        window.renderer.render = function (scene, camera) {
+            if (!document.hidden) renderGoc(scene, camera);
+        };
+    }
+    const rAF_goc = window.requestAnimationFrame;
+    window.requestAnimationFrame = function (callback) {
+        if (document.hidden) return 0;
+        return rAF_goc.call(window, callback);
+    };
+    let codeWorker = `setInterval(() => { postMessage('TICK'); }, 16);`;
+    let blob = new Blob([codeWorker], { type: 'application/javascript' });
+    let worker = new Worker(URL.createObjectURL(blob));
+    worker.onmessage = function () {
+        if (document.hidden && typeof animate === 'function') { animate(); }
+    };
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && typeof animate === 'function') { animate(); }
+    });
+    console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
+})();
+
+
 
 // =================================================================
 // 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
