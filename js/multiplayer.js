@@ -604,28 +604,19 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
                     if (rp.tag && typeof camera !== 'undefined') {
-                        let targetMesh = rp.meshChar || rp.mesh;
-
-                        if (!rp.chieuCaoThuc) {
-                            targetMesh.updateMatrixWorld(true);
-                            const box = new THREE.Box3().setFromObject(targetMesh);
-                            rp.chieuCaoThuc = box.max.y - box.min.y;
-                            // Ép trần: Tránh cánh dài làm chiều cao lố
-                            if (rp.chieuCaoThuc < 0.1 || !isFinite(rp.chieuCaoThuc)) rp.chieuCaoThuc = 2.5;
-                            if (rp.chieuCaoThuc > 10) rp.chieuCaoThuc = 10; 
-                        }
-
-                        // 🌟 BẢN VÁ AAA: KHÔNG DÙNG LOCAL NỮA! Lấy trực tiếp tọa độ ROOT dưới chân!
-                        const rootPos = new THREE.Vector3();
-                        rp.mesh.getWorldPosition(rootPos); 
-                        
+                        // 🌟 BẢN VÁ THEO LỆNH SẾP: Bỏ thuật toán Box3, đo trực tiếp từ lòng bàn chân (Root Position)
+                        const footPos = rp.mesh.position.clone();
                         let upV = rp.mesh.up ? rp.mesh.up.clone().normalize() : new THREE.Vector3(0,1,0);
 
-                        // 🌟 TÂM NGỰC: Đẩy thẳng từ chân lên 1/2 chiều cao
-                        rp.hitCenterWorld = rootPos.clone().add(upV.clone().multiplyScalar(rp.chieuCaoThuc / 2));
+                        // Phát hiện có cưỡi thú hay không (meshChar nằm bên trong mesh gốc)
+                        let isMount = (rp.meshChar && rp.meshChar !== rp.mesh);
+                        let tagHeight = isMount ? 4.5 : 2.5; // Chiều cao chuẩn 2.5m
 
-                        // 🌟 BẢNG TÊN: Đẩy lên đỉnh đầu + 0.5m
-                        const tagPos = rootPos.clone().add(upV.clone().multiplyScalar(rp.chieuCaoThuc + 0.5));
+                        // Tâm ngực: Từ lòng bàn chân đẩy lên 1 nửa
+                        rp.hitCenterWorld = footPos.clone().add(upV.clone().multiplyScalar(tagHeight / 2));
+
+                        // Bảng tên: Từ lòng bàn chân đẩy lên đỉnh đầu + 0.5m khoảng không
+                        const tagPos = footPos.clone().add(upV.clone().multiplyScalar(tagHeight + 0.5));
 
                         tagPos.project(camera);
                         if (tagPos.z < 1) {
