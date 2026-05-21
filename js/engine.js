@@ -205,6 +205,10 @@ window.donRac3D = function (obj) {
     if (typeof scene !== 'undefined') scene.remove(obj);
 };
 
+
+
+
+
 // ==========================================
 // ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX TRỘN BỤI LỬA CHÁY & THUẬT TOÁN ĐA TÂM PIVOT)
 // ==========================================
@@ -417,63 +421,6 @@ if (!window.loopBuiTienKhi) {
     let blob = new Blob([codeWorker], { type: 'application/javascript' });
     let worker = new Worker(URL.createObjectURL(blob));
     worker.onmessage = function() {
-        if (document.hidden && typeof animate === 'function') { animate(); }
-    };
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && typeof animate === 'function') { animate(); }
-    });
-    console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
-})();
-
-// =================================================================
-// 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
-// =================================================================
-(function khoiTaoChongNguDong() {
-    if (typeof window.renderer !== 'undefined' && window.renderer) {
-        const renderGoc = window.renderer.render.bind(window.renderer);
-        window.renderer.render = function (scene, camera) {
-            if (!document.hidden) renderGoc(scene, camera);
-        };
-    }
-    const rAF_goc = window.requestAnimationFrame;
-    window.requestAnimationFrame = function (callback) {
-        if (document.hidden) return 0;
-        return rAF_goc.call(window, callback);
-    };
-    let codeWorker = `setInterval(() => { postMessage('TICK'); }, 16);`;
-    let blob = new Blob([codeWorker], { type: 'application/javascript' });
-    let worker = new Worker(URL.createObjectURL(blob));
-    worker.onmessage = function () {
-        if (document.hidden && typeof animate === 'function') { animate(); }
-    };
-    document.addEventListener("visibilitychange", () => {
-        if (!document.hidden && typeof animate === 'function') { animate(); }
-    });
-    console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
-})();
-
-
-
-
-// =================================================================
-// 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
-// =================================================================
-(function khoiTaoChongNguDong() {
-    if (typeof window.renderer !== 'undefined' && window.renderer) {
-        const renderGoc = window.renderer.render.bind(window.renderer);
-        window.renderer.render = function (scene, camera) {
-            if (!document.hidden) renderGoc(scene, camera);
-        };
-    }
-    const rAF_goc = window.requestAnimationFrame;
-    window.requestAnimationFrame = function (callback) {
-        if (document.hidden) return 0;
-        return rAF_goc.call(window, callback);
-    };
-    let codeWorker = `setInterval(() => { postMessage('TICK'); }, 16);`;
-    let blob = new Blob([codeWorker], { type: 'application/javascript' });
-    let worker = new Worker(URL.createObjectURL(blob));
-    worker.onmessage = function () {
         if (document.hidden && typeof animate === 'function') { animate(); }
     };
     document.addEventListener("visibilitychange", () => {
