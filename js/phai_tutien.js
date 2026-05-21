@@ -33,24 +33,26 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
     return viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
 }
 
+
+
 // TÁC DỤNG: Bốc vũ khí từ kho Asset thay vì xài chung window.phiKiemModel
 function taoKiemChuan(scaleSize, weaponUrl) {
-
     const stdSword = new THREE.Group(); 
-    // 🌟 BẢN VÁ: Dùng trực tiếp Vũ Khí 1. Nếu tháo vũ khí thì đánh chưởng bằng tay không!
     let urlCanTai = weaponUrl || window.WEAPON_URL;
     if (!urlCanTai || urlCanTai.trim() === '') return stdSword;
     
     if (typeof window.taiHoacNhanBanAsset === 'function') {
-
-
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
             vuKhi.position.set(0, 0, 0); 
-            vuKhi.rotation.set(0, 0, 0); // CHUẨN BLENDER
+            vuKhi.rotation.set(0, 0, 0); 
             vuKhi.scale.set(1, 1, 1);
             vuKhi.traverse(c => { 
                 if (c.isMesh) { c.visible = true; c.castShadow = false; c.receiveShadow = false; } 
             });
+            
+            // 🌟 BƠM HÀO QUANG CHO KIẾM BAY TUNG CHIÊU
+            if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL || 0);
+
             stdSword.add(vuKhi);
         });
     }
@@ -58,8 +60,6 @@ function taoKiemChuan(scaleSize, weaponUrl) {
     stdSword.scale.set(scaleSize, scaleSize, scaleSize);
     return stdSword;
 }
-
-
 
 
 // TẠI FILE: phai_tutien.js
