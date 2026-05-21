@@ -4112,15 +4112,6 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 };
 
 
-
-
-
-
-
-
-
-
-
 // =================================================================
 // 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
 // =================================================================
@@ -4175,58 +4166,3 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
-
-
-// ==========================================
-// 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V2 (CHỐNG ẢO GIÁC XƯƠNG TÀNG HÌNH)
-// ==========================================
-window.canBangModelUI = function(model, kichThuocKhung = 4) {
-    if (!model) return;
-    
-    // 1. Reset về nguyên thủy
-    model.position.set(0, 0, 0);
-    model.scale.set(1, 1, 1);
-    model.rotation.set(0, 0, 0);
-    model.updateMatrixWorld(true);
-
-    // 2. TIA X-QUANG: CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG!
-    let box = new THREE.Box3();
-    box.makeEmpty(); // Dọn rác bộ đệm
-    let coHinh = false;
-    
-    model.traverse(function(child) {
-        // Chỉ quét các vật thể hiển thị thực tế, bỏ qua lửa, hạt bụi và hào quang
-        if (child.isMesh && !child.userData.isAura && !child.userData.isCloud && child.visible) {
-            if (child.geometry) {
-                child.geometry.computeBoundingBox();
-                if (child.geometry.boundingBox) {
-                    let b = child.geometry.boundingBox.clone();
-                    b.applyMatrix4(child.matrixWorld);
-                    box.union(b);
-                    coHinh = true;
-                }
-            }
-        }
-    });
-
-    // Nếu model bị lỗi không có khối thịt thì dùng phương pháp cũ để vớt vát
-    if (!coHinh || box.isEmpty()) {
-        box.setFromObject(model);
-    }
-
-    const size = new THREE.Vector3(); box.getSize(size);
-    const center = new THREE.Vector3(); box.getCenter(center);
-
-    let maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim <= 0.001 || !isFinite(maxDim) || maxDim > 1000) maxDim = 1; 
-    
-    // 3. Ép tỷ lệ thu nhỏ
-    const tyLe = kichThuocKhung / maxDim;
-    model.scale.set(tyLe, tyLe, tyLe);
-
-    // 4. Khóa Trọng Tâm Về 0,0,0
-    model.position.x = -center.x * tyLe;
-    model.position.y = -center.y * tyLe;
-    model.position.z = -center.z * tyLe;
-};
