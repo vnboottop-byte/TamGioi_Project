@@ -4167,6 +4167,19 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 })();
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ==========================================
 // 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V2 (CHỐNG ẢO GIÁC XƯƠNG TÀNG HÌNH)
 // ==========================================
@@ -4179,10 +4192,13 @@ window.canBangModelUI = function(model, kichThuocKhung = 4) {
     model.rotation.set(0, 0, 0);
     model.updateMatrixWorld(true);
 
-    // 2. CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG
+    // 2. TIA X-QUANG: CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG!
     let box = new THREE.Box3();
+    box.makeEmpty(); // Dọn rác bộ đệm
     let coHinh = false;
+    
     model.traverse(function(child) {
+        // Chỉ quét các vật thể hiển thị thực tế, bỏ qua lửa, hạt bụi và hào quang
         if (child.isMesh && !child.userData.isAura && !child.userData.isCloud && child.visible) {
             if (child.geometry) {
                 child.geometry.computeBoundingBox();
@@ -4196,8 +4212,8 @@ window.canBangModelUI = function(model, kichThuocKhung = 4) {
         }
     });
 
-    // Nếu model bị lỗi không có khối thịt thì dùng phương pháp cũ vớt vát
-    if (!coHinh || !isFinite(box.min.x)) {
+    // Nếu model bị lỗi không có khối thịt thì dùng phương pháp cũ để vớt vát
+    if (!coHinh || box.isEmpty()) {
         box.setFromObject(model);
     }
 
