@@ -4170,38 +4170,30 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
 // ==========================================
 // 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT (ÉP KHUNG UI CHUẨN AAA)
 // ==========================================
 window.canBangModelUI = function(model, kichThuocKhung = 4) {
     if (!model) return;
-
-    // 1. Reset về nguyên thủy để đo đạc không bị sai số do các hàm scale cũ của Sếp
+    
+    // 1. Reset về nguyên thủy để đo đạc chuẩn xác 100%
     model.position.set(0, 0, 0);
     model.scale.set(1, 1, 1);
     model.updateMatrixWorld(true);
 
-    // 2. Cảm biến "Da Thịt" (Quét Box3 lấy không gian thực tế mà model chiếm dụng)
+    // 2. Quét tia X lấy thể tích thực tế
     const box = new THREE.Box3().setFromObject(model);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
+    const size = new THREE.Vector3(); box.getSize(size);
+    const center = new THREE.Vector3(); box.getCenter(center);
 
-    // 3. Tính tỷ lệ thu nhỏ: Lấy trục bự nhất làm chuẩn để không bị bóp méo hình thù
     const maxDim = Math.max(size.x, size.y, size.z);
     if (maxDim === 0 || !isFinite(maxDim)) return; 
     
-    // Tự động ép tỷ lệ sao cho chiều dài nhất vừa đúng bằng kichThuocKhung Sếp muốn
+    // 3. Ép tỷ lệ thu nhỏ / phóng to
     const tyLe = kichThuocKhung / maxDim;
-
-    // 4. Ép tỷ lệ mới (Thu nhỏ con rồng khổng lồ thành rồng mini bonsai)
     model.scale.set(tyLe, tyLe, tyLe);
 
-    // 5. NẮN XƯƠNG DỜI TRỌNG TÂM: 
-    // Kéo tâm thực tế của khối thịt về đúng tọa độ 0,0,0 của ô Camera UI!
-    // Trị dứt điểm bệnh "mỏ neo ở gót chân" làm rồng bay lên trời!
+    // 4. KÉO TÂM RỐN VỀ CHÍNH GIỮA (Trị bệnh rồng bay lên trời)
     model.position.x = -center.x * tyLe;
     model.position.y = -center.y * tyLe;
     model.position.z = -center.z * tyLe;
