@@ -208,9 +208,10 @@ window.donRac3D = function (obj) {
 
 
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VỦ KHÍ (VFX LỬA THẦN BINH GỢN SÓNG - PHIÊN BẢN AAA)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX LỬA THẦN BINH & LUỒNG SÉT CO GIẬT PLASMA V3)
 // ==========================================
 window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || []; 
+window.danhSachSetVuKhi = window.danhSachSetVuKhi || []; // 🌟 Kho chứa tia sét lưới điện toàn map
 
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     if (!meshVuKhi) return;
@@ -228,6 +229,8 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             else r.material.dispose();
         }
     });
+    // Dọn lọc lại mảng chứa sấm sét cũ của riêng cây kiếm này
+    window.danhSachSetVuKhi = window.danhSachSetVuKhi.filter(s => s && s.parent && s.parent.parent === meshVuKhi);
 
     if (capDo < 4) return; // Dưới +4 mộc mạc không phát sáng
 
@@ -237,7 +240,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
     else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
 
-    // Sắc hỏa diệm phụ họa cho tro tàn bay gợn gợn
+    // Sắc hỏa diệm bập bùng
     let mauLua = 0xff5500; 
 
     // LÀM SÁNG LỚP VỎ VŨ KHÍ
@@ -253,19 +256,39 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
             let sizeZ = localBox.max.z - localBox.min.z;
             let maxDim = Math.max(sizeX, sizeY, sizeZ) || 1;
 
+            // Lớp vỏ bọc phát sáng dạng sương mù mềm mại nền ở dưới
             let voAura = new THREE.Mesh(
                 child.geometry.clone(),
                 new THREE.MeshBasicMaterial({
                     color: mauAura,
                     transparent: true,
-                    opacity: capDo >= 15 ? 0.6 : 0.35,
+                    opacity: capDo >= 15 ? 0.4 : 0.25,
                     blending: THREE.AdditiveBlending, 
                     depthWrite: false,
-                    wireframe: capDo >= 10 
+                    wireframe: false 
                 })
             );
             voAura.userData.isAura = true;
             child.add(voAura);
+
+            // 🌟 ĐÚC RIÊNG LỚP TIA SÉT MA TRẬN CO GIẬT ĐIÊN CUỒNG (TỪ +10 TRỞ LÊN)
+            if (capDo >= 10) {
+                let luoiSet = new THREE.Mesh(
+                    child.geometry.clone(),
+                    new THREE.MeshBasicMaterial({
+                        color: mauAura,
+                        transparent: true,
+                        opacity: 0.8,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false,
+                        wireframe: true // Kích hoạt lưới đa chéo bọc ngoài thân kiếm
+                    })
+                );
+                luoiSet.userData.isAura = true;
+                luoiSet.userData.mauGoc = mauAura; // Ghi nhớ màu gốc phái để AI bẻ lái màu sét
+                child.add(luoiSet);
+                window.danhSachSetVuKhi.push(luoiSet); // Đẩy vào lò vận hành sấm sét ngầm
+            }
 
             if (capDo >= 13) {
                 let loiAura = new THREE.Mesh(
@@ -278,9 +301,9 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                 child.add(loiAura);
             }
 
-            // 2. 🔥 TẠO MẠNG HẠT LỬA MỊN MÀNG (BĂM NHỎ HẠT - TĂNG SỐ LƯỢNG)
+            // TẠO MẠNG HẠT LỬA MỊN MÀNG (Giữ nguyên tối ưu gợn sóng của sếp)
             if (capDo >= 7) {
-                const soHat = window.isMobile ? 35 : 90; // 🌟 Tăng mật độ hạt để tạo làn khói lửa mịn màng
+                const soHat = window.isMobile ? 35 : 90; 
                 const geoBui = new THREE.BufferGeometry();
                 const posBui = new Float32Array(soHat * 3);
                 const colorsBui = new Float32Array(soHat * 3); 
@@ -290,19 +313,16 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                 let cLua = new THREE.Color(mauLua);
 
                 for (let i = 0; i < soHat; i++) {
-                    // Rải hạt phân bổ ngẫu nhiên dựa theo hộp chứa của riêng mảnh mesh đó
                     posBui[i * 3] = localBox.min.x + Math.random() * sizeX;
                     posBui[i * 3 + 1] = localBox.min.y + Math.random() * sizeY;
                     posBui[i * 3 + 2] = localBox.min.z + Math.random() * sizeZ;
 
-                    // Lực phát tán hỗn loạn ban đầu
                     velBui.push(new THREE.Vector3(
                         (Math.random() - 0.5) * 0.01,
                         (Math.random() - 0.5) * 0.01,
                         (Math.random() - 0.5) * 0.01
                     ));
 
-                    // Hòa trộn sắc lửa bập bùng
                     let cChon = (Math.random() < 0.45) ? cLua : cAura;
                     colorsBui[i * 3] = cChon.r;
                     colorsBui[i * 3 + 1] = cChon.g;
@@ -314,7 +334,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                 
                 const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
                 const matBui = new THREE.PointsMaterial({
-                    size: maxDim * (window.isMobile ? 0.05 : 0.035), // 🌟 Thu nhỏ size hạt lại để đạt độ "Mịn" tiên khí
+                    size: maxDim * (window.isMobile ? 0.05 : 0.035), 
                     map: texture,
                     transparent: true,
                     opacity: 0.9,
@@ -343,14 +363,41 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
 };
 
 // ==========================================
-// 🌪️ VÒNG LẶP ĐỘNG LỰC HỌC: ÉP LỬA BAY THẲNG LÊN TRỜI & GỢN SÓNG HÌNH SIN
+// 🌪️ VÒNG LẶP ĐỘNG LỰC HỌC: ÉP LỬA BAY LÊN & KÍCH HOẠT SẤM SÉT PHÓNG ĐIỆN LIÊN TỤC
 // ==========================================
 if (!window.loopBuiTienKhi) {
     window.loopBuiTienKhi = true;
     setInterval(() => {
         let now = Date.now();
         
-        // 🌍 LẤY TRỤC ĐỨNG HƯỚNG LÊN TRỜI THỰC TẾ (Hỗ trợ cả địa cầu cầu lẫn map phẳng)
+        // 🌟 A. THUẬT TOÁN PHÓNG SẤM SÉT CO GIẬT ĐIÊN CUỒNG (PLASMA FREQUENCY EFFECT)
+        for (let i = window.danhSachSetVuKhi.length - 1; i >= 0; i--) {
+            let setMesh = window.danhSachSetVuKhi[i];
+            
+            // Nếu kiếm bị gỡ ra -> Tự giải phóng bộ nhớ ngầm
+            if (!setMesh || !setMesh.parent) {
+                window.danhSachSetVuKhi.splice(i, 1);
+                continue;
+            }
+
+            // Tạo độ giật rung lắc gai góc siêu tốc quanh lưỡi kiếm
+            let giatX = 1.0 + (Math.random() - 0.5) * 0.04;
+            let giatY = 1.0 + (Math.random() - 0.5) * 0.04;
+            let giatZ = 1.0 + (Math.random() - 0.5) * 0.04;
+            setMesh.scale.set(giatX, giatY, giatZ);
+
+            // Phóng điện chớp tắt hỗn mang: 70% thời gian hiện tia điện rực sáng, 30% tối sầm chớp nhoáng
+            setMesh.material.opacity = Math.random() > 0.3 ? (0.3 + Math.random() * 0.7) : 0.0;
+
+            // 🌟 HIỆU ỨNG THIÊN ĐÌNH: 15% cơ hội luồng điện lóe lên sắc Trắng Bạch Kim chói lóa như sét giật thật!
+            if (Math.random() < 0.15) {
+                setMesh.material.color.setHex(0xffffff);
+            } else {
+                setMesh.material.color.setHex(setMesh.userData.mauGoc);
+            }
+        }
+
+        // 🌟 B. ĐỘNG LỰC HỌC KHÓA TRỤC TRỜI: LỬA BỐC LÊN KHÔNG GIAN CONG CONG
         let worldUp = new THREE.Vector3(0, 1, 0);
         if (window.playerModel && window.playerModel.up) {
             worldUp.copy(window.playerModel.up).normalize();
@@ -377,42 +424,35 @@ if (!window.loopBuiTienKhi) {
             let positions = bui.pts.geometry.attributes.position.array;
             let box = bui.localBox;
 
-            // 📐 BÍ THUẬT QUATERNION: Đột phá ma trận, chuyển hướng "Trời" thành hướng Local của lưỡi kiếm
             let qWorld = new THREE.Quaternion();
             bui.pts.getWorldQuaternion(qWorld);
             let localUp = worldUp.clone().applyQuaternion(qWorld.invert()).normalize();
             
-            // Tạo trục ngang vuông góc để bẻ lái làn khói gợn gợn sóng nước
             let localSide = new THREE.Vector3(1, 0, 0).cross(localUp).normalize();
             if (localSide.lengthSq() < 0.001) localSide.set(0, 0, 1).cross(localUp).normalize();
 
-            // Vận tốc bốc lên nhẹ nhàng tỷ lệ theo chiều dài kiếm
             let speedRise = bui.maxDim * 0.008; 
 
             for (let j = 0; j < positions.length / 3; j++) {
-                // 🌊 THUẬT TOÁN GỢN LỬA CHÁY: Ép hạt uốn lượn theo hàm Sin thời gian real-time
                 let wave = Math.sin(now * 0.008 + j * 0.4) * bui.maxDim * 0.012;
 
                 positions[j * 3] += localUp.x * speedRise + localSide.x * wave + bui.vels[j].x * 0.2;
                 positions[j * 3 + 1] += localUp.y * speedRise + localSide.y * wave + bui.vels[j].y * 0.2;
                 positions[j * 3 + 2] += localUp.z * speedRise + localSide.z * wave + bui.vels[j].z * 0.2;
 
-                // 🛑 LỒNG ĐỐT THÔNG MINH: Nếu ngọn lửa bay quá cao khỏi tầm lưỡi kiếm (+0.6m) -> Tự tắt và đẻ lại từ dưới mặt kiếm
                 if (positions[j * 3] < box.min.x - 0.6 || positions[j * 3] > box.max.x + 0.6 || 
                     positions[j * 3 + 1] < box.min.y - 0.6 || positions[j * 3 + 1] > box.max.y + 0.6 || 
                     positions[j * 3 + 2] < box.min.z - 0.6 || positions[j * 3 + 2] > box.max.z + 0.6) {
                     
-                    // Đầu thai lại ngẫu nhiên trên toàn bộ trục lưỡi kiếm để tạo dòng chảy liên tục
                     positions[j * 3] = box.min.x + Math.random() * bui.sizeX;
                     positions[j * 3 + 1] = box.min.y + Math.random() * bui.sizeY;
                     positions[j * 3 + 2] = box.min.z + Math.random() * bui.sizeZ;
                 }
             }
             bui.pts.geometry.attributes.position.needsUpdate = true;
-            // Chớp nháy bập bùng dạng tần số lửa cháy vật lý
             bui.pts.material.opacity = 0.4 + Math.abs(Math.sin(now * 0.005 + bui.seed)) * 0.6;
         }
-    }, 33); // 33ms tương đương nhịp kết xuất 30fps siêu mượt cho mảng khói hạt bay lên
+    }, 33); 
 }
 
 // =================================================================
@@ -441,7 +481,6 @@ if (!window.loopBuiTienKhi) {
     });
     console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
 })();
-
 
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
