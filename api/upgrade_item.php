@@ -94,33 +94,44 @@ try {
     
 
 
-    // 6. Tính Phí Luyện Hóa KIẾM THẾ: 1 Điểm = 1 Vàng
+    // 6. Tính Phí Luyện Hóa KIẾM THẾ: 1 Điểm Đá = 1 Vàng
     $cost = floor($total_stone_score);
     if ($cost < 1 && $total_stone_score > 0) $cost = 1;
     if ($total_stone_score == 0) $cost = 0;
-    if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
 
+    if ($current_gold < $cost) throw new Exception("Sếp không đủ Linh Thạch! Yêu cầu " . number_format($cost) . " Vàng.");
 
     // 7. MÁY QUAY XỔ SỐ CHỐNG HACK
     $rand_val = rand(1, 10000) / 100; 
-    
-    // Tỷ lệ thực tế có thể lên đến 120%, rand_val max là 100. Nên chắc chắn 100% Win!
     $is_success = ($rand_val <= $phanTramThucTe);
     
     $new_lvl = $current_lvl;
     $drop_level = false;
 
+    // 🌟 BIẾN LƯU TRỮ CHỈ SỐ GIÁM ĐỊNH MỚI
+    $new_bonus_dmg = null; $new_bonus_hp = null; $new_bonus_spd = null;
+
     if ($is_success) {
         $new_lvl = $current_lvl + 1; 
+
+        // 🌟 LÕI GIÁM ĐỊNH NGẪU NHIÊN: CHỈ KÍCH HOẠT KHI TỪ +0 LÊN +1
+        if ($current_lvl == 0) {
+            $tongDiemTiemNang = rand(80, 120); // 120 là Cực phẩm
+            $r1 = rand(1, 99); $r2 = rand(1, 99);
+            $minR = min($r1, $r2); $maxR = max($r1, $r2);
+
+            $phanDmg = $minR / 100;
+            $phanHp = ($maxR - $minR) / 100;
+            $phanSpd = (100 - $maxR) / 100;
+
+            $new_bonus_dmg = floor($tongDiemTiemNang * $phanDmg * 2);
+            $new_bonus_hp = floor($tongDiemTiemNang * $phanHp * 20);
+            $new_bonus_spd = floor($tongDiemTiemNang * $phanSpd * 0.2);
+        }
     } else {
         // Rớt cấp Hardcore
-        if ($current_lvl >= 6 && $current_lvl <= 9) {
-            $new_lvl = $current_lvl - 1; 
-            $drop_level = true;
-        } else if ($current_lvl >= 11 && $current_lvl <= 14) {
-            $new_lvl = 10; 
-            $drop_level = true;
-        }
+        if ($current_lvl >= 6 && $current_lvl <= 9) { $new_lvl = $current_lvl - 1; $drop_level = true; } 
+        else if ($current_lvl >= 11 && $current_lvl <= 14) { $new_lvl = 10; $drop_level = true; }
     }
 
     // 8. THỰC THI THAY ĐỔI XUỐNG DATABASE
@@ -133,8 +144,29 @@ try {
     }
 
     if ($new_lvl !== $current_lvl) {
-        $conn->query("UPDATE user_inventory SET upgrade_level = $new_lvl WHERE id = $item_id");
+        // 🌟 NẾU CÓ GIÁM ĐỊNH THÌ LẤY CHỈ SỐ GỐC (VIP) "+" CỘNG THÊM VỚI CHỈ SỐ NGẪU NHIÊN!
+        if ($new_bonus_dmg !== null) {
+            $conn->query("UPDATE user_inventory SET 
+                          upgrade_level = $new_lvl, 
+                          bonus_damage = bonus_damage + $new_bonus_dmg, 
+                          bonus_hp = bonus_hp + $new_bonus_hp, 
+                          bonus_speed = bonus_speed + $new_bonus_spd 
+                          WHERE id = $item_id");
+        } else {
+            $conn->query("UPDATE user_inventory SET upgrade_level = $new_lvl WHERE id = $item_id");
+        }
     }
+
+
+
+
+
+
+
+
+
+
+
 
     $conn->commit();
     echo json_encode([
