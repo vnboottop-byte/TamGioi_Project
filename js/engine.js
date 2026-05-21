@@ -286,25 +286,42 @@ denCamera.position.set(0, 5, 15);
 camera.add(denCamera);
 if (!scene.children.includes(camera)) scene.add(camera);
 
-
-
-
 window.bocHDRI_NhanVat = function (model) {
-    // 🛑 ĐÃ KHÓA: Ánh sáng Studio (RoomEnvironment) đã tự động bao phủ toàn map.
-    // Không cần gán tay thủ công và tuyệt đối không bơm x4 sáng nữa để tránh cháy hình!
+    // Đã khóa - Không bơm thêm HDRI gây chói
     return;
 };
 
+// ==========================================
+// 🛠️ BẢN VÁ AAA: THUỐC ĐẶC TRỊ "CHÓI MÙ MẮT" CHO NHÂN VẬT & THÚ CƯỠI
+// ==========================================
 window.fixHieuUngDenThui = function (model) {
-    // 🛑 ĐÃ KHÓA: Tôn trọng 100% chất liệu gốc của 3D Artist.
-    return;
+    if (!model) return;
+
+    model.traverse(function (child) {
+        if (child.isMesh && child.material) {
+            // Có những model xài nhiều chất liệu cùng lúc (Array)
+            let mats = Array.isArray(child.material) ? child.material : [child.material];
+
+            mats.forEach(mat => {
+                // 1. Tắt công tắc Tự Phát Sáng (Hung thủ chính gây ra màu trắng lóa)
+                if (mat.emissive) {
+                    mat.emissive.setHex(0x000000);
+                    mat.emissiveIntensity = 0;
+                }
+
+                // 2. Chữa bệnh "Bóng bẩy như Gương"
+                if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                    mat.metalness = 0.1;       // Gọt bớt tính chất kim loại (Tránh phản chiếu ánh sáng môi trường)
+                    mat.roughness = 0.8;       // Tăng độ nhám bề mặt lên để ánh sáng tán đều
+                    mat.envMapIntensity = 0.5; // Hạ mức độ hấp thụ ánh sáng từ bầu trời (Environment Map)
+                }
+
+                // Chốt áp dụng thay đổi
+                mat.needsUpdate = true;
+            });
+        }
+    });
 };
-
-
-
-
-
-
 
 setInterval(() => {
     // ==========================================
