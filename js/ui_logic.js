@@ -108,14 +108,14 @@ document.addEventListener('keydown', (e) => {
 
 
 
-// Hàm gọi API load túi đồ
 window.moTuiDoVIP = function() {
     const modal = document.getElementById('inventoryModal');
     if (modal) modal.style.display = 'flex';
-    // 🌟 Gọi GPU thức dậy vẽ lại Túi đồ
-    if (typeof animateInv === 'function' && !window.inv3D.reqId) { animateInv(); }
+    // 🌟 Đã sửa: Gắn window. để GPU Túi Đồ tỉnh ngủ
+    if (typeof window.animateInv === 'function' && !window.inv3D.reqId) { window.animateInv(); }
 
     document.getElementById('invGrid').innerHTML = '<div style="color:#00e5ff; grid-column:1/-1; text-align:center; padding:20px; font-weight:bold;">Đang quét Không gian Giới Chỉ...</div>';
+
 
     
     fetch('api/get_inventory.php')
