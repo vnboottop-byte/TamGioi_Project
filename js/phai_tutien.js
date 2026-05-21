@@ -466,28 +466,35 @@ window.addEventListener('click', () => {
 }, { once: true });
 
 
-
-
-
-
 const danhSachSoBay = [];
 window.tongSoChuNoi_TT = 0; // Biến đếm
-window.taoSoSatThuong = function (pos3D, satThuong) {
-    if (window.isMobile) return; // 🌟 CỨU SỐNG CPU MOBILE!
-    if (satThuong <= 0) return;
-    // 🌟 KHÓA VAN MOBILE: Quá 5 số thì cấm đẻ thêm HTML
+window.taoSoSatThuong = function (pos3D, satThuong, mauSac = '#ff2222') {
+    // 🌟 KHÓA VAN MOBILE: Chống quá tải CPU, chỉ cho hiện tối đa 5 thông báo cùng lúc
     if (window.isMobile && window.tongSoChuNoi_TT > 5) return;
+
+    const div = document.createElement('div'); 
+    
+    // 🌟 BỘ LỌC THÔNG MINH: Nhận diện SỐ và CHỮ
+    if (typeof satThuong === 'string') {
+        // Nếu là Chữ (Thông báo Auto, Cooldown...) -> In nguyên văn
+        div.innerText = satThuong;
+    } else {
+        // Nếu là Số (Sát thương) -> Check âm và làm tròn + ghép dấu trừ
+        if (satThuong <= 0) return; 
+        div.innerText = "-" + Math.round(satThuong);
+    }
+
     window.tongSoChuNoi_TT++;
 
-    const div = document.createElement('div'); div.innerText = "-" + Math.round(satThuong);
     let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 10px #000, 2px 2px 0px #000, -2px -2px 0px #000';
-    div.style.cssText = `position:absolute; color:#ff2222; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
-    document.body.appendChild(div); danhSachSoBay.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
+    let fontSize = window.isMobile ? '24px' : '35px'; // Giảm size xíu trên mobile cho đỡ che màn hình
+    
+    // 🌟 Nhận luôn màu sắc được truyền từ Controller/Engine vào
+    div.style.cssText = `position:absolute; color:${mauSac}; font-weight:900; font-size:${fontSize}; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
+    document.body.appendChild(div); 
+    
+    danhSachSoBay.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
 };
-
-
-
-
 
 
 window.gaySatThuong = function (tamNo, luongSatThuong, banKinh) {
