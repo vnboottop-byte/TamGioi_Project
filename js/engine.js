@@ -205,12 +205,10 @@ window.donRac3D = function (obj) {
     if (typeof scene !== 'undefined') scene.remove(obj);
 };
 
-
-
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX KHÓA TRỤC CHIỀU DÀI - CHỐNG BUNG MŨI KIẾM)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX TRỘN BỤI LỬA CHÁY & THUẬT TOÁN ĐA TÂM PIVOT)
 // ==========================================
-window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || [];
+window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || []; 
 
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     if (!meshVuKhi) return;
@@ -237,104 +235,117 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
     else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
 
+    // 🌟 THÊM SẮC HỎA DIỆM: Màu cam lửa cháy bập bùng phụ họa cho Tiên Khí
+    let mauLua = 0xff5500; 
+
     // LÀM SÁNG LỚP VỎ VŨ KHÍ
     meshVuKhi.traverse(child => {
         if (child.isMesh && !child.userData.isAura) {
+            
+            // 🌟 ĐO KHUÔN ĐA TÂM: Tính toán Bounding Box nội bộ của riêng mảnh Mesh này
+            child.geometry.computeBoundingBox();
+            let localBox = child.geometry.boundingBox;
+            if (!localBox) return;
+
+            let sizeX = localBox.max.x - localBox.min.x;
+            let sizeY = localBox.max.y - localBox.min.y;
+            let sizeZ = localBox.max.z - localBox.min.z;
+            let maxDim = Math.max(sizeX, sizeY, sizeZ) || 1;
+
+            // 🌟 TUYỆT CHIÊU ĐỒNG BỘ: Giữ nguyên scale 1.0, phủ Additive lấp lánh 
+            // bọc toàn bộ bề mặt đa giác, triệt tiêu hoàn toàn lỗi lệch tâm do chuôi/mũi kiếm!
             let voAura = new THREE.Mesh(
                 child.geometry.clone(),
                 new THREE.MeshBasicMaterial({
                     color: mauAura,
                     transparent: true,
-                    opacity: capDo >= 15 ? 0.7 : 0.4,
-                    blending: THREE.AdditiveBlending,
+                    opacity: capDo >= 15 ? 0.6 : 0.35,
+                    blending: THREE.AdditiveBlending, 
                     depthWrite: false,
-                    wireframe: capDo >= 10
+                    wireframe: capDo >= 10 // Đồ cấp cao chạy đường tơ lưới điện ma mị
                 })
             );
             voAura.userData.isAura = true;
-
-            // 🌟 THUẬT TOÁN ĐO TRỤC: Tìm xem thanh kiếm đang nằm dài theo hướng nào
-            child.geometry.computeBoundingBox();
-            let bBox = child.geometry.boundingBox;
-            let sizeX = bBox.max.x - bBox.min.x;
-            let sizeY = bBox.max.y - bBox.min.y;
-            let sizeZ = bBox.max.z - bBox.min.z;
-            let maxAxis = Math.max(sizeX, sizeY, sizeZ);
-
-            let scaleBung = 1.04 + (capDo * 0.002);
-
-            // 🌟 LỆNH KHÓA TRỤC: Trục nào dài nhất (mũi kiếm) thì GIỮ NGUYÊN tỉ lệ 1.0, chỉ phình bề ngang lưỡi dao!
-            let scX = (sizeX === maxAxis) ? 1.0 : scaleBung;
-            let scY = (sizeY === maxAxis) ? 1.0 : scaleBung;
-            let scZ = (sizeZ === maxAxis) ? 1.0 : scaleBung;
-
-            voAura.scale.set(scX, scY, scZ);
+            child.add(voAura);
 
             if (capDo >= 13) {
                 let loiAura = new THREE.Mesh(
                     child.geometry.clone(),
                     new THREE.MeshBasicMaterial({
-                        color: 0xffffff, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false
+                        color: 0xffffff, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false
                     })
                 );
-                loiAura.scale.set((sizeX === maxAxis) ? 1.0 : 1.01, (sizeY === maxAxis) ? 1.0 : 1.01, (sizeZ === maxAxis) ? 1.0 : 1.01);
                 loiAura.userData.isAura = true;
                 child.add(loiAura);
             }
-            child.add(voAura);
+
+            // 2. 🌟 BẢN VÁ PHÂN PHỐI HẠT BỤI TIÊN KHÍ KẾT HỢP BỤI LỬA CHÁY (TỪ +7 TRỞ LÊN)
+            if (capDo >= 7) {
+                const soHat = window.isMobile ? 20 : 55; 
+                const geoBui = new THREE.BufferGeometry();
+                const posBui = new Float32Array(soHat * 3);
+                const colorsBui = new Float32Array(soHat * 3); // Mảng màu hỗn hợp trộn bụi lửa
+                const velBui = [];
+
+                let cAura = new THREE.Color(mauAura);
+                let cLua = new THREE.Color(mauLua);
+
+                for (let i = 0; i < soHat; i++) {
+                    // 🌟 KHÓA TỌA ĐỘ LOCAL: Sinh ngẫu nhiên vị trí hạt chạy dọc theo localBox thực tế của kiếm!
+                    // Bất chấp tọa độ mỏ neo 0x0y0z nằm ở đuôi, ở đầu hay ở giữa, hạt vẫn rải đều lưỡi kiếm!
+                    let localX = localBox.min.x + Math.random() * sizeX;
+                    let localY = localBox.min.y + Math.random() * sizeY;
+                    let localZ = localBox.min.z + Math.random() * sizeZ;
+
+                    // Cho hạt bao bọc quanh thân kiếm dôi ra một chút biên độ nhẹ
+                    posBui[i * 3] = localX + (Math.random() - 0.5) * (sizeX * 0.1);
+                    posBui[i * 3 + 1] = localY + (Math.random() - 0.5) * (sizeY * 0.1);
+                    posBui[i * 3 + 2] = localZ + (Math.random() - 0.5) * (sizeZ * 0.1);
+
+                    // Vận tốc trôi nổi lập lờ
+                    velBui.push(new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.012,
+                        (Math.random() - 0.5) * 0.012,
+                        (Math.random() - 0.5) * 0.012
+                    ));
+
+                    // 🌟 MIX NHÂN PHẨM: 60% hạt mang màu phái, 40% hạt là bụi lửa cháy đỏ cam rực rỡ!
+                    let cChon = (Math.random() < 0.4) ? cLua : cAura;
+                    colorsBui[i * 3] = cChon.r;
+                    colorsBui[i * 3 + 1] = cChon.g;
+                    colorsBui[i * 3 + 2] = cChon.b;
+                }
+
+                geoBui.setAttribute('position', new THREE.BufferAttribute(posBui, 3));
+                geoBui.setAttribute('color', new THREE.BufferAttribute(colorsBui, 3)); 
+                
+                const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
+                const matBui = new THREE.PointsMaterial({
+                    size: maxDim * (window.isMobile ? 0.07 : 0.045), 
+                    map: texture,
+                    transparent: true,
+                    opacity: 0.85,
+                    blending: THREE.AdditiveBlending,
+                    vertexColors: true, // Bật tính năng hiển thị đa màu sắc cho từng hạt bụi riêng lẻ
+                    depthWrite: false
+                });
+
+                const heThongBui = new THREE.Points(geoBui, matBui);
+                heThongBui.userData.isAura = true;
+                child.add(heThongBui); 
+
+                window.danhSachBuiTienKhi.push({
+                    pts: heThongBui,
+                    vels: velBui,
+                    localBox: localBox.clone(),
+                    sizeX: sizeX,
+                    sizeY: sizeY,
+                    sizeZ: sizeZ,
+                    seed: Math.random() * 100 
+                });
+            }
         }
     });
-
-    // 2. TẠO HẠT BỤI ÁNH SÁNG ÔM KHÍT FORM KIẾM (TỪ +7 TRỞ LÊN)
-    if (capDo >= 7) {
-        meshVuKhi.updateMatrixWorld(true);
-        const box = new THREE.Box3().setFromObject(meshVuKhi);
-        const size = new THREE.Vector3(); box.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-
-        const soHat = window.isMobile ? 15 : 45;
-        const geoBui = new THREE.BufferGeometry();
-        const posBui = new Float32Array(soHat * 3);
-        const velBui = [];
-
-        for (let i = 0; i < soHat; i++) {
-            // 🌟 GIỚI HẠN BIÊN ĐỘ HẠT: Trục dài nhất chỉ nhân 0.95 (thu ngắn lại), các trục dày nhân 1.2 cho bung rộng bao quanh
-            posBui[i * 3] = (Math.random() - 0.5) * size.x * (size.x === maxDim ? 0.95 : 1.3);
-            posBui[i * 3 + 1] = (Math.random() - 0.5) * size.y * (size.y === maxDim ? 0.95 : 1.3);
-            posBui[i * 3 + 2] = (Math.random() - 0.5) * size.z * (size.z === maxDim ? 0.95 : 1.3);
-
-            velBui.push(new THREE.Vector3(
-                (Math.random() - 0.5) * 0.01,
-                (Math.random() - 0.5) * 0.01,
-                (Math.random() - 0.5) * 0.01
-            ));
-        }
-
-        geoBui.setAttribute('position', new THREE.BufferAttribute(posBui, 3));
-
-        const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
-        const matBui = new THREE.PointsMaterial({
-            color: mauAura,
-            size: maxDim * (window.isMobile ? 0.08 : 0.06),
-            map: texture,
-            transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-
-        const heThongBui = new THREE.Points(geoBui, matBui);
-        heThongBui.userData.isAura = true;
-        meshVuKhi.add(heThongBui);
-
-        window.danhSachBuiTienKhi.push({
-            pts: heThongBui,
-            vels: velBui,
-            size: size.clone(),
-            maxDim: maxDim,
-            seed: Math.random() * 100
-        });
-    }
 };
 
 // ==========================================
@@ -346,7 +357,7 @@ if (!window.loopBuiTienKhi) {
         let now = Date.now();
         for (let i = window.danhSachBuiTienKhi.length - 1; i >= 0; i--) {
             let bui = window.danhSachBuiTienKhi[i];
-
+            
             let connectedToScene = false;
             let checkObj = bui.pts;
             while (checkObj && checkObj.parent) {
@@ -363,21 +374,22 @@ if (!window.loopBuiTienKhi) {
             }
 
             let positions = bui.pts.geometry.attributes.position.array;
-            let maxDim = bui.maxDim;
+            let box = bui.localBox;
 
             for (let j = 0; j < positions.length / 3; j++) {
                 positions[j * 3] += bui.vels[j].x;
                 positions[j * 3 + 1] += bui.vels[j].y;
                 positions[j * 3 + 2] += bui.vels[j].z;
 
-                // 🌟 LƯỚI KHÓA HẠT: Đo chuẩn theo từng trục X, Y, Z riêng biệt để nhốt hạt không bay lọt khỏi mũi kiếm
-                if (Math.abs(positions[j * 3]) > bui.size.x * (bui.size.x === maxDim ? 0.48 : 0.7) ||
-                    Math.abs(positions[j * 3 + 1]) > bui.size.y * (bui.size.y === maxDim ? 0.48 : 0.7) ||
-                    Math.abs(positions[j * 3 + 2]) > bui.size.z * (bui.size.z === maxDim ? 0.48 : 0.7)) {
-
-                    positions[j * 3] = (Math.random() - 0.5) * bui.size.x * (bui.size.x === maxDim ? 0.9 : 0.1);
-                    positions[j * 3 + 1] = (Math.random() - 0.5) * bui.size.y * (bui.size.y === maxDim ? 0.9 : 0.1);
-                    positions[j * 3 + 2] = (Math.random() - 0.5) * bui.size.z * (bui.size.z === maxDim ? 0.9 : 0.1);
+                // 🌟 LÒ GIAM HẠT: Đo chuẩn theo hộp tọa độ thực tế của riêng mesh đó. 
+                // Bay lọt ra rìa núi kiếm quá 0.5 mét là bế cổ quăng ngược về lòng hộp ngẫu nhiên!
+                if (positions[j * 3] < box.min.x - 0.5 || positions[j * 3] > box.max.x + 0.5 || 
+                    positions[j * 3 + 1] < box.min.y - 0.5 || positions[j * 3 + 1] > box.max.y + 0.5 || 
+                    positions[j * 3 + 2] < box.min.z - 0.5 || positions[j * 3 + 2] > box.max.z + 0.5) {
+                    
+                    positions[j * 3] = box.min.x + Math.random() * bui.sizeX;
+                    positions[j * 3 + 1] = box.min.y + Math.random() * bui.sizeY;
+                    positions[j * 3 + 2] = box.min.z + Math.random() * bui.sizeZ;
                 }
             }
             bui.pts.geometry.attributes.position.needsUpdate = true;
@@ -392,19 +404,19 @@ if (!window.loopBuiTienKhi) {
 (function khoiTaoChongNguDong() {
     if (typeof window.renderer !== 'undefined' && window.renderer) {
         const renderGoc = window.renderer.render.bind(window.renderer);
-        window.renderer.render = function (scene, camera) {
+        window.renderer.render = function(scene, camera) {
             if (!document.hidden) renderGoc(scene, camera);
         };
     }
     const rAF_goc = window.requestAnimationFrame;
-    window.requestAnimationFrame = function (callback) {
-        if (document.hidden) return 0;
+    window.requestAnimationFrame = function(callback) {
+        if (document.hidden) return 0; 
         return rAF_goc.call(window, callback);
     };
     let codeWorker = `setInterval(() => { postMessage('TICK'); }, 16);`;
     let blob = new Blob([codeWorker], { type: 'application/javascript' });
     let worker = new Worker(URL.createObjectURL(blob));
-    worker.onmessage = function () {
+    worker.onmessage = function() {
         if (document.hidden && typeof animate === 'function') { animate(); }
     };
     document.addEventListener("visibilitychange", () => {
@@ -412,8 +424,6 @@ if (!window.loopBuiTienKhi) {
     });
     console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
 })();
-
-
 
 // =================================================================
 // 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
