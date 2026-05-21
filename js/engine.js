@@ -210,12 +210,28 @@ window.donRac3D = function (obj) {
 
 
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX BỤI TIÊN KHÍ LẤP LÁNH)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX BỤI TIÊN KHÍ LẤP LÁNH V2 - BỌC THÉP CHỐNG CRASH)
 // ==========================================
-window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || []; 
+window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || [];
 
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
-    if (!meshVuKhi || capDo < 4) return; // Dưới +4 mộc mạc không phát sáng
+    if (!meshVuKhi) return;
+
+    // 🌟 BẢN VÁ 1: XOÁ SẠCH HÀO QUANG VÀ HẠT CŨ TRƯỚC KHI BƠM MỚI (Chống phân thân x2 x3 gây lag máy)
+    let racCu = [];
+    meshVuKhi.traverse(child => {
+        if (child.userData && child.userData.isAura) racCu.push(child);
+    });
+    racCu.forEach(r => {
+        if (r.parent) r.parent.remove(r);
+        if (r.geometry) r.geometry.dispose();
+        if (r.material) {
+            if (Array.isArray(r.material)) r.material.forEach(m => m.dispose());
+            else r.material.dispose();
+        }
+    });
+
+    if (capDo < 4) return; // Dưới +4 mộc mạc không phát sáng
 
     let mauAura = 0x00ff00; // +4 đến +6: Khói Xanh
     if (capDo >= 7 && capDo <= 9) mauAura = 0x9b59b6;      // +7 đến +9: Tím Huyền Bí
@@ -223,7 +239,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     else if (capDo >= 13 && capDo <= 14) mauAura = 0x00ffff; // +13 đến +14: Cyan Bạch Kim
     else if (capDo >= 15) mauAura = 0xffaa00;                // +15: Vàng Gold Chí Tôn
 
-    // 1. LÀM SÁNG LỚP VỎ VŨ KHÍ (Giữ nguyên như cũ)
+    // 1. LÀM SÁNG LỚP VỎ VŨ KHÍ
     meshVuKhi.traverse(child => {
         if (child.isMesh && !child.userData.isAura) {
             let voAura = new THREE.Mesh(
@@ -232,9 +248,9 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
                     color: mauAura,
                     transparent: true,
                     opacity: capDo >= 15 ? 0.7 : 0.4,
-                    blending: THREE.AdditiveBlending, 
+                    blending: THREE.AdditiveBlending,
                     depthWrite: false,
-                    wireframe: capDo >= 10 
+                    wireframe: capDo >= 10
                 })
             );
             voAura.userData.isAura = true;
@@ -257,26 +273,23 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         }
     });
 
-    // 2. 🌟 TẠO HẠT BỤI ÁNH SÁNG TRÔI LƠ LỬNG (TỪ +7 TRỞ LÊN)
+    // 2. TẠO HẠT BỤI ÁNH SÁNG TRÔI LƠ LỬNG (TỪ +7 TRỞ LÊN)
     if (capDo >= 7) {
         meshVuKhi.updateMatrixWorld(true);
         const box = new THREE.Box3().setFromObject(meshVuKhi);
         const size = new THREE.Vector3(); box.getSize(size);
         const maxDim = Math.max(size.x, size.y, size.z) || 1;
 
-        // Ép xung: PC cho 40 hạt lấp lánh, Mobile cho 15 hạt cho nhẹ máy
-        const soHat = window.isMobile ? 15 : 40; 
+        const soHat = window.isMobile ? 15 : 40;
         const geoBui = new THREE.BufferGeometry();
         const posBui = new Float32Array(soHat * 3);
         const velBui = [];
 
         for (let i = 0; i < soHat; i++) {
-            // Rải hạt xung quanh thanh kiếm
-            posBui[i * 3] = (Math.random() - 0.5) * maxDim * 1.5;
-            posBui[i * 3 + 1] = (Math.random() - 0.5) * maxDim * 1.5;
-            posBui[i * 3 + 2] = (Math.random() - 0.5) * maxDim * 1.5;
+            posBui[i * 3] = (Math.random() - 0.5) * maxDim * 1.2;
+            posBui[i * 3 + 1] = (Math.random() - 0.5) * maxDim * 1.2;
+            posBui[i * 3 + 2] = (Math.random() - 0.5) * maxDim * 1.2;
 
-            // Mỗi hạt có tốc độ trôi nổi riêng
             velBui.push(new THREE.Vector3(
                 (Math.random() - 0.5) * 0.015,
                 (Math.random() - 0.5) * 0.015,
@@ -285,11 +298,12 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         }
 
         geoBui.setAttribute('position', new THREE.BufferAttribute(posBui, 3));
-        
+
+        const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
         const matBui = new THREE.PointsMaterial({
             color: mauAura,
-            size: maxDim * (window.isMobile ? 0.2 : 0.15), // Hạt to nhỏ tùy tỷ lệ vũ khí
-            map: typeof window.layTextureLua === 'function' ? window.layTextureLua() : null,
+            size: maxDim * (window.isMobile ? 0.2 : 0.15),
+            map: texture,
             transparent: true,
             opacity: 0.8,
             blending: THREE.AdditiveBlending,
@@ -300,12 +314,11 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         heThongBui.userData.isAura = true;
         meshVuKhi.add(heThongBui);
 
-        // Gắn thẻ ID để Engine vòng lặp biết đường dọn rác
         window.danhSachBuiTienKhi.push({
             pts: heThongBui,
             vels: velBui,
             maxDim: maxDim,
-            seed: Math.random() * 100 // Lệch nhịp chớp tắt cho đẹp
+            seed: Math.random() * 100
         });
     }
 };
@@ -319,9 +332,21 @@ if (!window.loopBuiTienKhi) {
         let now = Date.now();
         for (let i = window.danhSachBuiTienKhi.length - 1; i >= 0; i--) {
             let bui = window.danhSachBuiTienKhi[i];
-            
-            // Nếu Sếp tháo đồ ra hoặc rã rác -> Dọn dẹp Array
-            if (!bui.pts || !bui.pts.parent) {
+
+            // 🌟 BẢN VÁ LÁ CHẮN 2: Kiểm tra xem hệ thống hạt này có thực sự thuộc window.scene không?
+            // Nếu vũ khí đã bị tháo ra, parent-tree sẽ đứt đoạn và không chạm được tới scene gốc!
+            let connectedToScene = false;
+            let checkObj = bui.pts;
+            while (checkObj && checkObj.parent) {
+                if (checkObj.parent === window.scene || checkObj.parent.isScene) {
+                    connectedToScene = true;
+                    break;
+                }
+                checkObj = checkObj.parent;
+            }
+
+            // Nếu phát hiện vũ khí lậu, hoặc mất khung xương -> Khai tử khỏi mảng ngầm ngay lập tức!
+            if (!connectedToScene || !bui.pts.geometry || !bui.pts.geometry.attributes.position) {
                 window.danhSachBuiTienKhi.splice(i, 1);
                 continue;
             }
@@ -333,28 +358,45 @@ if (!window.loopBuiTienKhi) {
                 positions[j * 3 + 1] += bui.vels[j].y;
                 positions[j * 3 + 2] += bui.vels[j].z;
 
-                // Nếu bay tản ra quá xa thì hút nó quay lại tâm thanh kiếm
-                let distSq = positions[j*3]**2 + positions[j*3+1]**2 + positions[j*3+2]**2;
-                if (distSq > (bui.maxDim * 1.5)**2) {
-                    positions[j*3] = (Math.random() - 0.5) * bui.maxDim;
-                    positions[j*3+1] = (Math.random() - 0.5) * bui.maxDim;
-                    positions[j*3+2] = (Math.random() - 0.5) * bui.maxDim;
+                let distSq = positions[j * 3] ** 2 + positions[j * 3 + 1] ** 2 + positions[j * 3 + 2] ** 2;
+                if (distSq > (bui.maxDim * 1.5) ** 2) {
+                    positions[j * 3] = (Math.random() - 0.5) * bui.maxDim;
+                    positions[j * 3 + 1] = (Math.random() - 0.5) * bui.maxDim;
+                    positions[j * 3 + 2] = (Math.random() - 0.5) * bui.maxDim;
                 }
             }
             bui.pts.geometry.attributes.position.needsUpdate = true;
-            
-            // Hiệu ứng "Lấp lánh nhấp nháy" (Breathing/Twinkling Effect)
             bui.pts.material.opacity = 0.3 + Math.abs(Math.sin(now * 0.003 + bui.seed)) * 0.7;
         }
     }, 50);
 }
 
-
-
-
-
-
-
+// =================================================================
+// 🛡️ LÁ CHẮN CHỐNG NGỦ ĐÔNG (HACK TẬN GỐC TRÌNH DUYỆT)
+// =================================================================
+(function khoiTaoChongNguDong() {
+    if (typeof window.renderer !== 'undefined' && window.renderer) {
+        const renderGoc = window.renderer.render.bind(window.renderer);
+        window.renderer.render = function (scene, camera) {
+            if (!document.hidden) renderGoc(scene, camera);
+        };
+    }
+    const rAF_goc = window.requestAnimationFrame;
+    window.requestAnimationFrame = function (callback) {
+        if (document.hidden) return 0;
+        return rAF_goc.call(window, callback);
+    };
+    let codeWorker = `setInterval(() => { postMessage('TICK'); }, 16);`;
+    let blob = new Blob([codeWorker], { type: 'application/javascript' });
+    let worker = new Worker(URL.createObjectURL(blob));
+    worker.onmessage = function () {
+        if (document.hidden && typeof animate === 'function') { animate(); }
+    };
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden && typeof animate === 'function') { animate(); }
+    });
+    console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
+})();
 
 
 
