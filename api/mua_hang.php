@@ -68,9 +68,9 @@ try {
     $stmt_update_tien->bind_param("is", $new_balance, $username);
     $stmt_update_tien->execute();
 
-    // 6. NHÉT ĐỒ VÀO TÚI
-    $stmt_add_ruong = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped) VALUES (?, ?, ?, 0)");
-    $stmt_add_ruong->bind_param("sis", $username, $item_id, $item['item_type']);
+    // 6. NHÉT ĐỒ VÀO TÚI (KÈM THEO CHỈ SỐ GỐC VIP CỦA MÓN ĐỒ TỪ SHOP)
+    $stmt_add_ruong = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, 0, ?, ?, ?)");
+    $stmt_add_ruong->bind_param("sisiii", $username, $item_id, $item['item_type'], $item['bonus_damage'], $item['bonus_hp'], $item['bonus_speed']);
     $stmt_add_ruong->execute();
 
     // 🌟 7. AUTO-EQUIP (MÌ ĂN LIỀN): CẬP NHẬT THẲNG VÀO NHÂN VẬT VÀ TÚI ĐỒ
