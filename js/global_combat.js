@@ -127,34 +127,33 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     }
 };
 
-
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V2)
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V3 - FIX LỆCH TÂM)
 // ==========================================
 window.layHitbox = function (mesh) {
-    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 10 };
+    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 5 };
     
     if (!mesh.chieuCao) {
         let box = new THREE.Box3().setFromObject(mesh);
         mesh.chieuCao = (box.max.y - box.min.y);
         
-        // 🌟 BẢN VÁ: Cố định chiều rộng (banKinh) thay vì lấy theo Box3. 
-        // Box3 bị dính vũ khí dài sẽ làm Hitbox to như cái sân vận động, đánh đâu cũng trúng!
+        // 🌟 ÉP CỨNG CHIỀU RỘNG: Tránh việc thanh kiếm dài quơ ra phía trước làm tâm Hitbox bị dời đi!
         mesh.chieuRong = 4.0; 
         
-        if (mesh.chieuCao < 1) mesh.chieuCao = (mesh.scale.y || 1) * 10;
+        if (mesh.chieuCao < 1 || !isFinite(mesh.chieuCao)) mesh.chieuCao = (mesh.scale.y || 1) * 5;
+        if (mesh.chieuCao > 15) mesh.chieuCao = 15; // Giới hạn không cho đo trúng Mây/Rồng quá to
     }
     
-    let tamNguc = mesh.position.clone();
+    // 🌟 BẢN VÁ AAA: Phải dùnggetWorldPosition để lấy tọa độ Tuyệt đối của thế giới. 
+    // Dùng mesh.position sẽ bị sai nếu model nằm trong Group!
+    let tamNguc = new THREE.Vector3();
+    mesh.getWorldPosition(tamNguc); 
     
-    // 🌟 BẢN VÁ: Phải đẩy lên theo trục Up của nhân vật (Hành tinh cầu), không được đẩy thẳng lên Y!
     let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
     tamNguc.add(upV.multiplyScalar(mesh.chieuCao / 2));
     
     return { tamNguc: tamNguc, banKinh: mesh.chieuRong / 2, chieuCao: mesh.chieuCao };
 };
-
-
 
 // ==========================================
 // 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
