@@ -909,7 +909,17 @@ window.capNhatGiaoDienLo = function() {
     let slotTrungTam = document.getElementById('forgeItemSlot');
     let danhSachCanChup = [];
 
-    // --- VẼ Ô VŨ KHÍ ---
+
+
+
+
+    // --- VẼ Ô VŨ KHÍ & SOI NHÂN PHẨM ---
+    let boxRating = document.getElementById('forgeItemRating');
+    if (!boxRating) {
+        boxRating = document.createElement('div'); boxRating.id = 'forgeItemRating';
+        slotTrungTam.parentNode.insertBefore(boxRating, slotTrungTam.nextSibling);
+    }
+
     if (window.loRenData.item) {
         let it = window.loRenData.item;
         let lvl = parseInt(it.upgrade_level) || 0;
@@ -923,9 +933,39 @@ window.capNhatGiaoDienLo = function() {
             </div>
         `;
         danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId, capDo: parseInt(it.upgrade_level)||0 });
+
+        // 🌟 BỘ MÁY ĐO ĐIỂM TIỀM NĂNG GẮN BÊN DƯỚI Ô VŨ KHÍ
+        if (lvl > 0) {
+            // Tính toán ngược lại Điểm Tiềm Năng thực tế (Cộng dồn Dame, HP, Tốc)
+            let pts = Math.round(((it.bonus_damage || 0) / 2) + ((it.bonus_hp || 0) / 20) + ((it.bonus_speed || 0) * 5));
+            let xepLoai = ""; let mauSac = "";
+            
+            if (pts > 120) { xepLoai = "THẦN KHÍ (SHOP)"; mauSac = "#ff3333"; }
+            else if (pts >= 115) { xepLoai = "CỰC PHẨM"; mauSac = "#ff00ff"; }
+            else if (pts >= 100) { xepLoai = "VIP"; mauSac = "#f1c40f"; }
+            else if (pts >= 90) { xepLoai = "TRUNG BÌNH"; mauSac = "#3498db"; }
+            else { xepLoai = "RÁC"; mauSac = "#95a5a6"; }
+
+            boxRating.innerHTML = `
+                <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px solid ${mauSac}; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: #fff; box-shadow: 0 0 10px ${mauSac}; text-align: center; width: 100%; box-sizing: border-box;">
+                    <div style="color:#aaa; margin-bottom:2px;">Nhân Phẩm: <b style="color:${mauSac}; font-size:14px;">${pts}/120 ĐIỂM</b></div>
+                    Đánh giá: <b style="color:${mauSac}; text-transform:uppercase;">${xepLoai}</b>
+                </div>`;
+        } else {
+            boxRating.innerHTML = `
+                <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px dashed #7f8c8d; padding: 5px; border-radius: 5px; font-size: 10px; color: #7f8c8d; text-align: center; width: 100%; box-sizing: border-box;">
+                    Chưa Giám định (Max 120 Điểm)<br>Đập +1 để mở khóa!
+                </div>`;
+        }
+
     } else {
         slotTrungTam.innerHTML = `<span style="color:#555;">+</span>`;
+        if (boxRating) boxRating.innerHTML = '';
     }
+
+
+
+
 
     // --- VẼ 6 Ô TINH THẠCH & CỘNG ĐIỂM ---
     let tongDiemDa = 0;
@@ -1037,13 +1077,30 @@ window.tienHanhDapDo = function() {
                 // 🌟 FIX LỖI CẬP NHẬT TRONG LÒ: Sửa trực tiếp cấp độ của món đồ đang nằm trong Lò
                 window.loRenData.item.upgrade_level = data.new_level;
 
+
+
                 // 🌟 HIỆN THÔNG BÁO BẬT LÊN RÕ RÀNG CHO SẾP THẤY
                 if (data.result === 'SUCCESS') {
-                    window.hienThongBaoGame(`Tuyệt phẩm đã thăng cấp lên +${data.new_level}!`, true);
-                    
-                    if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, "✨ NÂNG CẤP THÀNH CÔNG! ✨", "#2ecc71");
+                    if (data.is_giam_dinh) {
+                        // Phân loại Phẩm chất khi vừa nổ hũ xong
+                        let danhGia = data.diem_giam_dinh >= 115 ? "CỰC PHẨM (MAX VIP) 🌈" : (data.diem_giam_dinh >= 100 ? "THƯỢNG PHẨM (VIP) 🌟" : (data.diem_giam_dinh >= 90 ? "TRUNG PHẨM 💠" : "HẠ PHẨM (RÁC) 🗑️"));
+
+                        window.hienThongBaoGame(`✨ THĂNG CẤP +1 THÀNH CÔNG!\n\n🔍 KẾT QUẢ GIÁM ĐỊNH:\nPháp bảo nhận được ${data.diem_giam_dinh}/120 Điểm Tiềm Năng!\nĐánh giá Nhân Phẩm: ${danhGia}`, true);
+
+                        if (typeof window.taoChuNoiGacha === 'function') {
+                            window.taoChuNoiGacha(charPos, "✨ ĐÃ MỞ KHÓA GIÁM ĐỊNH! ✨", "#00ffff");
+                            setTimeout(() => { window.taoChuNoiGacha(charPos.clone().add(new THREE.Vector3(0, 2, 0)), `💥 ${data.diem_giam_dinh} ĐIỂM TIỀM NĂNG!`, "#ff00ff"); }, 600);
+                        }
+                    } else {
+                        // Đập từ +2 trở lên thì chỉ hiện bình thường
+                        window.hienThongBaoGame(`Tuyệt phẩm đã thăng cấp lên +${data.new_level}!`, true);
+                        if (typeof window.taoChuNoiGacha === 'function') window.taoChuNoiGacha(charPos, "✨ NÂNG CẤP THÀNH CÔNG! ✨", "#2ecc71");
+                    }
                     if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(charPos, 15, 0x2ecc71);
                 } else {
+
+
+
                     let msgFail = `Tinh thạch đã hóa thành tro bụi...`;
                     if (data.drop_level) msgFail += `\n📉 Đắng lòng: Vũ khí bị rớt xuống +${data.new_level}!`;
                     
