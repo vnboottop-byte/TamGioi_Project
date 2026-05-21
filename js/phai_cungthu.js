@@ -161,21 +161,19 @@
     function taoMuiTenXin(scaleSize, weaponUrl) {
         const group = new THREE.Group();
 
-        // 🌟 BẢN VÁ: Nhận diện Mũi Tên là Vũ Khí 1. Nếu tháo vũ khí thì bắn ra không khí!
         let urlCanTai = weaponUrl || window.WEAPON_URL; 
         if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
-
-
-
             window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
                 vuKhi.position.set(0, 0, 0);
                 vuKhi.rotation.set(0, 0, 0);
 
-                // 🌟 LẤY TỶ LỆ ĐÃ ĐO KHI LOAD GAME NHÂN VỚI ĐỘ TO CỦA TỪNG CHIÊU
                 let tyLeGoc = window.scaleChuanMuiTen || 0.33;
                 vuKhi.scale.set(tyLeGoc * scaleSize, tyLeGoc * scaleSize, tyLeGoc * scaleSize);
+
+                // 🌟 BƠM HÀO QUANG CHO MŨI TÊN KHI BẮN ĐI
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL || 0);
 
                 group.add(vuKhi);
             });
