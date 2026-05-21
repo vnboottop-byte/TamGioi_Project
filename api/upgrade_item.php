@@ -185,7 +185,9 @@ try {
         'old_level' => $current_lvl,
         'new_level' => $new_lvl,
         'drop_level' => $drop_level,
-        'new_gold' => $new_gold
+        'new_gold' => $new_gold,
+        'is_giam_dinh' => $is_giam_dinh,
+        'diem_giam_dinh' => $diem_giam_dinh
     ]);
 
 } catch (Exception $e) {
