@@ -4079,7 +4079,7 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
                         
                         // 🌟 TẠI ĐÂY: GỌI HÀM HIỆN CHỮ GACHA!
                         if (window.playerModel && typeof window.taoChuNoiGacha === 'function') {
-                            window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} LINH THẠCH`, "#00ffcc");
+                            window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), `+${data.gold} VÀNG`, "#00ffcc");
                             if (data.item_name) {
                                 setTimeout(() => {
                                     window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ĐẠT ĐƯỢC: ${data.item_name}`, "gold");
