@@ -43,11 +43,16 @@ try {
     $res_wp = $stmt_wp->get_result();
     
     $buff_hp = 0; $buff_dmg = 0;
+    $heSoKiemThe = [1.0, 1.05, 1.12, 1.22, 1.35, 1.50, 1.70, 1.95, 2.25, 2.60, 3.10, 3.70, 4.50, 5.50, 6.80, 8.50];
+    
     while($wp = $res_wp->fetch_assoc()) {
-        $heSoCong = 1.0 + ((int)$wp['upgrade_level'] * 0.05);
+        $lvl_wp = (int)$wp['upgrade_level'];
+        $heSoCong = isset($heSoKiemThe[$lvl_wp]) ? $heSoKiemThe[$lvl_wp] : 1.0;
+        
         $buff_hp += (int)$wp['bonus_hp'] * $heSoCong;
         $buff_dmg += (int)$wp['bonus_damage'] * $heSoCong;
     }
+  }
 
     $stmt_user = $conn->prepare("SELECT level FROM game_characters WHERE username = ?");
     $stmt_user->bind_param("s", $username); $stmt_user->execute();
