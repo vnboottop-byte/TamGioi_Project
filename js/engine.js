@@ -4167,13 +4167,12 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 })();
 
 
-
 // ==========================================
 // 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V2 (CHỐNG ẢO GIÁC XƯƠNG TÀNG HÌNH)
 // ==========================================
-window.canBangModelUI = function (model, kichThuocKhung = 4) {
+window.canBangModelUI = function(model, kichThuocKhung = 4) {
     if (!model) return;
-
+    
     // 1. Reset về nguyên thủy
     model.position.set(0, 0, 0);
     model.scale.set(1, 1, 1);
@@ -4183,7 +4182,7 @@ window.canBangModelUI = function (model, kichThuocKhung = 4) {
     // 2. CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG
     let box = new THREE.Box3();
     let coHinh = false;
-    model.traverse(function (child) {
+    model.traverse(function(child) {
         if (child.isMesh && !child.userData.isAura && !child.userData.isCloud && child.visible) {
             if (child.geometry) {
                 child.geometry.computeBoundingBox();
@@ -4206,8 +4205,8 @@ window.canBangModelUI = function (model, kichThuocKhung = 4) {
     const center = new THREE.Vector3(); box.getCenter(center);
 
     let maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim <= 0.001 || !isFinite(maxDim) || maxDim > 1000) maxDim = 1;
-
+    if (maxDim <= 0.001 || !isFinite(maxDim) || maxDim > 1000) maxDim = 1; 
+    
     // 3. Ép tỷ lệ thu nhỏ
     const tyLe = kichThuocKhung / maxDim;
     model.scale.set(tyLe, tyLe, tyLe);
