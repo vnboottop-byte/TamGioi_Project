@@ -45,19 +45,27 @@ try {
             $exp_can_thiet = pow($level, 2) * 1000; 
         }
 
-        // 🌟 NẾU LÊN CẤP -> TÍNH LẠI TOÀN BỘ MÁU VÀ DAME (GỐC + ĐỒ ĐẠC)
+
+
+
+        // 🌟 NẾU LÊN CẤP -> TÍNH LẠI TOÀN BỘ MÁU VÀ DAME CÓ ĐÍNH KÈM CẤP ĐỘ ĐẬP ĐỒ (+15)
         $hp_max_moi = 1000; $damage_moi = 100;
         if ($da_thang_cap) {
-            // Lấy Buff từ túi đồ
-            $stmt_wp = $conn->prepare("SELECT SUM(s.bonus_hp) as b_hp, SUM(s.bonus_damage) as b_dmg FROM user_inventory i JOIN shop_items s ON i.item_id = s.id WHERE i.username = ? AND i.is_equipped = 1");
+            $stmt_wp = $conn->prepare("SELECT s.bonus_hp, s.bonus_damage, i.upgrade_level FROM user_inventory i JOIN shop_items s ON i.item_id = s.id WHERE i.username = ? AND i.is_equipped = 1");
             $stmt_wp->bind_param("s", $username); $stmt_wp->execute();
-            $wp = $stmt_wp->get_result()->fetch_assoc();
+            $res_wp = $stmt_wp->get_result();
             
-            // TỔNG LỰC = GỐC (Cấp) + BUFF (Vũ khí)
-            $hp_max_moi = 1000 + (($level - 1) * 30) + (int)$wp['b_hp'];
-            $damage_moi = 100 + (($level - 1) * 3) + (int)$wp['b_dmg'];
+            $buff_hp = 0; $buff_dmg = 0;
+            while($wp = $res_wp->fetch_assoc()) {
+                $heSoCong = 1.0 + ((int)$wp['upgrade_level'] * 0.05);
+                $buff_hp += (int)$wp['bonus_hp'] * $heSoCong;
+                $buff_dmg += (int)$wp['bonus_damage'] * $heSoCong;
+            }
+            
+            // TỔNG LỰC = GỐC (Cấp) + BUFF ĐÃ NHÂN CẤP ĐỘ (+15)
+            $hp_max_moi = 1000 + (($level - 1) * 30) + $buff_hp;
+            $damage_moi = 100 + (($level - 1) * 3) + $buff_dmg;
 
-            // Lưu vào DB và hồi đầy máu cho người chơi
             $update = $conn->prepare("UPDATE game_characters SET level = ?, exp = ?, hp_max = ?, damage = ?, hp_current = ? WHERE username = ?");
             $update->bind_param("iiiiss", $level, $exp, $hp_max_moi, $damage_moi, $hp_max_moi, $username); 
             $update->execute();
