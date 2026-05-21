@@ -4168,32 +4168,51 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
-
 // ==========================================
-// 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT (ÉP KHUNG UI CHUẨN AAA)
+// 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V2 (CHỐNG ẢO GIÁC XƯƠNG TÀNG HÌNH)
 // ==========================================
-window.canBangModelUI = function(model, kichThuocKhung = 4) {
+window.canBangModelUI = function (model, kichThuocKhung = 4) {
     if (!model) return;
-    
-    // 1. Reset về nguyên thủy để đo đạc chuẩn xác 100%
+
+    // 1. Reset về nguyên thủy
     model.position.set(0, 0, 0);
     model.scale.set(1, 1, 1);
+    model.rotation.set(0, 0, 0);
     model.updateMatrixWorld(true);
 
-    // 2. Quét tia X lấy thể tích thực tế
-    const box = new THREE.Box3().setFromObject(model);
+    // 2. CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG
+    let box = new THREE.Box3();
+    let coHinh = false;
+    model.traverse(function (child) {
+        if (child.isMesh && !child.userData.isAura && !child.userData.isCloud && child.visible) {
+            if (child.geometry) {
+                child.geometry.computeBoundingBox();
+                if (child.geometry.boundingBox) {
+                    let b = child.geometry.boundingBox.clone();
+                    b.applyMatrix4(child.matrixWorld);
+                    box.union(b);
+                    coHinh = true;
+                }
+            }
+        }
+    });
+
+    // Nếu model bị lỗi không có khối thịt thì dùng phương pháp cũ vớt vát
+    if (!coHinh || !isFinite(box.min.x)) {
+        box.setFromObject(model);
+    }
+
     const size = new THREE.Vector3(); box.getSize(size);
     const center = new THREE.Vector3(); box.getCenter(center);
 
-    const maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim === 0 || !isFinite(maxDim)) return; 
-    
-    // 3. Ép tỷ lệ thu nhỏ / phóng to
+    let maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim <= 0.001 || !isFinite(maxDim) || maxDim > 1000) maxDim = 1;
+
+    // 3. Ép tỷ lệ thu nhỏ
     const tyLe = kichThuocKhung / maxDim;
     model.scale.set(tyLe, tyLe, tyLe);
 
-    // 4. KÉO TÂM RỐN VỀ CHÍNH GIỮA (Trị bệnh rồng bay lên trời)
+    // 4. Khóa Trọng Tâm Về 0,0,0
     model.position.x = -center.x * tyLe;
     model.position.y = -center.y * tyLe;
     model.position.z = -center.z * tyLe;
