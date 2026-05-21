@@ -370,13 +370,15 @@ window.chonXemMonDo = function(item) {
                <button class="btn-cyber" style="background:transparent; border:1px solid #f1c40f; color:#f1c40f; margin:0; padding:8px; font-size:11px; flex:1;" onclick="treoBanChoden(${item.inv_id})">⚖️ TREO CHỢ</button>
            </div>`;
 
-    // 🌟 TÍNH TOÁN CHỈ SỐ THỰC TẾ SAU KHI ĐẬP ĐỒ (Mỗi cấp + 5% sức mạnh gốc)
+    // 🌟 TÍNH TOÁN CHỈ SỐ THỰC TẾ CHUẨN KIẾM THẾ (Hệ số nhân bạo kích theo cấp)
     let lvl = parseInt(item.upgrade_level) || 0;
-    let heSoCong = 1.0 + (lvl * 0.05); // VD: +15 = 1.0 + 0.75 = x1.75
-
+    const heSoKiemThe = [1.0, 1.05, 1.12, 1.22, 1.35, 1.50, 1.70, 1.95, 2.25, 2.60, 3.10, 3.70, 4.50, 5.50, 6.80, 8.50];
+    let heSoCong = heSoKiemThe[lvl] || 1.0; 
+    
     let dameThucTe = Math.floor((item.bonus_damage || 0) * heSoCong);
     let hpThucTe = Math.floor((item.bonus_hp || 0) * heSoCong);
     let tocDoThucTe = Math.floor((item.bonus_speed || 0) * heSoCong); // 🌟 TỐC ĐỘ
+    
 
     // 🌟 RÚT GỌN TÊN VÀ HỆ YÊU CẦU CHO ĐẸP VÀ VỪA VẶN
     let tenHienThi = lvl > 0 ? `${item.name} [+${lvl}]` : item.name;
