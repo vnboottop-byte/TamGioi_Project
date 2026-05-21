@@ -1,20 +1,17 @@
 // ==========================================
-// 📱 BỘ ĐIỀU KHIỂN ĐỘC LẬP CHO MOBILE (GIẢ LẬP PHÍM PC)
+// 📱 BỘ ĐIỀU KHIỂN ĐỘC LẬP CHO MOBILE (CÓ TỐC ĐỘ ĐÁNH V2)
 // ==========================================
 
 (function() {
     console.log("📱 Đã tải lõi Controller Mobile!");
     
-
     // Hệ Thống Thời Gian Hồi Chiêu
     const thoiGianHoiChieu = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
     const thoiDiemTungChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
-
-    function batDauHoiChieu(phimUpper) {
-        let tgHoi = thoiGianHoiChieu[phimUpper], tgBatDau = Date.now();
+    function batDauHoiChieuMobile(phimUpper, tgHoiThucTe) {
+        let tgBatDau = Date.now();
         
-        // Cập nhật cả nút PC (Phòng hờ) và nút Mobile
         let pcSlot = document.getElementById('slot-' + phimUpper);
         let pcOv = pcSlot ? pcSlot.querySelector('.cd-overlay') : null;
         let pcTxt = pcSlot ? pcSlot.querySelector('.cd-text') : null;
@@ -29,7 +26,7 @@
         if (mbTxt) mbTxt.style.display = 'block';
         
         const interval = setInterval(() => {
-            let conLai = tgHoi - (Date.now() - tgBatDau);
+            let conLai = tgHoiThucTe - (Date.now() - tgBatDau);
             if (conLai <= 0) {
                 clearInterval(interval); 
                 if (pcOv) pcOv.style.height = '0%';
@@ -37,7 +34,7 @@
                 if (pcTxt) pcTxt.style.display = 'none';
                 if (mbTxt) mbTxt.style.display = 'none';
             } else {
-                let pt = (conLai / tgHoi * 100) + '%';
+                let pt = (conLai / tgHoiThucTe * 100) + '%';
                 let sec = (conLai / 1000).toFixed(1);
                 if (pcOv) pcOv.style.height = pt;
                 if (mbOv) mbOv.style.height = pt;
@@ -47,24 +44,26 @@
         }, 50); 
     }
 
- 
     function kichHoatKyNang(phimUpper) {
-        // 🌟 MỞ KHÓA: Đã xóa điều kiện || window.dangMuaChieu
         if (!window.playerModel || window.isDead) return;
         let bayGio = Date.now();
-        if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianHoiChieu[phimUpper]) {
+
+        // 🌟 ÉP TỐC ĐÁNH CHO MOBILE: Giảm thời gian chờ dựa trên chỉ số Speed của vũ khí
+        let thoiGianHoiGoc = thoiGianHoiChieu[phimUpper];
+        let tyLeGiam = window.GIAM_HOI_CHIEU || 0; 
+        let thoiGianThucTe = thoiGianHoiGoc * (1.0 - tyLeGiam);
+
+        if (bayGio - thoiDiemTungChieu[phimUpper] >= thoiGianThucTe) {
             thoiDiemTungChieu[phimUpper] = bayGio; 
-            // 🌟 MỞ KHÓA: Đã xóa lệnh đóng băng 1 giây
             if (window.HePhaiHienTai) window.HePhaiHienTai.tungChieu(phimUpper);
-            batDauHoiChieu(phimUpper);
-
-
+            batDauHoiChieuMobile(phimUpper, thoiGianThucTe);
         } else {
-            let sec = ((thoiGianHoiChieu[phimUpper] - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
-            if (typeof taoSoSatThuong === 'function') taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), sec+"s", '#e74c3c');
+            let sec = ((thoiGianThucTe - (bayGio - thoiDiemTungChieu[phimUpper])) / 1000).toFixed(1);
+            if (typeof taoSoSatThuong === 'function') taoSoSatThuong(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "Chưa hồi xong (" + sec + "s)", '#e74c3c');
         }
     }
 
+    
     // ==========================================
     // 🕹️ LÕI CẢM ỨNG
     // ==========================================
