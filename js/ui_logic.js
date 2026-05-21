@@ -564,10 +564,17 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         body: JSON.stringify({ inv_id: invId, action: action })
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
+            
+            // ========================================================
+            // 🌟 CẬP NHẬT TRỰC TIẾP VÀO NÃO ENGINE ĐỂ ĐÁNH RA DAME MỚI NGAY LẬP TỨC
+            // ========================================================
+            window.DAME_CUA_TOI = data.new_damage;
+            window.MAU_TOI_DA = data.new_hp;
+            
+            // Thưởng nhẹ: Mặc đồ VIP vào thì full bình máu luôn!
+            window.mauBanThan = data.new_hp; 
 
-
-
-            // 🌟 TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
+            // TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
                 .then(res2 => res2.json())
                 .then(data2 => {
@@ -577,14 +584,11 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
                         if (document.getElementById('gameBalanceUI')) document.getElementById('gameBalanceUI').innerText = parseInt(data2.balance || 0).toLocaleString();
                         window.renderTrangTuiDo(); // Cập nhật ô lưới túi đồ
 
-
-
-                    
                     let itemMoi = window.khoDoData.find(i => i.inv_id == invId);
                     if (itemMoi) {
                         window.chonXemMonDo(itemMoi); // Cập nhật bảng thông tin bên phải
                         
-                        // 🔌 BẮN TÍN HIỆU SANG ENGINE ĐỂ ĐỔI ĐỒ 3D NGAY LẬP TỨC
+                        // 🔌 BẮN TÍN HIỆU SANG ENGINE ĐỂ ĐỔI ĐỒ 3D
                         if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
                             let url3D = action === 'equip' ? itemMoi.model_url : '';
                             let capDoĐập = action === 'equip' ? (parseInt(itemMoi.upgrade_level) || 0) : 0;
@@ -598,6 +602,7 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         }
     });
 };
+
 
 
 
