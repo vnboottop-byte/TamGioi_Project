@@ -1531,7 +1531,10 @@ function animate() {
                 else if (doCao < 1000.0) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
                 else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
                 if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
-
+                // 🌟 BẢN VÁ AAA: BƠM TỐC ĐỘ THÚ CƯỠI (1.1 = Tăng 10%)
+                let heSoThuCuoi = window.TOC_DO_CHAY_CUA_TOI || 1.0;
+                currentWalk *= heSoThuCuoi;
+                currentSprint *= heSoThuCuoi;
                 var dangChuDongDoiDoCao = false;
                 var tocDoBayLen = currentSprint * 0.7; 
 
@@ -1673,7 +1676,10 @@ function animate() {
                 else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
 
                 if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
-
+                // 🌟 BẢN VÁ AAA: BƠM TỐC ĐỘ THÚ CƯỠI (1.1 = Tăng 10%)
+                let heSoThuCuoi = window.TOC_DO_CHAY_CUA_TOI || 1.0;
+                currentWalk *= heSoThuCuoi;
+                currentSprint *= heSoThuCuoi;
                 var dangChuDongDoiDoCao = false;
                 var tocDoBayLen = currentSprint * 0.7; 
 
