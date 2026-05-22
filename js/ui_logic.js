@@ -600,9 +600,17 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
                         // 🔌 BẮN TÍN HIỆU SANG ENGINE ĐỂ ĐỔI ĐỒ 3D
                         if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
                             let url3D = action === 'equip' ? itemMoi.model_url : '';
+                            
+                            // 🌟 LÁ CHẮN THÉP: ĐANG BỊ ĐOẠT XÁ THÌ MẶC ĐỒ CỠ NÀO CŨNG CHỈ LÀ TÀNG HÌNH!
+                            if (window.IS_DOAT_XA && ['weapon', 'weapon2', 'mount', 'shield'].includes(itemMoi.item_type)) {
+                                url3D = 'none'; 
+                            }
+                            
                             let capDoĐập = action === 'equip' ? (parseInt(itemMoi.upgrade_level) || 0) : 0;
                             window.capNhatTrangBi3DNgayLapTuc(itemMoi.item_type, url3D, capDoĐập);
                         }
+
+
                     }
                 }
             });
