@@ -545,9 +545,8 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
 
 
 
-
 window.thucHienHanhDongTrangBi = function(invId, action) {
-    // 🌟 LÔI BIẾN NÀY RA NGOÀI ĐỂ BÊN DƯỚI CÓ THỂ ĐỌC ĐƯỢC!
+    // 🌟 LÔI BIẾN NÀY RA NGOÀI ĐỂ BÊN DƯỚI ĐỌC ĐƯỢC KHI THÁO ĐỒ!
     let item = window.khoDoData.find(i => i.inv_id == invId);
 
     if (action === 'equip') {
@@ -565,17 +564,29 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
             
-            // 🌟 ĐOẠT XÁ CHUYỂN PHÁI: Nếu vừa mặc Ngoại Trang hệ 'ALL' thì bắt buộc F5 để nạp JS riêng của nó!
-            if (action === 'equip' && item && item.item_type === 'model' && item.required_class === 'ALL') {
-                window.hienThongBaoGame("✨ Đang kích hoạt Bí Thuật Đoạt Xá! Xin chờ giây lát...", true);
+            // 🌟 ĐOẠT XÁ CHUYỂN PHÁI: Bắt buộc F5 khi Mặc hoặc Tháo Ngoại Trang hệ 'ALL'
+            if (item && item.item_type === 'model' && item.required_class === 'ALL') {
+                let thongBao = (action === 'equip') 
+                    ? "✨ Đang kích hoạt Bí Thuật Đoạt Xá! Xin chờ giây lát..." 
+                    : "✨ Thu hồi Bí Thuật! Đang hoàn nguyên chân thể...";
+                window.hienThongBaoGame(thongBao, true);
                 setTimeout(() => location.reload(), 1500);
                 return; // Dừng luôn hàm ở đây, chờ F5!
             }
 
-            // 🌟 TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
+            // ========================================================
+            // 🌟 CẬP NHẬT TRỰC TIẾP VÀO NÃO ENGINE ĐỂ ĐÁNH RA DAME MỚI NGAY LẬP TỨC
+            // ========================================================
+            window.DAME_CUA_TOI = data.new_damage;
+            window.MAU_TOI_DA = data.new_hp;
+            
+            // Thưởng nhẹ: Mặc đồ VIP vào thì full bình máu luôn!
+            window.mauBanThan = data.new_hp; 
+
+            // TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
-            .then(res2 => res2.json())
-            .then(data2 => {
+                .then(res2 => res2.json())
+                .then(data2 => {
                     if (data2.status === 'success') {
                         window.khoDoData = data2.data;
                         if (document.getElementById('gameGoldUI')) document.getElementById('gameGoldUI').innerText = parseInt(data2.game_gold).toLocaleString();
