@@ -43,7 +43,8 @@ try {
             $tenNhanVat = end($mangTen); // Lấy chữ cuối cùng. VD: 'jimbei'
 
             // Đường dẫn JS muốn ép vào
-            $js_doc_quyen = "js/phai_" . strtolower($tenNhanVat) . ".js";
+            // Đường dẫn JS muốn ép vào
+            $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
             
             // Ép thẳng vào Cột script_file của người chơi bằng 1 cột mới (Ta sẽ vá vào db)
             $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
