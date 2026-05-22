@@ -896,11 +896,16 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 let bOrigin = bot.mesh.position.clone();
                 let pTarget = playerModel.position.clone(); pTarget.y += 3;
                 let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+
+
                 let botFakeId = "PLAYER_" + bot.id;
 
                 if (typeof window.remotePlayers !== 'undefined') {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: 0, classCode: bot.fakePhai };
                 }
+
+                // 🌟 KHAI BÁO BIẾN BỊ THIẾU ĐỂ CỨU GAME KHỎI SẬP
+                let phaiDung = bot.fakePhai || 'TU_TIEN';
 
                 // 🌟 BẢN VÁ: Phantom đánh chay, miễn nhiễm lỗi xóa file
                 let phantomWeapon = null;
