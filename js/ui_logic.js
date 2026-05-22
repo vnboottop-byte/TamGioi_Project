@@ -562,19 +562,17 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
             
-            // ========================================================
-            // 🌟 CẬP NHẬT TRỰC TIẾP VÀO NÃO ENGINE ĐỂ ĐÁNH RA DAME MỚI NGAY LẬP TỨC
-            // ========================================================
-            window.DAME_CUA_TOI = data.new_damage;
-            window.MAU_TOI_DA = data.new_hp;
-            
-            // Thưởng nhẹ: Mặc đồ VIP vào thì full bình máu luôn!
-            window.mauBanThan = data.new_hp; 
+            // 🌟 ĐOẠT XÁ CHUYỂN PHÁI: Nếu vừa mặc Ngoại Trang hệ 'ALL' thì bắt buộc F5 để nạp JS riêng của nó!
+            if (action === 'equip' && item && item.item_type === 'model' && item.required_class === 'ALL') {
+                window.hienThongBaoGame("✨ Đang kích hoạt Bí Thuật Đoạt Xá! Xin chờ giây lát...", true);
+                setTimeout(() => location.reload(), 1500);
+                return; // Dừng luôn hàm ở đây, chờ F5!
+            }
 
-            // TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
+            // 🌟 TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
-                .then(res2 => res2.json())
-                .then(data2 => {
+            .then(res2 => res2.json())
+            .then(data2 => {
                     if (data2.status === 'success') {
                         window.khoDoData = data2.data;
                         if (document.getElementById('gameGoldUI')) document.getElementById('gameGoldUI').innerText = parseInt(data2.game_gold).toLocaleString();
