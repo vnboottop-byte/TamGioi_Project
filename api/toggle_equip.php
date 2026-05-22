@@ -26,11 +26,34 @@ try {
     elseif ($type === 'mount') $col = "current_mount_url";
     elseif ($type === 'model') $col = "current_model_url";
 
+
     if ($action === 'equip') {
         $conn->query("UPDATE user_inventory SET is_equipped = 0 WHERE username = '$username' AND item_type = '$type'");
         $conn->query("UPDATE user_inventory SET is_equipped = 1 WHERE id = $inv_id");
         if ($col) $conn->query("UPDATE game_characters SET $col = '$url' WHERE username = '$username'");
+
+        // 🌟 KIẾM HIỆP ĐOẠT XÁ BẰNG SKIN 'ALL'
+        if ($type === 'model' && $item['required_class'] === 'ALL') {
+            // Tách tên file. Ví dụ: 'uploads/anims/1779413960_jimbei.glb' -> Lấy chữ 'jimbei'
+            $tenFileGoc = basename($url); 
+            $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
+            
+            // Xóa đoạn số đằng trước (nếu có)
+            $mangTen = explode('_', $tenKhongDuoi);
+            $tenNhanVat = end($mangTen); // Lấy chữ cuối cùng. VD: 'jimbei'
+
+            // Đường dẫn JS muốn ép vào
+            $js_doc_quyen = "js/phai_" . strtolower($tenNhanVat) . ".js";
+            
+            // Ép thẳng vào Cột script_file của người chơi bằng 1 cột mới (Ta sẽ vá vào db)
+            $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+        } 
+        // 🌟 Nếu lột Skin 'ALL' ra mặc Skin phái gốc, thì xóa cái custom_script đi
+        else if ($type === 'model' && $item['required_class'] !== 'ALL') {
+            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
+        }
     } else {
+        // ... (Khúc else giữ nguyên)
         $conn->query("UPDATE user_inventory SET is_equipped = 0 WHERE id = $inv_id");
         if ($col) $conn->query("UPDATE game_characters SET $col = '' WHERE username = '$username'");
     }
