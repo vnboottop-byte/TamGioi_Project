@@ -547,9 +547,12 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
 
 
 window.thucHienHanhDongTrangBi = function(invId, action) {
+    // 🌟 LÔI BIẾN NÀY RA NGOÀI ĐỂ BÊN DƯỚI CÓ THỂ ĐỌC ĐƯỢC!
+    let item = window.khoDoData.find(i => i.inv_id == invId);
+
     if (action === 'equip') {
-        let item = window.khoDoData.find(i => i.inv_id == invId);
-        if (item && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
+        // Mở khóa cho Skin ALL không bị kẹt tẩu hỏa nhập ma
+        if (item && item.item_type !== 'model' && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
             window.hienThongBaoGame(`Tẩu hỏa nhập ma! Pháp bảo này chứa sức mạnh của hệ [${item.required_class}], cơ thể bạn không chịu nổi!`, false);
             return;
         }
