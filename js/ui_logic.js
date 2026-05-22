@@ -544,13 +544,10 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
 
 
 
-
 window.thucHienHanhDongTrangBi = function(invId, action) {
-    // 🌟 LÔI BIẾN NÀY RA NGOÀI ĐỂ BÊN DƯỚI ĐỌC ĐƯỢC KHI THÁO ĐỒ!
     let item = window.khoDoData.find(i => i.inv_id == invId);
 
     if (action === 'equip') {
-        // Mở khóa cho Skin ALL không bị kẹt tẩu hỏa nhập ma
         if (item && item.item_type !== 'model' && item.required_class !== 'ALL' && window.FACTION_CODE && item.required_class !== window.FACTION_CODE) {
             window.hienThongBaoGame(`Tẩu hỏa nhập ma! Pháp bảo này chứa sức mạnh của hệ [${item.required_class}], cơ thể bạn không chịu nổi!`, false);
             return;
@@ -571,46 +568,40 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
                     : "✨ Thu hồi Bí Thuật! Đang hoàn nguyên chân thể...";
                 window.hienThongBaoGame(thongBao, true);
                 setTimeout(() => location.reload(), 1500);
-                return; // Dừng luôn hàm ở đây, chờ F5!
+                return; 
             }
 
-            // ========================================================
-            // 🌟 CẬP NHẬT TRỰC TIẾP VÀO NÃO ENGINE ĐỂ ĐÁNH RA DAME MỚI NGAY LẬP TỨC
-            // ========================================================
-            window.DAME_CUA_TOI = data.new_damage;
-            window.MAU_TOI_DA = data.new_hp;
-            
-            // Thưởng nhẹ: Mặc đồ VIP vào thì full bình máu luôn!
-            window.mauBanThan = data.new_hp; 
+            // 🌟 CẬP NHẬT TRỰC TIẾP VÀO NÃO ENGINE ĐỂ ĐÁNH RA DAME MỚI
+            if (data.new_damage) window.DAME_CUA_TOI = data.new_damage;
+            if (data.new_hp) {
+                window.MAU_TOI_DA = data.new_hp;
+                window.mauBanThan = data.new_hp; 
+            }
 
-            // TẢI LẠI DỮ LIỆU TÚI ĐỒ NGẦM DƯỚI NỀN VÀ BẮN SANG ENGINE
             fetch('api/get_inventory.php')
-                .then(res2 => res2.json())
-                .then(data2 => {
-                    if (data2.status === 'success') {
-                        window.khoDoData = data2.data;
-                        if (document.getElementById('gameGoldUI')) document.getElementById('gameGoldUI').innerText = parseInt(data2.game_gold).toLocaleString();
-                        if (document.getElementById('gameBalanceUI')) document.getElementById('gameBalanceUI').innerText = parseInt(data2.balance || 0).toLocaleString();
-                        window.renderTrangTuiDo(); // Cập nhật ô lưới túi đồ
+            .then(res2 => res2.json())
+            .then(data2 => {
+                if (data2.status === 'success') {
+                    window.khoDoData = data2.data;
+                    if (document.getElementById('gameGoldUI')) document.getElementById('gameGoldUI').innerText = parseInt(data2.game_gold).toLocaleString();
+                    if (document.getElementById('gameBalanceUI')) document.getElementById('gameBalanceUI').innerText = parseInt(data2.balance || 0).toLocaleString();
+                    window.renderTrangTuiDo(); 
 
                     let itemMoi = window.khoDoData.find(i => i.inv_id == invId);
                     if (itemMoi) {
-                        window.chonXemMonDo(itemMoi); // Cập nhật bảng thông tin bên phải
+                        window.chonXemMonDo(itemMoi); 
                         
-                        // 🔌 BẮN TÍN HIỆU SANG ENGINE ĐỂ ĐỔI ĐỒ 3D
                         if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
                             let url3D = action === 'equip' ? itemMoi.model_url : '';
                             
-                            // 🌟 LÁ CHẮN THÉP: ĐANG BỊ ĐOẠT XÁ THÌ MẶC ĐỒ CỠ NÀO CŨNG CHỈ LÀ TÀNG HÌNH!
+                            // 🌟 ÉP TÀNG HÌNH KHỎI MÀN HÌNH NẾU ĐANG ĐOẠT XÁ MÀ ĐÒI THAY VŨ KHÍ
                             if (window.IS_DOAT_XA && ['weapon', 'weapon2', 'mount', 'shield'].includes(itemMoi.item_type)) {
-                                url3D = 'none'; 
+                                url3D = ''; 
                             }
                             
                             let capDoĐập = action === 'equip' ? (parseInt(itemMoi.upgrade_level) || 0) : 0;
                             window.capNhatTrangBi3DNgayLapTuc(itemMoi.item_type, url3D, capDoĐập);
                         }
-
-
                     }
                 }
             });
@@ -619,9 +610,6 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
         }
     });
 };
-
-
-
 
 
 // 🌟 THUẬT TOÁN BÁN RÁC (PHÂN RÃ)
