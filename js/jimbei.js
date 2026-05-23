@@ -108,7 +108,23 @@
             vels.push(new THREE.Vector3((Math.random() - 0.5) * 8, Math.random() * 8, (Math.random() - 0.5) * 8));
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-        const mat = new THREE.PointsMaterial({ color: 0x00aaff, size: 5.0, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+
+
+
+
+
+        // 🌟 Đã thu nhỏ hạt nước. Mobile để 2.5 cho dễ nhìn, PC để 1.5 cho cực mịn!
+        const mat = new THREE.PointsMaterial({
+            color: 0x00aaff,
+            size: window.isMobile ? 2.5 : 1.5,
+            transparent: true,
+            opacity: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false
+        });
+
+
+
         const pts = new THREE.Points(geo, mat); scene.add(pts);
         
         hieuUngJimbei.push({ system: pts, velocities: vels, life: 30, type: 'explosion' }); 
