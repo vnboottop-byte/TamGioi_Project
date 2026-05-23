@@ -304,16 +304,63 @@
     // 🌟 ĐĂNG KÝ HỆ PHÁI CHO ENGINE ĐỌC
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('jimbei')) {
-        window.HePhaiHienTai = {
-            tenPhai: "Hải Tặc Nước",
-            khoiTao: function () {
-                console.log("🌊 Bộ Kỹ Năng Hệ Nước Đã Đoạt Xá Thành Công!");
-            }, 
-            tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) { 
-                window.tungComboJimbei(phim, isRemote, origin, target, dir, casterId, weaponUrl); 
-            },
-            capNhat: function () {} 
-        };
+        // =========================================================================
+// 🔌 KÝ SINH VÀO ENGINE.JS (KHÔNG LÀM MẤT LOGIC TRỌNG LỰC MAP HÌNH CẦU)
+// =========================================================================
+
+// 1. SAO LƯU LẠI BỘ NÃO GỐC CỦA GAME
+if (!window.HePhaiGoc_Backup) {
+    window.HePhaiGoc_Backup = {
+        khoiTao: window.HePhaiHienTai.khoiTao,
+        capNhat: window.HePhaiHienTai.capNhat,
+        tungChieu: window.HePhaiHienTai.tungChieu
+    };
+}
+
+window.HePhaiHienTai.tenPhai = "Hải Hiệp Jimbei";
+
+// 2. KÝ SINH HÀM KHỞI TẠO
+window.HePhaiHienTai.khoiTao = function() {
+    // Chạy logic gốc của Engine trước (Để load Map, set trọng lực...)
+    if (window.HePhaiGoc_Backup.khoiTao) window.HePhaiGoc_Backup.khoiTao.apply(this, arguments);
+    
+    console.log("🦈 Đã kích hoạt Vòng Xoay Combo Jimbei!");
+    window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
+};
+
+// 3. KÝ SINH HÀM CẬP NHẬT (QUAN TRỌNG NHẤT ĐỂ GIỮ MAP CẦU)
+window.HePhaiHienTai.capNhat = function() {
+    // CHẠY LOGIC GỐC TRƯỚC: Giữ nhân vật bám dính vào Map hình cầu TRUNG_CHAU
+    if (window.HePhaiGoc_Backup.capNhat) window.HePhaiGoc_Backup.capNhat.apply(this, arguments);
+
+    // SAU ĐÓ MỚI CHẠY LOGIC ANIMATION CỦA JIMBEI
+    if (!window.MayTrangThaiJimbei.dangKhoaAnim && window.MayTrangThaiJimbei.trangThaiHienTai !== 'DIE') {
+        if (window.isMoving || window.isKeyboardMoving) {
+            window.MayTrangThaiJimbei.chuyenTrangThai('RUN');
+        } else {
+            window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
+        }
+    }
+};
+
+// 4. KÝ SINH HÀM TUNG CHIÊU
+window.HePhaiHienTai.tungChieu = function(phimBam, laBot = false) {
+    let phimHopLe = ['Q', 'E', 'R', 'F', 'COMBO1'];
+    
+    if (phimHopLe.includes(phimBam.toUpperCase())) {
+        let thongTinDonDanh = window.MayTrangThaiJimbei.tungDonDanhKeTiep();
+        if (thongTinDonDanh) {
+            // Xử lý logic trừ máu ở đây
+        }
+    } else if (phimBam.toUpperCase() === 'SPACE') {
+        window.MayTrangThaiJimbei.chuyenTrangThai('JUMP', null, 800);
+    } else if (phimBam.toUpperCase() === 'SHIFT') {
+        window.MayTrangThaiJimbei.chuyenTrangThai('DODGE', null, 500);
+    } else {
+        // Nếu bấm phím khác không thuộc Jimbei, trả về cho Game gốc tự xử lý
+        if (window.HePhaiGoc_Backup.tungChieu) window.HePhaiGoc_Backup.tungChieu.apply(this, arguments);
+    }
+};
         window.HePhaiHienTai.khoiTao();
     }
 
