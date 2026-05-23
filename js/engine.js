@@ -2249,50 +2249,60 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 
-
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
-    window.daNhanDanhSachMap = false; 
-    
-    // 🛑 LÁ CHẮN 1: Chặn đứng lỗi chuỗi 'undefined' khi mới nạp Game
-    if (!zoneId || zoneId === 'undefined' || zoneId === null || zoneId === '') {
-        zoneId = 'TRUNG_CHAU'; 
-        window.ZONE_ID = 'TRUNG_CHAU'; // Ép lưu lại luôn!
+    window.daNhanDanhSachMap = false;
+
+    // 🛑 LÁ CHẮN 1: Ép kiểu chuỗi, cắt gọt mọi khoảng trắng rác
+    if (!zoneId || String(zoneId).trim() === 'undefined' || zoneId === null || String(zoneId).trim() === '') {
+        zoneId = 'TRUNG_CHAU';
     }
-    
-    // Gọi API kèm theo Tên Khu Vực
-    fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
+    zoneId = String(zoneId).trim().toUpperCase();
+    window.ZONE_ID = zoneId; // Ép lưu lại vào sổ Nam Tào!
+
+    // 🛑 LÁ CHẮN 2: Bơm thuốc nổ CHỐNG CACHE LITESPEED (v=Date.now)
+    fetch('api/get_maps.php?zone=' + zoneId + '&v=' + Date.now()).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.THONG_TIN_CAC_MAP = data.data.map(m => ({
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
             }));
-            
-            // 🌟 CÔNG TẮC ĐA VŨ TRỤ
-            if (data.data.length > 0 && data.data[0].gravity_type) {
-                window.KIEU_TRONG_LUC = data.data[0].gravity_type;
+
+            // 🌟 LÁ CHẮN 3: CƯỠNG CHẾ VẬT LÝ TUYỆT ĐỐI (CẤM CÃI API)
+            if (zoneId === 'TRUNG_CHAU') {
+                window.KIEU_TRONG_LUC = 'CAU'; // Bố láo bố lếu, Trung Châu là phải Cầu!
+            } else if (data.data.length > 0 && data.data[0].gravity_type) {
+                window.KIEU_TRONG_LUC = String(data.data[0].gravity_type).trim().toUpperCase();
             } else {
-                // 🛑 LÁ CHẮN 2: BẢO VỆ LÕI TRUNG CHÂU (Phòng hờ API rớt mạng/trả về rỗng)
-                if (zoneId === 'TRUNG_CHAU') {
-                    window.KIEU_TRONG_LUC = 'CAU';
-                } else {
-                    window.KIEU_TRONG_LUC = 'PHANG';
-                    window.toaDoMatDat = 0; 
-                }
+                window.KIEU_TRONG_LUC = 'PHANG';
+                window.toaDoMatDat = 0;
             }
 
-           console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
-            
+            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
+
             // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
             if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
         }
-        window.daNhanDanhSachMap = true; 
-    }).catch(err => { 
-        console.error(err); 
-        window.daNhanDanhSachMap = true; 
+        window.daNhanDanhSachMap = true;
+    }).catch(err => {
+        console.error("❌ Lỗi mạng khi gọi API Map:", err);
+        window.daNhanDanhSachMap = true;
     });
 };
 
-
+// ==========================================
+// 🛡️ BÁC SĨ TỰ CHỮA LÀNH TRỌNG LỰC (AUTO-HEALER V1.0)
+// Ngay cả khi có thằng code nào khác (như lỗi Cổng Dịch Chuyển) cố tình bóp méo Map,
+// Bác sĩ này sẽ tự động nắn lại gân cốt sau mỗi 1 giây!
+// ==========================================
+setInterval(() => {
+    if (window.ZONE_ID && String(window.ZONE_ID).trim().toUpperCase() === 'TRUNG_CHAU') {
+        if (window.KIEU_TRONG_LUC !== 'CAU') {
+            window.KIEU_TRONG_LUC = 'CAU'; // Nắn xương sống!
+            if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
+            console.log("🛠️ Bác sĩ AI: Đã tự động nắn lại Trọng Lực Hình Cầu cho Trung Châu!");
+        }
+    }
+}, 1000);
 
 
 
