@@ -121,22 +121,19 @@
         return new THREE.Mesh(geo, mat);
     }
 
-    // ==========================================
-    // 🌊 TUNG CHIÊU JIMBEI
+
+// ==========================================
+    // 🌊 TUNG CHIÊU JIMBEI (CHUẨN LORE ONE PIECE)
     // ==========================================
     window.tungComboJimbei = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc && !isRemote) return;
-
-
-
 
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
 
-            // 🌟 BỘ MÁY VÒNG XOAY COMBO (ĐỌC ATK TỪ TRÊN XUỐNG DƯỚI)
             if (typeof window.ViTriComboJimbei === 'undefined') {
                 window.DanhSachComboJimbei = [
                     'PL_JINBE_ORIG01_COMBO_A', 'PL_JINBE_ORIG01_COMBO_B', 'PL_JINBE_ORIG01_COMBO_C',
@@ -146,19 +143,13 @@
             }
 
             let tenAnimMua = window.DanhSachComboJimbei[window.ViTriComboJimbei];
-
-            // Giao cho Engine xử lý Múa và Khóa chân (Engine đã có sẵn Cỗ Máy Trạng Thái)
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua);
             else if (typeof window.playAnim === 'function') window.playAnim(tenAnimMua);
 
-            // Chuyển đạn cho lần bấm tiếp theo
             window.ViTriComboJimbei++;
             if (window.ViTriComboJimbei >= window.DanhSachComboJimbei.length) window.ViTriComboJimbei = 0;
         }
-
-
-
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 150;
@@ -171,7 +162,7 @@
         } else {
             viTriGoc = nvc.position.clone();
             upVector = nvc.up.clone().normalize(); 
-            viTriGoc.add(upVector.clone().multiplyScalar(4.0)); // Bắn từ ngực/tay
+            viTriGoc.add(upVector.clone().multiplyScalar(4.0)); 
 
             huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
             
@@ -180,7 +171,7 @@
 
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                    type: 'TUNG_CHIEU', skillType: phim, className: 'Jimbei', // Đặt tên className để mạng phân biệt
+                    type: 'TUNG_CHIEU', skillType: phim, className: 'Jimbei', 
                     origin: {x: viTriGoc.x, y: viTriGoc.y, z: viTriGoc.z}, target: {x: mucTieu.x, y: mucTieu.y, z: mucTieu.z}, dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z},
                     weaponUrl: ""
                 })), { reliable: true });
@@ -188,43 +179,40 @@
         }
 
         if (phim === 'Q') {
-            // Q: Bắn Thủy Đạn (Giọt nước bay siêu tốc)
-            const vienNuoc = taoCauNuoc(1.5, 0x00ffff);
-            vienNuoc.position.copy(viTriGoc); scene.add(vienNuoc); 
-            kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 60, speed: 8.0, targetPos: mucTieu, damage: dameGoc * 0.2, isRemote: isRemote });
+            // Q: Đường Thảo Ngõa Chính Quyền (Sóng xung kích chém gió)
+            const vienNuoc = taoCauNuoc(2.0, 0x66ccff);
+            vienNuoc.scale.set(3, 0.2, 0.5); // Ép dẹp thành hình lưỡi kiếm sóng âm
+            vienNuoc.position.copy(viTriGoc); vienNuoc.lookAt(mucTieu); scene.add(vienNuoc); 
+            kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 40, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote });
         }
         else if (phim === 'E') {
-            // E: Thủy Pháo (Đại bác nước bự)
-            const bomNuoc = taoCauNuoc(4.0, 0x0088ff);
-            bomNuoc.position.copy(viTriGoc); scene.add(bomNuoc);
-            kyNangJimbei.push({ mesh: bomNuoc, type: 'E', life: 100, speed: 5.0, targetPos: mucTieu, damage: dameGoc * 0.5, isRemote: isRemote });
+            // E: Hải Lưu Thương Ba (Phóng lao nước đâm xuyên)
+            const muiLao = new THREE.Group();
+            const thanLao = taoCauNuoc(1.5, 0x0055ff);
+            thanLao.scale.set(1, 1, 6); // Kéo dài thành mũi lao
+            muiLao.add(thanLao);
+            muiLao.position.copy(viTriGoc); muiLao.lookAt(mucTieu); scene.add(muiLao);
+            kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote });
         }
         else if (phim === 'R') {
-            // R: Hải Lưu Ném Qua Vai (Bắn ra 3 luồng nước xoắn ốc)
+            // R: Hải Lưu Ném Qua Vai (Lốc xoáy nước nhiều tầng)
             const rGroup = new THREE.Group();
             rGroup.position.copy(viTriGoc); rGroup.lookAt(mucTieu); scene.add(rGroup);
-            for(let i=0; i<3; i++) {
-                const nuoc = taoCauNuoc(2.0, 0x0055ff);
-                const goc = (i / 3) * Math.PI * 2;
-                nuoc.position.set(Math.cos(goc)*3, Math.sin(goc)*3, 0);
+            for(let i=0; i<4; i++) {
+                const nuoc = taoCauNuoc(2.5, 0x0088ff);
+                const goc = (i / 4) * Math.PI * 2;
+                nuoc.position.set(Math.cos(goc)*4, Math.sin(goc)*4, 0);
                 rGroup.add(nuoc);
             }
-            kyNangJimbei.push({ mesh: rGroup, type: 'R', life: 150, speed: 4.0, ticks: 0, targetPos: mucTieu, damage: dameGoc * 0.8, isRemote: isRemote });
+            kyNangJimbei.push({ mesh: rGroup, type: 'R', life: 120, speed: 6.0, targetPos: mucTieu, damage: dameGoc * 1.2, isRemote: isRemote });
         }
         else if (phim === 'F') {
-            // F: Cơn Thịnh Nộ Của Đại Dương (Quả cầu nước siêu khổng lồ rớt từ trên cao)
-            const tsunami = taoCauNuoc(15.0, 0x00ffff);
-            
-            // Xuất hiện từ trên trời cao (cách 80 mét)
-            let startPos = mucTieu.clone().add(upVector.clone().multiplyScalar(80));
-            tsunami.position.copy(startPos); 
-            
-            // Xoay mặt nhìn thẳng xuống mục tiêu
-            let qMatDat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), upVector.clone().negate());
-            tsunami.quaternion.copy(qMatDat);
-
-            scene.add(tsunami);
-            kyNangJimbei.push({ mesh: tsunami, type: 'F', life: 200, speed: 6.0, targetPos: mucTieu, damage: dameGoc * 2.0, isRemote: isRemote, upV: upVector });
+            // F: Gyojin Karate Ogi: BURAIKAN (Tuyệt kĩ Vũ Lại Quán)
+            const buraikan = taoCauNuoc(6.0, 0x00ffff);
+            buraikan.position.copy(viTriGoc); 
+            buraikan.lookAt(mucTieu);
+            scene.add(buraikan);
+            kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote });
         }
     };
 
@@ -235,9 +223,17 @@
         for (let i = kyNangJimbei.length - 1; i >= 0; i--) {
             let s = kyNangJimbei[i]; s.life--;
 
-            if (s.type === 'Q' || s.type === 'E') {
+            if (s.type === 'Q') {
                 s.mesh.translateZ(s.speed);
-                // Radar tầm nhiệt đuổi theo kẻ địch
+                // Sóng Q bay cực nhanh, sát thương thẳng mặt
+                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
+                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 10);
+                    s.life = 0;
+                }
+            }
+            else if (s.type === 'E') {
+                s.mesh.translateZ(s.speed);
+                // Lao nước có tầm nhiệt nhẹ
                 if (s.targetPos) {
                     if (!s.isRemote) {
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
@@ -246,16 +242,14 @@
                     const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                 }
-
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
-                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), s.type==='Q'?5:15);
+                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 15);
                     s.life = 0;
                 }
             }
             else if (s.type === 'R') {
-                s.mesh.rotateZ(0.3); // Luồng nước xoáy tít thò lò
+                s.mesh.rotateZ(0.6); // Lốc xoáy quay tít thò lò
                 s.mesh.translateZ(s.speed);
-                
                 if (s.targetPos) {
                     if (!s.isRemote) {
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
@@ -264,21 +258,22 @@
                     const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.05);
                 }
-
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 10 || s.life < 5) {
                     taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 25);
                     s.life = 0;
                 }
             }
             else if (s.type === 'F') {
-                // Đại cầu nước giáng từ trên cao xuống
+                // Buraikan: Chưởng lực khổng lồ bắn thẳng tới trước, ngày càng bành trướng
                 s.mesh.translateZ(s.speed);
-                // Phình to dần tạo áp lực
-                s.mesh.scale.addScalar(0.05);
+                s.mesh.scale.addScalar(0.04); // Phình to ra theo thời gian
+                
+                // Rớt hạt nước dọc đường đi để tạo vệt đuôi đẹp mắt
+                if (s.life % 2 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 0); 
                 
                 let dist = s.mesh.position.distanceTo(s.targetPos);
-                if (dist < s.speed + 5 || s.mesh.position.dot(s.upV) < s.targetPos.dot(s.upV)) {
-                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 40); // Nổ to tướng 40m
+                if (dist < s.speed + 10 || s.life < 5) {
+                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 50); // Nổ siêu to 50m
                     s.life = 0;
                 }
             }
@@ -319,6 +314,7 @@
             if (it.life <= 0) { it.el.remove(); danhSachSoBayJB.splice(i, 1); window.tongSoChuNoi_JB--; }
         }
     };
+
 
     // 🌟 KẾT NỐI VÀO VÒNG LẶP TOÀN CẦU MÁY CHỦ
     setInterval(window.updateCombatJimbei, 30);
