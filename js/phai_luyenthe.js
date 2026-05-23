@@ -356,8 +356,19 @@
                     
                     let khoangCach = nvc.position.distanceTo(diemDen);
                     
-                    // Hướng mặt thẳng vào ngực Boss
-                    nvc.lookAt(new THREE.Vector3(tHit.tamNguc.x, nvc.position.y, tHit.tamNguc.z));
+                    // 🌟 HƯỚNG MẶT VỀ KẺ ĐỊCH (BẢN VÁ TRỌNG LỰC CẦU TƯƠNG TÍCH 100%)
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(nvc.position);
+                    dummy.up.copy(nvc.up);
+
+                    // Nắn thẳng mục tiêu theo phương ngang
+                    let vecToTarget = new THREE.Vector3().subVectors(tHit.tamNguc, nvc.position);
+                    let vertComp = vecToTarget.clone().projectOnVector(nvc.up);
+                    vecToTarget.sub(vertComp);
+
+                    dummy.lookAt(nvc.position.clone().add(vecToTarget));
+                    nvc.quaternion.slerp(dummy.quaternion, 0.3); // Xoay mượt mà trong lúc lao tới
+                    
                     
                     if (khoangCach > 2.2) {
                         // 💨 ĐANG LƯỚT: Lerp nội suy tốc độ cao (0.25)
