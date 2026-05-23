@@ -500,29 +500,38 @@ if (quai.classCode === 'TRANG_TRI') {
     
     quai.mesh.position.add(huongBay.clone().multiplyScalar(quai.currentSpeed * delta));
 
-    // ✨ THUẬT TOÁN VÁ KHÔNG GIAN: Ép hành trình lượn cong theo tầng khí quyển, chống chui xuống lòng đất
-    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-        let tam = window.TAM_HANH_TINH_HIEN_TAI;
-        let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-        let doCaoMongMuon = R + (quai.doCaoBayHienTai || 40);
-        
-        // Lấy Vector hướng từ tâm hành tinh đâm thẳng qua vị trí quái hiện tại
+
+
+
+    // ✨ THUẬT TOÁN VÁ KHÔNG GIAN: Ép Boss bơi ngang, chống cắm đầu xuống gầm map
+if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+    let tam = window.TAM_HANH_TINH_HIEN_TAI;
+    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+    
+    // Nếu quái thấp hơn độ cao mặt đất mong muốn, kéo nó lên và xoay nó nằm ngang
+    let kcQuai = quai.mesh.position.distanceTo(tam);
+    let doCaoThucTe = kcQuai - R;
+    
+    if (doCaoThucTe < (quai.doCaoBayHienTai || 40)) {
+        // 1. KÉO LÊN: Khóa chặt khoảng cách để nó nằm trên mặt đất
         let huongTuTam = quai.mesh.position.clone().sub(tam).normalize();
-        // Khóa chết khoảng cách của quái luôn bằng (Bán kính đất + Độ cao bay) để ép nó lượn vòng quanh cầu
+        let doCaoMongMuon = R + (quai.doCaoBayHienTai || 40);
         quai.mesh.position.copy(tam).add(huongTuTam.multiplyScalar(doCaoMongMuon));
+
+        // 2. XOAY NẰM NGANG: Ép quái xoay 90 độ, hướng thẳng về phía trước để bơi
+        let currentUp = quai.upVector; // Vector hướng thẳng lên trời
+        let newForward = huongBay.clone().projectOnPlane(currentUp).normalize(); 
+        
+        // Tạo hướng xoay mới: Ngang với mặt đất
+        let dummy = new THREE.Object3D();
+        dummy.position.copy(quai.mesh.position);
+        dummy.up.copy(currentUp);
+        dummy.lookAt(quai.mesh.position.clone().add(newForward));
+
+        // Slerp từ từ để nó xoay mượt mà sang tư thế bơi
+        quai.mesh.quaternion.slerp(dummy.quaternion, 0.1); 
     }
-
-    // 3. UỐN ÉP CƠ THỂ VÀ ÔM CUA NGHIÊNG CÁNH
-    let dummy = new THREE.Object3D();
-    dummy.position.copy(quai.mesh.position);
-    dummy.up.copy(quai.upVector);
-    dummy.lookAt(quai.mesh.position.clone().add(huongBay));
-
-    let rightVec = new THREE.Vector3(1,0,0).applyQuaternion(dummy.quaternion);
-    let gocRe = huongBay.dot(rightVec); 
-    dummy.rotateZ(gocRe * boNao.lucNghieng); 
-
-    quai.mesh.quaternion.slerp(dummy.quaternion, 0.02); 
+}
 
     // 4. ÉP CHẠY ANIMATION BAY
     if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
