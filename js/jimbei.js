@@ -318,3 +318,137 @@
     }
 
 })();
+
+
+
+// =========================================================================
+// 🦈 BỘ NÃO TRẠNG THÁI (STATE MACHINE) DÀNH RIÊNG CHO JIMBEI
+// =========================================================================
+
+window.MayTrangThaiJimbei = {
+    trangThaiHienTai: 'IDLE',
+    dangKhoaAnim: false, // Cái còng tay: Khóa không cho đi bộ khi đang múa chiêu
+    timeoutKhoa: null,
+
+    // 🌟 BẢNG DỊCH THUẬT: Khớp lệnh Game với đúng tên 30 Anim của Jimbei (VIẾT HOA ĐỂ ENGINE HIỂU)
+    tuDienAnim: {
+        'IDLE': 'PL_JINBE_ORIG01_IDLE_A',
+        'RUN': 'PL_JINBE_ORIG01_RUN',
+        'DODGE': 'PL_JINBE_ORIG01_DODGE',          // Lướt / Né
+        'JUMP': 'PL_JINBE_ORIG01_JUMP',
+        'HURT': 'PL_JINBE_ORIG01_DAMAGE',          // Bị đánh trúng
+        'STUN': 'PL_JINBE_ORIG01_STUN',            // Bị choáng
+        'DIE': 'PL_JINBE_ORIG01_LOSE',             // Nằm sấp
+        'VICTORY': 'PL_JINBE_ORIG01_VICTORY',      // Chiến thắng
+        
+        // ⚔️ HỆ THỐNG ĐÁNH ĐẤM
+        'COMBO_1': 'PL_JINBE_ORIG01_COMBO_A',      // Đấm trái
+        'COMBO_2': 'PL_JINBE_ORIG01_COMBO_B',      // Đấm phải
+        'COMBO_3': 'PL_JINBE_ORIG01_COMBO_C',      // Uppercut
+        'SKILL_Q': 'PL_JINBE_ORIG01_SKILL_A',      // Bắn nước ngầm
+        'SKILL_E': 'PL_JINBE_ORIG01_SKILL_B'       // Cú đấm võ đạo
+    },
+
+    // 🌟 CỖ MÁY CHUYỂN SỐ VÀ ÉP KHUNG HÌNH
+    chuyenTrangThai: function(trangThaiMoi, thoiGianKhoa = 0) {
+        // 🛑 LUẬT THÉP 1: Đã ngã xuống thì cấm làm mọi thứ!
+        if (this.trangThaiHienTai === 'DIE') return;
+
+        // 🛑 LUẬT THÉP 2: Nếu đang bị khóa (đang vung đấm, dính đòn) -> Bỏ qua lệnh chạy/đứng im
+        if (this.dangKhoaAnim && (trangThaiMoi === 'RUN' || trangThaiMoi === 'IDLE')) return;
+
+        // 🛑 LUẬT THÉP 3: Cấm đè hoạt ảnh trùng lặp gây giật lag
+        if (this.trangThaiHienTai === trangThaiMoi && trangThaiMoi !== 'HURT') return;
+
+        // ✅ Cấp phép chuyển trạng thái
+        this.trangThaiHienTai = trangThaiMoi;
+        let tenAnimChuan = this.tuDienAnim[trangThaiMoi];
+
+        if (tenAnimChuan && window.animationsMap && window.animationsMap[tenAnimChuan]) {
+            // Chọc thẳng vào lõi Three.js để ép chạy Anim, bỏ qua đống if/else lộn xộn của engine.js
+            let action = window.animationsMap[tenAnimChuan];
+            
+            if (window.currentAction) window.currentAction.fadeOut(0.15); // Mờ mượt 0.15s
+            window.currentAction = action;
+            window.currentAction.reset().fadeIn(0.15).play();
+            window.currentAnimName = tenAnimChuan;
+        } else {
+            console.warn("⚠️ Jimbei chưa học chiêu này: ", trangThaiMoi);
+        }
+
+        // 🔒 KÍCH HOẠT CÒNG TAY (Nếu tung chiêu hoặc dính đòn)
+        if (thoiGianKhoa > 0) {
+            this.dangKhoaAnim = true;
+            if (this.timeoutKhoa) clearTimeout(this.timeoutKhoa);
+            
+            this.timeoutKhoa = setTimeout(() => {
+                this.dangKhoaAnim = false;
+                // Múa xong thì tự động thu nắm đấm về đứng im (hoặc chạy tiếp nếu đang đè nút)
+                if (this.trangThaiHienTai !== 'DIE') {
+                    if (window.isMoving || window.isKeyboardMoving) {
+                        this.chuyenTrangThai('RUN');
+                    } else {
+                        this.chuyenTrangThai('IDLE');
+                    }
+                }
+            }, thoiGianKhoa);
+        }
+    }
+};
+
+// =========================================================================
+// 🔌 GHI ĐÈ LÊN MẠCH MÁU CỦA ENGINE.JS (HIJACKING)
+// =========================================================================
+
+// Khi Jimbei xuất hiện, nó sẽ tự động cướp quyền điều khiển hình ảnh của Engine
+window.HePhaiHienTai = {
+    tenPhai: "Hải Hiệp Jimbei",
+    
+    khoiTao: function() {
+        console.log("🦈 Đã kích hoạt Cỗ Máy Trạng Thái Jimbei!");
+        window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
+    },
+
+    capNhat: function() {
+        // Cập nhật dáng đi/chạy liên tục dựa trên phím bấm
+        if (!window.MayTrangThaiJimbei.dangKhoaAnim && window.MayTrangThaiJimbei.trangThaiHienTai !== 'DIE') {
+            if (window.isMoving || window.isKeyboardMoving) {
+                window.MayTrangThaiJimbei.chuyenTrangThai('RUN');
+            } else {
+                window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
+            }
+        }
+    },
+
+    // Quản lý kỹ năng Q, E, R, F
+    tungChieu: function(phimBam, laBot = false) {
+        let kyNang = null;
+        let thoiGianAnim = 0;
+
+        switch(phimBam.toUpperCase()) {
+            case 'Q': kyNang = 'SKILL_Q'; thoiGianAnim = 1200; break; // Chiêu A mất 1.2s
+            case 'E': kyNang = 'SKILL_E'; thoiGianAnim = 1500; break; // Chiêu B mất 1.5s
+            case 'SPACE': kyNang = 'JUMP'; thoiGianAnim = 800; break;
+            case 'SHIFT': kyNang = 'DODGE'; thoiGianAnim = 500; break;
+            case 'COMBO1': kyNang = 'COMBO_1'; thoiGianAnim = 600; break; // Cú đấm thường
+        }
+
+        if (kyNang) {
+            window.MayTrangThaiJimbei.chuyenTrangThai(kyNang, thoiGianAnim);
+            
+            // Ở đây Sếp có thể gọi hàm trừ máu Boss, bắn tia nước v.v.
+            console.log("🌊 Jimbei tung tuyệt kỹ: " + kyNang);
+        }
+    }
+};
+
+// Ghi đè hàm chết của Engine để gọi đúng Anim Nằm Sấp của Jimbei
+const hamChetGoc = window.xuLyCaiChetNhanVat;
+window.xuLyCaiChetNhanVat = function(killerId) {
+    if (window.IS_DOAT_XA && window.CURRENT_MODEL_URL.includes("jinbe")) {
+        window.MayTrangThaiJimbei.chuyenTrangThai('DIE');
+        // Khóa vĩnh viễn không cho hồi sinh Anim cho đến khi hệ thống hồi sinh thật sự chạy
+        window.MayTrangThaiJimbei.dangKhoaAnim = true; 
+    }
+    if (hamChetGoc) hamChetGoc(killerId);
+};
