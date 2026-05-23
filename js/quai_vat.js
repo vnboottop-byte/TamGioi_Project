@@ -262,11 +262,24 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                 else {
                     tenTrungKhop = danhSachTenGoc.find(n => n === theLoaiCanTim);
                     if (!tenTrungKhop) {
+
+
+
+
+
+
                         if (theLoaiCanTim === 'ATTACK') tenTrungKhop = danhSachTenGoc.find(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
-                        else if (theLoaiCanTim === 'RUN') tenTrungKhop = danhSachTenGoc.find(n => /chaybo|run|walk|fly|swim|move|chase|circling|bay|chạy|dibo/i.test(n));
-                        else if (theLoaiCanTim === 'IDLE') tenTrungKhop = danhSachTenGoc.find(n => /idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
-                        else if (theLoaiCanTim === 'DIE') tenTrungKhop = danhSachTenGoc.find(n => /die|death|dead|drop|chet/i.test(n));
+                        // 🌟 BẢN VÁ TỪ ĐIỂN: Ưu tiên "move f" (bơi thẳng) hoặc "swim" trước, rồi mới tới các từ khóa chung chung khác
+                        else if (theLoaiCanTim === 'RUN') tenTrungKhop = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move/i.test(n));
+                        else if (theLoaiCanTim === 'IDLE') tenTrungKhop = danhSachTenGoc.find(n => /surface|idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
+                        else if (theLoaiCanTim === 'DIE') tenTrungKhop = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
                         else if (theLoaiCanTim.includes('CHIEU')) {
+
+
+
+
+
+
                             tenTrungKhop = danhSachTenGoc.find(n => n.includes(theLoaiCanTim));
                             if (!tenTrungKhop) tenTrungKhop = danhSachTenGoc.find(n => /tancong|attack|skill/i.test(n));
                         }
