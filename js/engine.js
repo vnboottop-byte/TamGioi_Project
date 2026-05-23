@@ -994,9 +994,16 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
     scene.add(mapHanhTinh);
 
+
+
+
+
     window.kiemSoatHanhTinhGoc = function () {
         if (!window.HANH_TINH_GOC) return;
-        if (window.KIEU_TRONG_LUC === 'PHANG') {
+        
+        // 🌟 BẢN VÁ AAA: CHỈ ĐƯỢC HIỆN TRÁI ĐẤT GỐC KHI ĐANG Ở ĐÚNG TRUNG_CHAU!
+        // Dù là Map Cầu hay Phẳng, hễ đi khỏi Trung Châu là Trái Đất gốc phải Tàng hình!
+        if (window.ZONE_ID !== 'TRUNG_CHAU') {
             window.HANH_TINH_GOC.visible = false;
             if (window.danhSachMap && window.matDatHanhTinhGoc) {
                 window.danhSachMap = window.danhSachMap.filter(m => !window.matDatHanhTinhGoc.includes(m));
@@ -1010,6 +1017,11 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
             }
         }
     };
+
+
+
+
+
     window.kiemSoatHanhTinhGoc();
 
     tienHanhTaiNhanVat();
