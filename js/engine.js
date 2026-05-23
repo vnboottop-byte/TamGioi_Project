@@ -2250,10 +2250,14 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 
-
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
-    window.daNhanDanhSachMap = false; // 🌟 BẢN VÁ: ĐÁNH DẤU ĐANG KÉO DỮ LIỆU TỪ SQL
+    window.daNhanDanhSachMap = false; 
+    
+    // 🛑 LÁ CHẮN BẢO VỆ: Nếu zoneId bị trống hoặc bị biến thành chuỗi chữ 'undefined' do load lần đầu
+    if (!zoneId || zoneId === 'undefined' || zoneId === null) {
+        zoneId = 'TRUNG_CHAU'; // Ép buộc lấy Trung Châu làm mặc định để có Trọng lực CẦU!
+    }
     
     // Gọi API kèm theo Tên Khu Vực
     fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
@@ -2266,9 +2270,9 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
             if (data.data.length > 0 && data.data[0].gravity_type) {
                 window.KIEU_TRONG_LUC = data.data[0].gravity_type;
             } else {
-                // 🌟 LÁ CHẮN HƯ KHÔNG: Nếu khu vực này chưa có Map nào, Mặc định gạt sang PHẲNG để người chơi lơ lửng an toàn!
+                // 🌟 LÁ CHẮN HƯ KHÔNG
                 window.KIEU_TRONG_LUC = 'PHANG';
-                window.toaDoMatDat = 0; // Set sẵn mặt cỏ ở 0 để Sếp đáp xuống từ độ cao 15m
+                window.toaDoMatDat = 0; 
             }
 
            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
@@ -2276,7 +2280,7 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
             // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
             if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
         }
-        window.daNhanDanhSachMap = true; // 🌟 XÁC NHẬN ĐÃ KÉO XONG
+        window.daNhanDanhSachMap = true; 
     }).catch(err => { console.error(err); window.daNhanDanhSachMap = true; });
 };
 
