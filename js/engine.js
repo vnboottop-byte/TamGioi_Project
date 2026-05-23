@@ -2250,34 +2250,37 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 
-
-
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
     window.daNhanDanhSachMap = false; 
     
-    // 🛑 LÁ CHẮN BẢO VỆ: Nếu zoneId bị trống hoặc bị biến thành chuỗi chữ 'undefined' do load lần đầu
-    if (!zoneId || zoneId === 'undefined' || zoneId === null) {
-        zoneId = 'TRUNG_CHAU'; // Ép buộc lấy Trung Châu làm mặc định để có Trọng lực CẦU!
+    // 🛑 LÁ CHẮN 1: Chặn đứng lỗi chuỗi 'undefined' khi mới nạp Game
+    if (!zoneId || zoneId === 'undefined' || zoneId === null || zoneId === '') {
+        zoneId = 'TRUNG_CHAU'; 
+        window.ZONE_ID = 'TRUNG_CHAU'; // Ép lưu lại luôn!
     }
     
-    // Gợi API kèm theo Tên Khu Vực
+    // Gọi API kèm theo Tên Khu Vực
     fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.THONG_TIN_CAC_MAP = data.data.map(m => ({
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
             }));
             
-            // 🌟 CÔNG TẮC ĐA VŨ TRỤ: Nhìn vào Data SQL xem Map này là Tròn hay Phẳng để gạt cần số!
+            // 🌟 CÔNG TẮC ĐA VŨ TRỤ
             if (data.data.length > 0 && data.data[0].gravity_type) {
                 window.KIEU_TRONG_LUC = data.data[0].gravity_type;
             } else {
-                // 🌟 LÁ CHẮN HƯ KHÔNG
-                window.KIEU_TRONG_LUC = 'PHANG';
-                window.toaDoMatDat = 0; 
+                // 🛑 LÁ CHẮN 2: BẢO VỆ LÕI TRUNG CHÂU (Phòng hờ API rớt mạng/trả về rỗng)
+                if (zoneId === 'TRUNG_CHAU') {
+                    window.KIEU_TRONG_LUC = 'CAU';
+                } else {
+                    window.KIEU_TRONG_LUC = 'PHANG';
+                    window.toaDoMatDat = 0; 
+                }
             }
 
-            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
+           console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
             
             // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
             if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
@@ -2288,7 +2291,6 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
         window.daNhanDanhSachMap = true; 
     });
 };
-
 
 
 
