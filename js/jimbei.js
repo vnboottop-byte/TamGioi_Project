@@ -155,13 +155,33 @@
     }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ==========================================
-    // 🌊 TUNG CHIÊU JIMBEI (CHUẨN LORE ONE PIECE)
+    // 🌊 TUNG CHIÊU JIMBEI (VÁ LỖI: BAY TỪ TAY VÀ ĐỘ TRỄ 0.5S)
     // ==========================================
     window.tungComboJimbei = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+        
+        // 🌟 Nhận diện nhân vật của người chơi khác qua mạng
+        if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+            nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
+        }
+
         if (!nvc && !isRemote) return;
 
+        // 1. CHẠY ANIMATION MÚA QUYỀN TRƯỚC NGAY LẬP TỨC
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
@@ -184,102 +204,139 @@
             if (window.ViTriComboJimbei >= window.DanhSachComboJimbei.length) window.ViTriComboJimbei = 0;
         }
 
-        let viTriGoc, huongMat, mucTieu, upVector;
-        const dameGoc = window.DAME_CUA_TOI || 150;
+        let viTriGocToTam = new THREE.Vector3();
+        let upVector = nvc ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+        let huongMat = new THREE.Vector3(); 
+        if (nvc) { nvc.getWorldDirection(huongMat); huongMat.normalize(); }
+
+        let mucTieu = null;
 
         if (isRemote) {
-            viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
-            huongMat = new THREE.Vector3(remoteHuong.x, remoteHuong.y, remoteHuong.z);
+            viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
+            upVector = viTriGocToTam.clone().normalize(); 
             mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
-            upVector = viTriGoc.clone().normalize();
         } else {
-            viTriGoc = nvc.position.clone();
-            upVector = nvc.up.clone().normalize(); 
-            viTriGoc.add(upVector.clone().multiplyScalar(4.0)); 
-
-            huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
+            viTriGocToTam = nvc.position.clone();
+            viTriGocToTam.add(upVector.clone().multiplyScalar(4.0)); // Giả lập tâm ngực
             
-            let target = window.layMucTieuGanNhatJB(viTriGoc);
-            mucTieu = target ? target.clone() : viTriGoc.clone().add(huongMat.clone().multiplyScalar(300));
+            let target = window.layMucTieuGanNhatJB(viTriGocToTam);
+            mucTieu = target ? target.clone() : viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(300));
 
+            // 🌟 GỬI GÓI TIN MẠNG NGAY LẬP TỨC ĐỂ ĐỐI THỦ THẤY SẾP BẮT ĐẦU MÚA!
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'TUNG_CHIEU', skillType: phim, className: 'Jimbei', 
-                    origin: {x: viTriGoc.x, y: viTriGoc.y, z: viTriGoc.z}, target: {x: mucTieu.x, y: mucTieu.y, z: mucTieu.z}, dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z},
+                    origin: {x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z}, 
+                    target: {x: mucTieu.x, y: mucTieu.y, z: mucTieu.z}, 
+                    dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z},
                     weaponUrl: ""
                 })), { reliable: true });
             }
         }
 
-
-
-
-
-
-
+        const dameGoc = window.DAME_CUA_TOI || 150;
 
         // =====================================
-        // 🌟 TUNG CHIÊU: KHÓA TRỤC THEO TRỌNG LỰC CẦU
+        // 🌟 2. HẸN GIỜ 0.5 GIÂY SAU MỚI PHÓNG KỸ NĂNG TỪ TAY
         // =====================================
-        if (phim === 'Q') {
-            const vienNuoc = taoCauNuoc(2.0, 0x66ccff);
-            vienNuoc.scale.set(3, 0.2, 0.5);
-            vienNuoc.position.copy(viTriGoc);
+        setTimeout(() => {
+            let viTriXuatChieu = viTriGocToTam.clone(); 
+            let xuongTayPhai = null;
+            let xuongTayTrai = null;
 
-            vienNuoc.up.copy(upVector); // 🌟 Ép trục trên dưới theo Nhân Vật
-            vienNuoc.lookAt(mucTieu);
-            scene.add(vienNuoc);
+            // 🌟 MÁY DÒ XƯƠNG (Bắt chính xác RHand_Palm và LHand_Palm của Sếp)
+            if (nvc) {
+                nvc.traverse(c => {
+                    if (c.isBone) {
+                        let n = c.name.toUpperCase();
+                        if (n.includes('RHAND_PALM') || n.includes('HAND_R') || n.includes('RIGHTHAND')) xuongTayPhai = c;
+                        if (n.includes('LHAND_PALM') || n.includes('HAND_L') || n.includes('LEFTHAND')) xuongTayTrai = c;
+                    }
+                });
 
-            kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 40, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote, upVector: upVector.clone() });
-        }
-        else if (phim === 'E') {
-            const muiLao = new THREE.Group();
-            const thanLao = taoCauNuoc(1.5, 0x0055ff);
-            thanLao.scale.set(1, 1, 6);
-            muiLao.add(thanLao);
-            muiLao.position.copy(viTriGoc);
+                // Luân phiên dùng tay trái hoặc tay phải tùy theo chiêu thức
+                let tayChon = xuongTayPhai; 
+                if (phim === 'E' || phim === 'R') tayChon = xuongTayTrai || xuongTayPhai; 
 
-            muiLao.up.copy(upVector); // 🌟 Ép trục
-            muiLao.lookAt(mucTieu);
-            scene.add(muiLao);
+                // Lấy tọa độ không gian thật của xương lòng bàn tay ngay khoảnh khắc tay duỗi ra
+                if (tayChon) {
+                    tayChon.getWorldPosition(viTriXuatChieu);
+                }
+            }
 
-            kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote, upVector: upVector.clone() });
-        }
-        else if (phim === 'R') {
-            const waveGroup = new THREE.Group();
-            waveGroup.position.copy(viTriGoc);
-
-            waveGroup.up.copy(upVector); // 🌟 QUAN TRỌNG: Khóa trục sóng thần theo mặt đất cầu!
-            waveGroup.lookAt(mucTieu);
-            scene.add(waveGroup);
-
-            const geo = new THREE.CylinderGeometry(4, 6, 25, 16, 1, true, 0, Math.PI);
-            const mat = new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
-            const waveMesh = new THREE.Mesh(geo, mat);
-
-            waveMesh.rotation.z = Math.PI / 2;
-            waveMesh.rotation.y = Math.PI;
-            waveMesh.rotation.x = -Math.PI / 6;
-
-            const loiSong = taoCauNuoc(3, 0xffffff);
-            loiSong.scale.set(5, 1, 2);
-
-            waveGroup.add(waveMesh);
-            waveGroup.add(loiSong);
-
-            kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote, upVector: upVector.clone() });
-        }
-        else if (phim === 'F') {
-            const buraikan = taoCauNuoc(6.0, 0x00ffff);
-            buraikan.position.copy(viTriGoc);
-
-            buraikan.up.copy(upVector); // 🌟 Ép trục
-            buraikan.lookAt(mucTieu);
-            scene.add(buraikan);
-
-            kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote, upVector: upVector.clone() });
-        }
+            if (phim === 'Q') {
+                const vienNuoc = taoCauNuoc(2.0, 0x66ccff);
+                vienNuoc.scale.set(3, 0.2, 0.5); 
+                vienNuoc.position.copy(viTriXuatChieu); // 🌟 Phóng từ tay
+                
+                vienNuoc.up.copy(upVector); 
+                vienNuoc.lookAt(mucTieu); 
+                scene.add(vienNuoc); 
+                
+                kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 40, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote, upVector: upVector.clone() });
+            }
+            else if (phim === 'E') {
+                const muiLao = new THREE.Group();
+                const thanLao = taoCauNuoc(1.5, 0x0055ff);
+                thanLao.scale.set(1, 1, 6); 
+                muiLao.add(thanLao);
+                muiLao.position.copy(viTriXuatChieu); // 🌟 Phóng từ tay
+                
+                muiLao.up.copy(upVector); 
+                muiLao.lookAt(mucTieu); 
+                scene.add(muiLao);
+                
+                kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote, upVector: upVector.clone() });
+            }
+            else if (phim === 'R') {
+                const waveGroup = new THREE.Group();
+                waveGroup.position.copy(viTriXuatChieu); // 🌟 Phóng từ tay
+                
+                waveGroup.up.copy(upVector); 
+                waveGroup.lookAt(mucTieu); 
+                scene.add(waveGroup);
+                
+                const geo = new THREE.CylinderGeometry(4, 6, 25, 16, 1, true, 0, Math.PI);
+                const mat = new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+                const waveMesh = new THREE.Mesh(geo, mat);
+                
+                waveMesh.rotation.z = Math.PI / 2; 
+                waveMesh.rotation.y = Math.PI; 
+                waveMesh.rotation.x = -Math.PI / 6; 
+                
+                const loiSong = taoCauNuoc(3, 0xffffff);
+                loiSong.scale.set(5, 1, 2);
+                
+                waveGroup.add(waveMesh);
+                waveGroup.add(loiSong);
+                
+                kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote, upVector: upVector.clone() });
+            }
+            else if (phim === 'F') {
+                const buraikan = taoCauNuoc(6.0, 0x00ffff);
+                buraikan.position.copy(viTriXuatChieu); // 🌟 Phóng từ tay
+                
+                buraikan.up.copy(upVector); 
+                buraikan.lookAt(mucTieu);
+                scene.add(buraikan);
+                
+                kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote, upVector: upVector.clone() });
+            }
+        }, 500); // ⏳ Độ trễ 500 mili-giây (0.5s)
     };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // ==========================================
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU (JIMBEI)
