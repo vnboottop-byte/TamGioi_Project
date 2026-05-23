@@ -454,6 +454,77 @@ window.capNhatAIQuaiVat = function (delta) {
             }
         }
 
+
+        // ========================================================
+        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ
+        // ========================================================
+        if (quai.classCode === 'TRANG_TRI') {
+            let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
+            
+            // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT) NẾU ĐÃ BAY TỚI NƠI
+            if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 30) {
+                let alt = boNao.doCaoBayMin + Math.random() * (boNao.doCaoBayMax - boNao.doCaoBayMin);
+                
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                    // 🌍 BAY TRÊN MAP CẦU: Lấy random một điểm trên mặt cầu vĩ đại
+                    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+                    let radius = R + alt;
+                    let theta = Math.random() * Math.PI * 2; // Xoay vòng ngang 360 độ
+                    let phi = Math.random() * Math.PI;       // Xoay vòng dọc
+                    
+                    let tam = window.TAM_HANH_TINH_HIEN_TAI;
+                    quai.waypoint = new THREE.Vector3(
+                        tam.x + radius * Math.sin(phi) * Math.cos(theta),
+                        tam.y + radius * Math.cos(phi),
+                        tam.z + radius * Math.sin(phi) * Math.sin(theta)
+                    );
+                } else {
+                    // 🗺️ BAY TRÊN MAP PHẲNG: Lấy random tọa độ X Z quanh khu vực người chơi
+                    let range = 1500; // Vùng hoạt động 1.5km
+                    quai.waypoint = new THREE.Vector3(
+                        playerModel.position.x + (Math.random() - 0.5) * range,
+                        (window.toaDoMatDat || 0) + alt,
+                        playerModel.position.z + (Math.random() - 0.5) * range
+                    );
+                }
+                
+                // Mới chọn đường xong thì cho nó lượn chậm lại tí
+                quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
+            }
+
+            // 2. LƯỚT TỚI MỤC TIÊU
+            let huongBay = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
+            
+            // Gia tốc êm ái
+            let maxSpeed = 30 * (quai.heSoToLon || 1);
+            if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
+            
+            quai.mesh.position.add(huongBay.clone().multiplyScalar(quai.currentSpeed * delta));
+
+            // 3. UỐN ÉP CƠ THỂ VÀ ÔM CUA NGHIÊNG CÁNH
+            let dummy = new THREE.Object3D();
+            dummy.position.copy(quai.mesh.position);
+            dummy.up.copy(quai.upVector);
+            dummy.lookAt(quai.mesh.position.clone().add(huongBay));
+
+            // Hiệu ứng nghiêng mình khi rẽ
+            let rightVec = new THREE.Vector3(1,0,0).applyQuaternion(dummy.quaternion);
+            let fwdCu = new THREE.Vector3(0,0,1).applyQuaternion(quai.mesh.quaternion);
+            let gocRe = huongBay.dot(rightVec); 
+            dummy.rotateZ(gocRe * boNao.lucNghieng); 
+
+            quai.mesh.quaternion.slerp(dummy.quaternion, 0.02); 
+
+            // 4. ÉP CHẠY ANIMATION BAY
+            if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
+            
+            // Vô hiệu hóa thẻ máu
+            if (quai.tagEl) quai.tagEl.style.display = 'none';
+
+            return; // 🛑 BỎ QUA TOÀN BỘ LOGIC RƯỢT ĐUỔI, ĐÁNH NHAU BÊN DƯỚI!
+        }
+        
+
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
             if (quai.tFlying === undefined) {
                 quai.tFlying = Math.random() * 1000;
@@ -709,75 +780,7 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-// ========================================================
-        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ
-        // ========================================================
-        if (quai.classCode === 'TRANG_TRI') {
-            let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
-            
-            // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT) NẾU ĐÃ BAY TỚI NƠI
-            if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 30) {
-                let alt = boNao.doCaoBayMin + Math.random() * (boNao.doCaoBayMax - boNao.doCaoBayMin);
-                
-                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                    // 🌍 BAY TRÊN MAP CẦU: Lấy random một điểm trên mặt cầu vĩ đại
-                    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-                    let radius = R + alt;
-                    let theta = Math.random() * Math.PI * 2; // Xoay vòng ngang 360 độ
-                    let phi = Math.random() * Math.PI;       // Xoay vòng dọc
-                    
-                    let tam = window.TAM_HANH_TINH_HIEN_TAI;
-                    quai.waypoint = new THREE.Vector3(
-                        tam.x + radius * Math.sin(phi) * Math.cos(theta),
-                        tam.y + radius * Math.cos(phi),
-                        tam.z + radius * Math.sin(phi) * Math.sin(theta)
-                    );
-                } else {
-                    // 🗺️ BAY TRÊN MAP PHẲNG: Lấy random tọa độ X Z quanh khu vực người chơi
-                    let range = 1500; // Vùng hoạt động 1.5km
-                    quai.waypoint = new THREE.Vector3(
-                        playerModel.position.x + (Math.random() - 0.5) * range,
-                        (window.toaDoMatDat || 0) + alt,
-                        playerModel.position.z + (Math.random() - 0.5) * range
-                    );
-                }
-                
-                // Mới chọn đường xong thì cho nó lượn chậm lại tí
-                quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
-            }
 
-            // 2. LƯỚT TỚI MỤC TIÊU
-            let huongBay = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
-            
-            // Gia tốc êm ái
-            let maxSpeed = 30 * (quai.heSoToLon || 1);
-            if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
-            
-            quai.mesh.position.add(huongBay.clone().multiplyScalar(quai.currentSpeed * delta));
-
-            // 3. UỐN ÉP CƠ THỂ VÀ ÔM CUA NGHIÊNG CÁNH
-            let dummy = new THREE.Object3D();
-            dummy.position.copy(quai.mesh.position);
-            dummy.up.copy(quai.upVector);
-            dummy.lookAt(quai.mesh.position.clone().add(huongBay));
-
-            // Hiệu ứng nghiêng mình khi rẽ (Cực ngầu cho cá voi/phi thuyền)
-            let rightVec = new THREE.Vector3(1,0,0).applyQuaternion(dummy.quaternion);
-            let fwdCu = new THREE.Vector3(0,0,1).applyQuaternion(quai.mesh.quaternion);
-            let gocRe = huongBay.dot(rightVec); 
-            dummy.rotateZ(gocRe * boNao.lucNghieng); // Lật nghiêng người theo độ gắt của khúc cua
-
-            quai.mesh.quaternion.slerp(dummy.quaternion, 0.02); // Xoay cực chậm tạo độ nặng nề khổng lồ
-
-            // 4. ÉP CHẠY ANIMATION BAY
-            if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); // Bơm RUN, từ điển sẽ tự dịch ra FLY
-            
-            // Vô hiệu hóa thẻ máu trên đầu cho nó đỡ rác màn hình
-            if (quai.tagEl) quai.tagEl.style.display = 'none';
-
-            return; // 🛑 BỎ QUA TOÀN BỘ LOGIC RƯỢT ĐUỔI, ĐÁNH NHAU BÊN DƯỚI!
-        }
-        // ========================================================
 
 
 // 6. VÒNG LẶP SKILL VÀ SÁT THƯƠNG BOSS THƯỜNG
