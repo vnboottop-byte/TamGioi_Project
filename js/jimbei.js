@@ -128,14 +128,37 @@
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc && !isRemote) return;
 
+
+
+
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            
-            // Ép múa chiêu: Gọi ATTACK chung vì Jimbei có thể xài bộ xương khác
-            if (typeof window.playAnim === 'function') window.playAnim('ATTACK');
+
+            // 🌟 BỘ MÁY VÒNG XOAY COMBO (ĐỌC ATK TỪ TRÊN XUỐNG DƯỚI)
+            if (typeof window.ViTriComboJimbei === 'undefined') {
+                window.DanhSachComboJimbei = [
+                    'PL_JINBE_ORIG01_COMBO_A', 'PL_JINBE_ORIG01_COMBO_B', 'PL_JINBE_ORIG01_COMBO_C',
+                    'PL_JINBE_ORIG01_SKILL_A', 'PL_JINBE_ORIG01_SKILL_B'
+                ];
+                window.ViTriComboJimbei = 0;
+            }
+
+            let tenAnimMua = window.DanhSachComboJimbei[window.ViTriComboJimbei];
+
+            // Giao cho Engine xử lý Múa và Khóa chân (Engine đã có sẵn Cỗ Máy Trạng Thái)
+            window.dangMuaChieu = true;
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua);
+            else if (typeof window.playAnim === 'function') window.playAnim(tenAnimMua);
+
+            // Chuyển đạn cho lần bấm tiếp theo
+            window.ViTriComboJimbei++;
+            if (window.ViTriComboJimbei >= window.DanhSachComboJimbei.length) window.ViTriComboJimbei = 0;
         }
+
+
+
 
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 150;
