@@ -1882,6 +1882,7 @@ function animate() {
                 }
             } 
             else {
+
                 // ----------------------------------------------------
                 // 🌎 NHÁNH 2: XỬ LÝ VẬT LÝ CHO HÀNH TINH CẦU 
                 // ----------------------------------------------------
@@ -1893,15 +1894,16 @@ function animate() {
                 window.radarTrongLuc.firstHitOnly = false;
 
                 var hanhTinhGanNhat = null;
-                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Trọng lực mặc định
+                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Lõi Trái Đất mặc định
 
-                // 🌟 BẢN VÁ ĐA VŨ TRỤ: DÒ TÌM TÂM HÀNH TINH THỰC SỰ ĐANG ĐỨNG (THAY VÌ KHÓA Ở 0,0,0)
-                if (window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
+                // 🛑 LỖI CHÍ MẠNG ĐÃ FIX: TRUNG CHÂU là 1 hành tinh khổng lồ duy nhất có lõi ở (0,0,0).
+                // Các map Sếp rải trên TRUNG CHÂU chỉ là nhà cửa, cây cối, KHÔNG PHẢI LÀ LÕI HÀNH TINH!
+                // Cấm tuyệt đối việc lấy tọa độ nhà cửa làm trọng tâm lực hút nếu đang ở TRUNG_CHAU!
+                if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
                     let khoangCachMin = Infinity;
                     window.THONG_TIN_CAC_MAP.forEach(mapData => {
                         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
                         let d = playerModel.position.distanceTo(mPos);
-                        // Bắt dính vào tâm của Map cầu gần người chơi nhất
                         if (d < khoangCachMin) {
                             khoangCachMin = d;
                             tamHanhTinh.copy(mPos);
