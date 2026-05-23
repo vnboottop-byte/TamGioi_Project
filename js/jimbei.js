@@ -211,76 +211,85 @@
             }
         }
 
+
+
+
+
+
+
+
+        // =====================================
+        // 🌟 TUNG CHIÊU: KHÓA TRỤC THEO TRỌNG LỰC CẦU
+        // =====================================
         if (phim === 'Q') {
-            // Q: Đường Thảo Ngõa Chính Quyền (Sóng xung kích chém gió)
             const vienNuoc = taoCauNuoc(2.0, 0x66ccff);
-            vienNuoc.scale.set(3, 0.2, 0.5); // Ép dẹp thành hình lưỡi kiếm sóng âm
-            vienNuoc.position.copy(viTriGoc); vienNuoc.lookAt(mucTieu); scene.add(vienNuoc); 
-            kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 40, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote });
+            vienNuoc.scale.set(3, 0.2, 0.5);
+            vienNuoc.position.copy(viTriGoc);
+
+            vienNuoc.up.copy(upVector); // 🌟 Ép trục trên dưới theo Nhân Vật
+            vienNuoc.lookAt(mucTieu);
+            scene.add(vienNuoc);
+
+            kyNangJimbei.push({ mesh: vienNuoc, type: 'Q', life: 40, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.4, isRemote: isRemote, upVector: upVector.clone() });
         }
         else if (phim === 'E') {
-            // E: Hải Lưu Thương Ba (Phóng lao nước đâm xuyên)
             const muiLao = new THREE.Group();
             const thanLao = taoCauNuoc(1.5, 0x0055ff);
-            thanLao.scale.set(1, 1, 6); // Kéo dài thành mũi lao
+            thanLao.scale.set(1, 1, 6);
             muiLao.add(thanLao);
-            muiLao.position.copy(viTriGoc); muiLao.lookAt(mucTieu); scene.add(muiLao);
-            kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote });
+            muiLao.position.copy(viTriGoc);
+
+            muiLao.up.copy(upVector); // 🌟 Ép trục
+            muiLao.lookAt(mucTieu);
+            scene.add(muiLao);
+
+            kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote, upVector: upVector.clone() });
         }
         else if (phim === 'R') {
-            // R: Hải Lưu Ném Qua Vai (Sóng Thần Cuộn Trào)
             const waveGroup = new THREE.Group();
             waveGroup.position.copy(viTriGoc);
+
+            waveGroup.up.copy(upVector); // 🌟 QUAN TRỌNG: Khóa trục sóng thần theo mặt đất cầu!
             waveGroup.lookAt(mucTieu);
             scene.add(waveGroup);
 
-            // Tạo mặt sóng cong (Cắt nửa hình trụ)
-            // Bán kính 5, Dài 25, Cắt góc 180 độ (Math.PI)
             const geo = new THREE.CylinderGeometry(4, 6, 25, 16, 1, true, 0, Math.PI);
-            const mat = new THREE.MeshBasicMaterial({
-                color: 0x00aaff,
-                transparent: true,
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending,
-                side: THREE.DoubleSide,
-                depthWrite: false
-            });
+            const mat = new THREE.MeshBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
             const waveMesh = new THREE.Mesh(geo, mat);
 
-            // Xoay cho cơn sóng nằm ngang và ập về phía trước
-            waveMesh.rotation.z = Math.PI / 2; // Đặt nằm ngang
-            waveMesh.rotation.y = Math.PI; // Quay mặt lõm (lưỡi sóng) về phía trước
-            waveMesh.rotation.x = -Math.PI / 6; // Hơi chúi xuống như đang đổ ập tới
+            waveMesh.rotation.z = Math.PI / 2;
+            waveMesh.rotation.y = Math.PI;
+            waveMesh.rotation.x = -Math.PI / 6;
 
-            // Thêm một lõi sóng cuộn trắng ở giữa để tăng sát thương thị giác
             const loiSong = taoCauNuoc(3, 0xffffff);
             loiSong.scale.set(5, 1, 2);
 
             waveGroup.add(waveMesh);
             waveGroup.add(loiSong);
 
-            kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
+            kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote, upVector: upVector.clone() });
         }
         else if (phim === 'F') {
-            // F: Gyojin Karate Ogi: BURAIKAN (Tuyệt kĩ Vũ Lại Quán)
             const buraikan = taoCauNuoc(6.0, 0x00ffff);
-            buraikan.position.copy(viTriGoc); 
+            buraikan.position.copy(viTriGoc);
+
+            buraikan.up.copy(upVector); // 🌟 Ép trục
             buraikan.lookAt(mucTieu);
             scene.add(buraikan);
-            kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote });
+
+            kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote, upVector: upVector.clone() });
         }
     };
 
     // ==========================================
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU (JIMBEI)
     // ==========================================
-    window.updateCombatJimbei = function() {
+    window.updateCombatJimbei = function () {
         for (let i = kyNangJimbei.length - 1; i >= 0; i--) {
             let s = kyNangJimbei[i]; s.life--;
 
             if (s.type === 'Q') {
                 s.mesh.translateZ(s.speed);
-                // Sóng Q bay cực nhanh, sát thương thẳng mặt
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
                     taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 10);
                     s.life = 0;
@@ -288,13 +297,17 @@
             }
             else if (s.type === 'E') {
                 s.mesh.translateZ(s.speed);
-                // Lao nước có tầm nhiệt nhẹ
                 if (s.targetPos) {
                     if (!s.isRemote) {
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
                         if (mucTieuMoi) s.targetPos = mucTieuMoi;
                     }
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(s.mesh.position);
+
+                    dummy.up.copy(s.upVector); // 🌟 DUY TRÌ TRỤC TRỌNG LỰC KHI TẦM NHIỆT ÔM CUA
+                    dummy.lookAt(s.targetPos);
+
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                 }
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
@@ -303,14 +316,10 @@
                 }
             }
             else if (s.type === 'R') {
-                // CƠN SÓNG THẦN LAO TỚI
                 s.mesh.translateZ(s.speed);
+                s.mesh.scale.x += 0.02;
+                s.mesh.scale.y += 0.01;
 
-                // Hiệu ứng: Cơn sóng càng bay xa càng bành trướng to ra
-                s.mesh.scale.x += 0.02; // Sải sóng rộng ra
-                s.mesh.scale.y += 0.01; // Sóng dâng cao lên
-
-                // Sóng quét tới đâu, bọt nước văng tung tóe tới đó (Gọi hàm nổ nhỏ gọn)
                 if (s.life % 3 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 5);
 
                 if (s.targetPos) {
@@ -318,28 +327,26 @@
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
                         if (mucTieuMoi) s.targetPos = mucTieuMoi;
                     }
-                    // Cơn sóng khổng lồ nên ôm cua sẽ chậm hơn các chiêu khác
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(s.mesh.position);
+
+                    dummy.up.copy(s.upVector); // 🌟 KHÓA TRỤC SÓNG THẦN KHI NÓ ĐUỔI THEO ĐỊCH
+                    dummy.lookAt(s.targetPos);
+
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.03);
                 }
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 12 || s.life < 5) {
-                    // Khi chạm đích -> Sóng vỡ tung thành một vụ nổ bọt nước khổng lồ
                     taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 35);
                     s.life = 0;
                 }
             }
             else if (s.type === 'F') {
-                // Buraikan: Chưởng lực khổng lồ bắn thẳng tới trước, ngày càng bành trướng
                 s.mesh.translateZ(s.speed);
-                s.mesh.scale.addScalar(0.04); // Phình to ra theo thời gian
-                
-                // Rớt hạt nước dọc đường đi để tạo vệt đuôi đẹp mắt
-                if (s.life % 2 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 0); 
-                
-                let dist = s.mesh.position.distanceTo(s.targetPos);
-                if (dist < s.speed + 10 || s.life < 5) {
-                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 50); // Nổ siêu to 50m
+                s.mesh.scale.addScalar(0.04);
+                if (s.life % 2 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 0);
+                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 10 || s.life < 5) {
+                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 50);
                     s.life = 0;
                 }
             }
@@ -358,7 +365,7 @@
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
-                h.velocities[j].y -= 0.5; // Trọng lực: Nước rơi rất nhanh
+                h.velocities[j].y -= 0.5; // Rơi xuống
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 30;
@@ -369,7 +376,7 @@
             }
         }
 
-        // --- CẬP NHẬT CHỮ NỔI SÁT THƯƠNG ---
+        // --- CẬP NHẬT CHỮ NỔI ---
         for (let i = danhSachSoBayJB.length - 1; i >= 0; i--) {
             let it = danhSachSoBayJB[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -380,6 +387,12 @@
             if (it.life <= 0) { it.el.remove(); danhSachSoBayJB.splice(i, 1); window.tongSoChuNoi_JB--; }
         }
     };
+
+
+
+
+
+
 
 
     // 🌟 KẾT NỐI VÀO VÒNG LẶP TOÀN CẦU MÁY CHỦ
