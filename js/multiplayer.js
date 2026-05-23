@@ -534,20 +534,27 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
 
-                            // TẠI FILE: multiplayer.js (Khoảng dòng 230)
-                            // TÁC DỤNG: Nhận lệnh tung chiêu và truyền luôn ĐƯỜNG DẪN VŨ KHÍ (weaponUrl) để gọi đúng model, khỏi xài lộn Phi Kiếm.
+
+
+
+                            // TẠI FILE: multiplayer.js (Khoảng dòng 330)
+                            // 🌟 BẢN VÁ: AUTO TÌM HÀM THEO TÊN PHÁI (KHÔNG CẦN IF-ELSE NỮA)
                             else if (data.type === 'TUNG_CHIEU') {
-                                // Tung chiêu của 6 môn phái - Thêm tham số data.weaponUrl vào cuối!
-                                if (data.className === 'TuTien' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                if (data.className === 'PhapSu' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                if (data.className === 'CungThu' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                if (data.className === 'BanSung' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                if (data.className === 'Lazer' && typeof window.tungComboLazer === 'function') window.tungComboLazer(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                if (data.className === 'LuyenThe' && typeof window.tungComboLuyenThe === 'function') window.tungComboLuyenThe(data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                // Ghép chuỗi tạo thành tên hàm. VD: 'Jimbei' -> 'tungComboJimbei'
+                                let tenHam = 'tungCombo' + data.className; 
+                                
+                                // Kiểm tra xem hệ thống có hàm này chưa, có thì gọi luôn!
+                                if (typeof window[tenHam] === 'function') {
+                                    window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                } else {
+                                    console.warn("⚠️ Báo động: Chưa có hàm xuất chiêu cho nhân vật " + data.className);
+                                }
                             }
 
 
 
+
+   
                             
                             else if (data.type === 'BI_CHEM') {
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
