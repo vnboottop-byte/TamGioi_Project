@@ -1878,12 +1878,29 @@ function animate() {
                 var timThayDat = false;
 
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
-                window.radarTrongLuc.firstHitOnly = false; 
+                window.radarTrongLuc.firstHitOnly = false;
 
                 var hanhTinhGanNhat = null;
-                var tamHanhTinh = new THREE.Vector3(0, 0, 0);
+                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Trọng lực mặc định
+
+                // 🌟 BẢN VÁ ĐA VŨ TRỤ: DÒ TÌM TÂM HÀNH TINH THỰC SỰ ĐANG ĐỨNG (THAY VÌ KHÓA Ở 0,0,0)
+                if (window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
+                    let khoangCachMin = Infinity;
+                    window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                        let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+                        let d = playerModel.position.distanceTo(mPos);
+                        // Bắt dính vào tâm của Map cầu gần người chơi nhất
+                        if (d < khoangCachMin) {
+                            khoangCachMin = d;
+                            tamHanhTinh.copy(mPos);
+                            hanhTinhGanNhat = mapData;
+                        }
+                    });
+                }
 
                 huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh);
+
+
                 if (huongLenTroiMoi.lengthSq() < 0.001) {
                     huongLenTroiMoi.set(0, 1, 0); 
                 } else {
