@@ -228,16 +228,38 @@
             kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote });
         }
         else if (phim === 'R') {
-            // R: Hải Lưu Ném Qua Vai (Lốc xoáy nước nhiều tầng)
-            const rGroup = new THREE.Group();
-            rGroup.position.copy(viTriGoc); rGroup.lookAt(mucTieu); scene.add(rGroup);
-            for(let i=0; i<4; i++) {
-                const nuoc = taoCauNuoc(2.5, 0x0088ff);
-                const goc = (i / 4) * Math.PI * 2;
-                nuoc.position.set(Math.cos(goc)*4, Math.sin(goc)*4, 0);
-                rGroup.add(nuoc);
-            }
-            kyNangJimbei.push({ mesh: rGroup, type: 'R', life: 120, speed: 6.0, targetPos: mucTieu, damage: dameGoc * 1.2, isRemote: isRemote });
+            // R: Hải Lưu Ném Qua Vai (Sóng Thần Cuộn Trào)
+            const waveGroup = new THREE.Group();
+            waveGroup.position.copy(viTriGoc);
+            waveGroup.lookAt(mucTieu);
+            scene.add(waveGroup);
+
+            // Tạo mặt sóng cong (Cắt nửa hình trụ)
+            // Bán kính 5, Dài 25, Cắt góc 180 độ (Math.PI)
+            const geo = new THREE.CylinderGeometry(4, 6, 25, 16, 1, true, 0, Math.PI);
+            const mat = new THREE.MeshBasicMaterial({
+                color: 0x00aaff,
+                transparent: true,
+                opacity: 0.8,
+                blending: THREE.AdditiveBlending,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const waveMesh = new THREE.Mesh(geo, mat);
+
+            // Xoay cho cơn sóng nằm ngang và ập về phía trước
+            waveMesh.rotation.z = Math.PI / 2; // Đặt nằm ngang
+            waveMesh.rotation.y = Math.PI; // Quay mặt lõm (lưỡi sóng) về phía trước
+            waveMesh.rotation.x = -Math.PI / 6; // Hơi chúi xuống như đang đổ ập tới
+
+            // Thêm một lõi sóng cuộn trắng ở giữa để tăng sát thương thị giác
+            const loiSong = taoCauNuoc(3, 0xffffff);
+            loiSong.scale.set(5, 1, 2);
+
+            waveGroup.add(waveMesh);
+            waveGroup.add(loiSong);
+
+            kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote });
         }
         else if (phim === 'F') {
             // F: Gyojin Karate Ogi: BURAIKAN (Tuyệt kĩ Vũ Lại Quán)
@@ -281,18 +303,29 @@
                 }
             }
             else if (s.type === 'R') {
-                s.mesh.rotateZ(0.6); // Lốc xoáy quay tít thò lò
+                // CƠN SÓNG THẦN LAO TỚI
                 s.mesh.translateZ(s.speed);
+
+                // Hiệu ứng: Cơn sóng càng bay xa càng bành trướng to ra
+                s.mesh.scale.x += 0.02; // Sải sóng rộng ra
+                s.mesh.scale.y += 0.01; // Sóng dâng cao lên
+
+                // Sóng quét tới đâu, bọt nước văng tung tóe tới đó (Gọi hàm nổ nhỏ gọn)
+                if (s.life % 3 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 5);
+
                 if (s.targetPos) {
                     if (!s.isRemote) {
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
                         if (mucTieuMoi) s.targetPos = mucTieuMoi;
                     }
+                    // Cơn sóng khổng lồ nên ôm cua sẽ chậm hơn các chiêu khác
                     const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.05);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.03);
                 }
-                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 10 || s.life < 5) {
-                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 25);
+
+                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 12 || s.life < 5) {
+                    // Khi chạm đích -> Sóng vỡ tung thành một vụ nổ bọt nước khổng lồ
+                    taoVuNoNuocJB(s.targetPos, s.isRemote, Math.round(s.damage), 35);
                     s.life = 0;
                 }
             }
