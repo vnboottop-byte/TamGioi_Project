@@ -113,10 +113,27 @@
 
 
 
-        // 🌟 Đã thu nhỏ hạt nước. Mobile để 2.5 cho dễ nhìn, PC để 1.5 cho cực mịn!
+        // =====================================
+        // 🌟 BÙA CHÚ LÀM MỊN GIỌT NƯỚC (Tạo Texture tròn bằng Code)
+        // =====================================
+        if (!window.textureNuocMin) {
+            let canvas = document.createElement('canvas');
+            canvas.width = 64; canvas.height = 64;
+            let ctx = canvas.getContext('2d');
+            let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)'); // Lõi phát sáng trắng
+            gradient.addColorStop(0.3, 'rgba(0, 170, 255, 0.8)'); // Giữa màu xanh lam
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // Viền mờ tàng hình
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 64, 64);
+            window.textureNuocMin = new THREE.CanvasTexture(canvas);
+        }
+
+        // Ép mặt nạ tròn vào vật liệu hạt nước
         const mat = new THREE.PointsMaterial({
-            color: 0x00aaff,
-            size: window.isMobile ? 2.5 : 1.5,
+            color: 0x00ffff,
+            size: window.isMobile ? 3.0 : 6.0, // Viền đã mờ nên có thể để size to cho hoành tráng
+            map: window.textureNuocMin, // Gắn Texture mịn vào đây!
             transparent: true,
             opacity: 0.9,
             blending: THREE.AdditiveBlending,
