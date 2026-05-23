@@ -243,22 +243,45 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
         let vuKhiThucTe = weaponUrl;
         if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
 
+
+
+
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
             huongMat = new THREE.Vector3(remoteHuong.x, remoteHuong.y, remoteHuong.z);
             mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
-            upVector = viTriGoc.clone().normalize(); 
+            upVector = viTriGoc.clone().normalize();
         } else {
+            upVector = window.playerModel.up.clone().normalize();
+
+            // 🌟 1. TÌM MỤC TIÊU TRƯỚC TIÊN TỪ VỊ TRÍ NHÂN VẬT ĐỨNG
+            let tamNhanVat = window.playerModel.position.clone();
+            let target = window.layMucTieuGanNhatPS(tamNhanVat);
+
+            // 🌟 2. ÉP NHÂN VẬT XOAY MẶT VỀ PHÍA MỤC TIÊU (CHỐNG LẬT TRỤC CẦU)
+            if (target) {
+                const dummy = new THREE.Object3D();
+                dummy.position.copy(tamNhanVat);
+                dummy.up.copy(upVector);
+
+                // Chiếu mục tiêu lên mặt phẳng ngang để nhân vật không bị ngửa cổ
+                let vecToTarget = new THREE.Vector3().subVectors(target, tamNhanVat);
+                let vertComp = vecToTarget.clone().projectOnVector(upVector);
+                vecToTarget.sub(vertComp);
+                let targetNgang = tamNhanVat.clone().add(vecToTarget);
+
+                dummy.lookAt(targetNgang);
+                window.playerModel.quaternion.copy(dummy.quaternion); // Xoay người ngay lập tức!
+            }
+
+            // 🌟 3. SAU KHI ĐÃ XOAY NGƯỜI XONG MỚI TÍNH TỌA ĐỘ VŨ KHÍ ĐỂ NÉM
             viTriGoc = new THREE.Vector3();
-            upVector = window.playerModel.up.clone().normalize(); 
-            
-            // Phóng ra từ tay nhân vật
             if (window.vuKhiPhapSu) window.vuKhiPhapSu.getWorldPosition(viTriGoc);
-            else { viTriGoc.copy(window.playerModel.position); viTriGoc.add(upVector.clone().multiplyScalar(2)); }
-            
+            else { viTriGoc.copy(tamNhanVat); viTriGoc.add(upVector.clone().multiplyScalar(2)); }
+
+            // Cập nhật lại hướng mặt mới
             huongMat = new THREE.Vector3(); window.playerModel.getWorldDirection(huongMat); huongMat.normalize();
-            
-            let target = window.layMucTieuGanNhatPS(viTriGoc);
+
             mucTieu = target ? target.clone() : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
 
             // Gửi lệnh lên mạng (Kèm theo Link Vũ Khí)
@@ -270,6 +293,9 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 })), { reliable: true });
             }
         }
+
+
+
 
         let qNamNgangMatDat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), upVector);
 
