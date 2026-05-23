@@ -324,220 +324,28 @@
     setInterval(window.updateCombatJimbei, 30);
 
     // ==========================================
-    // 🌟 ĐĂNG KÝ HỆ PHÁI CHO ENGINE ĐỌC
+    // 🌟 ĐĂNG KÝ HỆ PHÁI CHO ENGINE ĐỌC (BẢN GỌN NHẸ CHUẨN AAA)
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('jimbei')) {
-        // =========================================================================
-// 🔌 KÝ SINH VÀO ENGINE.JS (KHÔNG LÀM MẤT LOGIC TRỌNG LỰC MAP HÌNH CẦU)
-// =========================================================================
+        window.HePhaiHienTai = {
+            tenPhai: "Hải Hiệp Jimbei",
+            khoiTao: function () {
+                console.log("🌊 Hải Hiệp Jimbei đã xuất chiến!");
 
-// 1. SAO LƯU LẠI BỘ NÃO GỐC CỦA GAME
-if (!window.HePhaiGoc_Backup) {
-    window.HePhaiGoc_Backup = {
-        khoiTao: window.HePhaiHienTai.khoiTao,
-        capNhat: window.HePhaiHienTai.capNhat,
-        tungChieu: window.HePhaiHienTai.tungChieu
-    };
-}
-
-window.HePhaiHienTai.tenPhai = "Hải Hiệp Jimbei";
-
-// 2. KÝ SINH HÀM KHỞI TẠO
-window.HePhaiHienTai.khoiTao = function() {
-    // Chạy logic gốc của Engine trước (Để load Map, set trọng lực...)
-    if (window.HePhaiGoc_Backup.khoiTao) window.HePhaiGoc_Backup.khoiTao.apply(this, arguments);
-    
-    console.log("🦈 Đã kích hoạt Vòng Xoay Combo Jimbei!");
-    window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
-};
-
-// 3. KÝ SINH HÀM CẬP NHẬT (QUAN TRỌNG NHẤT ĐỂ GIỮ MAP CẦU)
-window.HePhaiHienTai.capNhat = function() {
-    // CHẠY LOGIC GỐC TRƯỚC: Giữ nhân vật bám dính vào Map hình cầu TRUNG_CHAU
-    if (window.HePhaiGoc_Backup.capNhat) window.HePhaiGoc_Backup.capNhat.apply(this, arguments);
-
-    // SAU ĐÓ MỚI CHẠY LOGIC ANIMATION CỦA JIMBEI
-    if (!window.MayTrangThaiJimbei.dangKhoaAnim && window.MayTrangThaiJimbei.trangThaiHienTai !== 'DIE') {
-        if (window.isMoving || window.isKeyboardMoving) {
-            window.MayTrangThaiJimbei.chuyenTrangThai('RUN');
-        } else {
-            window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
-        }
-    }
-};
-
-// 4. KÝ SINH HÀM TUNG CHIÊU
-window.HePhaiHienTai.tungChieu = function(phimBam, laBot = false) {
-    let phimHopLe = ['Q', 'E', 'R', 'F', 'COMBO1'];
-    
-    if (phimHopLe.includes(phimBam.toUpperCase())) {
-        let thongTinDonDanh = window.MayTrangThaiJimbei.tungDonDanhKeTiep();
-        if (thongTinDonDanh) {
-            // Xử lý logic trừ máu ở đây
-        }
-    } else if (phimBam.toUpperCase() === 'SPACE') {
-        window.MayTrangThaiJimbei.chuyenTrangThai('JUMP', null, 800);
-    } else if (phimBam.toUpperCase() === 'SHIFT') {
-        window.MayTrangThaiJimbei.chuyenTrangThai('DODGE', null, 500);
-    } else {
-        // Nếu bấm phím khác không thuộc Jimbei, trả về cho Game gốc tự xử lý
-        if (window.HePhaiGoc_Backup.tungChieu) window.HePhaiGoc_Backup.tungChieu.apply(this, arguments);
-    }
-};
+                // 🌟 TỪ ĐIỂN DỊCH THUẬT: Ép Engine hiểu tiếng của Jimbei
+                // Giúp Engine biết Jimbei dùng xương nào để Chạy, Nhảy, Nằm sấp
+                if (window.animationsMap) {
+                    window.animationsMap['NHANROI'] = window.animationsMap['PL_JINBE_ORIG01_IDLE_A'];
+                    window.animationsMap['CHAYBO'] = window.animationsMap['PL_JINBE_ORIG01_RUN'];
+                    window.animationsMap['BAY'] = window.animationsMap['PL_JINBE_ORIG01_JUMP'];
+                    window.animationsMap['CHET'] = window.animationsMap['PL_JINBE_ORIG01_LOSE'];
+                    window.animationsMap['HIT'] = window.animationsMap['PL_JINBE_ORIG01_DAMAGE'];
+                }
+            },
+            tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) {
+                window.tungComboJimbei(phim, isRemote, origin, target, dir, casterId, weaponUrl);
+            },
+            capNhat: function () { } // Hiệu ứng nước đã chạy ngầm rồi
+        };
         window.HePhaiHienTai.khoiTao();
     }
-
-})();
-
-
-
-
-
-
-
-
-
-
-
-// =========================================================================
-// 🦈 BỘ NÃO TRẠNG THÁI (STATE MACHINE) - PHIÊN BẢN VÒNG XOAY COMBO
-// =========================================================================
-
-window.MayTrangThaiJimbei = {
-    trangThaiHienTai: 'IDLE',
-    dangKhoaAnim: false, 
-    timeoutKhoa: null,
-
-    // 🌟 TỪ ĐIỂN CÁC TRẠNG THÁI CƠ BẢN
-    tuDienAnim: {
-        'IDLE': 'PL_JINBE_ORIG01_IDLE_A',
-        'RUN': 'PL_JINBE_ORIG01_RUN',
-        'DODGE': 'PL_JINBE_ORIG01_DODGE',          
-        'JUMP': 'PL_JINBE_ORIG01_JUMP',
-        'HURT': 'PL_JINBE_ORIG01_DAMAGE',          
-        'STUN': 'PL_JINBE_ORIG01_STUN',            
-        'DIE': 'PL_JINBE_ORIG01_LOSE',             
-        'VICTORY': 'PL_JINBE_ORIG01_VICTORY'
-    },
-
-    // ⚔️ KHO VŨ KHÍ TẤN CÔNG (Xếp theo thứ tự xoay vòng từ trên xuống)
-    vongXoayTanCong: [
-        { tenChiêu: 'PL_JINBE_ORIG01_COMBO_A', thoiGian: 600,  dame: 100 }, // Đòn 1
-        { tenChiêu: 'PL_JINBE_ORIG01_COMBO_B', thoiGian: 600,  dame: 150 }, // Đòn 2
-        { tenChiêu: 'PL_JINBE_ORIG01_COMBO_C', thoiGian: 800,  dame: 250 }, // Đòn 3
-        { tenChiêu: 'PL_JINBE_ORIG01_SKILL_A', thoiGian: 1200, dame: 500 }, // Đòn 4 (Skill Q cũ)
-        { tenChiêu: 'PL_JINBE_ORIG01_SKILL_B', thoiGian: 1500, dame: 800 }  // Đòn 5 (Skill E cũ)
-    ],
-    chiSoComboHienTai: 0, // Bộ đếm đang ở chiêu thứ mấy
-
-    // 🌟 CỖ MÁY CHUYỂN SỐ
-    chuyenTrangThai: function(trangThaiMoi, tenAnimTuChon = null, thoiGianKhoa = 0) {
-        if (this.trangThaiHienTai === 'DIE') return;
-        if (this.dangKhoaAnim && (trangThaiMoi === 'RUN' || trangThaiMoi === 'IDLE')) return;
-        if (this.trangThaiHienTai === trangThaiMoi && trangThaiMoi !== 'HURT' && trangThaiMoi !== 'ATTACK') return;
-
-        this.trangThaiHienTai = trangThaiMoi;
-        
-        // Nếu là lệnh đánh (ATTACK) thì lấy tên Anim từ vòng xoay, nếu không thì lấy từ từ điển
-        let tenAnimChuan = tenAnimTuChon ? tenAnimTuChon : this.tuDienAnim[trangThaiMoi];
-
-        if (tenAnimChuan && window.animationsMap && window.animationsMap[tenAnimChuan]) {
-            let action = window.animationsMap[tenAnimChuan];
-            if (window.currentAction) window.currentAction.fadeOut(0.15); 
-            window.currentAction = action;
-            window.currentAction.reset().fadeIn(0.15).play();
-            window.currentAnimName = tenAnimChuan;
-        } else {
-            console.warn("⚠️ Không tìm thấy hoạt ảnh: ", tenAnimChuan);
-        }
-
-        if (thoiGianKhoa > 0) {
-            this.dangKhoaAnim = true;
-            if (this.timeoutKhoa) clearTimeout(this.timeoutKhoa);
-            
-            this.timeoutKhoa = setTimeout(() => {
-                this.dangKhoaAnim = false;
-                if (this.trangThaiHienTai !== 'DIE') {
-                    if (window.isMoving || window.isKeyboardMoving) {
-                        this.chuyenTrangThai('RUN');
-                    } else {
-                        this.chuyenTrangThai('IDLE');
-                    }
-                }
-            }, thoiGianKhoa);
-        }
-    },
-
-    // 🌟 KÍCH HOẠT VÒNG XOAY TẤN CÔNG
-    tungDonDanhKeTiep: function() {
-        // Không cho phép đè chiêu nếu đang múa chưa xong
-        if (this.dangKhoaAnim) return null; 
-
-        // 1. Rút chiêu thức hiện tại ra khỏi kho
-        let donDanh = this.vongXoayTanCong[this.chiSoComboHienTai];
-        
-        // 2. Chuyển trạng thái sang múa chiêu đó
-        this.chuyenTrangThai('ATTACK', donDanh.tenChiêu, donDanh.thoiGian);
-        console.log(`🌊 Jimbei tung đòn thứ ${this.chiSoComboHienTai + 1}: ${donDanh.tenChiêu}`);
-
-        // 3. Tăng bộ đếm cho lần đánh sau. Nếu quá số lượng thì quay về số 0
-        this.chiSoComboHienTai++;
-        if (this.chiSoComboHienTai >= this.vongXoayTanCong.length) {
-            this.chiSoComboHienTai = 0; // Reset vòng xoay
-        }
-
-        return donDanh; // Trả về thông tin đòn đánh (để tính dame trừ máu boss)
-    }
-};
-
-// =========================================================================
-// 🔌 GHI ĐÈ LÊN ENGINE.JS
-// =========================================================================
-
-window.HePhaiHienTai = {
-    tenPhai: "Hải Hiệp Jimbei",
-    
-    khoiTao: function() {
-        console.log("🦈 Đã kích hoạt Vòng Xoay Combo Jimbei!");
-        window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
-    },
-
-    capNhat: function() {
-        if (!window.MayTrangThaiJimbei.dangKhoaAnim && window.MayTrangThaiJimbei.trangThaiHienTai !== 'DIE') {
-            if (window.isMoving || window.isKeyboardMoving) {
-                window.MayTrangThaiJimbei.chuyenTrangThai('RUN');
-            } else {
-                window.MayTrangThaiJimbei.chuyenTrangThai('IDLE');
-            }
-        }
-    },
-
-    // Giờ đây bất kể bấm phím tấn công nào (Q, E, R, F, Chuột trái), nó đều gọi Vòng Xoay
-    tungChieu: function(phimBam, laBot = false) {
-        let phimHopLe = ['Q', 'E', 'R', 'F', 'COMBO1'];
-        
-        if (phimHopLe.includes(phimBam.toUpperCase())) {
-            let thongTinDonDanh = window.MayTrangThaiJimbei.tungDonDanhKeTiep();
-            
-            if (thongTinDonDanh) {
-                // Sếp có thể gọi hàm trừ máu quái ở đây, dùng thongTinDonDanh.dame
-                // VD: window.truMauQuaiGiaoDien(thongTinDonDanh.dame);
-            }
-        } 
-        // Các phím di chuyển / né / nhảy vẫn hoạt động bình thường
-        else if (phimBam.toUpperCase() === 'SPACE') {
-            window.MayTrangThaiJimbei.chuyenTrangThai('JUMP', null, 800);
-        } else if (phimBam.toUpperCase() === 'SHIFT') {
-            window.MayTrangThaiJimbei.chuyenTrangThai('DODGE', null, 500);
-        }
-    }
-};
-
-const hamChetGoc = window.xuLyCaiChetNhanVat;
-window.xuLyCaiChetNhanVat = function(killerId) {
-    if (window.IS_DOAT_XA && window.CURRENT_MODEL_URL.includes("jinbe")) {
-        window.MayTrangThaiJimbei.chuyenTrangThai('DIE');
-        window.MayTrangThaiJimbei.dangKhoaAnim = true; 
-    }
-    if (hamChetGoc) hamChetGoc(killerId);
-};
