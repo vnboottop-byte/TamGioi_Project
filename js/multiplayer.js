@@ -537,19 +537,77 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
 
-                            // TẠI FILE: multiplayer.js (Khoảng dòng 330)
-                            // 🌟 BẢN VÁ: AUTO TÌM HÀM THEO TÊN PHÁI (KHÔNG CẦN IF-ELSE NỮA)
+
+
+
+
+
+
+
+
+
+
+                            // TẠI FILE: multiplayer.js
+                            // 🌟 BẢN VÁ AAA: LAZY LOAD - TỰ ĐỘNG HỌC LỎM VÕ CÔNG CỦA KẺ ĐỊCH
                             else if (data.type === 'TUNG_CHIEU') {
-                                // Ghép chuỗi tạo thành tên hàm. VD: 'Jimbei' -> 'tungComboJimbei'
                                 let tenHam = 'tungCombo' + data.className; 
                                 
-                                // Kiểm tra xem hệ thống có hàm này chưa, có thì gọi luôn!
+                                // 1. Nếu trong não đã có sẵn võ công này thì tung chiêu luôn!
                                 if (typeof window[tenHam] === 'function') {
                                     window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                } else {
-                                    console.warn("⚠️ Báo động: Chưa có hàm xuất chiêu cho nhân vật " + data.className);
+                                } 
+                                // 2. NẾU CHƯA BIẾT CHIÊU NÀY -> TỰ ĐỘNG TẢI FILE SÁCH VÕ CÔNG VỀ HỌC NGAY!
+                                else {
+                                    if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
+                                    if (window.dangTaiVoCong[data.className]) return; // Tránh tải trùng lặp
+                                    window.dangTaiVoCong[data.className] = true;
+
+                                    console.log("⏳ Kẻ địch xài chiêu lạ! Đang Auto-Download data của: " + data.className);
+
+                                    let theScript = document.createElement('script');
+                                    // Quy tắc 1: Thử tải theo tên chuẩn (VD: js/jimbei.js)
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js';
+
+                                    theScript.onload = function() {
+                                        console.log("✅ Đã học xong võ công của: " + data.className);
+                                        if (typeof window[tenHam] === 'function') {
+                                            window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                        }
+                                    };
+
+                                    theScript.onerror = function() {
+                                        // Quy tắc 2: Nếu file ko tồn tại, thử tải theo đuôi cũ (VD: js/phai_jimbei.js)
+                                        let scriptDuPhong = document.createElement('script');
+                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js';
+                                        
+                                        scriptDuPhong.onload = function() {
+                                            console.log("✅ Đã học xong võ công của: " + data.className);
+                                            if (typeof window[tenHam] === 'function') {
+                                                window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                            }
+                                        };
+                                        document.head.appendChild(scriptDuPhong);
+                                    };
+
+                                    document.head.appendChild(theScript);
                                 }
                             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
