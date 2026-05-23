@@ -3,14 +3,20 @@
 header('Content-Type: application/json');
 require_once '../db.php';
 
-// 🌟 THÊM LỌC THEO ZONE_ID
 $zone = isset($_GET['zone']) ? $_GET['zone'] : 'TRUNG_CHAU';
 $now = time();
 $respawn_time = 600; 
 
-$stmt = $conn->prepare("SELECT * FROM map_monsters WHERE zone_id = ? ORDER BY id DESC");
-$stmt->bind_param("s", $zone);
-$stmt->execute();
+// 🌟 BẢN VÁ ĐA VŨ TRỤ: Nếu Bảng Admin yêu cầu 'ALL', lấy sạch Boss ở mọi Map!
+if ($zone === 'ALL') {
+    $stmt = $conn->prepare("SELECT * FROM map_monsters ORDER BY zone_id ASC, id DESC");
+    $stmt->execute();
+} else {
+    $stmt = $conn->prepare("SELECT * FROM map_monsters WHERE zone_id = ? ORDER BY id DESC");
+    $stmt->bind_param("s", $zone);
+    $stmt->execute();
+}
+
 $res = $stmt->get_result();
 
 $bosses = [];
