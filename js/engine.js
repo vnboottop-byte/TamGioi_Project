@@ -2250,6 +2250,8 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 
+
+
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
     window.daNhanDanhSachMap = false; 
@@ -2259,7 +2261,7 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
         zoneId = 'TRUNG_CHAU'; // Ép buộc lấy Trung Châu làm mặc định để có Trọng lực CẦU!
     }
     
-    // Gọi API kèm theo Tên Khu Vực
+    // Gợi API kèm theo Tên Khu Vực
     fetch('api/get_maps.php?zone=' + zoneId).then(res => res.json()).then(data => {
         if (data.status === 'success' && data.data) {
             window.THONG_TIN_CAC_MAP = data.data.map(m => ({
@@ -2275,20 +2277,17 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
                 window.toaDoMatDat = 0; 
             }
 
-           console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
+            console.log(`🗺️ XUYÊN KHÔNG: Đã nạp khu vực [${zoneId}] - Trọng lực hiện tại: ${window.KIEU_TRONG_LUC}`);
             
             // 🌟 BẬT/TẮT TRÁI ĐẤT GỐC NGAY LẬP TỨC
             if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
         }
         window.daNhanDanhSachMap = true; 
-    }).catch(err => { console.error(err); window.daNhanDanhSachMap = true; });
+    }).catch(err => { 
+        console.error(err); 
+        window.daNhanDanhSachMap = true; 
+    });
 };
-
-
-
-
-
-
 
 
 
