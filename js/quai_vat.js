@@ -227,11 +227,56 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
         let anToanX = Math.max(-BAN_KINH_ONG + 1, Math.min(BAN_KINH_ONG - 1, x));
         let yChuan = posY || -Math.sqrt(BAN_KINH_ONG * BAN_KINH_ONG - anToanX * anToanX);
 
+
+
+
+
         quai.position.set(x, yChuan, z);
+        
+        // 🌟 BẢN VÁ AAA: TỐI ƯU HÓA TÀI NGUYÊN CHO SINH VẬT CẢNH
+        let laTrangTri = (classCode === 'TRANG_TRI');
+
         quai.traverse(c => {
-            if (c.isMesh) { c.frustumCulled = false; c.castShadow = true; }
+            if (c.isMesh) { 
+                c.frustumCulled = false; 
+                
+                if (laTrangTri) {
+                    // 1. Cắt Đổ Bóng (Tiết kiệm 30% GPU)
+                    c.castShadow = false; 
+                    c.receiveShadow = false;
+                    // 2. Chặn Máy Quét Chuột (Tiết kiệm CPU Core 1)
+                    c.raycast = function() {}; 
+                    
+                    // 3. Ép vật liệu Basic trên Mobile (Bỏ tính toán bóng bẩy)
+                    if (window.isMobile && c.material) {
+                        let mats = Array.isArray(c.material) ? c.material : [c.material];
+                        let newMats = mats.map(mat => {
+                            let basicMat = new THREE.MeshBasicMaterial({
+                                map: mat.map,
+                                color: mat.color || 0xffffff,
+                                transparent: mat.transparent,
+                                opacity: mat.opacity,
+                                side: mat.side || THREE.FrontSide
+                            });
+                            if (c.isSkinnedMesh) basicMat.skinning = true; // Chìa khóa để vây cá voi vẫn vẫy
+                            return basicMat;
+                        });
+                        c.material = newMats.length === 1 ? newMats[0] : newMats;
+                    }
+                } else {
+                    c.castShadow = true; 
+                }
+            }
         });
+
+        // 4. Báo cho hệ thống đánh nhau bỏ qua cục thịt này
+        if (laTrangTri) quai.userData = { ignore: true };
+
         if (typeof scene !== 'undefined') scene.add(quai);
+
+
+
+
 
         const mixer = new THREE.AnimationMixer(quai);
         const anims = {};
