@@ -455,91 +455,116 @@ window.capNhatAIQuaiVat = function (delta) {
         }
 
 
+
+
+
         // ========================================================
-// 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ (FIX LỌT ĐẤT MAP CẦU)
-// ========================================================
-if (quai.classCode === 'TRANG_TRI') {
-    let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
-    
-    // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT) NẾU ĐÃ BAY TỚI NƠI
-    if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 30) {
-        let alt = boNao.doCaoBayMin + Math.random() * (boNao.doCaoBayMax - boNao.doCaoBayMin);
-        quai.doCaoBayHienTai = alt; // ✨ Ghi nhớ độ cao mục tiêu vào quái để ép trục bầu trời
-        
-        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-            // 🌍 BAY TRÊN MAP CẦU: Lấy random một điểm trên mặt cầu vĩ đại
-            let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-            let radius = R + alt;
-            let theta = Math.random() * Math.PI * 2; 
-            let phi = Math.random() * Math.PI;       
+        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ
+        // ========================================================
+        if (quai.classCode === 'TRANG_TRI') {
+            let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
             
-            let tam = window.TAM_HANH_TINH_HIEN_TAI;
-            quai.waypoint = new THREE.Vector3(
-                tam.x + radius * Math.sin(phi) * Math.cos(theta),
-                tam.y + radius * Math.cos(phi),
-                tam.z + radius * Math.sin(phi) * Math.sin(theta)
-            );
-        } else {
-            // 🗺️ BAY TRÊN MAP PHẲNG: Lấy random tọa độ X Z quanh khu vực người chơi
-            let range = 1500; 
-            quai.waypoint = new THREE.Vector3(
-                playerModel.position.x + (Math.random() - 0.5) * range,
-                (window.toaDoMatDat || 0) + alt,
-                playerModel.position.z + (Math.random() - 0.5) * range
-            );
+            // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT)
+            if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 50) {
+                let alt = boNao.doCaoBayMin + Math.random() * (boNao.doCaoBayMax - boNao.doCaoBayMin);
+                quai.doCaoBayHienTai = alt; 
+                
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+                    let radius = R + alt;
+                    let theta = Math.random() * Math.PI * 2; 
+                    let phi = Math.random() * Math.PI;       
+                    
+                    let tam = window.TAM_HANH_TINH_HIEN_TAI;
+                    quai.waypoint = new THREE.Vector3(
+                        tam.x + radius * Math.sin(phi) * Math.cos(theta),
+                        tam.y + radius * Math.cos(phi),
+                        tam.z + radius * Math.sin(phi) * Math.sin(theta)
+                    );
+                } else {
+                    let range = 1500; 
+                    quai.waypoint = new THREE.Vector3(
+                        (playerModel ? playerModel.position.x : 0) + (Math.random() - 0.5) * range,
+                        (window.toaDoMatDat || 0) + alt,
+                        (playerModel ? playerModel.position.z : 0) + (Math.random() - 0.5) * range
+                    );
+                }
+                quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
+            }
+
+            // 2. 🌟 CHỐNG BƠI NGANG/LÙI: Lấy trục mặt nhìn hiện tại làm hướng tiến lên!
+            let currentForward = new THREE.Vector3(0, 0, 1).applyQuaternion(quai.mesh.quaternion).normalize();
+            
+            let maxSpeed = 30 * (quai.heSoToLon || 1);
+            if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
+
+            // Bơi theo đường nhìn của mắt
+            quai.mesh.position.add(currentForward.multiplyScalar(quai.currentSpeed * delta));
+
+            // 3. 🌟 UỐN CỔ VỀ PHÍA MỤC TIÊU VÀ NGHIÊNG CÁNH ÔM CUA
+            let huongBayDich = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
+            
+            let dummy = new THREE.Object3D();
+            dummy.position.copy(quai.mesh.position);
+            dummy.up.copy(quai.upVector);
+            dummy.lookAt(quai.mesh.position.clone().add(huongBayDich));
+
+            let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
+            let gocRe = currentForward.dot(rightVec); 
+            dummy.rotateZ(gocRe * boNao.lucNghieng); 
+
+            // Cổ xoay từ từ (0.015) để ôm cua thành hình vòng cung cực mượt
+            quai.mesh.quaternion.slerp(dummy.quaternion, 0.015); 
+
+            // 4. 🌟 VÁ LỖI LỌT ĐẤT MƯỢT MÀ (SMOOTH LIFTING)
+            let doCaoMin = boNao.doCaoBayMin || 20;
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                let tam = window.TAM_HANH_TINH_HIEN_TAI;
+                let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+                let kcQuai = quai.mesh.position.distanceTo(tam);
+
+                if (kcQuai < R + doCaoMin) {
+                    // Nếu lọt quá thấp, từ từ thả khinh khí cầu đẩy lên thay vì giật cục lên mặt đất
+                    let huongTuTam = quai.mesh.position.clone().sub(tam).normalize();
+                    quai.mesh.position.add(huongTuTam.multiplyScalar((R + doCaoMin - kcQuai) * 0.1));
+                }
+            } else if (window.KIEU_TRONG_LUC === 'PHANG') {
+                let yMin = (window.toaDoMatDat || 0) + doCaoMin;
+                if (quai.mesh.position.y < yMin) {
+                    quai.mesh.position.y += (yMin - quai.mesh.position.y) * 0.1;
+                }
+            }
+
+            // 5. CHẠY ANIMATION BAY VÀ ẨN TÊN
+            if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
+            if (quai.tagEl) quai.tagEl.style.display = 'none';
+
+            return; // 🛑 KHÔNG ĐƯỢC XÓA LỆNH NÀY!
         }
-        
-        quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
-    }
-
-    // 2. LƯỚT TỚI MỤC TIÊU
-    let huongBay = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
-    
-    let maxSpeed = 30 * (quai.heSoToLon || 1);
-    if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
-    
-    quai.mesh.position.add(huongBay.clone().multiplyScalar(quai.currentSpeed * delta));
 
 
 
 
-    // ✨ THUẬT TOÁN VÁ KHÔNG GIAN: Ép Boss bơi ngang, chống cắm đầu xuống gầm map
-if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-    let tam = window.TAM_HANH_TINH_HIEN_TAI;
-    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-    
-    // Nếu quái thấp hơn độ cao mặt đất mong muốn, kéo nó lên và xoay nó nằm ngang
-    let kcQuai = quai.mesh.position.distanceTo(tam);
-    let doCaoThucTe = kcQuai - R;
-    
-    if (doCaoThucTe < (quai.doCaoBayHienTai || 40)) {
-        // 1. KÉO LÊN: Khóa chặt khoảng cách để nó nằm trên mặt đất
-        let huongTuTam = quai.mesh.position.clone().sub(tam).normalize();
-        let doCaoMongMuon = R + (quai.doCaoBayHienTai || 40);
-        quai.mesh.position.copy(tam).add(huongTuTam.multiplyScalar(doCaoMongMuon));
 
-        // 2. XOAY NẰM NGANG: Ép quái xoay 90 độ, hướng thẳng về phía trước để bơi
-        let currentUp = quai.upVector; // Vector hướng thẳng lên trời
-        let newForward = huongBay.clone().projectOnPlane(currentUp).normalize(); 
-        
-        // Tạo hướng xoay mới: Ngang với mặt đất
-        let dummy = new THREE.Object3D();
-        dummy.position.copy(quai.mesh.position);
-        dummy.up.copy(currentUp);
-        dummy.lookAt(quai.mesh.position.clone().add(newForward));
 
-        // Slerp từ từ để nó xoay mượt mà sang tư thế bơi
-        quai.mesh.quaternion.slerp(dummy.quaternion, 0.1); 
-    }
-}
 
-    // 4. ÉP CHẠY ANIMATION BAY
-    if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
-    
-    if (quai.tagEl) quai.tagEl.style.display = 'none';
 
-    return; // 🛑 BỎ QUA TOÀN BỘ LOGIC RƯỢT ĐUỔI BÊN DƯỚI AN TOÀN!
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         
 
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
