@@ -21,7 +21,9 @@ try {
         if ($row = $res->fetch_assoc()) {
             if (password_verify($pass, $row['password'])) {
                 // Kiểm tra xem nó có nhân vật chưa (Tránh lỗi tài khoản ảo)
+             
                 $stmtChar = $conn->prepare("SELECT username FROM game_characters WHERE username = ?");
+              
                 $stmtChar->bind_param("s", $user); $stmtChar->execute();
                 if ($stmtChar->get_result()->num_rows === 0) {
                     die(json_encode(["status" => "error", "message" => "Tài khoản chưa có nhân vật! Vui lòng tạo tài khoản mới!"]));
@@ -76,7 +78,8 @@ try {
         if (!$classData) { $conn->rollback(); die(json_encode(["status" => "error", "message" => "Hệ phái không hợp lệ!"])); }
 
         // C. Lưu vào Game_characters
-        $stmtChar = $conn->prepare("INSERT INTO game_characters (username, char_name, class_id, hp_max, hp_current, mana_current, damage, current_model_url, current_weapon_url, current_mount_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '')");
+        // C. Lưu vào Game_characters (ÉP THẲNG TỌA ĐỘ TÂN THỦ VÀO NAM DU)
+        $stmtChar = $conn->prepare("INSERT INTO game_characters (username, char_name, class_id, hp_max, hp_current, mana_current, damage, current_model_url, current_weapon_url, current_mount_url, zone_id, last_pos_x, last_pos_y, last_pos_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', 'NAM_DU', -784, 1390, -240)");
         $stmtChar->bind_param("ssiiiiiss", $user, $char_name, $class_id, $classData['base_hp'], $classData['base_hp'], $classData['base_mana'], $classData['base_damage'], $classData['default_model'], $classData['default_weapon']);
         $stmtChar->execute();
 
