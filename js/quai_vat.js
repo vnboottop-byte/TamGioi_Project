@@ -502,8 +502,7 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-
-        // ========================================================
+// ========================================================
         // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ
         // ========================================================
         if (quai.classCode === 'TRANG_TRI') {
@@ -537,31 +536,38 @@ window.capNhatAIQuaiVat = function (delta) {
                 quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
             }
 
-            // 2. 🌟 CHỐNG BƠI NGANG/LÙI: Lấy trục mặt nhìn hiện tại làm hướng tiến lên!
+            // 2. CHỐNG BƠI NGANG/LÙI: Lấy trục mặt nhìn hiện tại làm hướng tiến lên!
             let currentForward = new THREE.Vector3(0, 0, 1).applyQuaternion(quai.mesh.quaternion).normalize();
             
             let maxSpeed = 30 * (quai.heSoToLon || 1);
             if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
 
-            // Bơi theo đường nhìn của mắt
             quai.mesh.position.add(currentForward.multiplyScalar(quai.currentSpeed * delta));
 
-            // 3. 🌟 UỐN CỔ VỀ PHÍA MỤC TIÊU VÀ NGHIÊNG CÁNH ÔM CUA
+            // 3. UỐN CỔ VỀ PHÍA MỤC TIÊU VÀ NGHIÊNG CÁNH ÔM CUA
             let huongBayDich = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
             
+            // 🌟 VÁ LỖI BẺ TRỤC: Chiếu hướng bay lên mặt phẳng tiếp tuyến để không bị lộn nhào!
+            let huongBayNgang = huongBayDich.clone().projectOnPlane(quai.upVector).normalize();
+            if (huongBayNgang.lengthSq() < 0.001) huongBayNgang = currentForward.clone();
+
             let dummy = new THREE.Object3D();
             dummy.position.copy(quai.mesh.position);
             dummy.up.copy(quai.upVector);
-            dummy.lookAt(quai.mesh.position.clone().add(huongBayDich));
+            dummy.lookAt(quai.mesh.position.clone().add(huongBayNgang));
 
             let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
             let gocRe = currentForward.dot(rightVec); 
             dummy.rotateZ(gocRe * boNao.lucNghieng); 
 
-            // Cổ xoay từ từ (0.015) để ôm cua thành hình vòng cung cực mượt
             quai.mesh.quaternion.slerp(dummy.quaternion, 0.015); 
 
-            // 4. 🌟 VÁ LỖI LỌT ĐẤT MƯỢT MÀ (SMOOTH LIFTING)
+            // 🌟 3.5 BÙ ĐẮP TRỌNG LỰC CẦU: Nắn lại xương sống vuông góc với mặt đất!
+            let trucUpHienTai = new THREE.Vector3(0, 1, 0).applyQuaternion(quai.mesh.quaternion);
+            let nanTrucQuat = new THREE.Quaternion().setFromUnitVectors(trucUpHienTai, quai.upVector);
+            quai.mesh.quaternion.premultiply(nanTrucQuat);
+
+            // 4. VÁ LỖI LỌT ĐẤT MƯỢT MÀ
             let doCaoMin = boNao.doCaoBayMin || 20;
             if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 let tam = window.TAM_HANH_TINH_HIEN_TAI;
@@ -569,7 +575,6 @@ window.capNhatAIQuaiVat = function (delta) {
                 let kcQuai = quai.mesh.position.distanceTo(tam);
 
                 if (kcQuai < R + doCaoMin) {
-                    // Nếu lọt quá thấp, từ từ thả khinh khí cầu đẩy lên thay vì giật cục lên mặt đất
                     let huongTuTam = quai.mesh.position.clone().sub(tam).normalize();
                     quai.mesh.position.add(huongTuTam.multiplyScalar((R + doCaoMin - kcQuai) * 0.1));
                 }
@@ -584,7 +589,7 @@ window.capNhatAIQuaiVat = function (delta) {
             if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
             if (quai.tagEl) quai.tagEl.style.display = 'none';
 
-            return; // 🛑 KHÔNG ĐƯỢC XÓA LỆNH NÀY!
+            return; // 🛑 KHÔNG ĐƯỢC XÓA LỆNH NÀY NỮA!
         }
 
 
