@@ -461,14 +461,13 @@
             khoiTao: function () {
                 console.log("🌊 Hải Hiệp Jimbei đã xuất chiến!");
 
-                // 🌟 TỪ ĐIỂN DỊCH THUẬT: Ép Engine hiểu tiếng của Jimbei
-                // Giúp Engine biết Jimbei dùng xương nào để Chạy, Nhảy, Nằm sấp
+                // 🌟 TỪ ĐIỂN DỊCH THUẬT: Đã map theo đúng số Sếp chọn!
                 if (window.animationsMap) {
-                    window.animationsMap['NHANROI'] = window.animationsMap['PL_JINBE_ORIG01_IDLE_A'];
-                    window.animationsMap['CHAYBO'] = window.animationsMap['PL_JINBE_ORIG01_RUN'];
-                    window.animationsMap['BAY'] = window.animationsMap['PL_JINBE_ORIG01_JUMP'];
-                    window.animationsMap['CHET'] = window.animationsMap['PL_JINBE_ORIG01_LOSE'];
-                    window.animationsMap['HIT'] = window.animationsMap['PL_JINBE_ORIG01_DAMAGE'];
+                    window.animationsMap['NHANROI'] = window.animationsMap['PL_JINBE_ORIG01_IDLEHOME_A']; // Số 20 (Nhàn rỗi / Cưỡi thú)
+                    window.animationsMap['CHAYBO'] = window.animationsMap['PL_JINBE_ORIG01_RUN'];        // Số 25 (Chạy bộ)
+                    window.animationsMap['BAY'] = window.animationsMap['PL_JINBE_ORIG01_JUMP'];       // Nhảy
+                    window.animationsMap['CHET'] = window.animationsMap['PL_JINBE_ORIG01_LOSE'];       // Gục ngã
+                    window.animationsMap['HIT'] = window.animationsMap['PL_JINBE_ORIG01_DAMAGE'];     // Bị đánh trúng
                 }
             },
             tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) {
