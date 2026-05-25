@@ -1788,7 +1788,7 @@ function animate() {
                 playerModel.up.copy(huongLenTroi);
                 playerModel.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0).applyQuaternion(playerModel.quaternion), huongLenTroi));
 
-                var currentWalk = 0.15; var currentSprint = 0.4; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+                var currentWalk = 0.15; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
                 if (doCao <= 5.0) { currentWalk = 0.15; currentSprint = 0.4; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
                 else if (doCao < 1000.0) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
                 else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
