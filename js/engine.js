@@ -1788,11 +1788,22 @@ function animate() {
                 playerModel.up.copy(huongLenTroi);
                 playerModel.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0).applyQuaternion(playerModel.quaternion), huongLenTroi));
 
-                var currentWalk = 0.15; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
-                if (doCao <= 5.0) { currentWalk = 0.15; currentSprint = 0.4; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
-                else if (doCao < 1000.0) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
-                else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
-                if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
+
+
+var currentWalk = 0.15; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+
+// 🌍 Dưới 5m: Chạy bộ tà tà (0.2)
+if (doCao <= 5.0) { currentWalk = 0.15; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
+// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.4)
+else if (doCao <= 500.0) { currentWalk = 0.15; currentSprint = 0.4; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
+// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.8)
+else if (doCao <= 1000.0) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
+// 🚀 Trên 1000m: Xé gió (1.5)
+else { currentWalk = 1.0; currentSprint = 1.5; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
+
+if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
+
+
                 // 🌟 BẢN VÁ AAA: BƠM TỐC ĐỘ THÚ CƯỠI (1.1 = Tăng 10%)
                 let heSoThuCuoi = window.TOC_DO_CHAY_CUA_TOI || 1.0;
                 currentWalk *= heSoThuCuoi;
@@ -1953,13 +1964,21 @@ function animate() {
 
 
 
-                var currentWalk = 0.15; var currentSprint = 0.4; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+var currentWalk = 0.15; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
 
-                if (doCao <= 5.0 && timThayDat) { currentWalk = 0.15; currentSprint = 0.4; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
-                else if (doCao < 1000.0 && timThayDat) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
-                else { currentWalk = 1.0; currentSprint = 2.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
+// 🌍 Dưới 5m: Chạy bộ tà tà (0.2)
+if (doCao <= 5.0 && timThayDat) { currentWalk = 0.15; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
+// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.4)
+else if (doCao <= 500.0 && timThayDat) { currentWalk = 0.15; currentSprint = 0.4; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
+// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.8)
+else if (doCao <= 1000.0 && timThayDat) { currentWalk = 0.5; currentSprint = 0.8; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
+// 🚀 Trên 1000m: Xé gió (1.5)
+else { currentWalk = 1.0; currentSprint = 1.5; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
 
-                if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
+if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
+
+
+
                 // 🌟 BẢN VÁ AAA: BƠM TỐC ĐỘ THÚ CƯỠI (1.1 = Tăng 10%)
                 let heSoThuCuoi = window.TOC_DO_CHAY_CUA_TOI || 1.0;
                 currentWalk *= heSoThuCuoi;
