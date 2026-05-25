@@ -181,27 +181,24 @@
 
         if (!nvc && !isRemote) return;
 
-        // 1. CHẠY ANIMATION MÚA QUYỀN TRƯỚC NGAY LẬP TỨC
+        // =====================================
+        // 1. CHỌN ANIMATION MÚA QUYỀN CHUẨN TỪNG CHIÊU SẾP CHỌN
+        // =====================================
+        let tenAnimMua = 'PL_JINBE_ORIG01_COMBO_A';
+        if (phim === 'Q') tenAnimMua = 'PL_JINBE_ORIG01_SKILL_B';      // Số 3
+        else if (phim === 'R') tenAnimMua = 'PL_JINBE_ORIG01_SKILL_A'; // Số 2
+        else if (phim === 'E') tenAnimMua = 'PL_JINBE_ORIG01_COMBO_A'; // Số 26
+        else if (phim === 'F') tenAnimMua = 'PL_JINBE_ORIG01_COMBO_B'; // Số 27
+
+        // CHẠY ANIMATION MÚA QUYỀN TRƯỚC NGAY LẬP TỨC
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
 
-            if (typeof window.ViTriComboJimbei === 'undefined') {
-                window.DanhSachComboJimbei = [
-                    'PL_JINBE_ORIG01_COMBO_A', 'PL_JINBE_ORIG01_COMBO_B', 'PL_JINBE_ORIG01_COMBO_C',
-                    'PL_JINBE_ORIG01_SKILL_A', 'PL_JINBE_ORIG01_SKILL_B'
-                ];
-                window.ViTriComboJimbei = 0;
-            }
-
-            let tenAnimMua = window.DanhSachComboJimbei[window.ViTriComboJimbei];
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua);
             else if (typeof window.playAnim === 'function') window.playAnim(tenAnimMua);
-
-            window.ViTriComboJimbei++;
-            if (window.ViTriComboJimbei >= window.DanhSachComboJimbei.length) window.ViTriComboJimbei = 0;
         }
 
         let viTriGocToTam = new THREE.Vector3();
