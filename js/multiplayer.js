@@ -381,7 +381,9 @@ livekitScript.onload = async () => {
                             // 🌟 Nếu có rồi -> Kéo tọa độ đi (KHÚC NÀY CỦA SẾP PHẢI GIỮ NGUYÊN)
                             else if (rp.status === 'ready') {
                                 rp.targetPos = new THREE.Vector3(mappedData.x, mappedData.y, mappedData.z);
-                                rp.targetRot = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz);
+                               // Chuyển Euler nhận được từ mạng sang Quaternion ngay lập tức
+                               let gocEuler = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz, 'XYZ');
+                               rp.targetQuat = new THREE.Quaternion().setFromEuler(gocEuler);
                                 // 🌟 ÉP SIZE ĐỒNG BỘ TỪ MÁY CHỦ SANG!
                                 if (mappedData.size > 0 && rp.mesh.scale.x !== mappedData.size) {
                                     rp.mesh.scale.setScalar(mappedData.size);
@@ -657,11 +659,15 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
         if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers !== null) {
             for (let id in window.remotePlayers) {
                 let rp = window.remotePlayers[id];
+
+
                 if (rp && rp.status === 'ready' && rp.targetPos && rp.mesh) {
                     rp.mesh.position.lerp(rp.targetPos, 0.15); 
-                    rp.mesh.rotation.x += (rp.targetRot.x - rp.mesh.rotation.x) * 0.15;
-                    rp.mesh.rotation.y += (rp.targetRot.y - rp.mesh.rotation.y) * 0.15;
-                    rp.mesh.rotation.z += (rp.targetRot.z - rp.mesh.rotation.z) * 0.15;
+    
+                   // 🌟 BẢN VÁ: DÙNG SLERP ĐỂ TÌM GÓC XOAY NGẮN NHẤT, CHỐNG LỘN VÒNG
+                   if (rp.targetQuat) {
+                   rp.mesh.quaternion.slerp(rp.targetQuat, 0.15);
+                   }
 
 
 
