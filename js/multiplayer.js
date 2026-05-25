@@ -334,19 +334,33 @@ livekitScript.onload = async () => {
 
 
                         // ==========================================
-                        // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
-                        // ==========================================
-                        if (Array.isArray(data) && data[0] === 1) {
+// 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
+// ==========================================
+if (Array.isArray(data) && data[0] === 1) {
 
-                            // 🌟 HẢI QUAN ĐA VŨ TRỤ: Kẻ nào không cùng Map thì tàng hình!
-                            let senderZone = data[16] || 'TRUNG_CHAU';
-                            if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
-                                if (window.remotePlayers[senderId]) {
-                                    if (window.remotePlayers[senderId].mesh) window.remotePlayers[senderId].mesh.visible = false;
-                                    if (window.remotePlayers[senderId].tag) window.remotePlayers[senderId].tag.style.display = 'none';
-                                }
-                                return; 
-                            }
+    // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì TIÊU DIỆT khỏi RAM!
+    let senderZone = data[16] || 'TRUNG_CHAU';
+    if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
+        if (window.remotePlayers[senderId]) {
+            let rpLeaver = window.remotePlayers[senderId];
+            // Đốt xác
+            if (rpLeaver.mesh) {
+                if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(rpLeaver.mesh);
+                else scene.remove(rpLeaver.mesh);
+            }
+            // Hủy CMND (Thẻ tên)
+            if (rpLeaver.tag) rpLeaver.tag.remove();
+            
+            // Xóa sổ khỏi sổ Nam Tào
+            delete window.remotePlayers[senderId];
+        }
+        return; // Đuổi về, không cho cập nhật tọa độ nữa!
+    }
+
+    
+
+
 
                             // 🌟 TỐI ƯU MOBILE: Nếu người chơi khác ở quá xa (> 2500m), không cần tải/Render để tiết kiệm VRAM!
                             let pX = data[1], pY = data[2], pZ = data[3];
@@ -361,11 +375,6 @@ livekitScript.onload = async () => {
                             }
 
                             let mappedData = {
-
-
-
-
-
                                 type: 'vitri', x: data[1], y: data[2], z: data[3], rx: data[4], ry: data[5], rz: data[6],
                                 size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14],
                                 vuKhiHienThi: data[15]
