@@ -2195,19 +2195,30 @@ if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { cu
                 if (!window.oldPosLK) window.oldPosLK = new THREE.Vector3();
 
                 let isPosChanged = playerModel.position.distanceTo(window.oldPosLK) > 0.1;
-                let isAnimChanged = currentAnimName !== window.oldAnimLK; 
+
+
+
+                // =====================================
+                // 🌟 BẢN VÁ ĐẠI TÔNG SƯ: GỬI ĐÍCH DANH TÊN GỐC CỦA HOẠT ẢNH (CHỐNG AI ĐOÁN MÒ)
+                // =====================================
+                let tenAnimThucTe = 'IDLE';
+                if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") {
+                    tenAnimThucTe = (window.currentActionChar && window.currentActionChar.getClip()) ? window.currentActionChar.getClip().name : (window.currentAnimNameChar || 'IDLE');
+                } else {
+                    tenAnimThucTe = (typeof currentAction !== 'undefined' && currentAction && currentAction.getClip()) ? currentAction.getClip().name : (currentAnimName || 'IDLE');
+                }
+
+                let isAnimChanged = tenAnimThucTe !== window.oldAnimLK; 
                 let lastSend = window.lastSendTime || 0;
 
                 // 🌟 CHỐNG NÓNG MÁY MOBILE: Nới lỏng độ trễ mạng để Ăng-ten Wi-fi/4G được nghỉ ngơi
                 let doTreMang = window.isMobile ? 150 : 80;
                 if (!window.dangLuot && (now - lastSend > 3000 || ((isPosChanged || isAnimChanged) && now - lastSend > doTreMang))) {
-                    window.oldAnimLK = currentAnimName; 
-                    let animNguoiChoi = currentAnimName || 'IDLE';
-                    if (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") {
-                        animNguoiChoi = window.currentAnimNameChar || 'IDLE'; 
-                    }
+                    window.oldAnimLK = tenAnimThucTe; 
+                    let animNguoiChoi = tenAnimThucTe; // Gửi thẳng tên gốc sang máy đối thủ!
 
-                    let vuKhiHienThi = 1; 
+
+
                     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu')) {
                         vuKhiHienThi = (window.cungTrenTay && window.cungTrenTay.visible) ? 1 : 0;
                     } else {
