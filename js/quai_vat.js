@@ -522,14 +522,18 @@ window.capNhatAIQuaiVat = function (delta) {
         if (quai.classCode === 'TRANG_TRI') {
             let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
             
-            // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT)
+            // 🌟 CHỐT ĐỘ CAO GỐC LÚC MỚI ĐẺ (Cứu tinh đồng bộ Đa người chơi)
+            if (quai.gocY === undefined) quai.gocY = quai.mesh.position.y;
+            if (quai.gocTam === undefined) {
+                quai.gocTam = quai.spawnPos ? quai.spawnPos.clone() : quai.mesh.position.clone();
+            }
+            
+            // 1. TẠO TỌA ĐỘ MỤC TIÊU MỚI (WAYPOINT) XUNG QUANH Ổ
             if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 50) {
-                let alt = boNao.doCaoBayMin + Math.random() * (boNao.doCaoBayMax - boNao.doCaoBayMin);
-                quai.doCaoBayHienTai = alt; 
-                
                 if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                    // MAP CẦU: Lượn nhấp nhô quanh quỹ đạo ban đầu
                     let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-                    let radius = R + alt;
+                    let radius = quai.gocTam.distanceTo(window.TAM_HANH_TINH_HIEN_TAI) + (Math.random() * 50 - 25);
                     let theta = Math.random() * Math.PI * 2; 
                     let phi = Math.random() * Math.PI;       
                     
@@ -540,11 +544,12 @@ window.capNhatAIQuaiVat = function (delta) {
                         tam.z + radius * Math.sin(phi) * Math.sin(theta)
                     );
                 } else {
-                    let range = 1500; 
+                    // 🌟 MAP PHẲNG: Không lấy người chơi làm gốc nữa! Lấy Tọa Độ lúc đẻ làm gốc!
+                    let range = 2000; // Bán kính lượn lờ quanh Ổ
                     quai.waypoint = new THREE.Vector3(
-                        (playerModel ? playerModel.position.x : 0) + (Math.random() - 0.5) * range,
-                        (window.toaDoMatDat || 0) + alt,
-                        (playerModel ? playerModel.position.z : 0) + (Math.random() - 0.5) * range
+                        quai.gocTam.x + (Math.random() - 0.5) * range,
+                        quai.gocY + (Math.random() * 50 - 25), // Nhấp nhô quanh độ cao Admin thả
+                        quai.gocTam.z + (Math.random() - 0.5) * range
                     );
                 }
                 quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
@@ -566,30 +571,25 @@ window.capNhatAIQuaiVat = function (delta) {
             let dummy = new THREE.Object3D();
             dummy.position.copy(quai.mesh.position);
             dummy.up.copy(quai.upVector);
-            
-            // 🛑 CHÌA KHÓA TRỊ BỆNH Ở ĐÂY: Phải dùng .sub() thay vì .add() để chống ngược trục lộn nhào!
             dummy.lookAt(quai.mesh.position.clone().sub(huongBayNgang));
 
             let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
             let gocRe = currentForward.dot(rightVec); 
             dummy.rotateZ(gocRe * boNao.lucNghieng); 
 
-            // Cổ xoay mượt mà (0.02) để đến nơi phanh lại, không quay chong chóng nữa!
             quai.mesh.quaternion.slerp(dummy.quaternion, 0.02); 
 
-            // 4. VÁ LỖI LỌT ĐẤT MƯỢT MÀ
-            let doCaoMin = boNao.doCaoBayMin || 20;
-            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                let tam = window.TAM_HANH_TINH_HIEN_TAI;
-                let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-                let kcQuai = quai.mesh.position.distanceTo(tam);
+            // 3.5 BÙ ĐẮP TRỌNG LỰC CẦU
+            let trucUpHienTai = new THREE.Vector3(0, 1, 0).applyQuaternion(quai.mesh.quaternion);
+            let nanTrucQuat = new THREE.Quaternion().setFromUnitVectors(trucUpHienTai, quai.upVector);
+            quai.mesh.quaternion.premultiply(nanTrucQuat);
 
-                if (kcQuai < R + doCaoMin) {
-                    let huongTuTam = quai.mesh.position.clone().sub(tam).normalize();
-                    quai.mesh.position.add(huongTuTam.multiplyScalar((R + doCaoMin - kcQuai) * 0.1));
-                }
+            // 4. CHỐNG LỌT ĐẤT (ĐÃ XÓA BIẾN MẶT ĐẤT CỦA SẾP, THAY BẰNG TỌA ĐỘ TUYỆT ĐỐI)
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                // Map cầu tính theo quỹ đạo nên tự động không chạm đất
             } else if (window.KIEU_TRONG_LUC === 'PHANG') {
-                let yMin = (window.toaDoMatDat || 0) + doCaoMin;
+                // Nếu lặn quá sâu (hơn 100m so với độ cao Admin thả), ép đẩy lên lại
+                let yMin = quai.gocY - 100;
                 if (quai.mesh.position.y < yMin) {
                     quai.mesh.position.y += (yMin - quai.mesh.position.y) * 0.1;
                 }
