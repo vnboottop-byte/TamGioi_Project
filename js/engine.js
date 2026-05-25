@@ -1790,16 +1790,16 @@ function animate() {
 
 
 
-var currentWalk = 0.06; var currentSprint = 0.08; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
 
-// 🌍 Dưới 5m: Chạy bộ tà tà (0.08)
-if (doCao <= 5.0) { currentWalk = 0.06; currentSprint = 0.08; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
-// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.16)
-else if (doCao <= 500.0) { currentWalk = 0.06; currentSprint = 0.16; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
-// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.32)
-else if (doCao <= 1000.0) { currentWalk = 0.2; currentSprint = 0.32; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
-// 🚀 Trên 1000m: Xé gió (0.6)
-else { currentWalk = 0.4; currentSprint = 0.6; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
+// 🌍 Dưới 5m: Chạy bộ tà tà (0.2 - Khớp nhịp chân nhất)
+if (doCao <= 5.0) { currentWalk = 0.1; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
+// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.3)
+else if (doCao <= 500.0) { currentWalk = 0.15; currentSprint = 0.3; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
+// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.6)
+else if (doCao <= 1000.0) { currentWalk = 0.3; currentSprint = 0.6; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
+// 🚀 Trên 1000m: Xé gió (1.0)
+else { currentWalk = 0.5; currentSprint = 1.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
 
 if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
 
@@ -1964,16 +1964,16 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
 
 
 
-var currentWalk = 0.06; var currentSprint = 0.08; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
 
-// 🌍 Dưới 5m: Chạy bộ tà tà (0.08)
-if (doCao <= 5.0 && timThayDat) { currentWalk = 0.06; currentSprint = 0.08; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
-// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.16)
-else if (doCao <= 500.0 && timThayDat) { currentWalk = 0.06; currentSprint = 0.16; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
-// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.32)
-else if (doCao <= 1000.0 && timThayDat) { currentWalk = 0.2; currentSprint = 0.32; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
-// 🚀 Trên 1000m: Xé gió (0.6)
-else { currentWalk = 0.4; currentSprint = 0.6; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
+// 🌍 Dưới 5m: Chạy bộ tà tà (0.2)
+if (doCao <= 5.0 && timThayDat) { currentWalk = 0.1; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
+// ☁️ Từ 5m đến 500m: Vừa cất cánh (0.3)
+else if (doCao <= 500.0 && timThayDat) { currentWalk = 0.15; currentSprint = 0.3; tangKhongGian = "☁️ TẦNG MÂY"; mauChu = "#00ffff"; }
+// ⚔️ Từ 500m đến 1000m: Bay tốc độ cao (0.6)
+else if (doCao <= 1000.0 && timThayDat) { currentWalk = 0.3; currentSprint = 0.6; tangKhongGian = "⚔️ BẦU KHÍ QUYỂN"; mauChu = "#ffff00"; }
+// 🚀 Trên 1000m: Xé gió (1.0)
+else { currentWalk = 0.5; currentSprint = 1.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
 
 if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; } }
 
