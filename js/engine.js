@@ -3176,7 +3176,9 @@ window.thucHienTruyenTong = function (congData) {
         window.toaDoMatDat = viTriAnToan.y;
         if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
 
-        
+
+
+
 
 
 
@@ -3196,10 +3198,33 @@ window.thucHienTruyenTong = function (congData) {
             for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
                 let quai = window.danhSachQuaiVat[i];
                 if (quai.tagEl) quai.tagEl.remove();
-                if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh); // Quái thì được quyền đốt
             }
             window.danhSachQuaiVat = []; // Xóa trắng data Quái vật
         }
+
+        // 🌟 DÁN THÊM ĐOẠN NÀY VÀO: GỠ SẠCH NGƯỜI CHƠI MAP CŨ KHI CHUI CỔNG
+        if (window.remotePlayers) {
+            for (let id in window.remotePlayers) {
+                let rp = window.remotePlayers[id];
+
+                // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
+                if (rp.mesh) {
+                    if (rp.mesh.parent) rp.mesh.parent.remove(rp.mesh);
+                    scene.remove(rp.mesh);
+                }
+                if (rp.tag) rp.tag.remove();
+            }
+            window.remotePlayers = {}; // Xóa trắng sổ Nam Tào
+        }
+
+        
+
+
+
+
+
+        
 
         // ========================================================
         // 🌍 CẬP NHẬT KHU VỰC VÀ NẮN XƯƠNG SƠ BỘ
