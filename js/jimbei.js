@@ -231,7 +231,7 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 150;
+        const dameGoc = window.DAME_CUA_TOI || 100;
 
         // =====================================
         // 🌟 2. HẸN GIỜ 0.5 GIÂY SAU MỚI PHÓNG KỸ NĂNG TỪ TAY
@@ -283,7 +283,7 @@
                 muiLao.lookAt(mucTieu); 
                 scene.add(muiLao);
                 
-                kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.7, isRemote: isRemote, upVector: upVector.clone() });
+                kyNangJimbei.push({ mesh: muiLao, type: 'E', life: 80, speed: 10.0, targetPos: mucTieu, damage: dameGoc * 0.6, isRemote: isRemote, upVector: upVector.clone() });
             }
             else if (phim === 'R') {
                 const waveGroup = new THREE.Group();
@@ -307,7 +307,7 @@
                 waveGroup.add(waveMesh);
                 waveGroup.add(loiSong);
                 
-                kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 1.5, isRemote: isRemote, upVector: upVector.clone() });
+                kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 0.6, isRemote: isRemote, upVector: upVector.clone() });
             }
             else if (phim === 'F') {
                 const buraikan = taoCauNuoc(6.0, 0x00ffff);
@@ -317,7 +317,7 @@
                 buraikan.lookAt(mucTieu);
                 scene.add(buraikan);
                 
-                kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 3.5, isRemote: isRemote, upVector: upVector.clone() });
+                kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 0.9, isRemote: isRemote, upVector: upVector.clone() });
             }
         }, 500); // ⏳ Độ trễ 500 mili-giây (0.5s)
     };
