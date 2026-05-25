@@ -399,47 +399,58 @@ livekitScript.onload = async () => {
 
 
 
-                                if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
-                                    let upAnim = mappedData.anim.toUpperCase();
-                                    
-                                    // 🌟 NÃO BỘ NGƯỜI CHƠI BẢN SAO (HỆ TIẾNG VIỆT)
-                                    if (rp.animsChar && Object.keys(rp.animsChar).length > 0) {
-                                        let actionChar = rp.animsChar[upAnim];
-                                        // Luật dự phòng: Không có chân thì dồn về BAY
-                                        if (!actionChar && !upAnim.includes('CHIEU') && upAnim !== 'CHET' && upAnim !== 'DIE') {
-                                            actionChar = rp.animsChar['BAY'];
-                                        }
-                                        if (!actionChar) actionChar = rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
-                                        
-                                        if (actionChar) { if (rp.activeActionChar) rp.activeActionChar.fadeOut(0.2); rp.activeActionChar = actionChar; rp.activeActionChar.reset().fadeIn(0.2).play(); }
-                                    }
+                                // ==========================================
+// 🌟 TỪ ĐIỂN PHIÊN DỊCH ANIMATION XUYÊN QUỐC GIA
+// ==========================================
+if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
+    let upAnim = mappedData.anim.toUpperCase();
 
-                                    // 🌟 NÃO BỘ THÚ CƯỠI BẢN SAO (HỆ TIẾNG ANH)
-                                    if (rp.anims && Object.keys(rp.anims).length > 0) {
-                                        let checkNameThu = upAnim;
-                                        // Dịch thuật từ gói tin Tiếng Việt sang Tiếng Anh cho thú hiểu
-                                        if (upAnim === 'NHANROI') checkNameThu = 'IDLE';
-                                        else if (upAnim === 'CHAYBO' || upAnim === 'DIBO') checkNameThu = 'RUN';
-                                        else if (upAnim === 'BAY') checkNameThu = 'FLY';
-                                        else if (upAnim === 'CHET' || upAnim === 'DIE') checkNameThu = 'DIE';
-                                        
-                                        let actionThu = rp.anims[checkNameThu];
-                                        // Vét máng dự phòng nếu Model Thú trên mạng đặt tên tào lao
-                                        if (!actionThu) {
-                                            if (checkNameThu === 'RUN') actionThu = rp.anims['WALK'] || rp.anims['FLY'];
-                                            else if (checkNameThu === 'IDLE') actionThu = rp.anims['WAIT'] || rp.anims['FLY'];
-                                            else if (checkNameThu === 'FLY') actionThu = rp.anims['JUMP'] || rp.anims['RUN'];
-                                        }
-                                        if (!actionThu) actionThu = rp.anims['IDLE'] || Object.values(rp.anims)[0];
+    // 1. DỊCH THUẬT TIẾNG VIỆT -> TIẾNG ANH (Cho Model hiểu)
+    let checkName = upAnim;
+    if (checkName === 'NHANROI') checkName = 'IDLE';
+    else if (checkName === 'CHAYBO' || checkName === 'DIBO') checkName = 'RUN';
+    else if (checkName === 'BAY') checkName = 'FLY';
+    else if (checkName === 'CHET' || checkName === 'DIE') checkName = 'DEATH';
 
-                                        // Thú chỉ diễn cảnh Di chuyển/Đứng/Chết. Bỏ qua các lệnh Múa Chiêu!
-                                        if (!upAnim.includes('CHIEU') || checkNameThu === 'DIE') {
-                                            if (actionThu) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = actionThu; rp.activeAction.reset().fadeIn(0.2).play(); }
-                                        }
-                                    }
+    // 2. XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI (NẾU CÓ)
+    if (rp.anims && Object.keys(rp.anims).length > 0) {
+        // Ưu tiên tìm đúng tên tiếng Việt -> Tên tiếng Anh -> Tên Fallback
+        let action = rp.anims[upAnim] || rp.anims[checkName];
+        if (!action) {
+            if (checkName === 'RUN') action = rp.anims['WALK'] || rp.anims['FLY'];
+            else if (checkName === 'FLY') action = rp.anims['JUMP'] || rp.anims['RUN'];
+        }
+        if (!action) action = rp.anims['IDLE'] || rp.anims['WAIT'] || Object.values(rp.anims)[0];
 
-                                    rp.currentAnim = mappedData.anim;
-                                }
+        // Nếu là lệnh MÚA CHIÊU thì không ép thú cưỡi diễn (tránh lỗi méo thú)
+        if (!upAnim.includes('CHIEU') || checkName === 'DEATH') {
+            if (action) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = action; rp.activeAction.reset().fadeIn(0.2).play(); }
+        }
+    }
+
+    // 3. XỬ LÝ HOẠT ẢNH CHO NGƯỜI CHƠI (TỰ ĐỘNG KHỚP MODEL GỐC)
+    if (rp.animsChar && Object.keys(rp.animsChar).length > 0) {
+        // Tương tự, dò từ Tiếng Việt sang Tiếng Anh
+        let actionChar = rp.animsChar[upAnim] || rp.animsChar[checkName];
+        if (!actionChar) {
+            if (checkName === 'RUN') actionChar = rp.animsChar['WALK'] || rp.animsChar['FLY'];
+            else if (checkName === 'FLY') actionChar = rp.animsChar['JUMP'] || rp.animsChar['RUN'];
+        }
+        if (!actionChar) actionChar = rp.animsChar['IDLE'] || rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
+
+        if (actionChar) { 
+            if (rp.activeActionChar) rp.activeActionChar.fadeOut(0.2); 
+            rp.activeActionChar = actionChar; 
+            rp.activeActionChar.reset().fadeIn(0.2).play(); 
+        }
+    }
+
+    rp.currentAnim = mappedData.anim;
+}
+
+
+
+
 
                             }
                         }
