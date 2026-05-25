@@ -333,22 +333,26 @@ livekitScript.onload = async () => {
 
 
 
+
+
+
                         // ==========================================
-// 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
-// ==========================================
+                        // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
+                        // ==========================================
 if (Array.isArray(data) && data[0] === 1) {
 
-    // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì TIÊU DIỆT khỏi RAM!
+    // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì GỠ KHỎI MÀN HÌNH!
     let senderZone = data[16] || 'TRUNG_CHAU';
     if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
         if (window.remotePlayers[senderId]) {
             let rpLeaver = window.remotePlayers[senderId];
-            // Đốt xác
+            
+            // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
             if (rpLeaver.mesh) {
                 if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh);
-                if (typeof window.donRac3D === 'function') window.donRac3D(rpLeaver.mesh);
-                else scene.remove(rpLeaver.mesh);
+                scene.remove(rpLeaver.mesh);
             }
+            
             // Hủy CMND (Thẻ tên)
             if (rpLeaver.tag) rpLeaver.tag.remove();
             
@@ -357,6 +361,15 @@ if (Array.isArray(data) && data[0] === 1) {
         }
         return; // Đuổi về, không cho cập nhật tọa độ nữa!
     }
+
+
+
+
+
+
+
+
+ 
 
     
 
