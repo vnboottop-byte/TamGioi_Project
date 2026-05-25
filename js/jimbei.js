@@ -8,7 +8,7 @@
     const danhSachSoBayJB = [];
 
     // 🌟 CẤU HÌNH THỜI GIAN HỒI CHIÊU (Miligiây)
-    const THOI_GIAN_HOI = { 'Q': 1500, 'E': 4000, 'R': 8000, 'F': 15000 };
+    const THOI_GIAN_HOI = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     window.tongSoChuNoi_JB = 0;
