@@ -623,6 +623,10 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
+
+
+
+
         if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho && !window.isDead) {
             let dangLui = false;
             if (boNao && boNao.choPhepLuiBinh) {
@@ -779,6 +783,13 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
             }
         }
+
+
+
+
+
+
+
 
 
                 
