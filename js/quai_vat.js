@@ -78,6 +78,67 @@ window.TU_DIEN_AI_QUAI['TRANG_TRI'] = {
     choPhepLuiBinh: false
 };
 
+// 🥊 BỘ NÃO LUYỆN THỂ & CẬN CHIẾN (CHẠY ĐẾN ÁP SÁT ĐẤM TÉT MÁU PHẠM VI GẦN)
+window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
+    he: 'BO',
+    getTamDanh: () => 12, // Ép chạy vào sát nách 12 mét mới được đấm
+    getTamNhin: () => 300,
+    getGioiHanLanhTho: () => 450,
+    khoangCachAnToan: 2,
+    choPhepLuiBinh: false,
+    thucHienTanCong: function (quai, playerModel, delta) {
+        if (Date.now() - (quai.lastAttackTime || 0) > 1500) {
+            quai.lastAttackTime = Date.now();
+            
+            // Kích hoạt hoạt ảnh đấm đá cận chiến ngẫu nhiên có sẵn trong model
+            if (typeof quai.playAnim === 'function') {
+                let danhSachDon = Object.keys(quai.anims).filter(k => /attack|punch|kick|combo/i.test(k));
+                let chieuChon = danhSachDon.length > 0 ? danhSachDon[Math.floor(Math.random() * danhSachDon.length)] : 'ATTACK';
+                quai.playAnim(chieuChon);
+            }
+
+            let dmgBoss = (quai.maxHp || 4000) * 0.05; 
+            let bOrigin = quai.mesh.position.clone();
+            let pTarget = playerModel.position.clone();
+            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+
+            // Mượn hiệu ứng vạt cào tóe máu đỏ của hệ Chim/Cá để diễn hoạt chấn lực đấm
+            if (typeof window.tungComboChimCa === 'function') {
+                window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, quai.id, null, true);
+            }
+
+            if (!window.IS_IN_SAFE_ZONE) {
+                let role = (window.ROLE || "").toLowerCase();
+                let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+
+                if (role !== "admin" && name !== "admin") {
+                    window.mauBanThan -= Math.round(dmgBoss);
+                    if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(dmgBoss));
+
+                    const uiThanhMau = document.getElementById('thanhMauHienTai');
+                    const uiSoMau = document.getElementById('soMauHienTai');
+                    if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+                    if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
+
+                    if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Luyện Thể Đấm Chết");
+                }
+            }
+
+            if (window.room && window.room.state === 'connected') {
+                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'CHIM', chieu: 'CAN_CHIEN' })), { reliable: true }); } catch (e) { }
+            }
+        }
+    }
+};
+window.TU_DIEN_AI_QUAI['CAN_CHIEN'] = window.TU_DIEN_AI_QUAI['LUYEN_THE'];
+
+
+
+
+
+
+
+
 
 window.danhSachQuaiVat = window.danhSachQuaiVat || [];
 window.bossSkills = window.bossSkills || [];
