@@ -848,18 +848,24 @@ window.capNhatAIQuaiVat = function (delta) {
                         quai.gocY = quai.spawnPos.y;
                     }
 
-                    // 1. CHỮA BỆNH TỐC ĐỘ: Tính vận tốc tuyến tính 35m/s y như người chơi
-                    let banKinhMap = window.BAN_KINH_HANH_TINH_HIEN_TAI || 5000;
-                    let banKinhBay = Math.min(800, banKinhMap * 0.1);
 
-                    let tocDoTuyenTinh = 35 * (quai.heSoToLon || 1);
-                    let angularSpeed = tocDoTuyenTinh / banKinhBay;
-                    quai.tFlying += angularSpeed * delta;
 
-                    // 2. CHỮA BỆNH QUỸ ĐẠO: Hình số 8 nghiêng 45 độ (Tôn cao trục Y để chao lượn)
+
+
+                    // 1. CHỮA BỆNH "SCALE TO BAY NHỎ": 
+                    // Gắn bán kính bay tỷ lệ thuận 100% với kích cỡ Boss. Boss to = Vòng lượn to.
+                    let banKinhBay = 150 * (quai.heSoToLon || 1); 
+                    
+                    // 2. CHỮA BỆNH TỐC ĐỘ: Khóa chết tốc độ góc lượn lờ dạo chơi (cực chậm)
+                    quai.tFlying += 0.15 * delta; 
+                    
+                    // 3. CHỮA BỆNH QUỸ ĐẠO XUYÊN ĐẤT:
                     let dx = Math.sin(quai.tFlying) * banKinhBay;
                     let dz = Math.sin(quai.tFlying) * Math.cos(quai.tFlying) * banKinhBay;
-                    let dy = dz * 0.8; // 🌟 Chao liệng nâng/hạ độ cao cực mượt theo trục Z
+                    
+                    // Dùng Trị tuyệt đối (Math.abs) để dy LUÔN LUÔN DƯƠNG (>= 0). 
+                    // Đáy của số 8 chính là điểm xuất phát, Quái chỉ có vút lên cao rồi chao xuống đúng điểm xuất phát.
+                    let dy = Math.abs(Math.sin(quai.tFlying)) * (banKinhBay * 0.4); 
 
                     let viTriDich = quai.spawnPos.clone();
 
@@ -868,7 +874,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
                         if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
                         let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
-
+                        
                         viTriDich.add(rightSpawn.multiplyScalar(dx));
                         viTriDich.add(forwardSpawn.multiplyScalar(dz));
                         viTriDich.add(upSpawn.multiplyScalar(dy));
@@ -879,7 +885,12 @@ window.capNhatAIQuaiVat = function (delta) {
                     }
 
                     let huongBay = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position).normalize();
-                    quai.mesh.position.lerp(viTriDich, 0.02);
+                    quai.mesh.position.lerp(viTriDich, 0.05); // 🌟 Tăng độ bám dính quỹ đạo để không bị bóp nhỏ vòng cua
+
+
+
+
+
 
                     if (huongBay.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
