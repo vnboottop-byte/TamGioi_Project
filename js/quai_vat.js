@@ -749,14 +749,10 @@ window.capNhatAIQuaiVat = function (delta) {
                         // ==========================================
                         // 🌟 3. TRANG BỊ VŨ KHÍ MẶC ĐỊNH CHO BOSS (CHỐNG ĂN CẮP ĐỒ CỦA SẾP)
                         // ==========================================
-
-
-
-                        let bossWeapon = null;
                         let phaiCode = quai.classCode;
+                        
                         // 🌟 TỰ ĐỘNG ĐỌC VŨ KHÍ TỪ DATABASE THAY VÌ GẮN CHẾT TÊN FILE
                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                        
                         // 🌟 TỰ ĐỘNG TÌM HÀM THEO HỆ PHÁI MỚI NHẤT
                         let tenHamMap = {
                             'TU_TIEN': 'tungComboTuTien',
