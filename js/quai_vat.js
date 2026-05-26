@@ -615,7 +615,7 @@ window.capNhatAIQuaiVat = function (delta) {
             else if (phaiBoss === 'LAZER' || phaiBoss === 'SIEUANHHUNG') { scaleTamDanh = 300; scaleTamNhin = 450; }
             else if (phaiBoss === 'TU_TIEN') { scaleTamDanh = 80; scaleTamNhin = 300; }
             else if (phaiBoss === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } 
-            else { scaleTamDanh = 25; scaleTamNhin = 300; }
+            else { scaleTamDanh = 250; scaleTamNhin = 300; }
             
             gioiHanLanhTho = scaleTamNhin * 1.5;
         }
