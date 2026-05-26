@@ -1113,42 +1113,51 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.5);
             }
 
+
+
             if (Date.now() - (bot.lastAttackTime || 0) > 1200) {
                 bot.lastAttackTime = Date.now();
                 let nextChieu = ['Q', 'E', 'R', 'F'][bot.soLanDaDanh % 4];
                 bot.soLanDaDanh++;
-
                 if (typeof bot.playAnim === 'function') bot.playAnim('ATTACK');
-
                 let bOrigin = bot.mesh.position.clone();
                 let pTarget = playerModel.position.clone(); pTarget.y += 3;
                 let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-
-
                 let botFakeId = "PLAYER_" + bot.id;
-
                 if (typeof window.remotePlayers !== 'undefined') {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: 0, classCode: bot.fakePhai };
                 }
 
+
+
+
                 // 🌟 KHAI BÁO BIẾN BỊ THIẾU ĐỂ CỨU GAME KHỎI SẬP
                 let phaiDung = bot.fakePhai || 'TU_TIEN';
-
-                // 🌟 BẢN VÁ: Phantom đánh chay, miễn nhiễm lỗi xóa file
                 let phantomWeapon = null;
-                if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                else if (phaiDung === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                else if (phaiDung === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                else if (phaiDung === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
-                else if (phaiDung === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                // 🌟 BẢN VÁ AI TỐI THƯỢNG CHO PHANTOM
+                let maPhaiBot = phaiDung;
+                if (maPhaiBot === 'XA_THU' || maPhaiBot === 'SUNG_DAN') maPhaiBot = 'BanSung';
+                else if (maPhaiBot === 'SIEUANHHUNG') maPhaiBot = 'Lazer';
+                else if (maPhaiBot === 'CUNG_TEN') maPhaiBot = 'CungThu';
+                else {
+                    maPhaiBot = maPhaiBot.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+                }
+                let tenHamBot = 'tungCombo' + maPhaiBot;
+                // Tự động gọi chiêu thức nếu có Script
+                if (typeof window[tenHamBot] === 'function') {
+                    window[tenHamBot](nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                } else if (typeof window.bossTungTuyetKieu === 'function') {
+                    window.bossTungTuyetKieu(bot, pTarget, 'TU_TIEN', nextChieu);
+                }
+
+
+
 
 
                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 100);
-
                 let khoangCachDenSep = bOrigin.distanceTo(playerModel.position);
                 let thoiGianDanBay = (khoangCachDenSep / 60) * 1000;
                 if (thoiGianDanBay < 200) thoiGianDanBay = 200;
-
                 let tamNo = pTarget.clone();
                 setTimeout(() => {
                     if (typeof window.gaySatThuongBossToPlayer === 'function' && !window.isDead) {
@@ -1156,7 +1165,6 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                         window.gaySatThuongBossToPlayer(tamNo, dmg, 15.0);
                     }
                 }, thoiGianDanBay);
-
                 if (window.room && window.room.state === 'connected') {
                     window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                         type: 'BOSS_SKILL', bossId: bot.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'FAKE_PLAYER', classCode: phaiDung, chieu: nextChieu
