@@ -777,7 +777,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         // 🌟 SỬA ĐỔI: Phóng chiêu trực tiếp từ giữa Lõi Thịt
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
                         if (!quai.tamThucTeLocal) bOrigin.y += 5; // Dự phòng an toàn
-                        
+
                         const pTarget = playerModel.position.clone(); pTarget.y += 5;
 
 
@@ -795,7 +795,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         // 🌟 BẢN VÁ AI TỐI THƯỢNG: TỰ ĐỘNG KÍCH HOẠT KỸ NĂNG THEO TÊN PHÁI
                         let bossWeapon = null;
                         let maPhai = quai.classCode || 'TU_TIEN';
-                        
+
                         // Tự động nắn lại các mã phái cũ cho khớp tên Hàm
                         if (maPhai === 'XA_THU' || maPhai === 'SUNG_DAN') maPhai = 'BanSung';
                         else if (maPhai === 'SIEUANHHUNG') maPhai = 'Lazer';
@@ -806,12 +806,12 @@ window.capNhatAIQuaiVat = function (delta) {
                         }
 
                         // Ghép tên hàm: VD window['tungComboTuTien']
-                        let tenHam = 'tungCombo' + maPhai; 
+                        let tenHam = 'tungCombo' + maPhai;
 
                         // Nếu tìm thấy File Script của phái đó -> Quất luôn!
                         if (typeof window[tenHam] === 'function') {
                             window[tenHam](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        } 
+                        }
                         // Nếu chưa tải File kịp hoặc bị lỗi -> Xài chiêu dự phòng bắn cục vuông
                         else if (typeof window.bossTungTuyetKieu === 'function') {
                             window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
@@ -821,12 +821,24 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-                        
+
 
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
                         if (window.room && window.room.state === 'connected') {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
                         }
+                    }
+                
+
+            
+           
+                    else {
+                        if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                        let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                        let dummy = new THREE.Object3D();
+                        dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                        dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
+                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.15); // Xoay cổ mượt mà
                     }
                 }
             }else {
