@@ -602,6 +602,11 @@ window.capNhatAIQuaiVat = function (delta) {
             return; 
         }
 
+
+
+        // ========================================================
+        // 🦅🐟🐉 HOẠT ẢNH LƯỢN LỜ KHI NHÀN RỖI CỦA THÚ
+        // ========================================================
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
             if (quai.tFlying === undefined) {
                 quai.tFlying = Math.random() * 1000;
@@ -609,8 +614,19 @@ window.capNhatAIQuaiVat = function (delta) {
             }
             quai.tFlying += delta * 0.5;
             let t = quai.tFlying * quai.adn1;
+            
+            // Xử lý lượn sóng
+            let offset = new THREE.Vector3(Math.sin(t) * 1.5, Math.cos(t * 0.8) * 1.0, Math.sin(t * 1.2) * 1.5);
+            quai.mesh.position.add(offset.multiplyScalar(delta));
+        } // 🛑 CHÍNH LÀ CÁI DẤU NGOẶC NÀY ĐÃ BỊ SẾP XÓA MẤT!
 
-             // ========================================================
+        // ========================================================
+        // 🎯 TÍNH TOÁN KHOẢNG CÁCH CHUNG CHO MỌI LOẠI QUÁI
+        // ========================================================
+        let myDist = quai.mesh.position.distanceTo(playerModel.position);
+        let isClosest = true; 
+
+        // ========================================================
         // 🧠 BẢN VÁ TRUY QUÉT NÃO BỘ ĐỘNG CHO BOSS MÔN PHÁI
         // ========================================================
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
@@ -628,20 +644,16 @@ window.capNhatAIQuaiVat = function (delta) {
             gioiHanLanhTho = boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1);
             khoangCachAnToan = boNao.khoangCachAnToan || 0;
         } 
-        // KIỂM TRA 2: Nếu là Boss Môn Phái xài chung JS người chơi (Jimbei, Cung Thủ, Pháp Sư...)
-        // Tự động mò vào hàm layMucTieuGanNhatXX để trích xuất Tầm Đánh cấu hình trong file JS đó!
+        // KIỂM TRA 2: Nếu là Boss Môn Phái xài chung JS người chơi
         else if (window.HePhaiHienTai) {
-            // Thử dò xem trong file JS của Phái có cài hàm kiểm tra tầm nhìn không
-            // Nếu có cài minD trong hàm layMucTieu của phái (Ví dụ: Cung thủ 500m, Pháp sư 200m)
             let maPhaiNgan = quai.classCode === 'CUNG_THU' ? 'CT' : (quai.classCode === 'PHAP_SU' ? 'PS' : (quai.classCode === 'LUYEN_THE' ? 'LT' : 'JB'));
             let tenHamQuet = 'layMucTieuGanNhat' + maPhaiNgan;
             
             if (typeof window[tenHamQuet] === 'function') {
-                // Tách biệt: Phái đánh xa bắn từ tít mù tắp, Luyện Thể cận chiến phải rượt sát nút
                 if (quai.classCode === 'CUNG_THU') { scaleTamDanh = 400; scaleTamNhin = 550; }
                 else if (quai.classCode === 'PHAP_SU') { scaleTamDanh = 200; scaleTamNhin = 350; }
                 else if (quai.classCode === 'JIMBEI') { scaleTamDanh = 150; scaleTamNhin = 300; }
-                else if (quai.classCode === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } // Cận chiến ép sát
+                else if (quai.classCode === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } 
                 
                 gioiHanLanhTho = scaleTamNhin * 1.5;
             }
@@ -649,9 +661,11 @@ window.capNhatAIQuaiVat = function (delta) {
 
         if (quai.lastHp === undefined) quai.lastHp = quai.hp;
         if (quai.hp < quai.lastHp) { quai.thoiDiemBiChocGian = Date.now(); quai.lastHp = quai.hp; }
-        else if (quai.hp > quai.lastHp) { lastHp = quai.hp; }
+        else if (quai.hp > quai.lastHp) { quai.lastHp = quai.hp; }
 
         let dangCayCu = (quai.thoiDiemBiChocGian && (Date.now() - quai.thoiDiemBiChocGian < 15000));
+
+        
 
         if (quai.spawnPos === undefined) quai.spawnPos = quai.mesh.position.clone();
         let cachXaO = quai.spawnPos.distanceTo(playerModel.position);
