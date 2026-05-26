@@ -635,6 +635,7 @@ window.capNhatAIQuaiVat = function (delta) {
             quai.tFlying += delta * 0.5;
             let t = quai.tFlying * quai.adn1;
 
+
             let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
             let banKinhBay = boNao ? boNao.banKinhTuanTra(quai.heSoToLon || 1) : 30;
             let doCaoBay = boNao ? boNao.doCaoBay : 20;
@@ -718,10 +719,11 @@ window.capNhatAIQuaiVat = function (delta) {
         }
 
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
-        let scaleTamNhin = 600;
-        let scaleTamDanh = 500;
-        let gioiHanLanhTho = 900;
-        let khoangCachAnToan = 0;
+        // 🌟 BẢN VÁ 1: Set tầm đánh mặc định cực ngắn (20m) để Boss Môn Phái phải rượt sát đít mới tung chiêu!
+        let scaleTamNhin = boNao ? boNao.getTamNhin(quai.heSoToLon || 1) : 200; 
+        let scaleTamDanh = boNao ? boNao.getTamDanh(quai.heSoToLon || 1) : 20;  
+        let gioiHanLanhTho = boNao ? boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1) : 400;
+        let khoangCachAnToan = boNao ? boNao.khoangCachAnToan : 0;
 
         if (boNao) {
             scaleTamDanh = boNao.getTamDanh(quai.heSoToLon || 1);
