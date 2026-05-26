@@ -477,4 +477,31 @@
         };
         window.HePhaiHienTai.khoiTao();
     }
+
+
+
+
+
+
+
+
+
+    // ==========================================
+    // 🌟 CẤY NÃO BỘ BOSS CHO JIMBEI VÀO ĐÂY ĐỂ ĐỘNG CƠ TỰ ĐỌC (CẮM LÀ CHẠY)
+    // ==========================================
+    window.TU_DIEN_AI_QUAI = window.TU_DIEN_AI_QUAI || {};
+    window.TU_DIEN_AI_QUAI['JIMBEI'] = {
+        getTamDanh: () => 150,     // Cách 150m xả nước
+        getTamNhin: () => 300,     // Cách 300m là thấy Sếp
+        khoangCachAnToan: 0,
+        choPhepLuiBinh: false
+        // 🛑 BÍ MẬT QUÂN SỰ: TUYỆT ĐỐI KHÔNG KHAI BÁO hàm thucHienTanCong vào đây! 
+        // Không có hàm đó, AI Trung Tâm sẽ tự động gọi hàm tungComboJimbei như một người chơi!
+    };
+
+
+
+
+
+
 })(); // 🌟 Ốc vít chốt hạ (Đóng Function) nằm ở đây Sếp nhé!
