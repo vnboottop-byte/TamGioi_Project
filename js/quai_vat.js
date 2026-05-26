@@ -585,7 +585,6 @@ window.capNhatAIQuaiVat = function (delta) {
         // ========================================================
         let myDist = quai.mesh.position.distanceTo(playerModel.position);
         
-        // 🌟 BẢN VÁ CHỐNG KẸT BAY: Tính khoảng cách theo chiều ngang mặt đất
         let posNgangQuai = quai.mesh.position.clone().projectOnPlane(quai.upVector);
         let posNgangSep = playerModel.position.clone().projectOnPlane(quai.upVector);
         let distNgang = posNgangQuai.distanceTo(posNgangSep);
@@ -605,14 +604,15 @@ window.capNhatAIQuaiVat = function (delta) {
             khoangCachAnToan = boNao.khoangCachAnToan || 0;
         } 
         else {
-            // 🌟 BẢN VÁ LIỆT NÃO: Khóa cứng Tầm Đánh theo Hệ Phái Boss, không bị phụ thuộc vào Phái Sếp đang chơi nữa!
-            if (quai.classCode === 'CUNG_THU') { scaleTamDanh = 400; scaleTamNhin = 550; }
-            else if (quai.classCode === 'PHAP_SU') { scaleTamDanh = 200; scaleTamNhin = 350; }
-            else if (quai.classCode === 'JIMBEI') { scaleTamDanh = 150; scaleTamNhin = 300; }
-            else if (quai.classCode === 'XA_THU' || quai.classCode === 'SUNG_DAN') { scaleTamDanh = 350; scaleTamNhin = 500; }
-            else if (quai.classCode === 'LAZER' || quai.classCode === 'SIEUANHHUNG') { scaleTamDanh = 300; scaleTamNhin = 450; }
-            else if (quai.classCode === 'TU_TIEN') { scaleTamDanh = 80; scaleTamNhin = 300; }
-            else if (quai.classCode === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } 
+            // 🌟 BẢN VÁ 1: ĐỘC LẬP TỰ CHỦ! Boss đọc trực tiếp mã của chính nó, không quan tâm Sếp đang chơi phái gì!
+            let phaiBoss = quai.classCode;
+            if (phaiBoss === 'CUNG_THU') { scaleTamDanh = 400; scaleTamNhin = 550; }
+            else if (phaiBoss === 'PHAP_SU') { scaleTamDanh = 200; scaleTamNhin = 350; }
+            else if (phaiBoss === 'JIMBEI') { scaleTamDanh = 150; scaleTamNhin = 300; }
+            else if (phaiBoss === 'XA_THU' || phaiBoss === 'SUNG_DAN') { scaleTamDanh = 350; scaleTamNhin = 500; }
+            else if (phaiBoss === 'LAZER' || phaiBoss === 'SIEUANHHUNG') { scaleTamDanh = 300; scaleTamNhin = 450; }
+            else if (phaiBoss === 'TU_TIEN') { scaleTamDanh = 80; scaleTamNhin = 300; }
+            else if (phaiBoss === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } 
             
             gioiHanLanhTho = scaleTamNhin * 1.5;
         }
@@ -622,10 +622,8 @@ window.capNhatAIQuaiVat = function (delta) {
         else if (quai.hp > quai.lastHp) { quai.lastHp = quai.hp; }
 
         let dangCayCu = (quai.thoiDiemBiChocGian && (Date.now() - quai.thoiDiemBiChocGian < 15000));
-
         if (quai.spawnPos === undefined) quai.spawnPos = quai.mesh.position.clone();
         let cachXaO = quai.spawnPos.distanceTo(playerModel.position);
-
         if (dangCayCu && scaleTamNhin < gioiHanLanhTho) scaleTamNhin = gioiHanLanhTho;
 
         // ========================================================
@@ -633,124 +631,126 @@ window.capNhatAIQuaiVat = function (delta) {
         // ========================================================
         if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho && !window.isDead) {
             let dangLui = false;
-            if (boNao && boNao.choPhepLuiBinh) {
-                dangLui = window.xuLyQuaiLuiBinh(quai, playerModel.position, delta);
-            }
+            if (boNao && boNao.choPhepLuiBinh) dangLui = window.xuLyQuaiLuiBinh(quai, playerModel.position, delta);
 
             if (dangLui) {
                 // Đang lùi binh
             }
-            else if (myDist < scaleTamDanh) {
-                quai.state = 'ATTACK';
-                if (boNao && typeof boNao.thucHienTanCong === 'function') {
-                    boNao.thucHienTanCong(quai, playerModel, delta);
-                }
-                else {
-                    let thoiGianDaQua = Date.now() - (quai.lastAttackTime || 0);
+            else {
+                let thoiGianDaQua = Date.now() - (quai.lastAttackTime || 0);
+                
+                // 🌟 BẢN VÁ 2: KHÓA MÚA CHIÊU (ANIMATION LOCK)
+                // Đang trong thời gian 1.5s múa chiêu thì cấm tuyệt đối việc chuyển sang CHASE!
+                let dangKhoaChieu = (thoiGianDaQua < 1500);
+                
+                // 🌟 BẢN VÁ 3: VÙNG ĐỆM CHỐNG GIẬT (Hysteresis)
+                // Nếu đang tấn công thì Sếp phải chạy ra xa hơn tầm đánh 15m nó mới chịu rượt tiếp!
+                let vungDem = (quai.state === 'ATTACK') ? (scaleTamDanh + 15) : scaleTamDanh;
 
-                    if (thoiGianDaQua > 3000) {
-                        quai.lastAttackTime = Date.now();
-                        const chieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
-                        
-                        // 🌟 KÍCH HOẠT HOẠT ẢNH TUNG CHIÊU
-                        if (typeof quai.playAnim === 'function') quai.playAnim('CHIEU' + chieu);
-
-                        let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-                        let dummy = new THREE.Object3D();
-                        dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-                        dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
-                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.5);
-
-                        let dmgBoss = (quai.maxHp || 4000) * 0.05;
-                        const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
-                        if (!quai.tamThucTeLocal) bOrigin.y += 5; 
-
-                        const pTarget = playerModel.position.clone(); pTarget.y += 5;
-                        const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-
-                        let tempId = "BOSS_" + quai.id;
-                        if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
-
-                        let bossWeapon = null;
-                        let maPhai = quai.classCode || 'TU_TIEN';
-
-                        if (maPhai === 'XA_THU' || maPhai === 'SUNG_DAN') maPhai = 'BanSung';
-                        else if (maPhai === 'SIEUANHHUNG') maPhai = 'Lazer';
-                        else if (maPhai === 'CUNG_TEN') maPhai = 'CungThu';
-                        else {
-                            maPhai = maPhai.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
-                        }
-
-                        let tenHam = 'tungCombo' + maPhai;
-
-                        if (typeof window[tenHam] === 'function') {
-                            window[tenHam](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        }
-                        else if (typeof window.bossTungTuyetKieu === 'function') {
-                            window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
-                        }
-
-                        setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
-                        if (window.room && window.room.state === 'connected') {
-                            try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
-                        }
+                // 🛑 NẾU TRONG TẦM ĐÁNH HOẶC ĐANG BỊ KHÓA MÚA CHIÊU DỞ DANG
+                if (myDist < vungDem || dangKhoaChieu) {
+                    quai.state = 'ATTACK';
+                    
+                    if (boNao && typeof boNao.thucHienTanCong === 'function') {
+                        boNao.thucHienTanCong(quai, playerModel, delta);
                     }
                     else {
-                        // 🌟 BẢN VÁ TRỊ GIẬT KINH PHONG: Ép chờ 1.5 giây cho diễn xong Animation Múa Chiêu mới được phép trở về IDLE!
-                        if (thoiGianDaQua > 1500) {
-                            if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                        // Boss Môn Phái ra chiêu
+                        if (thoiGianDaQua > 3000) {
+                            quai.lastAttackTime = Date.now();
+                            const chieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
+                            
+                            if (typeof quai.playAnim === 'function') quai.playAnim('CHIEU' + chieu);
+
+                            // Xoay mặt thẳng vào Sếp lúc ra chiêu
+                            let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                            let dummy = new THREE.Object3D();
+                            dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                            dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
+                            quai.mesh.quaternion.slerp(dummy.quaternion, 1.0); // Ép xoay lập tức
+
+                            let dmgBoss = (quai.maxHp || 4000) * 0.05;
+                            const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
+                            if (!quai.tamThucTeLocal) bOrigin.y += 5; 
+
+                            const pTarget = playerModel.position.clone(); pTarget.y += 5;
+                            const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+
+                            let tempId = "BOSS_" + quai.id;
+                            if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
+
+                            let bossWeapon = null;
+                            let maPhai = quai.classCode || 'TU_TIEN';
+                            if (maPhai === 'XA_THU' || maPhai === 'SUNG_DAN') maPhai = 'BanSung';
+                            else if (maPhai === 'SIEUANHHUNG') maPhai = 'Lazer';
+                            else if (maPhai === 'CUNG_TEN') maPhai = 'CungThu';
+                            else maPhai = maPhai.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+
+                            let tenHam = 'tungCombo' + maPhai;
+                            if (typeof window[tenHam] === 'function') {
+                                window[tenHam](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                            } else if (typeof window.bossTungTuyetKieu === 'function') {
+                                window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
+                            }
+
+                            setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
+                            if (window.room && window.room.state === 'connected') {
+                                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
+                            }
                         }
-                        
-                        // Đứng thở và xoay cổ nhìn chằm chằm theo Sếp
-                        let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                        else {
+                            // ĐANG CHỜ HỒI CHIÊU HOẶC ĐANG MÚA: Không chạy, chỉ đứng nhìn và xoay cổ
+                            if (thoiGianDaQua > 1500) {
+                                if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                            }
+                            let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                            let dummy = new THREE.Object3D();
+                            dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                            dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
+                            quai.mesh.quaternion.slerp(dummy.quaternion, 0.15); 
+                        }
+                    }
+                } 
+                // 🛑 NẾU ĐỨNG NGAY TRÊN ĐẦU BOSS (NGOÀI TẦM ĐÁNH NHƯNG TRONG TẦM NGANG)
+                else if (distNgang < scaleTamDanh && myDist >= scaleTamDanh) {
+                    quai.state = 'IDLE';
+                    let thoiGianDaQua = Date.now() - (quai.lastAttackTime || 0);
+                    if (thoiGianDaQua > 1500) {
+                        if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                    }
+                    let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                    if (huongNhin.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
-                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.15); 
+                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.15);
                     }
                 }
-            } 
-            else if (distNgang < scaleTamDanh && myDist >= scaleTamDanh) {
-                // 🌟 BẢN VÁ SẾP BAY TRÊN ĐẦU: Nếu khoảng cách ngang đã áp sát, nhưng Sếp bay tít trên cao ngoài tầm tay...
-                // Thì KHÔNG RƯỢT NỮA! Đứng im dưới đất ngước cổ lên ngó!
-                quai.state = 'IDLE';
-                let thoiGianDaQua = Date.now() - (quai.lastAttackTime || 0);
-                if (thoiGianDaQua > 1500) {
-                    if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
-                }
-                
-                let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-                if (huongNhin.lengthSq() > 0.001) {
-                    let dummy = new THREE.Object3D();
-                    dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-                    dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
-                    quai.mesh.quaternion.slerp(dummy.quaternion, 0.15);
-                }
-            }
-            else {
-                // RƯỢT ĐUỔI
-                quai.state = 'CHASE';
-                if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
+                // 🛑 NẾU NGOÀI TẦM ĐÁNH VÀ KHÔNG BỊ KHÓA CHIÊU -> RƯỢT ĐUỔI
+                else {
+                    quai.state = 'CHASE';
+                    if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
 
-                let tocDoRuot = boNao ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
+                    let tocDoRuot = boNao ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
 
-                if (boNao && boNao.he === 'BAY') {
-                    let mucTieuBay = playerModel.position.clone();
-                    mucTieuBay.add(quai.upVector.clone().multiplyScalar(boNao.getChieuCaoNgam()));
-                    let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
-                    quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
-                } else {
-                    let huongRuot = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).normalize();
-                    let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
-                    quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
-                }
+                    if (boNao && boNao.he === 'BAY') {
+                        let mucTieuBay = playerModel.position.clone();
+                        mucTieuBay.add(quai.upVector.clone().multiplyScalar(boNao.getChieuCaoNgam()));
+                        let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
+                        quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
+                    } else {
+                        let huongRuot = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).normalize();
+                        let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
+                        quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
+                    }
 
-                let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-                if (huongRuotPhang.lengthSq() > 0.001) {
-                    let dummy = new THREE.Object3D();
-                    dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-                    dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
-                    quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
+                    let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                    if (huongRuotPhang.lengthSq() > 0.001) {
+                        let dummy = new THREE.Object3D();
+                        dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                        dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
+                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
+                    }
                 }
             }
         }
