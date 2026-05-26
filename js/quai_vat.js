@@ -591,34 +591,23 @@ window.capNhatAIQuaiVat = function (delta) {
 
         let isClosest = true; 
 
+        // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
+        
+        // Mặc định cho những phái chưa được nâng cấp
         let scaleTamNhin = 300;
         let scaleTamDanh = 25;  
-        let gioiHanLanhTho = 600;
+        let gioiHanLanhTho = 450;
         let khoangCachAnToan = 0;
-
-        // 🌟 BẢN VÁ 1: ĐỘC LẬP TỰ CHỦ HOÀN TOÀN! (Không quan tâm Sếp đang chơi phái gì)
-        let phaiBoss = quai.classCode || 'TU_TIEN';
 
         if (boNao) {
             scaleTamDanh = boNao.getTamDanh(quai.heSoToLon || 1);
             scaleTamNhin = boNao.getTamNhin(quai.heSoToLon || 1);
-            gioiHanLanhTho = boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1);
+            if (typeof boNao.getGioiHanLanhTho === 'function') gioiHanLanhTho = boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1);
+            else gioiHanLanhTho = scaleTamNhin * 1.5;
             khoangCachAnToan = boNao.khoangCachAnToan || 0;
         } 
-        else {
-            // Tự con Boss quét mã của nó để tự lên tầm đánh!
-            if (phaiBoss === 'CUNG_THU') { scaleTamDanh = 400; scaleTamNhin = 550; }
-            else if (phaiBoss === 'PHAP_SU') { scaleTamDanh = 200; scaleTamNhin = 350; }
-            else if (phaiBoss === 'JIMBEI') { scaleTamDanh = 150; scaleTamNhin = 300; }
-            else if (phaiBoss === 'XA_THU' || phaiBoss === 'SUNG_DAN') { scaleTamDanh = 350; scaleTamNhin = 500; }
-            else if (phaiBoss === 'LAZER' || phaiBoss === 'SIEUANHHUNG') { scaleTamDanh = 300; scaleTamNhin = 450; }
-            else if (phaiBoss === 'TU_TIEN') { scaleTamDanh = 80; scaleTamNhin = 300; }
-            else if (phaiBoss === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } 
-            else { scaleTamDanh = 250; scaleTamNhin = 300; }
-            
-            gioiHanLanhTho = scaleTamNhin * 1.5;
-        }
+        // 🛑 ĐÃ XÓA VĨNH VIỄN TOÀN BỘ CỤC "ELSE IF" KHAI BÁO CỨNG NHẮC!
 
         if (quai.lastHp === undefined) quai.lastHp = quai.hp;
         if (quai.hp < quai.lastHp) { quai.thoiDiemBiChocGian = Date.now(); quai.lastHp = quai.hp; }
@@ -698,7 +687,8 @@ window.capNhatAIQuaiVat = function (delta) {
                                 window.bossTungTuyetKieu(quai, pTarget, phaiBoss, chieu);
                             }
 
-                            setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
+                            // 🌟 BẢN VÁ: Tăng lên 2000ms để đợi các phái có độ trễ múa tay phóng chiêu xong mới được xóa
+                            setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
                             if (window.room && window.room.state === 'connected') {
                                 try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
                             }
@@ -766,6 +756,22 @@ window.capNhatAIQuaiVat = function (delta) {
                 if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
             }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
