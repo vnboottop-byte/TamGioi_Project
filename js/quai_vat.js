@@ -1120,18 +1120,30 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
 
 
+
+
+
                 // 🌟 KHAI BÁO BIẾN BỊ THIẾU ĐỂ CỨU GAME KHỎI SẬP
                 let phaiDung = bot.fakePhai || 'TU_TIEN';
-
 
                 // 🌟 TỰ ĐỘNG LẤY ĐÚNG VŨ KHÍ CỦA MÔN PHÁI TỪ BẢNG GAME_CLASSES
                 let phantomWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiDung]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiDung] : null;
 
-
+                // 🌟 BẢN VÁ AI TỐI THƯỢNG CHO PHANTOM (Đã phục hồi đoạn if bị mất)
+                let maPhaiBot = phaiDung;
+                if (maPhaiBot === 'XA_THU' || maPhaiBot === 'SUNG_DAN') maPhaiBot = 'BanSung';
+                else if (maPhaiBot === 'SIEUANHHUNG') maPhaiBot = 'Lazer';
+                else if (maPhaiBot === 'CUNG_TEN') maPhaiBot = 'CungThu';
                 else {
                     maPhaiBot = maPhaiBot.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                 }
                 let tenHamBot = 'tungCombo' + maPhaiBot;
+
+
+
+
+
+
                 // Tự động gọi chiêu thức nếu có Script
                 if (typeof window[tenHamBot] === 'function') {
                     window[tenHamBot](nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
