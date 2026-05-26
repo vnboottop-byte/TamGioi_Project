@@ -602,31 +602,6 @@ window.capNhatAIQuaiVat = function (delta) {
             return; 
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
             if (quai.tFlying === undefined) {
                 quai.tFlying = Math.random() * 1000;
@@ -635,106 +610,46 @@ window.capNhatAIQuaiVat = function (delta) {
             quai.tFlying += delta * 0.5;
             let t = quai.tFlying * quai.adn1;
 
-
-            let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
-            let banKinhBay = boNao ? boNao.banKinhTuanTra(quai.heSoToLon || 1) : 30;
-            let doCaoBay = boNao ? boNao.doCaoBay : 20;
-            let lucNghieng = boNao ? boNao.lucNghieng : 0.1;
-
-            if (banKinhBay < 20) banKinhBay = 20;
-
-            let vUp = quai.upVector ? quai.upVector.clone() : new THREE.Vector3(0, 1, 0);
-            let right = new THREE.Vector3(1, 0, 0).cross(vUp).normalize();
-            if (right.lengthSq() < 0.001) right.set(0, 0, 1).cross(vUp).normalize();
-            let forward = new THREE.Vector3().crossVectors(right, vUp).normalize();
-
-            let viTriMoi = quai.spawnPos ? quai.spawnPos.clone() : quai.mesh.position.clone();
-            viTriMoi.add(vUp.clone().multiplyScalar(doCaoBay));
-            viTriMoi.add(right.multiplyScalar(Math.sin(t) * banKinhBay));
-            viTriMoi.add(forward.multiplyScalar(Math.sin(t * 2.0) * (banKinhBay * 0.6)));
-
-            let huongDi = viTriMoi.clone().sub(quai.mesh.position);
-            quai.mesh.position.lerp(viTriMoi, 0.03);
-
-            if (huongDi.lengthSq() > 0.01) {
-                let dummy = new THREE.Object3D();
-                dummy.position.copy(quai.mesh.position); dummy.up.copy(vUp);
-                dummy.lookAt(quai.mesh.position.clone().add(huongDi));
-                dummy.rotateZ(-Math.cos(t) * lucNghieng);
-                quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
-            }
-        }
-
-        if (quai.tagEl && typeof camera !== 'undefined') {
-            let khoangCachDenCam = camera.position.distanceTo(quai.mesh.position);
-            let tamNhinTen = 800 * (quai.heSoToLon || 1);
-            if (tamNhinTen < 1000) tamNhinTen = 1000;
-
-
-
-
-            if (khoangCachDenCam < tamNhinTen) {
-                // 🌟 SỬA ĐỔI: Dùng Lõi Thịt làm mốc, đẩy lên nửa chiều cao hộp + 0.5m
-                const p = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
-                let chieuCaoNapBox = quai.chieuCaoThuc ? (quai.chieuCaoThuc / 2) : ((quai.heSoToLon * 15) + 5);
-                p.y += chieuCaoNapBox + 0.5; 
-
-                p.project(camera);
-
-
-
-
-                if (p.z < 1) {
-                    quai.tagEl.style.left = `${(p.x * .5 + .5) * window.innerWidth}px`;
-                    quai.tagEl.style.top = `${(p.y * -.5 + .5) * window.innerHeight}px`;
-                    quai.tagEl.style.display = 'block';
-
-                    let tyLeZoom = 1.0 - (khoangCachDenCam / tamNhinTen);
-                    if (tyLeZoom < 0.25) tyLeZoom = 0.25;
-                    if (tyLeZoom > 1.0) tyLeZoom = 1.0;
-
-                    quai.tagEl.style.transform = `translate(-50%, -100%) scale(${tyLeZoom})`;
-                    quai.tagEl.style.opacity = tyLeZoom + 0.1;
-                    quai.tagEl.style.zIndex = Math.round(100000 - khoangCachDenCam);
-                } else {
-                    quai.tagEl.style.display = 'none';
-                }
-            } else {
-                quai.tagEl.style.display = 'none';
-            }
-        }
-
-        let refPos = quai.targetPosLK || quai.mesh.position;
-        let myDist = refPos.distanceTo(playerModel.position);
-        let isClosest = true; let closestPos = playerModel.position.clone();
-
-        if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers !== null) {
-            for (let id in window.remotePlayers) {
-                let rp = window.remotePlayers[id];
-                if (rp && rp.status === 'ready' && rp.mesh) {
-                    let d = refPos.distanceTo(rp.mesh.position);
-                    if (d < myDist - 5) { isClosest = false; myDist = d; closestPos = rp.mesh.position.clone(); }
-                }
-            }
-        }
-
+             // ========================================================
+        // 🧠 BẢN VÁ TRUY QUÉT NÃO BỘ ĐỘNG CHO BOSS MÔN PHÁI
+        // ========================================================
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
-        // 🌟 BẢN VÁ 1: Set tầm đánh mặc định cực ngắn (20m) để Boss Môn Phái phải rượt sát đít mới tung chiêu!
-        let scaleTamNhin = boNao ? boNao.getTamNhin(quai.heSoToLon || 1) : 200; 
-        let scaleTamDanh = boNao ? boNao.getTamDanh(quai.heSoToLon || 1) : 20;  
-        let gioiHanLanhTho = boNao ? boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1) : 400;
-        let khoangCachAnToan = boNao ? boNao.khoangCachAnToan : 0;
+        
+        // Cấu hình khoảng cách mặc định ban đầu
+        let scaleTamNhin = 300;
+        let scaleTamDanh = 25;  
+        let gioiHanLanhTho = 600;
+        let khoangCachAnToan = 0;
 
+        // KIỂM TRA 1: Nếu là quái thuần hệ thú (Rồng, Chim, Cá...) lấy chỉ số từ từ điển
         if (boNao) {
             scaleTamDanh = boNao.getTamDanh(quai.heSoToLon || 1);
             scaleTamNhin = boNao.getTamNhin(quai.heSoToLon || 1);
             gioiHanLanhTho = boNao.getGioiHanLanhTho(scaleTamNhin, quai.heSoToLon || 1);
-            khoangCachAnToan = boNao.khoangCachAnToan;
+            khoangCachAnToan = boNao.khoangCachAnToan || 0;
+        } 
+        // KIỂM TRA 2: Nếu là Boss Môn Phái xài chung JS người chơi (Jimbei, Cung Thủ, Pháp Sư...)
+        // Tự động mò vào hàm layMucTieuGanNhatXX để trích xuất Tầm Đánh cấu hình trong file JS đó!
+        else if (window.HePhaiHienTai) {
+            // Thử dò xem trong file JS của Phái có cài hàm kiểm tra tầm nhìn không
+            // Nếu có cài minD trong hàm layMucTieu của phái (Ví dụ: Cung thủ 500m, Pháp sư 200m)
+            let maPhaiNgan = quai.classCode === 'CUNG_THU' ? 'CT' : (quai.classCode === 'PHAP_SU' ? 'PS' : (quai.classCode === 'LUYEN_THE' ? 'LT' : 'JB'));
+            let tenHamQuet = 'layMucTieuGanNhat' + maPhaiNgan;
+            
+            if (typeof window[tenHamQuet] === 'function') {
+                // Tách biệt: Phái đánh xa bắn từ tít mù tắp, Luyện Thể cận chiến phải rượt sát nút
+                if (quai.classCode === 'CUNG_THU') { scaleTamDanh = 400; scaleTamNhin = 550; }
+                else if (quai.classCode === 'PHAP_SU') { scaleTamDanh = 200; scaleTamNhin = 350; }
+                else if (quai.classCode === 'JIMBEI') { scaleTamDanh = 150; scaleTamNhin = 300; }
+                else if (quai.classCode === 'LUYEN_THE') { scaleTamDanh = 20; scaleTamNhin = 200; } // Cận chiến ép sát
+                
+                gioiHanLanhTho = scaleTamNhin * 1.5;
+            }
         }
 
         if (quai.lastHp === undefined) quai.lastHp = quai.hp;
         if (quai.hp < quai.lastHp) { quai.thoiDiemBiChocGian = Date.now(); quai.lastHp = quai.hp; }
-        else if (quai.hp > quai.lastHp) { quai.lastHp = quai.hp; }
+        else if (quai.hp > quai.lastHp) { lastHp = quai.hp; }
 
         let dangCayCu = (quai.thoiDiemBiChocGian && (Date.now() - quai.thoiDiemBiChocGian < 15000));
 
