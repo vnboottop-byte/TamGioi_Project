@@ -749,13 +749,13 @@ window.capNhatAIQuaiVat = function (delta) {
                         // ==========================================
                         // 🌟 3. TRANG BỊ VŨ KHÍ MẶC ĐỊNH CHO BOSS (CHỐNG ĂN CẮP ĐỒ CỦA SẾP)
                         // ==========================================
+
+
+
                         let bossWeapon = null;
                         let phaiCode = quai.classCode;
-                        
-                        if (phaiCode === 'TU_TIEN') bossWeapon = 'uploads/anims/PHIKIEM.glb';
-                        else if (phaiCode === 'PHAP_SU') bossWeapon = 'uploads/anims/vong_phep.glb';
-                        else if (phaiCode === 'CUNG_THU' || phaiCode === 'CUNG_TEN') bossWeapon = 'uploads/anims/CUNGTEN.glb';
-                        else if (phaiCode === 'XA_THU' || phaiCode === 'BAN_SUNG' || phaiCode === 'SUNG_DAN') bossWeapon = 'uploads/anims/GUN.glb';
+                        // 🌟 TỰ ĐỘNG ĐỌC VŨ KHÍ TỪ DATABASE THAY VÌ GẮN CHẾT TÊN FILE
+                        let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
                         
                         // 🌟 TỰ ĐỘNG TÌM HÀM THEO HỆ PHÁI MỚI NHẤT
                         let tenHamMap = {
@@ -1122,12 +1122,12 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
                 // 🌟 KHAI BÁO BIẾN BỊ THIẾU ĐỂ CỨU GAME KHỎI SẬP
                 let phaiDung = bot.fakePhai || 'TU_TIEN';
-                let phantomWeapon = null;
-                // 🌟 BẢN VÁ AI TỐI THƯỢNG CHO PHANTOM
-                let maPhaiBot = phaiDung;
-                if (maPhaiBot === 'XA_THU' || maPhaiBot === 'SUNG_DAN') maPhaiBot = 'BanSung';
-                else if (maPhaiBot === 'SIEUANHHUNG') maPhaiBot = 'Lazer';
-                else if (maPhaiBot === 'CUNG_TEN') maPhaiBot = 'CungThu';
+
+
+                // 🌟 TỰ ĐỘNG LẤY ĐÚNG VŨ KHÍ CỦA MÔN PHÁI TỪ BẢNG GAME_CLASSES
+                let phantomWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiDung]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiDung] : null;
+
+
                 else {
                     maPhaiBot = maPhaiBot.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                 }
