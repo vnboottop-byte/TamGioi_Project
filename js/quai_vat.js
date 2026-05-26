@@ -629,21 +629,21 @@ window.capNhatAIQuaiVat = function (delta) {
                 dangLui = window.xuLyQuaiLuiBinh(quai, playerModel.position, delta);
             }
 
-            // 🌟 1. LÁ CHẮN BẢO VỆ ANIMATION (CHỐNG ĐÈ CHIÊU LÚC ĐANG RƯỢT ĐUỔI)
+            // 🌟 1. LÁ CHẮN BẢO VỆ ANIMATION (CHỐNG TRƯỢT BĂNG & ĐÈ CHIÊU LÚC ĐANG RƯỢT)
             let dangMuaChieu = quai.thoiGianKhoaChieu && Date.now() < quai.thoiGianKhoaChieu;
 
             if (dangLui) {
-                // Đang lùi
+                // Đang lùi binh
             }
-            else if (myDist < scaleTamDanh) {
+            else if (myDist < scaleTamDanh || dangMuaChieu) { // Ép đứng lại nếu đang múa dở
                 quai.state = 'ATTACK';
                 
                 if (boNao && typeof boNao.thucHienTanCong === 'function') {
-                    // Nếu là thú (Rồng, Chim) thì tự lo logic
+                    // Rồng, Chim, Cá tự lo logic
                     boNao.thucHienTanCong(quai, playerModel, delta);
                 }
                 else {
-                    // Nếu đang múa chiêu thì khóa chân, chỉ xoay mặt theo Sếp
+                    // Nếu đang múa chiêu dở dang -> Khóa chân, chỉ xoay mặt liếc theo Sếp
                     if (dangMuaChieu) {
                         let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                         let dummy = new THREE.Object3D();
@@ -651,14 +651,15 @@ window.capNhatAIQuaiVat = function (delta) {
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                     } 
-                    // Bắt đầu xả chiêu mới
-                    else if (Date.now() - quai.lastAttackTime > 3000) {
+                    // Nếu hồi chiêu xong -> Bắt đầu xả chiêu mới
+                    else if (Date.now() - (quai.lastAttackTime || 0) > 3000) {
                         quai.lastAttackTime = Date.now();
-                        quai.thoiGianKhoaChieu = Date.now() + 1500; // 🌟 KHÓA CHÂN 1.5 GIÂY ĐỂ HOÀN THÀNH ANIMATION MÚA
+                        quai.thoiGianKhoaChieu = Date.now() + 1500; // 🌟 KHÓA CHÂN 1.5 GIÂY CHO MÚA XONG
 
                         const chieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
                         if (typeof quai.playAnim === 'function') quai.playAnim('CHIEU' + chieu);
 
+                        // Xoay mặt thẳng vào Sếp lúc vung tay
                         let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
@@ -667,7 +668,7 @@ window.capNhatAIQuaiVat = function (delta) {
 
                         let dmgBoss = (quai.maxHp || 4000) * 0.05;
                         
-                        // Lấy tọa độ từ Lõi Thịt
+                        // Lấy tọa độ từ lõi ngực Boss
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
                         if (!quai.tamThucTeLocal) bOrigin.y += 5; 
                         
@@ -677,14 +678,21 @@ window.capNhatAIQuaiVat = function (delta) {
                         let tempId = "BOSS_" + quai.id;
                         if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
 
-                        // 🌟 2. VÁ LỖI TỊT NGÒI: GIỮ XÁC ẢO LÊN 2 GIÂY ĐỂ ĐỢI CÁC CHIÊU DELAY CHẠY XONG (NHƯ JIMBEI)
+                        // 🌟 2. VÁ LỖI TỊT NGÒI: Giữ xác ảo lên 2000ms để đợi các chiêu delay (như Jimbei) chạy xong mới xóa
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
 
+                        // ==========================================
+                        // 🌟 3. TRANG BỊ VŨ KHÍ MẶC ĐỊNH CHO BOSS (CHỐNG ĂN CẮP ĐỒ CỦA SẾP)
+                        // ==========================================
                         let bossWeapon = null;
-
-                        // ==========================================
-                        // 🌟 3. BỘ NÃO AUTO TÌM HỆ PHÁI KHÔNG CODE CỨNG
-                        // ==========================================
+                        let phaiCode = quai.classCode;
+                        
+                        if (phaiCode === 'TU_TIEN') bossWeapon = 'uploads/anims/PHIKIEM.glb';
+                        else if (phaiCode === 'PHAP_SU') bossWeapon = 'uploads/anims/vong_phep.glb';
+                        else if (phaiCode === 'CUNG_THU' || phaiCode === 'CUNG_TEN') bossWeapon = 'uploads/anims/CUNGTEN.glb';
+                        else if (phaiCode === 'XA_THU' || phaiCode === 'BAN_SUNG' || phaiCode === 'SUNG_DAN') bossWeapon = 'uploads/anims/GUN.glb';
+                        
+                        // 🌟 TỰ ĐỘNG TÌM HÀM THEO HỆ PHÁI MỚI NHẤT
                         let tenHamMap = {
                             'TU_TIEN': 'tungComboTuTien',
                             'PHAP_SU': 'tungComboPhapSu',
@@ -694,20 +702,19 @@ window.capNhatAIQuaiVat = function (delta) {
                             'CAN_CHIEN': 'tungComboLuyenThe', 'LUYEN_THE': 'tungComboLuyenThe'
                         };
 
-                        let funcName = tenHamMap[quai.classCode];
+                        let funcName = tenHamMap[phaiCode];
                         if (!funcName) {
-                            // Tự động nhận diện phái mới. Ví dụ: 'JIMBEI' -> 'tungComboJimbei'
-                            let parts = (quai.classCode || "").split('_');
+                            // Tự động nhận diện phái mới: 'JIMBEI' -> 'tungComboJimbei'
+                            let parts = (phaiCode || "").split('_');
                             let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                             funcName = 'tungCombo' + camelCase;
                         }
 
-                        // HÀM TRIỂN CHIÊU
                         let thiTrienVoCong = function() {
                             if (typeof window[funcName] === 'function') {
+                                // Gửi Biến dmgBoss = Mức sát thương thật sự vào vị trí isRemote của hàm tung chiêu!
                                 window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                             } else {
-                                // Fallback ném chiêu vật lý rác nếu không tìm thấy file
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
                             }
                         };
@@ -715,30 +722,22 @@ window.capNhatAIQuaiVat = function (delta) {
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); // Đã học rồi thì múa luôn
                         } else {
-                            // 🌟 CHƯA HỌC -> TỰ ĐỘNG TẢI FILE VÕ CÔNG (LAZY LOAD)
+                            // TỰ ĐỘNG TẢI FILE VÕ CÔNG MỚI (LAZY LOAD)
                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
-                            if (!window.dangTaiVoCongBoss[quai.classCode]) {
-                                window.dangTaiVoCongBoss[quai.classCode] = true;
-                                console.log("⏳ Boss xài chiêu lạ! Đang Auto-Download file võ công của: " + quai.classCode);
+                            if (!window.dangTaiVoCongBoss[phaiCode]) {
+                                window.dangTaiVoCongBoss[phaiCode] = true;
+                                console.log("⏳ Boss xài chiêu lạ! Đang Auto-Download file võ công của: " + phaiCode);
 
                                 let theScript = document.createElement('script');
-                                theScript.src = 'js/' + quai.classCode.toLowerCase() + '.js';
+                                theScript.src = 'js/' + phaiCode.toLowerCase() + '.js';
 
-                                theScript.onload = function() {
-                                    console.log("✅ Đã nạp thành công bộ kỹ năng Boss: " + quai.classCode);
-                                    thiTrienVoCong();
-                                };
-
+                                theScript.onload = function() { thiTrienVoCong(); };
                                 theScript.onerror = function() {
                                     let scriptDuPhong = document.createElement('script');
-                                    scriptDuPhong.src = 'js/phai_' + quai.classCode.toLowerCase() + '.js';
-                                    scriptDuPhong.onload = function() {
-                                        console.log("✅ Đã nạp thành công bộ kỹ năng Boss (Dự phòng): " + quai.classCode);
-                                        thiTrienVoCong();
-                                    };
+                                    scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js';
+                                    scriptDuPhong.onload = function() { thiTrienVoCong(); };
                                     document.head.appendChild(scriptDuPhong);
                                 };
-
                                 document.head.appendChild(theScript);
                             }
                         }
@@ -750,27 +749,32 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
             }
             else {
-                // 🌟 CHỈ CHẠY RƯỢT ĐUỔI KHI KHÔNG BỊ KHÓA MÚA CHIÊU (Sửa dứt điểm lỗi trượt băng)
+                // CHỈ RƯỢT ĐUỔI KHI KHÔNG BỊ KHÓA MÚA CHIÊU
                 if (!dangMuaChieu) {
                     quai.state = 'CHASE';
                     if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
 
+                    let tocDoRuot = boNao ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
+
                     if (boNao && boNao.he === 'BAY') {
                         let mucTieuBay = playerModel.position.clone();
                         mucTieuBay.add(quai.upVector.clone().multiplyScalar(boNao.getChieuCaoNgam()));
-
                         let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
-                        let tocDoRuot = boNao.getTocDoRuot(quai.heSoToLon || 1);
-
                         quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
+                    } else {
+                        // Thú đi bộ rượt đuổi
+                        let huongRuot = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).normalize();
+                        let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
+                        quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
+                    }
 
-                        if (quai.mesh.position.distanceTo(playerModel.position) > 2) {
-                            let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-                            let dummy = new THREE.Object3D();
-                            dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-                            dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
-                            quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
-                        }
+                    // Quay mặt bám theo Sếp lúc rượt
+                    let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                    if (huongRuotPhang.lengthSq() > 0.001) {
+                        let dummy = new THREE.Object3D();
+                        dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                        dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
+                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                     }
                 }
             }
