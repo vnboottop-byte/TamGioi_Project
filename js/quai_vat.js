@@ -882,18 +882,41 @@ window.capNhatAIQuaiVat = function (delta) {
             if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
         }
 
-        if (quai.mucTieuY && window.TAM_HANH_TINH_HIEN_TAI) {
 
 
-            let kcQuai = quai.mesh.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-            let kcDat = quai.mucTieuY.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
-            let khoangCachAnToan = boNao ? boNao.khoangCachAnToan : 0;
+        // ========================================================
+        // 🌟 BẢN VÁ 3: TRỌNG LỰC THÍCH ỨNG CHO CẢ BẦU TRỜI LẪN MẶT ĐẤT
+        // ========================================================
+        if (quai.mucTieuY) {
+            let isFlying = (boNao && boNao.he === 'BAY');
+            let kcAnToan = boNao ? boNao.khoangCachAnToan : 0;
 
-            if (kcQuai < kcDat + khoangCachAnToan) {
-                let viTriCuuHo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + khoangCachAnToan));
-                quai.mesh.position.lerp(viTriCuuHo, 0.5);
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                let kcQuai = quai.mesh.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
+                let kcDat = quai.mucTieuY.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
+                
+                if (kcQuai < kcDat + kcAnToan) { 
+                    // Chống lọt hố (Đẩy lên)
+                    let viTriCuuHo = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + kcAnToan));
+                    quai.mesh.position.lerp(viTriCuuHo, 0.5);
+                } 
+                else if (!isFlying && kcQuai > kcDat + kcAnToan + 1.0) { 
+                    // 🌟 HÚT KÉO XUỐNG: Bọn đi bộ mà bay lơ lửng thì rớt xuống đất!
+                    let viTriDat = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + kcAnToan));
+                    quai.mesh.position.lerp(viTriDat, 0.2); 
+                }
+            } 
+            else if (window.KIEU_TRONG_LUC === 'PHANG') {
+                if (quai.mesh.position.y < quai.mucTieuY.y + kcAnToan) { 
+                    quai.mesh.position.y += (quai.mucTieuY.y + kcAnToan - quai.mesh.position.y) * 0.5;
+                }
+                else if (!isFlying && quai.mesh.position.y > quai.mucTieuY.y + kcAnToan + 1.0) { 
+                    quai.mesh.position.y -= (quai.mesh.position.y - (quai.mucTieuY.y + kcAnToan)) * 0.2;
+                }
             }
         }
+
+
 
         if (quai.upVector) {
             let trucUpHienTai = new THREE.Vector3(0, 1, 0).applyQuaternion(quai.mesh.quaternion);
