@@ -909,11 +909,66 @@ window.capNhatAIQuaiVat = function (delta) {
                     if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
                 }
                 else {
-                    // Quái đi bộ thì đứng thở bình thường
-                    if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                    // 🌟 BẢN VÁ AAA: TUẦN TRA QUỸ ĐẠO SỐ 8 TRÊN MẶT ĐẤT CHO CÁC PHÁI CÒN LẠI
+                    if (quai.tFlying === undefined) {
+                        quai.tFlying = Math.random() * Math.PI * 2; 
+                        if (!quai.spawnPos) quai.spawnPos = quai.mesh.position.clone(); 
+                        quai.gocY = quai.spawnPos.y;
+                    }
+                    
+                    // 1. Tốc độ đi bộ dạo chơi (Chậm hơn bọn bay trên trời)
+                    quai.tFlying += 0.08 * delta; 
+                    
+                    // 2. Vòng số 8 to hơn để đi dạo cho thoải mái (Scale to thì vòng cũng to theo)
+                    let banKinhBay = 250 * (quai.heSoToLon || 1); 
+                    
+                    // 3. Quỹ đạo mặt phẳng ngang (dy = 0 vì đi dưới đất, không chao liệng)
+                    let dx = Math.sin(quai.tFlying) * banKinhBay;
+                    let dz = Math.sin(quai.tFlying) * Math.cos(quai.tFlying) * banKinhBay;
+
+                    let viTriDich = quai.spawnPos.clone();
+
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        // Trượt theo độ cong của Trái đất
+                        let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                        let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
+                        if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
+                        let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
+                        
+                        viTriDich.add(rightSpawn.multiplyScalar(dx));
+                        viTriDich.add(forwardSpawn.multiplyScalar(dz));
+                    } else {
+                        // Trượt trên mặt phẳng Bí cảnh
+                        viTriDich.x += dx;
+                        viTriDich.z += dz;
+                        viTriDich.y = quai.gocY; 
+                    }
+
+                    // Tính hướng để xoay mặt (Boss đi bộ thì không nghiêng người lúc bo cua)
+                    let huongBay = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position).normalize();
+                    quai.mesh.position.lerp(viTriDich, 0.05); 
+
+                    if (huongBay.lengthSq() > 0.001) {
+                        let dummy = new THREE.Object3D();
+                        dummy.position.copy(quai.mesh.position);
+                        dummy.up.copy(quai.upVector);
+                        dummy.lookAt(quai.mesh.position.clone().add(huongBay));
+                        
+                        // Slerp nhẹ nhàng để xoay người mượt mà, KHÔNG rotateZ (chống vẹo cổ)
+                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
+                    }
+
+                    // Kích hoạt hoạt ảnh đi bộ/chạy bộ
+                    if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
                 }
             }
         }
+
+
+
+
+
+        
 
 
 
