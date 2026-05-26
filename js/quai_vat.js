@@ -762,8 +762,15 @@ window.capNhatAIQuaiVat = function (delta) {
 
                     if (boNao && boNao.he === 'BAY') {
                         let mucTieuBay = playerModel.position.clone();
-                        mucTieuBay.add(quai.upVector.clone().multiplyScalar(boNao.getChieuCaoNgam()));
+
+                        // 🌟 BẢN VÁ AAA: Chống Crash nếu AI quên cài đặt hàm getChieuCaoNgam
+                        let chieuCaoNgam = typeof boNao.getChieuCaoNgam === 'function' ? boNao.getChieuCaoNgam() : 15;
+                        mucTieuBay.add(quai.upVector.clone().multiplyScalar(chieuCaoNgam));
+
                         let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
+
+                        // 🌟 BẢN VÁ AAA: Chống Crash nếu AI quên cài đặt hàm getTocDoRuot
+                        let tocDoRuot = typeof boNao.getTocDoRuot === 'function' ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 15.0;
                         quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
                     } else {
                         // Thú đi bộ rượt đuổi
