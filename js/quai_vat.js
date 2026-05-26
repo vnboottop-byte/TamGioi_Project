@@ -223,7 +223,7 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
 
 
 
-        const BAN_KINH_ONG = 74980;
+        const BAN_KINH_ONG = 20000;
         let anToanX = Math.max(-BAN_KINH_ONG + 1, Math.min(BAN_KINH_ONG - 1, x));
         let yChuan = posY || -Math.sqrt(BAN_KINH_ONG * BAN_KINH_ONG - anToanX * anToanX);
 
@@ -446,9 +446,6 @@ window.xuLyQuaiLuiBinh = function (quai, targetPos, delta) {
 };
 
 
-
-
-
 // ========================================================
 // 🧠 TRÍ TUỆ NHÂN TẠO AI BOSS TOÀN VŨ TRỤ (BẢN VÁ LIỀN TRỤC CHUẨN)
 // ========================================================
@@ -596,7 +593,7 @@ window.capNhatAIQuaiVat = function (delta) {
         
         // Mặc định cho những phái chưa được nâng cấp
         let scaleTamNhin = 300;
-        let scaleTamDanh = 25;  
+        let scaleTamDanh = 250;  
         let gioiHanLanhTho = 450;
         let khoangCachAnToan = 0;
 
