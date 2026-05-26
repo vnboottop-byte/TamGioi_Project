@@ -786,29 +786,49 @@ window.capNhatAIQuaiVat = function (delta) {
                         let tempId = "BOSS_" + quai.id;
                         if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
 
-                        // 🌟 BẢN VÁ: Tạm thời Boss chưởng tàng hình, sát thương và Particle nổ vẫn hoạt động tốt!
+
+
+
+
+                        // 🌟 BẢN VÁ AI TỐI THƯỢNG: TỰ ĐỘNG KÍCH HOẠT KỸ NĂNG THEO TÊN PHÁI
                         let bossWeapon = null;
-
-                        if (quai.classCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') window.tungComboTuTien(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        else if (quai.classCode === 'PHAP_SU' && typeof window.tungComboPhapSu === 'function') window.tungComboPhapSu(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        else if (quai.classCode === 'CUNG_THU' && typeof window.tungComboCungThu === 'function') window.tungComboCungThu(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        else if (quai.classCode === 'XA_THU' && typeof window.tungComboBanSung === 'function') window.tungComboBanSung(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        else if (quai.classCode === 'LAZER' && typeof window.tungComboLazer === 'function') window.tungComboLazer(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                        else if (quai.classCode === 'LUYEN_THE' && typeof window.tungComboLuyenThe === 'function') window.tungComboLuyenThe(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                        let maPhai = quai.classCode || 'TU_TIEN';
                         
+                        // Tự động nắn lại các mã phái cũ cho khớp tên Hàm
+                        if (maPhai === 'XA_THU' || maPhai === 'SUNG_DAN') maPhai = 'BanSung';
+                        else if (maPhai === 'SIEUANHHUNG') maPhai = 'Lazer';
+                        else if (maPhai === 'CUNG_TEN') maPhai = 'CungThu';
+                        else {
+                            // Biến 'TU_TIEN' thành 'TuTien', 'JIMBEI' thành 'Jimbei'
+                            maPhai = maPhai.split('_').map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+                        }
 
-                        else if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
+                        // Ghép tên hàm: VD window['tungComboTuTien']
+                        let tenHam = 'tungCombo' + maPhai; 
+
+                        // Nếu tìm thấy File Script của phái đó -> Quất luôn!
+                        if (typeof window[tenHam] === 'function') {
+                            window[tenHam](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                        } 
+                        // Nếu chưa tải File kịp hoặc bị lỗi -> Xài chiêu dự phòng bắn cục vuông
+                        else if (typeof window.bossTungTuyetKieu === 'function') {
+                            window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
+                        }
+
+
+
+
+
                         
 
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 100);
-
                         if (window.room && window.room.state === 'connected') {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
                         }
                     }
                 }
-            }
-            else {
+            }else{
+            
                 quai.state = 'CHASE';
                 if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
 
