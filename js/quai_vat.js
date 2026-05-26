@@ -618,18 +618,78 @@ window.capNhatAIQuaiVat = function (delta) {
             return; 
         }
 
+
+
+
+
+
+
         // ========================================================
-        // 🦅🐟🐉 HOẠT ẢNH LƯỢN LỜ KHI NHÀN RỖI CỦA THÚ
+        // 🦅🐟🐉 HOẠT ẢNH LƯỢN LỜ KHI NHÀN RỖI CỦA THÚ (BAY SỐ 8 TUẦN TRA)
         // ========================================================
         if (['RONG', 'CHIM', 'CA'].includes(quai.classCode) && (!quai.state || quai.state === 'IDLE')) {
             if (quai.tFlying === undefined) {
-                quai.tFlying = Math.random() * 1000;
-                quai.adn1 = 0.2 + Math.random() * 0.1;
+                quai.tFlying = Math.random() * Math.PI * 2; // Góc xuất phát ngẫu nhiên để các con không bay trùng nhau
+                if (!quai.spawnPos) quai.spawnPos = quai.mesh.position.clone(); // Khóa chặt tâm ổ đẻ
+                quai.gocY = quai.spawnPos.y;
             }
-            quai.tFlying += delta * 0.5;
-            let t = quai.tFlying * quai.adn1;
-            let offset = new THREE.Vector3(Math.sin(t) * 1.5, Math.cos(t * 0.8) * 1.0, Math.sin(t * 1.2) * 1.5);
-            quai.mesh.position.add(offset.multiplyScalar(delta));
+
+            // Tốc độ bay lượn tuần tra (Thong dong dạo chơi)
+            quai.tFlying += delta * 0.3;
+
+            // 🌟 ÁP DỤNG THƯỚC ĐO CỦA MAP THEO Ý SẾP
+            let banKinhMap = window.BAN_KINH_HANH_TINH_HIEN_TAI || 5000;
+            // Trích 10% bán kính Map làm quỹ đạo số 8. Khóa max 800m để nó không bay sang tận biên giới!
+            let banKinhBay = Math.min(800, banKinhMap * 0.1);
+
+            // Công thức quỹ đạo hình số 8 (Đường cong Lemniscate)
+            let dx = Math.sin(quai.tFlying) * banKinhBay;
+            let dz = Math.sin(quai.tFlying) * Math.cos(quai.tFlying) * banKinhBay;
+            let dy = Math.sin(quai.tFlying * 2) * (banKinhBay * 0.1); // Lượn sóng nhấp nhô lên xuống nhẹ
+
+            // Tính toán vị trí mục tiêu tiếp theo trên quỹ đạo bay
+            let viTriDich = quai.spawnPos.clone();
+
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                // Trượt vòng quanh bề mặt của Hành Tinh Cầu
+                let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
+                if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
+                let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
+
+                viTriDich.add(rightSpawn.multiplyScalar(dx));
+                viTriDich.add(forwardSpawn.multiplyScalar(dz));
+                viTriDich.add(upSpawn.multiplyScalar(dy));
+            } else {
+                // Lượn trên Mặt phẳng (Bí cảnh)
+                viTriDich.x += dx;
+                viTriDich.z += dz;
+                viTriDich.y = quai.gocY + dy;
+            }
+
+            // Tính toán hướng bay để bẻ lái
+            let huongBay = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position).normalize();
+
+            // Tiến tới vị trí mới một cách mượt mà (Lerp)
+            quai.mesh.position.lerp(viTriDich, 0.02);
+
+            // Bẻ cổ xoay mặt theo hướng bay + Nghiêng cánh lúc bo cua
+            if (huongBay.lengthSq() > 0.001) {
+                let dummy = new THREE.Object3D();
+                dummy.position.copy(quai.mesh.position);
+                dummy.up.copy(quai.upVector);
+                dummy.lookAt(quai.mesh.position.clone().add(huongBay));
+
+                // Thuật toán nghiêng cánh khí động học (Bank angle)
+                let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
+                let lucNghieng = huongBay.dot(rightVec);
+                dummy.rotateZ(lucNghieng * 0.8); // Áp dụng lực nghiêng mạnh hơn để bo cua gắt
+
+                quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
+            }
+
+            // Kích hoạt vỗ cánh bay
+            if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); // Hoạt ảnh Run của Boss Bay sẽ tự động map thành Fly
         } // 🌟 ĐÃ ĐÓNG NGOẶC CHUẨN XÁC Ở ĐÂY CHỐNG BỆNH KẸT NÃO!
 
 
