@@ -827,53 +827,50 @@ window.capNhatAIQuaiVat = function (delta) {
                         }
                     }
                 }
-            }else{
-            
+            }else {
                 quai.state = 'CHASE';
                 if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
 
+                // 🌟 BẢN VÁ ĐA HỆ THỐNG: Tính toán tốc độ rượt đuổi (Mặc định 25m/s nếu không có từ điển)
+                let tocDoRuot = boNao ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
+
                 if (boNao && boNao.he === 'BAY') {
+                    // 🦅 KHỐI 1: Hệ bay lượn (Rồng, Chim, Cá) - Giữ quỹ đạo trên cao bổ nhào xuống
                     let mucTieuBay = playerModel.position.clone();
                     mucTieuBay.add(quai.upVector.clone().multiplyScalar(boNao.getChieuCaoNgam()));
 
                     let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
-                    let tocDoRuot = boNao.getTocDoRuot(quai.heSoToLon || 1);
-
                     quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
+                } else {
+                    // 👤 KHỐI 2: Hệ đất / Boss môn phái dùng chung JS - Chạy bộ là là theo bề mặt hành tinh
+                    let huongRuot = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).normalize();
+                    // Chiếu hướng rượt lên mặt phẳng tiếp tuyến trọng lực (Cầu/Phẳng) để không bị cắm mặt lọt đất
+                    let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
+                    quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
+                }
 
-                    if (quai.mesh.position.distanceTo(playerModel.position) > 2) {
-                        let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-                        let dummy = new THREE.Object3D();
-                        dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-                        dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
-                        quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
-                    }
+                // 🔄 Xoay mặt hướng thẳng về phía người chơi cho cả 2 hệ
+                let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                if (huongRuotPhang.lengthSq() > 0.001) {
+                    let dummy = new THREE.Object3D();
+                    dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                    dummy.lookAt(quai.mesh.position.clone().add(huongRuotPhang));
+                    quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                 }
             }
         }
-
-        else if (!isClosest) {
-            let huongNhin = new THREE.Vector3().subVectors(closestPos, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
-            let dummy = new THREE.Object3D();
-            dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-            dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
-            quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
-
-            if (quai.targetPosLK) {
-                quai.mesh.position.lerp(quai.targetPosLK, 0.2);
-                if (quai.targetAnimLK && typeof quai.playAnim === 'function') {
-                    if (quai.targetAnimLK === 'CHASE') quai.playAnim('RUN');
-                    else quai.playAnim(quai.targetAnimLK);
-                }
-            }
-        }
-
+        // ========================================================
+        // 🌟 BẢN VÁ TRẠNG THÁI NHÀN RỖI CHUẨN MEN (SỬA LỖI CHẠY BỘ TẠI CHỖ)
+        // ========================================================
         else {
             quai.state = 'IDLE';
-            if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
+            // Sửa chữ 'RUN' dại dột cũ thành 'IDLE' chuẩn chỉ để quái đứng thở nhàn rỗi!
+            if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
         }
 
         if (quai.mucTieuY && window.TAM_HANH_TINH_HIEN_TAI) {
+
+
             let kcQuai = quai.mesh.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
             let kcDat = quai.mucTieuY.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
             let khoangCachAnToan = boNao ? boNao.khoangCachAnToan : 0;
