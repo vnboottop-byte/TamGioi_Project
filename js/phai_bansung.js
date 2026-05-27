@@ -197,7 +197,7 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
     function taoHoaTienXin(scaleSize) {
         const group = new THREE.Group();
         if (typeof window.taiHoacNhanBanAsset === 'function') {
-            window.taiHoacNhanBanAsset('uploads/anims/rocket.glb', (r) => {
+            window.taiHoacNhanBanAsset('uploads/anims/VIENDAN.glb', (r) => {
                 r.rotation.set(0, 0, 0);
 
                 // 📏 THƯỚC ĐO TÊN LỬA
