@@ -1,17 +1,16 @@
 // ==========================================
 // 🍖 HỆ THỐNG ĐOẠT XÁ: LUFFY (TRÁI GOMU GOMU)
-// 👑 TÍNH NĂNG: GATLING GUN XEN KẼ + TÌM KIẾM MESH THÔNG MINH
+// 👑 TÍNH NĂNG: GATLING XEN KẼ + TÁCH GEOMETRY KHỎI XƯƠNG
 // ==========================================
 
 (function () {
     const kyNangLuffy = [];
 
-    // 🌟 ĐỒNG BỘ HỒI CHIÊU NHANH (3 GIÂY) VÌ LÀ PHÁI TỐC ĐỘ
     const THOI_GIAN_HOI = { 'Q': 3000, 'E': 3000, 'R': 3000, 'F': 3000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     // ==========================================
-    // 🛡️ HỆ THỐNG PHIỄU GOM SÁT THƯƠNG (CHỐNG LAG SỐ BAY)
+    // 🛡️ HỆ THỐNG PHIỄU GOM SÁT THƯƠNG
     // ==========================================
     window.phieuDameLuffy = {};
     const danhSachSoBayLF = [];
@@ -41,7 +40,7 @@
     }, 500);
 
     // ==========================================
-    // 🎯 RADAR PVP/PVE (THẤY NGƯỜI ĐẤM NGƯỜI)
+    // 🎯 RADAR VÀ SÁT THƯƠNG
     // ==========================================
     window.layMucTieuGanNhatLF = function (viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
@@ -158,48 +157,48 @@
         let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
         let right = new THREE.Vector3().crossVectors(nvc.up, fwd).normalize();
 
-        // 🔍 MÁY DÒ TÌM MESH THÔNG MINH (BỌC THÉP)
+        // 🔍 MÁY DÒ TÌM MESH THÔNG MINH
         let tayTraiThuong = null, tayPhaiThuong = null;
         let tayTraiGiga = null, tayPhaiGiga = null;
-        let thitDuPhong = null; // Backup nếu Sếp chưa kịp đổi tên
 
         nvc.traverse(c => {
-            if (c.isMesh) {
-                if (!thitDuPhong) thitDuPhong = c; // Lưu đại 1 cục thịt đầu tiên
-
+            if (c.isMesh || c.isSkinnedMesh) {
                 let name = c.name.toLowerCase();
-                // 🌟 Dùng includes để bất chấp Blender có nhét thêm tiền tố/hậu tố
                 if (name.includes('taytrai_thuong') || name.includes('tay_trai_thuong')) tayTraiThuong = c;
                 if (name.includes('tayphai_thuong') || name.includes('tay_phai_thuong')) tayPhaiThuong = c;
                 if (name.includes('taytrai_giga') || name.includes('tay_trai_giga')) tayTraiGiga = c;
                 if (name.includes('tayphai_giga') || name.includes('tay_phai_giga')) tayPhaiGiga = c;
 
-                // Đảm bảo Tay Giga luôn bị ẩn lúc lấy ra
+                // Giữ nguyên trạng thái tàng hình của tay Giga trên body gốc
                 if (name.includes('giga')) c.visible = false;
             }
         });
 
-        // 🚀 HÀM BẮN GATLING CƠ ĐỘNG
         const dameGoc = window.DAME_CUA_TOI || 100;
+
+        // 🚀 HÀM BẮN GATLING - BẢN VÁ TÁCH HỒN ÉP XÁC
         function banGatling(soLuong, heSoDame, tocDoBay, scaleTay, dungTayGiga = false) {
             let tayTraiMau = dungTayGiga ? tayTraiGiga : tayTraiThuong;
             let tayPhaiMau = dungTayGiga ? tayPhaiGiga : tayPhaiThuong;
-
-            // 🛑 BẢN VÁ LỖI: NẾU TÌM KHÔNG RA TÊN CỦA SẾP, LẤY ĐẠI CỤC THỊT DỰ PHÒNG NÉM ĐI ĐỂ GAME KHÔNG BỊ LIỆT!
-            if (!tayTraiMau && !tayPhaiMau) {
-                console.warn("⚠️ Không tìm thấy tay chuẩn! Đang dùng thịt dự phòng!");
-                tayTraiMau = thitDuPhong;
-                tayPhaiMau = thitDuPhong;
-            }
-            if (!tayTraiMau && !tayPhaiMau) return; // Vẫn rỗng thì thua
 
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
                     let isRight = (i % 2 === 0);
                     let tayMau = isRight ? tayPhaiMau : tayTraiMau;
-                    if (!tayMau) tayMau = tayPhaiMau || tayTraiMau; // Backup nếu chỉ có 1 tay
+                    if (!tayMau) tayMau = tayPhaiMau || tayTraiMau;
 
-                    let tayClone = tayMau.clone();
+                    let tayClone;
+
+                    // 🛑 BÍ QUYẾT Ở ĐÂY: Rút xương đúc lại thành viên đạn cứng
+                    if (tayMau && tayMau.geometry) {
+                        tayClone = new THREE.Mesh(tayMau.geometry, tayMau.material);
+                    } else {
+                        // 🛑 LỐP DỰ PHÒNG: Nếu chưa kịp đổi tên Mesh, bắn ra quả Cầu Haki Đỏ
+                        const geo = new THREE.SphereGeometry(1, 16, 16);
+                        const mat = new THREE.MeshBasicMaterial({ color: 0x880000 }); // Màu đỏ bầm Haki
+                        tayClone = new THREE.Mesh(geo, mat);
+                    }
+
                     tayClone.visible = true;
                     if (scaleTay !== 1) tayClone.scale.set(scaleTay, scaleTay, scaleTay);
 
@@ -208,12 +207,12 @@
 
                     let lechNgang = right.clone().multiplyScalar(isRight ? -4 : 4);
                     posSpawn.add(lechNgang);
-
                     posSpawn.add(new THREE.Vector3((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 4, 0));
 
                     tayClone.position.copy(posSpawn);
                     let targetBay = posSpawn.clone().add(fwd.clone().multiplyScalar(50));
                     tayClone.lookAt(targetBay);
+
                     scene.add(tayClone);
 
                     kyNangLuffy.push({
@@ -241,6 +240,7 @@
                 s.life--;
                 s.mesh.translateZ(s.speed);
 
+                // Va chạm và Sát thương (Chỉ máy tung chiêu mới tính)
                 if (!s.isRemote && s.life % 2 === 0) {
                     gaySatThuongLuffy(s.mesh.position, s.damage, 8);
                 }
@@ -271,12 +271,12 @@
             tenPhai: "Hải Tặc Luffy",
             khoiTao: function () {
                 console.log("⚓ Gomu Gomu Gatling Sẵn Sàng!");
-                // 🛑 ẨN TAY GIGA LÚC VỪA LOAD GAME (DÙNG INCLUDES ĐỂ BẮT TRỌN TÊN)
+                // 🛑 ẨN TAY GIGA LÚC VỪA LOAD GAME
                 setTimeout(() => {
                     let nvc = window.playerModel;
                     if (nvc) {
                         nvc.traverse(c => {
-                            if (c.isMesh) {
+                            if (c.isMesh || c.isSkinnedMesh) {
                                 let name = c.name.toLowerCase();
                                 if (name.includes('giga') || name.includes('taytrai_giga') || name.includes('tayphai_giga')) {
                                     c.visible = false;
