@@ -443,7 +443,7 @@
                     let bayGio = Date.now();
                     
                     // 🌟 180000 mili-giây = Chuẩn 3 Phút
-                    if (!window.lastIdleSwap || bayGio - window.lastIdleSwap > 180000) {
+                    if (!window.lastIdleSwap || bayGio - window.lastIdleSwap > 60000) {
                         window.lastIdleSwap = bayGio;
 
                         // Tìm các dáng đặc biệt (HOME, NHANROI2...) NHƯNG LOẠI BỎ dáng NHANROI gốc
