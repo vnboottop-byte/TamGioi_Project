@@ -129,55 +129,49 @@
     }
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN VÁ: VÀNH KHĂN 3D VỚI VOLUME)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN: BỤNG CONG ĐI TRƯỚC)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // 🌟 SỬ DỤNG CylinderGeometry CẮT NỬA, CHO NÓ CÓ CHIỀU CAO THỰC SỰ ĐỂ TẠO VOLUME (ĐỘ DÀY)
-        // height = 1.0 cho nó một độ dày thực sự (không phải mỏng dính như pho mát)
-        // openEnded = true để không có nắp đầu và nắp cuối, tạo hiệu ứng rỗng như vệt sáng
-        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 1.0, 32, 1, true, 0, Math.PI); 
+        // 🌟 BẢN CHẤT CỦA CYLINDER: Cắt từ 0 đến Math.PI
+        // Nó sẽ tự động tạo một hình bán nguyệt nằm phẳng.
+        // Phần BỤNG CONG mặc định luôn chĩa về hướng +Z. 
+        // Hai CẠNH NHỌN nằm ngang chĩa về 2 bên (Trục X).
+        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 0.5, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
-            color: colorHex, 
-            transparent: true, 
-            opacity: 0.8, 
-            blending: THREE.AdditiveBlending, 
-            side: THREE.DoubleSide, 
-            depthWrite: false 
+            color: colorHex, transparent: true, opacity: 0.8, 
+            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // Lõi trắng chói lóa nằm lồng bên trong
-        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.9, 32, 1, true, 0, Math.PI);
+        // Lõi trắng nằm bên trong cho cảm giác chói lóa
+        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.3, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff, 
-            transparent: true, 
-            opacity: 1.0, 
-            blending: THREE.AdditiveBlending, 
-            side: THREE.DoubleSide, 
-            depthWrite: false 
+            color: 0xffffff, transparent: true, opacity: 1.0, 
+            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
         });
         const meshLoi = new THREE.Mesh(geoLoi, matLoi);
         
-        // Gắn vào 1 trục
         const luoiDaoGroup = new THREE.Group();
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
 
-        // 🌟 BẺ CONG LƯỠI ĐAO VÀ CHĨA VỀ PHÍA TRƯỚC
-        luoiDaoGroup.rotation.x = Math.PI; // Lật ngược lại để hướng bụng cong ra trước
-        luoiDaoGroup.rotation.z = Math.PI / 2; // Xoay để bụng cong nằm ngang sát mặt đất
+        // 🛑 TÔI ĐÃ XÓA SẠCH TOÀN BỘ LỆNH XOAY (ROTATION) LỖI Ở ĐÂY!
+        // Giờ lưỡi đao sẽ giữ nguyên trạng thái cân bằng. Khi Sếp gọi lệnh luoiDao.lookAt(Kẻ_địch),
+        // Lập tức cái Bụng Cong (+Z) sẽ tự động ngắm thẳng và lao vào mặt kẻ địch!
         
-        // 🌟 DÙNG SCALE ĐỂ TRẢI RỘNG RA ĐÚNG NHƯ ẢNH
-        // Ép dẹt trục X để lưỡi liềm dãn rộng ra hai bên như cánh chim
-        // Tôi tăng Scale X lên 3.0 (từ 1.5 ban nãy) cho nó sweeping cực kỳ đã mắt!
-        luoiDaoGroup.scale.set(3, 1.0, 1.0); 
+        // 🌟 BÓP DẸT VÀ KÉO DÀI 2 CÁNH NHỌN
+        // Scale X = 3.0: Kéo dài 2 cái góc nhọn dãn rộng ra 2 bên thành hình lưỡi liềm.
+        // Scale Y = 0.5: Ép độ dày cho mỏng lại thành một vệt sáng sắc lẹm.
+        luoiDaoGroup.scale.set(3.0, 0.5, 1.0); 
 
         group.add(luoiDaoGroup);
         return group;
     }
 
+
+    
     // ==========================================
     // ⚡ KỸ XẢO 2: TIA LAZER KÉO DÀI 1 ĐƯỜNG TỚI ĐÍCH (Q, R, F)
     // ==========================================
