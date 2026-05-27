@@ -128,13 +128,15 @@
         hieuUngKizaru.push({ system: pts, velocities: vels, life: 15, type: 'explosion' }); 
     }
 
+
+
+
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN: BỤNG ĐI TRƯỚC, GAI QUAY LẠI)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN ĐAO QUANG 3D)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // Mặc định Cylinder nửa vòng tròn có BỤNG ở trục +X, HAI MŨI NHỌN ở trục +Z và -Z.
         const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 0.5, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
             color: colorHex, transparent: true, opacity: 0.8, 
@@ -142,7 +144,6 @@
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // Lõi trắng chói lóa
         const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.3, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
             color: 0xffffff, transparent: true, opacity: 1.0, 
@@ -154,20 +155,18 @@
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
 
-        // 🌟 BÍ QUYẾT FIX LỖI Ở ĐÂY:
-        // Xoay -90 độ trục Y để đưa cái "Bụng cong" từ bên hông chỉa thẳng ra phía trước (+Z).
-        // Tự động 2 góc nhọn sẽ bạt sang 2 bên và hướng ngược về phía Nhân vật!
-        luoiDaoGroup.rotation.y = -Math.PI / 2;
+        luoiDaoGroup.rotation.y = -Math.PI / 2; // Bụng hướng tới trước, sừng vuốt ra sau
 
-        // 🌟 KÉO GIÃN BOOMERANG:
-        // Scale Z: Kéo giãn khoảng cách 2 mũi nhọn dang rộng ra (Vì 2 nhọn đang ở trục Z gốc)
-        // Scale Y: Bóp dẹt bề dày lại thành lưỡi đao
-        // Scale X: Giữ nguyên độ phình của cái bụng
-        luoiDaoGroup.scale.set(1.0, 0.5, 3.0); 
+        // 🌟 TĂNG ĐỘ DÀY VÀ BỀ NGANG BAN ĐẦU
+        // Scale Y: Tăng từ 0.5 lên 1.5 để nó có độ dày, nhìn rõ rệt trong không gian 3D.
+        // Scale X và Z: Để nó là một hình cung đẹp ngay lúc vừa xuất chiêu.
+        luoiDaoGroup.scale.set(1.5, 1.5, 2.5); 
 
         group.add(luoiDaoGroup);
         return group;
     }
+
+    
 
 
 
@@ -329,13 +328,18 @@
             if (s.type === 'TIA_CHOP') {
                 s.mesh.traverse(c => { if (c.material) c.material.opacity *= 0.8; });
             }
-            // 🔪 Lưỡi Đao Bán Nguyệt: Phải quét bay tới mục tiêu
+            // 🔪 Lưỡi Đao Bán Nguyệt: Quét tới và BÀNH TRƯỚNG
             else if (s.type === 'E_BLADE') {
                 s.mesh.translateZ(s.speed);
-                s.mesh.scale.x += 0.08; // Lưỡi đao càng bay càng dãn rộng ra quét kẻ thù
+                
+                // 🌟 TĂNG TỐC ĐỘ BÀNH TRƯỚNG ĐAO QUANG
+                // Tăng từ 0.08 lên 0.3 để nó bành trướng cực nhanh, quét bề ngang lên đến 30m!
+                // Giãn đều cả Z và X để hình bán nguyệt to ra mà không bị móp méo
+                s.mesh.scale.x += 0.3; 
+                s.mesh.scale.z += 0.3; 
                 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
-                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 20);
+                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 30); // Nổ bự hơn
                     s.life = 0;
                 }
             }
