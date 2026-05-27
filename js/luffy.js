@@ -26,6 +26,49 @@
         document.body.appendChild(div);
         danhSachSoBayLF.push({ el: div, pos: pos3D.clone(), life: 40, offsetY: 0 });
     }
+    // ==========================================
+    // 💥 HỆ THỐNG VỤ NỔ HAKI VÀ ÂM THANH
+    // ==========================================
+    const hieuUngLuffy = [];
+    window.thoiDiemNoCuoiCungLF = window.thoiDiemNoCuoiCungLF || 0;
+
+    function taoVuNoLuffy(pos, banKinh = 10) {
+        let bayGio = Date.now();
+        // Chống lag âm thanh: Mỗi 100ms chỉ phát 1 tiếng nổ (dù đấm trúng chục phát)
+        if (bayGio - window.thoiDiemNoCuoiCungLF > 100) {
+            window.thoiDiemNoCuoiCungLF = bayGio;
+            // Phát âm thanh nổ (Sếp nhớ thay link file âm thanh nếu có)
+            if (typeof window.phatAmThanh === 'function') window.phatAmThanh('uploads/anims/hit.mp3', 0.5); 
+        }
+
+        const soLuong = window.isMobile ? 10 : 30; // Hạt Haki văng ra
+        const geo = new THREE.BufferGeometry();
+        const posArr = new Float32Array(soLuong * 3); const vels = [];
+        
+        for (let i = 0; i < soLuong; i++) {
+            posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;
+            vels.push(new THREE.Vector3((Math.random() - 0.5) * 15, Math.random() * 12, (Math.random() - 0.5) * 15));
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+
+        if (!window.textureHakiLF) {
+            let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
+            let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 200, 200, 1)');   
+            gradient.addColorStop(0.3, 'rgba(255, 50, 50, 0.9)'); // Đỏ rực
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
+            window.textureHakiLF = new THREE.CanvasTexture(canvas);
+        }
+
+        const mat = new THREE.PointsMaterial({
+            color: 0xff3333, size: window.isMobile ? 6.0 : 12.0, map: window.textureHakiLF, 
+            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+
+        const pts = new THREE.Points(geo, mat); scene.add(pts);
+        hieuUngLuffy.push({ system: pts, velocities: vels, life: 20 }); // Vụ nổ tan nhanh
+    }
 
     setInterval(() => {
         for (let id in window.phieuDameLuffy) {
@@ -86,6 +129,8 @@
                     let hit = window.layHitbox(rp.mesh);
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
                         daTrungMucTieu = true;
+                        taoVuNoLuffy(hit.tamNguc.clone()); // 💥 BÙM!
+                       
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
                         
                         // 🛑 ĐÃ ĐẬP NÁT PHIỄU GOM! GỌI XẢ THẲNG SỐ RA MÀN HÌNH
@@ -102,6 +147,7 @@
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
                         daTrungMucTieu = true;
+                        taoVuNoLuffy(hit.tamNguc.clone()); // 💥 BÙM!
                         let posHienSo = hit.tamNguc.clone();
                         
                         // 🛑 ĐÃ ĐẬP NÁT PHIỄU GOM! GỌI XẢ THẲNG SỐ RA MÀN HÌNH
@@ -288,6 +334,27 @@
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { it.el.style.display = 'none'; }
             if (it.life <= 0) { it.el.remove(); danhSachSoBayLF.splice(i, 1); window.tongSoChuNoi_LF--; }
+        }
+        // XỬ LÝ HẠT HAKI BAY TUNG TOÉ
+        for (let i = hieuUngLuffy.length - 1; i >= 0; i--) {
+            let h = hieuUngLuffy[i]; h.life--;
+            let posArr = h.system.geometry.attributes.position.array;
+            for (let j = 0; j < posArr.length / 3; j++) {
+                posArr[j * 3] += h.velocities[j].x;
+                posArr[j * 3 + 1] += h.velocities[j].y;
+                posArr[j * 3 + 2] += h.velocities[j].z;
+
+                h.velocities[j].x *= 0.9;
+                h.velocities[j].z *= 0.9;
+                h.velocities[j].y -= 0.6; // Rớt xuống đất nhanh
+            }
+            h.system.geometry.attributes.position.needsUpdate = true;
+            h.system.material.opacity = h.life / 20;
+
+            if (h.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                hieuUngLuffy.splice(i, 1);
+            }
         }
     };
     setInterval(window.updateCombatLuffy, 30);
