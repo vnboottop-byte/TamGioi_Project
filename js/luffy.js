@@ -16,7 +16,7 @@
     window.tongSoChuNoi_LF = 0;
 
     function hienThiSoDameGom(pos3D, satThuong) {
-        if (window.isMobile && window.tongSoChuNoi_LF > 8) return;
+        if (window.isMobile && window.tongSoChuNoi_LF > 40) return;
         if (satThuong <= 0) return;
         window.tongSoChuNoi_LF++;
         const div = document.createElement('div');
@@ -69,6 +69,16 @@
     // 🌟 TRẢ VỀ TRUE NẾU ĐẤM TRÚNG ĐỂ GIẬT TAY LẠI
     function gaySatThuongLuffy(tamNo, luongSatThuong, banKinh) {
         let daTrungMucTieu = false;
+        
+        // 💥 BÍ QUYẾT BUNG LỤA: Random vị trí nảy số để tạo thành "Suối máu" văng tứ tung!
+        function taoSuoiSo(posGoc) {
+            let posMoi = posGoc.clone();
+            posMoi.x += (Math.random() - 0.5) * 4; // Văng sang trái phải
+            posMoi.y += (Math.random() - 0.5) * 4; // Văng lên xuống
+            posMoi.z += (Math.random() - 0.5) * 4;
+            hienThiSoDameGom(posMoi, luongSatThuong);
+        }
+
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
@@ -77,8 +87,10 @@
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
                         daTrungMucTieu = true;
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                        if (!window.phieuDameLuffy[id]) window.phieuDameLuffy[id] = { dame: 0, pos: null };
-                        window.phieuDameLuffy[id].dame += luongSatThuong; window.phieuDameLuffy[id].pos = posHienSo;
+                        
+                        // 🛑 ĐÃ ĐẬP NÁT PHIỄU GOM! GỌI XẢ THẲNG SỐ RA MÀN HÌNH
+                        taoSuoiSo(posHienSo);
+                        
                         if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
                     }
                 }
@@ -90,9 +102,10 @@
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
                         daTrungMucTieu = true;
-                        let idQ = quai.id || Math.random();
-                        if (!window.phieuDameLuffy[idQ]) window.phieuDameLuffy[idQ] = { dame: 0, pos: null };
-                        window.phieuDameLuffy[idQ].dame += luongSatThuong; window.phieuDameLuffy[idQ].pos = hit.tamNguc.clone();
+                        let posHienSo = hit.tamNguc.clone();
+                        
+                        // 🛑 ĐÃ ĐẬP NÁT PHIỄU GOM! GỌI XẢ THẲNG SỐ RA MÀN HÌNH
+                        taoSuoiSo(posHienSo);
                         
                         if (quai.isBoss) { if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong); } 
                         else {
