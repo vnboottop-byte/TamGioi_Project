@@ -129,30 +129,49 @@
     }
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN VÁ: VÀNH KHĂN 2D SẮC LẸM)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // 1. Tạo vầng trăng khuyết bằng Cylinder nửa vòng tròn (Math.PI)
-        const geo = new THREE.CylinderGeometry(banKinh, banKinh, 2, 32, 1, true, 0, Math.PI);
-        const mat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
-        const mesh = new THREE.Mesh(geo, mat);
+        // 1. Dùng RingGeometry (Vành khăn 2D) cắt nửa vòng (Math.PI) để tạo Bán Nguyệt
+        // Bán kính trong = banKinh * 0.7, Bán kính ngoài = banKinh
+        const geoVo = new THREE.RingGeometry(banKinh * 0.7, banKinh, 32, 1, 0, Math.PI);
+        const matVo = new THREE.MeshBasicMaterial({ 
+            color: colorHex, 
+            transparent: true, 
+            opacity: 0.8, 
+            blending: THREE.AdditiveBlending, 
+            side: THREE.DoubleSide, 
+            depthWrite: false 
+        });
+        const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // Xoay lưỡi đao chĩa thẳng về phía trước (Hướng cong đâm tới)
-        mesh.rotation.z = Math.PI / 2; 
-        
-        // 2. Lõi trắng chói lóa cho sắc bén
-        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 1.5, 32, 1, true, 0, Math.PI);
-        const matLoi = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+        // 2. Lõi trắng chói lóa (Sắc bén hơn) nằm lồng bên trong
+        const geoLoi = new THREE.RingGeometry(banKinh * 0.8, banKinh * 0.9, 32, 1, 0, Math.PI);
+        const matLoi = new THREE.MeshBasicMaterial({ 
+            color: 0xffffff, 
+            transparent: true, 
+            opacity: 1.0, 
+            blending: THREE.AdditiveBlending, 
+            side: THREE.DoubleSide, 
+            depthWrite: false 
+        });
         const meshLoi = new THREE.Mesh(geoLoi, matLoi);
-        meshLoi.rotation.z = Math.PI / 2;
         
-        group.add(mesh);
-        group.add(meshLoi);
+        // Gắn vào 1 trục
+        const luoiDaoGroup = new THREE.Group();
+        luoiDaoGroup.add(meshVo);
+        luoiDaoGroup.add(meshLoi);
+
+        // 🌟 BẺ CONG LƯỠI ĐAO XUỐNG MẶT ĐẤT VÀ CHĨA VỀ PHÍA TRƯỚC
+        luoiDaoGroup.rotation.x = -Math.PI / 2; // Lật nằm ngang sát mặt đất
+        luoiDaoGroup.rotation.z = Math.PI;      // Xoay phần bụng lưỡi liềm (vòng cung) hướng tới trước
         
-        // Bóp dẹt trục Y để nó mỏng như Lưỡi Kiếm, trục X bung rộng
-        group.scale.set(3, 0.1, 3);
+        // Ép dẹt trục X để lưỡi liềm dãn rộng ra hai bên như cánh chim
+        luoiDaoGroup.scale.set(1.5, 1.0, 1.0);
+
+        group.add(luoiDaoGroup);
         return group;
     }
 
