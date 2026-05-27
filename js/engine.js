@@ -1559,8 +1559,10 @@ function playAnim(animName) {
     
     // 🌟 ĐỒNG BỘ TỪ ĐIỂN ĐỂ CHỐNG LỖI GIẬT KHUNG HÌNH (TWITCH FIX)
     let checkName = upName;
+    
+    let checkName = upName;
     if (checkName === 'IDLE') checkName = 'NHANROI';
-    if (checkName === 'WALK' || checkName === 'RUN') checkName = 'CHAYBO'; // Gộp hết DIBO/WALK/RUN thành 1 mối
+    if (checkName === 'WALK' || checkName === 'RUN' || checkName === 'DIBO') checkName = 'CHAYBO'; // 🌟 Đã nhét DIBO vào chung mâm!
     if (checkName === 'FLY') checkName = 'BAY';
     
     // Nếu lệnh mới giống hệt trạng thái hiện tại thì bỏ qua, chống Restart Animation
