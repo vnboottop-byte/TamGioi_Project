@@ -33,35 +33,39 @@
     }
 
     window.layMucTieuGanNhatKTK = function(viTriGoc) {
-        // 🌟 ƯU TIÊN 1: Mục tiêu đang khóa bằng chuột (Khung đỏ)
+        // 🌟 ƯU TIÊN 1: Mục tiêu khóa tay (Dành cho Sếp chơi trên PC)
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
             if (viTriGoc.distanceTo(hit.tamNguc) <= 300) return window.mucTieuHienTai;
         }
 
-        let targetPos = null; let minD = 300; 
-
-        // 🌟 ƯU TIÊN 2: Quét Người chơi khác (PVP)
+        // 🌟 ƯU TIÊN 2: QUÉT TÌM NGƯỜI CHƠI (PVP) TRƯỚC!
+        let targetNguoi = null; let minDNguoi = 300; 
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
                 if (rp.status === 'ready' && rp.mesh) {
                     let hit = window.layHitbox(rp.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
-                    if (d > 0.1 && d < minD) { minD = d; targetPos = rp; }
+                    if (d > 0.1 && d < minDNguoi) { minDNguoi = d; targetNguoi = rp; }
                 }
             }
         }
+        
+        // 🛑 BÍ QUYẾT Ở ĐÂY: NẾU THẤY CÓ NGƯỜI LÀ RETURN NGAY LẬP TỨC! BỎ QUA ĐÁM QUÁI!
+        if (targetNguoi) return targetNguoi;
 
-        // 🌟 ƯU TIÊN 3: Quét Quái vật (PVE)
+        // 🌟 ƯU TIÊN 3: KHÔNG CÓ AI Ở ĐÂY THÌ MỚI TÌM QUÁI (PVE)
+        let targetQuai = null; let minDQuai = 300;
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
-                    if (d > 0.1 && d < minD) { minD = d; targetPos = quai; }
+                    if (d > 0.1 && d < minDQuai) { minDQuai = d; targetQuai = quai; }
                 }
             });
         }
-        return targetPos;
+        
+        return targetQuai; // Trả về con quái gần nhất (hoặc null nếu bãi trống)
     };
 
     function gaySatThuongKTK(tamNo, luongSatThuong, banKinh) {
