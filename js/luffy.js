@@ -5,7 +5,8 @@
 
 (function () {
     const kyNangLuffy = [];
-    const THOI_GIAN_HOI = { 'Q': 3000, 'E': 3000, 'R': 3000, 'F': 3000 };
+     
+    const THOI_GIAN_HOI = { 'Q': 4000, 'E': 4000, 'R': 4000, 'F': 4000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     // ==========================================
@@ -280,11 +281,20 @@
         }
 
         // =====================================
-        // 🌟 TĂNG TỐC ĐỘ BAY LÊN 12.0 ĐỂ TẠO CẢM GIÁC LỰC MẠNH
-        if (phim === 'Q') banGatling(10, 0.15, 8.0, 5.0, 'NHO'); 
-        else if (phim === 'E') banGatling(6, 0.25, 8.0, 3.5, 'LON'); 
-        else if (phim === 'R') banGatling(4, 0.4, 8.0, 3.0, 'LON'); 
-        else if (phim === 'F') banGatling(4, 0.5, 8.0, 3.5, 'LON'); 
+        // 🌟 BẢN VÁ CÂN BẰNG AAA (HỒI 4 GIÂY): Bơm nhẹ lại dame để giữ DPS chuẩn
+        // CHÚ THÍCH: banGatling(Số_Lượng, HỆ_SỐ_DAME, Tốc_Độ_Bay, Kích_Thước, Loại)
+
+        // Q: 10 hit * 0.05 = 0.5 
+        if (phim === 'Q') banGatling(10, 0.05, 8.0, 5.0, 'NHO');
+
+        // E: 6 hit * 0.08 = 0.48
+        else if (phim === 'E') banGatling(6, 0.08, 8.0, 3.5, 'LON');
+
+        // R: 4 hit * 0.12 = 0.48
+        else if (phim === 'R') banGatling(4, 0.12, 8.0, 3.5, 'LON');
+
+        // F: 4 hit * 0.15 = 0.6
+        else if (phim === 'F') banGatling(4, 0.15, 8.0, 3.5, 'LON');
     };
 
     // ==========================================
