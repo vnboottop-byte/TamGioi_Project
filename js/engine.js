@@ -3469,8 +3469,8 @@ window.botMucTieuId = null;
 window.botState = 'IDLE';    
 
 // Mặc định cho phái viễn chiến (Đánh xa)
-window.tamXaXungDot = 450; 
-window.tamDungHinh = 450;   
+window.tamXaXungDot = 45; 
+window.tamDungHinh = 40;   
 
 window.toggleAutoTreoMay = function() {
     window.isAutoAFK = !window.isAutoAFK;
