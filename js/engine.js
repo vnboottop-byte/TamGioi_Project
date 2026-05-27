@@ -1551,38 +1551,56 @@ function playAnim(animName) {
         }
     }
 
+
+
     // ==========================================
     // XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI HOẶC NGƯỜI ĐI BỘ
     // ==========================================
+    
+    // 🌟 ĐỒNG BỘ TỪ ĐIỂN ĐỂ CHỐNG LỖI GIẬT KHUNG HÌNH (TWITCH FIX)
     let checkName = upName;
     if (checkName === 'IDLE') checkName = 'NHANROI';
-    if (checkName === 'RUN' || checkName === 'WALK') checkName = 'CHAYBO';
+    if (checkName === 'WALK' || checkName === 'RUN') checkName = 'CHAYBO'; // Gộp hết DIBO/WALK/RUN thành 1 mối
     if (checkName === 'FLY') checkName = 'BAY';
-
-    if (currentAnimName === checkName) return;
-
+    
+    // Nếu lệnh mới giống hệt trạng thái hiện tại thì bỏ qua, chống Restart Animation
+    if (currentAnimName === checkName) return; 
+    
     let action = animationsMap[upName];
     if (!action) {
-        if (checkName === 'CHAYBO') action = animationsMap['RUN'] || animationsMap['DIBO'] || animationsMap['BAY'] || animationsMap['CHAYBO'];
-        else if (laChieuTanCong) action = animationsMap['ATTACK'] || animationsMap['ATTACK1'] || animationsMap['ATTACK01'] || animationsMap['BITE'] || animationsMap['SKILL'];
-        else if (checkName === 'NHANROI') action = animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['BAY'] || animationsMap['NHANROI'];
-        else if (checkName === 'BAY') {
-            // 🌟 BẢN VÁ TỐI THƯỢNG: RỒNG KHÔNG CÓ ANIM BAY THÌ MƯỢN ĐỠ CHẠY BỘ!
-            action = animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'] || animationsMap['BAY'] || animationsMap['RUN'] || animationsMap['WALK'];
+        // 🌟 BẢN VÁ AAA: QUY HẾT DI CHUYỂN VỀ MỘT MỐI (CHẠY HOẶC BAY)
+        if (checkName === 'CHAYBO') {
+            action = animationsMap['CHAYBO'] || animationsMap['RUN'] || animationsMap['BAY'] || animationsMap['FLY'];
         }
-        else if (checkName === 'DIE' || checkName === 'DEATH') action = animationsMap['DEATH'] || animationsMap['DIE'];
+        else if (laChieuTanCong) {
+            action = animationsMap['ATTACK'] || animationsMap['ATTACK1'] || animationsMap['ATTACK01'] || animationsMap['BITE'] || animationsMap['SKILL'];
+        }
+        else if (checkName === 'NHANROI') {
+            action = animationsMap['NHANROI'] || animationsMap['IDLE'] || animationsMap['WAIT'] || animationsMap['BAY'] || animationsMap['FLY'];
+        }
+        else if (checkName === 'BAY') {
+            action = animationsMap['BAY'] || animationsMap['FLY'] || animationsMap['JUMP'] || animationsMap['FALL'];
+        }
+        else if (checkName === 'DIE' || checkName === 'DEATH') {
+            action = animationsMap['DEATH'] || animationsMap['DIE'];
+        }
     }
-
-    if (!action && animationsMap && Object.keys(animationsMap).length > 0) {
-        action = animationsMap['TAKE 001'] || Object.values(animationsMap)[0];
-    }
-    if (!action) return;
-
-    if (currentAction) currentAction.fadeOut(0.2);
-    currentAction = action;
-    currentAction.reset().fadeIn(0.2).play();
-    currentAnimName = checkName;
+    
+    // 🛑 ĐÃ CẮT BỎ HOÀN TOÀN TÍNH NĂNG "VÉT MÁNG" LẤY ANIMATION ĐẦU TIÊN!
+    // Không có Animation phù hợp thì tuyệt đối không múa loạn xạ!
+    
+    if (!action) return; 
+    
+    if (currentAction) currentAction.fadeOut(0.2); 
+    currentAction = action; 
+    currentAction.reset().fadeIn(0.2).play(); 
+    currentAnimName = checkName; // Lưu tên đã chuẩn hóa
 }
+
+
+
+
+
 
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
