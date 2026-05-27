@@ -37,35 +37,44 @@
     const THOI_GIAN_HOI = { 'Q': 8000, 'E': 8000, 'R': 8000, 'F': 8000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
+
+
+
+
+
     function layQuaiVatGanNhatLT(viTriGoc) {
-        // 🌟 ƯU TIÊN 1: Mục tiêu đang khóa bằng chuột
+        // 🌟 ƯU TIÊN 1: Khóa mục tiêu thủ công
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
             if (viTriGoc.distanceTo(hit.tamNguc) <= 300) return window.mucTieuHienTai;
         }
 
-        let targetQuai = null; let minD = 300; 
-        
-        // 🌟 ƯU TIÊN 2: Quét Người chơi khác (PVP)
+        // 🌟 ƯU TIÊN 2: QUÉT NGƯỜI CHƠI (PVP) TRƯỚC
+        let targetNguoi = null; let minDNguoi = 300; 
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
                 if (rp.status === 'ready' && rp.mesh) {
                     let hit = window.layHitbox(rp.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
-                    if (d > 0.1 && d < minD) { minD = d; targetQuai = rp; }
+                    if (d > 0.1 && d < minDNguoi) { minDNguoi = d; targetNguoi = rp; }
                 }
             }
         }
 
-        // 🌟 ƯU TIÊN 3: Quét Quái vật (PVE)
+        // 🛑 BÍ QUYẾT: THẤY NGƯỜI LÀ ĐẤM LUÔN KHÔNG CẦN NHÌN QUÁI
+        if (targetNguoi) return targetNguoi;
+
+        // 🌟 ƯU TIÊN 3: HẾT NGƯỜI MỚI TÌM QUÁI (PVE)
+        let targetQuai = null; let minDQuai = 300; 
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
-                    if (d > 0.1 && d < minD) { minD = d; targetQuai = quai; }
+                    if (d > 0.1 && d < minDQuai) { minDQuai = d; targetQuai = quai; }
                 }
             });
         }
+        
         return targetQuai;
     }
 
