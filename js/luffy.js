@@ -222,7 +222,7 @@
 
         // =====================================
         // 🌟 TĂNG TỐC ĐỘ BAY LÊN 12.0 ĐỂ TẠO CẢM GIÁC LỰC MẠNH
-        if (phim === 'Q') banGatling(10, 0.15, 8.0, 10.0, 'NHO'); 
+        if (phim === 'Q') banGatling(10, 0.15, 8.0, 5.0, 'NHO'); 
         else if (phim === 'E') banGatling(6, 0.25, 8.0, 3.5, 'LON'); 
         else if (phim === 'R') banGatling(4, 0.4, 8.0, 3.0, 'LON'); 
         else if (phim === 'F') banGatling(4, 0.5, 8.0, 3.5, 'LON'); 
