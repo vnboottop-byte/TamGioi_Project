@@ -129,15 +129,12 @@
     }
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN: BỤNG CONG ĐI TRƯỚC)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN: BỤNG ĐI TRƯỚC, GAI QUAY LẠI)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // 🌟 BẢN CHẤT CỦA CYLINDER: Cắt từ 0 đến Math.PI
-        // Nó sẽ tự động tạo một hình bán nguyệt nằm phẳng.
-        // Phần BỤNG CONG mặc định luôn chĩa về hướng +Z. 
-        // Hai CẠNH NHỌN nằm ngang chĩa về 2 bên (Trục X).
+        // Mặc định Cylinder nửa vòng tròn có BỤNG ở trục +X, HAI MŨI NHỌN ở trục +Z và -Z.
         const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 0.5, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
             color: colorHex, transparent: true, opacity: 0.8, 
@@ -145,7 +142,7 @@
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // Lõi trắng nằm bên trong cho cảm giác chói lóa
+        // Lõi trắng chói lóa
         const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.3, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
             color: 0xffffff, transparent: true, opacity: 1.0, 
@@ -157,21 +154,23 @@
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
 
-        // 🛑 TÔI ĐÃ XÓA SẠCH TOÀN BỘ LỆNH XOAY (ROTATION) LỖI Ở ĐÂY!
-        // Giờ lưỡi đao sẽ giữ nguyên trạng thái cân bằng. Khi Sếp gọi lệnh luoiDao.lookAt(Kẻ_địch),
-        // Lập tức cái Bụng Cong (+Z) sẽ tự động ngắm thẳng và lao vào mặt kẻ địch!
-        
-        // 🌟 BÓP DẸT VÀ KÉO DÀI 2 CÁNH NHỌN
-        // Scale X = 3.0: Kéo dài 2 cái góc nhọn dãn rộng ra 2 bên thành hình lưỡi liềm.
-        // Scale Y = 0.5: Ép độ dày cho mỏng lại thành một vệt sáng sắc lẹm.
-        luoiDaoGroup.scale.set(3.0, 0.5, 1.0); 
+        // 🌟 BÍ QUYẾT FIX LỖI Ở ĐÂY:
+        // Xoay -90 độ trục Y để đưa cái "Bụng cong" từ bên hông chỉa thẳng ra phía trước (+Z).
+        // Tự động 2 góc nhọn sẽ bạt sang 2 bên và hướng ngược về phía Nhân vật!
+        luoiDaoGroup.rotation.y = -Math.PI / 2;
+
+        // 🌟 KÉO GIÃN BOOMERANG:
+        // Scale Z: Kéo giãn khoảng cách 2 mũi nhọn dang rộng ra (Vì 2 nhọn đang ở trục Z gốc)
+        // Scale Y: Bóp dẹt bề dày lại thành lưỡi đao
+        // Scale X: Giữ nguyên độ phình của cái bụng
+        luoiDaoGroup.scale.set(1.0, 0.5, 3.0); 
 
         group.add(luoiDaoGroup);
         return group;
     }
 
 
-    
+
     // ==========================================
     // ⚡ KỸ XẢO 2: TIA LAZER KÉO DÀI 1 ĐƯỜNG TỚI ĐÍCH (Q, R, F)
     // ==========================================
