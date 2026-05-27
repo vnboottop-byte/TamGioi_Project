@@ -132,35 +132,46 @@
 
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN ĐAO QUANG 3D)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN ĐAO QUANG NHIỀU LỚP)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 0.5, 32, 1, true, 0, Math.PI); 
+        // 🌟 LỚP 1: Vỏ ngoài mờ ảo, bự và tỏa sáng
+        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 1.5, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
-            color: colorHex, transparent: true, opacity: 0.8, 
+            color: colorHex, transparent: true, opacity: 0.6, 
             blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.3, 32, 1, true, 0, Math.PI);
+        // 🌟 LỚP 2: Lõi đặc trắng toát, sắc lẹm, chém đứt không khí
+        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.8, banKinh * 0.8, 0.8, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
             color: 0xffffff, transparent: true, opacity: 1.0, 
             blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
         });
         const meshLoi = new THREE.Mesh(geoLoi, matLoi);
+
+        // 🌟 LỚP 3: Vệt năng lượng xé gió (Hiệu ứng tia tia lướt phía sau)
+        const geoVet = new THREE.CylinderGeometry(banKinh * 1.1, banKinh * 1.1, 2.5, 24, 1, true, 0, Math.PI);
+        const matVet = new THREE.MeshBasicMaterial({ 
+            color: 0xffaa00, transparent: true, opacity: 0.3, 
+            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false,
+            wireframe: true // Bật lưới để tạo vệt xước xước cực đẹp!
+        });
+        const meshVet = new THREE.Mesh(geoVet, matVet);
         
         const luoiDaoGroup = new THREE.Group();
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
+        luoiDaoGroup.add(meshVet);
 
         luoiDaoGroup.rotation.y = -Math.PI / 2; // Bụng hướng tới trước, sừng vuốt ra sau
 
-        // 🌟 TĂNG ĐỘ DÀY VÀ BỀ NGANG BAN ĐẦU
-        // Scale Y: Tăng từ 0.5 lên 1.5 để nó có độ dày, nhìn rõ rệt trong không gian 3D.
-        // Scale X và Z: Để nó là một hình cung đẹp ngay lúc vừa xuất chiêu.
-        luoiDaoGroup.scale.set(1.5, 1.5, 2.5); 
+        // 🌟 TĂNG KHỐI LƯỢNG VÀ ĐỘ DÀY
+        // Scale Y = 2.0 để đao quang dày dặn, nhìn từ xa vẫn thấy một mảng sáng khổng lồ!
+        luoiDaoGroup.scale.set(2.0, 2.0, 3.0); 
 
         group.add(luoiDaoGroup);
         return group;
@@ -328,18 +339,35 @@
             if (s.type === 'TIA_CHOP') {
                 s.mesh.traverse(c => { if (c.material) c.material.opacity *= 0.8; });
             }
-            // 🔪 Lưỡi Đao Bán Nguyệt: Quét tới và BÀNH TRƯỚNG
+
+            // 🔪 Lưỡi Đao Bán Nguyệt: TẦM NHIỆT KHÓA CHẾT MỤC TIÊU VÀ BÀNH TRƯỚNG
             else if (s.type === 'E_BLADE') {
                 s.mesh.translateZ(s.speed);
                 
-                // 🌟 TĂNG TỐC ĐỘ BÀNH TRƯỚNG ĐAO QUANG
-                // Tăng từ 0.08 lên 0.3 để nó bành trướng cực nhanh, quét bề ngang lên đến 30m!
-                // Giãn đều cả Z và X để hình bán nguyệt to ra mà không bị móp méo
-                s.mesh.scale.x += 0.3; 
-                s.mesh.scale.z += 0.3; 
+                // Bành trướng đao quang (Quét rộng ra hai bên)
+                s.mesh.scale.x += 0.2; 
+                s.mesh.scale.z += 0.2; 
                 
-                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
-                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 30); // Nổ bự hơn
+                // 🌟 AI TẦM NHIỆT: CHẮC CHẮN TRÚNG 100%
+                if (s.targetPos) {
+                    if (!s.isRemote) {
+                        // Liên tục dò vị trí hiện tại của kẻ địch đang chạy
+                        const mucTieuMoi = window.layMucTieuGanNhatKZR(s.mesh.position);
+                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
+                    }
+                    
+                    // Khóa cứng mục tiêu: Ép đao quang bẻ lái ôm cua khét lẹt rượt theo
+                    const dummy = new THREE.Object3D(); 
+                    dummy.position.copy(s.mesh.position); 
+                    dummy.up.copy(s.upVector || new THREE.Vector3(0,1,0));
+                    dummy.lookAt(s.targetPos);
+                    
+                    // Hệ số 0.3 là bẻ lái cực gắt, địch tàng hình cũng rượt trúng!
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.3); 
+                }
+
+                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 8 || s.life < 5) {
+                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 30); 
                     s.life = 0;
                 }
             }
