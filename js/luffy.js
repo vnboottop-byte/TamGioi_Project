@@ -190,8 +190,12 @@
                     let tayClone = taoNamDamGatling(loaiDam, scaleTay);
 
                     let posSpawn = nvc.position.clone().add(new THREE.Vector3(0, 5, 0));
-                    posSpawn.add(fwd.clone().multiplyScalar(4)); 
-                    let lechNgang = right.clone().multiplyScalar(isRight ? -3 : 3); 
+                    
+                    // 🛑 CHỮA MÙ 1: Kéo nòng súng về sát ngực Luffy (1.5 mét thay vì 4 mét)
+                    posSpawn.add(fwd.clone().multiplyScalar(1.5)); 
+                    
+                    // 🛑 CHỮA MÙ 2: Khép nách lại, đánh cận chiến đấm túm tụm vào giữa thay vì tòe ra 2 bên
+                    let lechNgang = right.clone().multiplyScalar(isRight ? -1.5 : 1.5); 
                     posSpawn.add(lechNgang);
 
                     tayClone.position.copy(posSpawn);
@@ -238,8 +242,10 @@
                     s.mesh.translateZ(s.speed); 
                     
                     let daTrung = false;
-                    if (!s.isRemote && s.life % 2 === 0) { 
-                        daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 6); 
+                    // 🛑 CHỮA MÙ 3: Xóa bỏ lệnh ngủ gật %2. Ép mở mắt check va chạm LIÊN TỤC TỪNG KHUNG HÌNH!
+                    // 🛑 CHỮA MÙ 4: Phóng to cục Hitbox của nắm đấm từ 6 mét lên 12 mét. Quái né đằng trời!
+                    if (!s.isRemote) { 
+                        daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12); 
                     }
 
                     // Nếu đấm TRÚNG mặt kẻ địch, hoặc bay hết TẦM ĐÁNH -> GIẬT NGƯỢC LẠI
@@ -247,7 +253,7 @@
                     if (daTrung || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
                         s.state = 'IN'; 
                     }
-                } 
+                }
                 else if (s.state === 'IN') {
                     // 🛑 BÍ QUYẾT: GIẬT LÙI NHANH GẤP ĐÔI TỐC ĐỘ BAY (s.speed * -2)
                     s.mesh.translateZ(-s.speed * 2.0); 
