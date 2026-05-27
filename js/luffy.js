@@ -1,12 +1,10 @@
 // ==========================================
 // 🍖 HỆ THỐNG ĐOẠT XÁ: LUFFY (TRÁI GOMU GOMU)
-// 👑 TÍNH NĂNG: GATLING VỚI MODEL ĐỘC LẬP (NAMDAMNHO & NAMDAMLON)
+// 👑 TÍNH NĂNG: KHÓA MỤC TIÊU + ĐẤM BOOMERANG TỐC ĐỘ CAO
 // ==========================================
 
 (function () {
     const kyNangLuffy = [];
-    
-    // 🌟 ĐỒNG BỘ HỒI CHIÊU NHANH (3 GIÂY)
     const THOI_GIAN_HOI = { 'Q': 3000, 'E': 3000, 'R': 3000, 'F': 3000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
@@ -21,11 +19,10 @@
         if (window.isMobile && window.tongSoChuNoi_LF > 8) return;
         if (satThuong <= 0) return;
         window.tongSoChuNoi_LF++;
-
         const div = document.createElement('div');
         div.innerText = "-" + Math.round(satThuong);
         let bongChu = window.isMobile ? '1px 1px 0px #000' : '0px 0px 8px #000, 2px 2px 0px #aa0000';
-        div.style.cssText = `position:absolute; color:#ff3333; font-weight:900; font-size:30px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
+        div.style.cssText = `position:absolute; color:#ff3333; font-weight:900; font-size:35px; text-shadow:${bongChu}; pointer-events:none; z-index:9999;`;
         document.body.appendChild(div);
         danhSachSoBayLF.push({ el: div, pos: pos3D.clone(), life: 40, offsetY: 0 });
     }
@@ -33,15 +30,12 @@
     setInterval(() => {
         for (let id in window.phieuDameLuffy) {
             let data = window.phieuDameLuffy[id];
-            if (data.dame > 0 && data.pos) {
-                hienThiSoDameGom(data.pos, data.dame);
-                data.dame = 0; 
-            }
+            if (data.dame > 0 && data.pos) { hienThiSoDameGom(data.pos, data.dame); data.dame = 0; }
         }
-    }, 500);
+    }, 400); // Rút ngắn thời gian nhả số xuống 400ms cho cảm giác đấm nhanh hơn
 
     // ==========================================
-    // 🎯 RADAR PVP/PVE (THẤY NGƯỜI ĐẤM NGƯỜI)
+    // 🎯 RADAR PVP/PVE (KHÓA MỤC TIÊU)
     // ==========================================
     window.layMucTieuGanNhatLF = function(viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
@@ -72,13 +66,16 @@
         return targetQuai;
     };
 
+    // 🌟 TRẢ VỀ TRUE NẾU ĐẤM TRÚNG ĐỂ GIẬT TAY LẠI
     function gaySatThuongLuffy(tamNo, luongSatThuong, banKinh) {
+        let daTrungMucTieu = false;
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
                 if (rp.status === 'ready' && rp.mesh) {
                     let hit = window.layHitbox(rp.mesh);
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        daTrungMucTieu = true;
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
                         if (!window.phieuDameLuffy[id]) window.phieuDameLuffy[id] = { dame: 0, pos: null };
                         window.phieuDameLuffy[id].dame += luongSatThuong; window.phieuDameLuffy[id].pos = posHienSo;
@@ -92,13 +89,13 @@
                 if (!quai.isDead && quai.mesh) {
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        daTrungMucTieu = true;
                         let idQ = quai.id || Math.random();
                         if (!window.phieuDameLuffy[idQ]) window.phieuDameLuffy[idQ] = { dame: 0, pos: null };
                         window.phieuDameLuffy[idQ].dame += luongSatThuong; window.phieuDameLuffy[idQ].pos = hit.tamNguc.clone();
                         
-                        if (quai.isBoss) {
-                            if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
-                        } else {
+                        if (quai.isBoss) { if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong); } 
+                        else {
                             quai.hp -= luongSatThuong; 
                             if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
                             if (quai.hp <= 0) {
@@ -112,20 +109,18 @@
                 }
             });
         }
+        return daTrungMucTieu;
     }
 
     // ==========================================
-    // 🌟 HÀM TẠO NẮM ĐẤM TỪ FILE .GLB CHUẨN AAA
+    // 🌟 HÀM TẠO NẮM ĐẤM (GLB)
     // ==========================================
     function taoNamDamGatling(loaiNMDam, scaleSize) {
         const handGroup = new THREE.Group(); 
         let url = (loaiNMDam === 'LON') ? 'uploads/anims/NAMDAMLON.glb' : 'uploads/anims/NAMDAMNHO.glb';
-        
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(url, (vuKhi) => {
                 vuKhi.position.set(0, 0, 0); 
-                // 🛑 LƯU Ý CHO SẾP: Nếu lúc bắn ra mà nắm đấm bị quay ngang quay ngược,
-                // Sếp chỉ cần chỉnh cái vuKhi.rotation này (Math.PI / 2 là xoay 90 độ)
                 vuKhi.rotation.set(0, 0, 0); 
                 vuKhi.scale.set(1, 1, 1);
                 vuKhi.traverse(c => { if (c.isMesh) { c.visible = true; } });
@@ -141,109 +136,132 @@
     // ==========================================
     window.tungComboLuffy = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-        if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
-            nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
-        }
+        if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
         if (!nvc) return;
 
         if (isRemote === false) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            
             let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
-            if (nutKyNang) {
-                nutKyNang.style.pointerEvents = 'none'; nutKyNang.style.filter = 'brightness(0.4) grayscale(100%)';
-                setTimeout(() => { nutKyNang.style.filter = ''; nutKyNang.style.pointerEvents = ''; }, THOI_GIAN_HOI[phim]);
-            }
-
-            let huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
-            if (window.room && window.room.localParticipant) {
-                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                    type: 'TUNG_CHIEU', skillType: phim, className: 'Luffy', 
-                    origin: {x: nvc.position.x, y: nvc.position.y, z: nvc.position.z}, target: {x: 0, y: 0, z: 0}, dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z}, weaponUrl: ""
-                })), { reliable: true });
-            }
+            if (nutKyNang) { nutKyNang.style.pointerEvents = 'none'; nutKyNang.style.filter = 'brightness(0.4) grayscale(100%)'; setTimeout(() => { nutKyNang.style.filter = ''; nutKyNang.style.pointerEvents = ''; }, THOI_GIAN_HOI[phim]); }
         }
 
         let tenAnimMua = '';
-        if (phim === 'Q') tenAnimMua = 'ATTACK3'; 
-        else if (phim === 'E') tenAnimMua = 'ATTACK4';
-        else if (phim === 'R') tenAnimMua = 'ATTACK2'; 
-        else if (phim === 'F') tenAnimMua = 'ATTACK1'; 
+        if (phim === 'Q') tenAnimMua = 'ATTACK3'; else if (phim === 'E') tenAnimMua = 'ATTACK4';
+        else if (phim === 'R') tenAnimMua = 'ATTACK2'; else if (phim === 'F') tenAnimMua = 'ATTACK1'; 
 
-        if (!isRemote) {
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua);
-            else if (typeof window.playAnim === 'function') window.playAnim(tenAnimMua);
+        if (!isRemote) { if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua); else if (typeof window.playAnim === 'function') window.playAnim(tenAnimMua); }
+
+        // 🛑 BƯỚC 1: KHÓA MỤC TIÊU VÀ QUAY MẶT 🛑
+        let target = window.layMucTieuGanNhatLF(nvc.position);
+        let targetPoint = null;
+
+        if (target && target.mesh) {
+            let hit = window.layHitbox(target.mesh);
+            targetPoint = hit.tamNguc.clone();
+            
+            if (!isRemote) {
+                // Xoay mặt nhân vật ngay lập tức về phía mục tiêu
+                let dummy = new THREE.Object3D();
+                dummy.position.copy(nvc.position);
+                dummy.lookAt(targetPoint.x, nvc.position.y, targetPoint.z);
+                nvc.quaternion.copy(dummy.quaternion); 
+            }
         }
 
+        // Bắn sóng mạng sau khi đã xoay mặt
         let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
+        if (isRemote === false && window.room && window.room.localParticipant) {
+            window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'TUNG_CHIEU', skillType: phim, className: 'Luffy', origin: {x: nvc.position.x, y: nvc.position.y, z: nvc.position.z}, target: {x: 0, y: 0, z: 0}, dir: {x: fwd.x, y: fwd.y, z: fwd.z}, weaponUrl: "" })), { reliable: true });
+        }
+
         let right = new THREE.Vector3().crossVectors(nvc.up, fwd).normalize();
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // 🚀 HÀM BẮN GATLING TỪ FILE GLB
+        // 🚀 BƯỚC 2: HÀM BẮN GATLING BOOMERANG TỐC ĐỘ CAO
         function banGatling(soLuong, heSoDame, tocDoBay, scaleTay, loaiDam) {
+            // Xác định điểm nhắm cơ bản (Ngay ngực quái hoặc mù 30m phía trước)
+            let baseTarget = targetPoint ? targetPoint.clone() : nvc.position.clone().add(fwd.clone().multiplyScalar(30));
+
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
                     let isRight = (i % 2 === 0);
-                    
-                    // 🌟 Gọi hàm lấy File GLB ra xài luôn
                     let tayClone = taoNamDamGatling(loaiDam, scaleTay);
 
                     let posSpawn = nvc.position.clone().add(new THREE.Vector3(0, 5, 0));
-                    posSpawn.add(fwd.clone().multiplyScalar(5)); 
-                    
-                    // Xếp đạn lệch ngang Trái/Phải
-                    let lechNgang = right.clone().multiplyScalar(isRight ? -4 : 4); 
+                    posSpawn.add(fwd.clone().multiplyScalar(4)); 
+                    let lechNgang = right.clone().multiplyScalar(isRight ? -3 : 3); 
                     posSpawn.add(lechNgang);
-                    
-                    // Lệch dọc ngẫu nhiên tạo độ phủ loạn đả
-                    posSpawn.add(new THREE.Vector3((Math.random()-0.5)*3, (Math.random()-0.5)*4, 0));
 
                     tayClone.position.copy(posSpawn);
-                    let targetBay = posSpawn.clone().add(fwd.clone().multiplyScalar(50)); 
-                    tayClone.lookAt(targetBay);
+
+                    // Lan tỏa nắm đấm (Spread) quanh mục tiêu để giống đấm loạn đả
+                    let doLan = (loaiDam === 'LON') ? 2.5 : 1.5;
+                    let targetBay = baseTarget.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan));
                     
+                    tayClone.lookAt(targetBay);
                     scene.add(tayClone);
 
+                    // maxDist là khoảng cách từ người đến mục tiêu (Giới hạn tối đa 50m)
+                    let maxDist = Math.min(posSpawn.distanceTo(targetBay) + 2, 50);
+
                     kyNangLuffy.push({ 
-                        mesh: tayClone, type: 'BULLET_PUNCH', speed: tocDoBay, life: 15, 
-                        targetPos: targetBay, isRemote: isRemote, damage: dameGoc * heSoDame
+                        mesh: tayClone, type: 'BULLET_PUNCH', 
+                        speed: tocDoBay, state: 'OUT', life: 100, // Đặt life cao để bay theo khoảng cách
+                        startPos: posSpawn.clone(), maxDist: maxDist,
+                        isRemote: isRemote, damage: dameGoc * heSoDame
                     });
-                }, i * 60); 
+                }, i * 35); // 🌟 XẢ ĐẠN CỰC NHANH (35ms 1 đấm thay vì 60ms)
             }
         }
 
         // =====================================
-        if (phim === 'Q') banGatling(10, 0.15, 6.0, 1.0, 'NHO'); 
-        else if (phim === 'E') banGatling(6, 0.25, 4.0, 1.5, 'LON'); 
-        else if (phim === 'R') banGatling(4, 0.4, 4.0, 2.0, 'LON'); 
-        else if (phim === 'F') banGatling(4, 0.5, 4.0, 2.5, 'LON'); 
+        // 🌟 TĂNG TỐC ĐỘ BAY LÊN 12.0 ĐỂ TẠO CẢM GIÁC LỰC MẠNH
+        if (phim === 'Q') banGatling(10, 0.15, 12.0, 1.0, 'NHO'); 
+        else if (phim === 'E') banGatling(6, 0.25, 10.0, 1.5, 'LON'); 
+        else if (phim === 'R') banGatling(4, 0.4, 10.0, 2.0, 'LON'); 
+        else if (phim === 'F') banGatling(4, 0.5, 10.0, 2.5, 'LON'); 
     };
 
     // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ VÀ DỌN RÁC
+    // ⚙️ VÒNG LẶP VẬT LÝ VÀ DỌN RÁC (XỬ LÝ LÙI LẠI BOOMERANG)
     // ==========================================
     window.updateCombatLuffy = function () {
         for (let i = kyNangLuffy.length - 1; i >= 0; i--) {
             let s = kyNangLuffy[i]; 
             if (s.type === 'BULLET_PUNCH') {
                 s.life--;
-                s.mesh.translateZ(s.speed); 
                 
-                // Check Va chạm
-                if (!s.isRemote && s.life % 2 === 0) { 
-                    gaySatThuongLuffy(s.mesh.position, s.damage, 8); 
+                if (s.state === 'OUT') {
+                    // BAY RA NHƯ TÊN LỬA
+                    s.mesh.translateZ(s.speed); 
+                    
+                    let daTrung = false;
+                    if (!s.isRemote && s.life % 2 === 0) { 
+                        daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 6); 
+                    }
+
+                    // Nếu đấm TRÚNG mặt kẻ địch, hoặc bay hết TẦM ĐÁNH -> GIẬT NGƯỢC LẠI
+                    let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
+                    if (daTrung || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
+                        s.state = 'IN'; 
+                    }
+                } 
+                else if (s.state === 'IN') {
+                    // 🛑 BÍ QUYẾT: GIẬT LÙI NHANH GẤP ĐÔI TỐC ĐỘ BAY (s.speed * -2)
+                    s.mesh.translateZ(-s.speed * 2.0); 
                 }
 
-                if (s.life <= 0) {
+                // XÓA ĐẠN KHI GIẬT VỀ GẦN TỚI NGƯỜI (hoặc hết life)
+                if (s.life <= 0 || (s.state === 'IN' && s.mesh.position.distanceTo(s.startPos) < s.speed * 3)) {
                     if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                     kyNangLuffy.splice(i, 1);
                 }
             }
         }
 
-        // Số nổi phiễu sát thương
+        // Số nổi
         for (let i = danhSachSoBayLF.length - 1; i >= 0; i--) {
             let it = danhSachSoBayLF[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -256,29 +274,17 @@
     setInterval(window.updateCombatLuffy, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO TỪ ĐIỂN VÀ DỌN DẸP
+    // 🌟 KHỞI TẠO TỪ ĐIỂN
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('luffy')) {
         window.HePhaiHienTai = {
             tenPhai: "Hải Tặc Luffy",
             khoiTao: function () {
-                console.log("⚓ Gomu Gomu Gatling (GLB Độc Lập) Sẵn Sàng!");
-                
-                // 🛑 PHÒNG HỜ: Nếu Sếp up cái Body chưa xóa tay Giga thì hệ thống vẫn quét và giấu nó đi giùm Sếp
+                console.log("⚓ Luffy Auto-Lock & Boomerang Sẵn Sàng!");
                 setTimeout(() => {
                     let nvc = window.playerModel;
-                    if (nvc) {
-                        nvc.traverse(c => {
-                            if (c.isMesh || c.isSkinnedMesh) {
-                                let name = c.name.toLowerCase();
-                                if (name.includes('giga') || name.includes('giant') || name.includes('big')) {
-                                    c.visible = false;
-                                }
-                            }
-                        });
-                    }
+                    if (nvc) nvc.traverse(c => { if ((c.isMesh || c.isSkinnedMesh) && (c.name.toLowerCase().includes('giga') || c.name.toLowerCase().includes('giant') || c.name.toLowerCase().includes('big'))) c.visible = false; });
                 }, 1000);
-
                 if (window.animationsMap) {
                     let animNhanRoi = null;
                     for (let key in window.animationsMap) {
@@ -287,10 +293,7 @@
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) window.animationsMap['CHAYBO'] = window.animationsMap[key];
                         if (k.includes('BAY') || k.includes('FLY')) window.animationsMap['BAY'] = window.animationsMap[key];
                     }
-                    if (animNhanRoi) {
-                        window.animationsMap['NHANROI'] = animNhanRoi;
-                        if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = animNhanRoi;
-                    }
+                    if (animNhanRoi) { window.animationsMap['NHANROI'] = animNhanRoi; if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = animNhanRoi; }
                 }
             },
             tungChieu: window.tungComboLuffy,
