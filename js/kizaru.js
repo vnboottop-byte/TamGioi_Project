@@ -404,8 +404,16 @@
 
     setInterval(window.updateCombatKizaru, 30);
 
+
+
+
+
+
+
+
+
     // ==========================================
-    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI (GÁN ĐÚNG ANIMATION CỦA SẾP)
+    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI (MÁY QUÉT THÔNG MINH CHỐNG BLENDER)
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('kizaru')) {
         window.HePhaiHienTai = {
@@ -414,36 +422,52 @@
                 console.log("⚡ Tốc độ ánh sáng! Kizaru đã được định tuyến!");
 
                 if (window.animationsMap) {
-                    window.animationsMap['CHAYBO'] = window.animationsMap['CHAYBO']; // Anim 23
-                    window.animationsMap['BAY']    = window.animationsMap['BAY'];    // Anim 18
+                    // 🌟 BỘ DÒ TÌM THÔNG MINH: Quét sạch mọi tiền tố (VD: Armature|CHAYBO -> CHAYBO)
+                    for (let key in window.animationsMap) {
+                        let k = key.toUpperCase();
+                        if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) {
+                            window.animationsMap['CHAYBO'] = window.animationsMap[key];
+                        }
+                        if (k.includes('BAY') || k.includes('FLY')) {
+                            window.animationsMap['BAY'] = window.animationsMap[key];
+                        }
+                    }
                 }
             },
             tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) {
                 window.tungComboKizaru(phim, isRemote, origin, target, dir, casterId, weaponUrl);
             },
             capNhat: function () {
-                // 🧠 AI RANDOM NHÀN RỖI: Đảo ngẫu nhiên 5 dáng đứng (15, 16, 21, 22, 31, 32)
+                // 🧠 AI RANDOM NHÀN RỖI (Cũng được bọc thép chống tiền tố)
                 if (!window.dangMuaChieu && !window.isMoving && window.animationsMap) {
                     let bayGio = Date.now();
                     if (!window.lastIdleSwap || bayGio - window.lastIdleSwap > 5000) {
                         window.lastIdleSwap = bayGio;
-                        
-                        let cacTheNhanRoi = ['NHANROI', 'NHANROI2', 'HOME', 'HOME2', 'HOME3'];
-                        
-                        // Lọc những cái Sếp đã nhúng thành công vào Blender
-                        let cacTheSanCo = cacTheNhanRoi.filter(t => window.animationsMap[t]);
-                        
+
+                        let cacTheSanCo = Object.keys(window.animationsMap).filter(k =>
+                            k.includes('NHANROI') || k.includes('HOME') || k.includes('IDLE')
+                        );
+
                         if (cacTheSanCo.length > 0) {
                             let chonBua = cacTheSanCo[Math.floor(Math.random() * cacTheSanCo.length)];
-                            
-                            // Tráo ruột Từ điển, để khi Engine gọi 'NHANROI', nó sẽ ra dáng mới!
                             window.animationsMap['NHANROI'] = window.animationsMap[chonBua];
-                            if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMapChar[chonBua];
+                            if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[chonBua];
                         }
                     }
                 }
-            } 
+            }
         };
         window.HePhaiHienTai.khoiTao();
     }
+
+
+
+
+
+
+
+
+
+
+    
 })();
