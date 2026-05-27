@@ -1556,10 +1556,6 @@ function playAnim(animName) {
     // ==========================================
     // XỬ LÝ HOẠT ẢNH CHO THÚ CƯỠI HOẶC NGƯỜI ĐI BỘ
     // ==========================================
-    
-    // 🌟 ĐỒNG BỘ TỪ ĐIỂN ĐỂ CHỐNG LỖI GIẬT KHUNG HÌNH (TWITCH FIX)
-    let checkName = upName;
-    
     let checkName = upName;
     if (checkName === 'IDLE') checkName = 'NHANROI';
     if (checkName === 'WALK' || checkName === 'RUN' || checkName === 'DIBO') checkName = 'CHAYBO'; // 🌟 Đã nhét DIBO vào chung mâm!
