@@ -438,20 +438,30 @@
                 window.tungComboKizaru(phim, isRemote, origin, target, dir, casterId, weaponUrl);
             },
             capNhat: function () {
-                // 🧠 AI RANDOM NHÀN RỖI (Cũng được bọc thép chống tiền tố)
+                // 🧠 AI RANDOM NHÀN RỖI (Mỗi 3 phút gáy bẩn 1 lần)
                 if (!window.dangMuaChieu && !window.isMoving && window.animationsMap) {
                     let bayGio = Date.now();
-                    if (!window.lastIdleSwap || bayGio - window.lastIdleSwap > 5000) {
+                    
+                    // 🌟 180000 mili-giây = Chuẩn 3 Phút
+                    if (!window.lastIdleSwap || bayGio - window.lastIdleSwap > 180000) {
                         window.lastIdleSwap = bayGio;
 
+                        // Tìm các dáng đặc biệt (HOME, NHANROI2...) NHƯNG LOẠI BỎ dáng NHANROI gốc
                         let cacTheSanCo = Object.keys(window.animationsMap).filter(k =>
-                            k.includes('NHANROI') || k.includes('HOME') || k.includes('IDLE')
+                            (k.includes('HOME') || k.includes('NHANROI2')) && k !== 'NHANROI' && k !== 'IDLE'
                         );
 
                         if (cacTheSanCo.length > 0) {
                             let chonBua = cacTheSanCo[Math.floor(Math.random() * cacTheSanCo.length)];
-                            window.animationsMap['NHANROI'] = window.animationsMap[chonBua];
-                            if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[chonBua];
+                            
+                            // 🛑 TUYỆT ĐỐI KHÔNG TRÁO TỪ ĐIỂN NỮA! 
+                            // Chỉ ép phát hoạt ảnh 1 lần duy nhất. 
+                            // Engine sẽ tự động lo việc đưa nhân vật về dáng đứng im ban đầu sau vài giây!
+                            if (typeof window.epNhanVatMua === 'function') {
+                                window.epNhanVatMua(chonBua);
+                            } else if (typeof window.playAnim === 'function') {
+                                window.playAnim(chonBua);
+                            }
                         }
                     }
                 }
