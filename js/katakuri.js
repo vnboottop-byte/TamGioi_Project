@@ -33,7 +33,26 @@
     }
 
     window.layMucTieuGanNhatKTK = function(viTriGoc) {
+        // 🌟 ƯU TIÊN 1: Mục tiêu đang khóa bằng chuột (Khung đỏ)
+        if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
+            let hit = window.layHitbox(window.mucTieuHienTai.mesh);
+            if (viTriGoc.distanceTo(hit.tamNguc) <= 300) return window.mucTieuHienTai;
+        }
+
         let targetPos = null; let minD = 300; 
+
+        // 🌟 ƯU TIÊN 2: Quét Người chơi khác (PVP)
+        if (typeof remotePlayers !== 'undefined') {
+            for (let id in remotePlayers) {
+                let rp = remotePlayers[id];
+                if (rp.status === 'ready' && rp.mesh) {
+                    let hit = window.layHitbox(rp.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
+                    if (d > 0.1 && d < minD) { minD = d; targetPos = rp; }
+                }
+            }
+        }
+
+        // 🌟 ƯU TIÊN 3: Quét Quái vật (PVE)
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
