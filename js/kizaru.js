@@ -88,7 +88,7 @@
 
     window.thoiDiemNoCuoiCungKZR = window.thoiDiemNoCuoiCungKZR || 0;
 
-    // 💥 HIỆU ỨNG NỔ ÁNH SÁNG 
+    // 💥 HIỆU ỨNG NỔ ÁNH SÁNG (BỤI VÀNG TUNG TÓE CỰC MỊN)
     function taoVuNoAnhSangKZR(pos, isRemote = false, luongDame = 100, banKinh = 15) {
         if (isRemote === false && luongDame > 0) gaySatThuongKZR(pos, luongDame, banKinh);
         else if (typeof isRemote === 'number' && isRemote > 0) {
@@ -99,45 +99,47 @@
         if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungKZR < 250) return; 
         window.thoiDiemNoCuoiCungKZR = bayGio;
 
-        const soLuong = window.isMobile ? 10 : 60; 
+        const soLuong = window.isMobile ? 15 : 100; // 🌟 Xả 100 hạt bụi vàng tung tóe
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3); const vels = [];
         
         for (let i = 0; i < soLuong; i++) {
             posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;
-            vels.push(new THREE.Vector3((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15));
+            // 🌟 Ép văng tung tóe lên cao rồi mới rớt xuống
+            vels.push(new THREE.Vector3((Math.random() - 0.5) * 10, Math.random() * 12, (Math.random() - 0.5) * 10));
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-        if (!window.textureAnhSangMin) {
+        // 🌟 BÙA CHÚ TẠO HẠT BỤI VÀNG MỊN NHƯ CỦA PHÁP SƯ
+        if (!window.textureBuiVangMin) {
             let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
             let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');   
-            gradient.addColorStop(0.2, 'rgba(255, 255, 0, 1)');   
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');   // Lõi trắng chói
+            gradient.addColorStop(0.3, 'rgba(255, 200, 0, 0.9)'); // Viền vàng óng mịn màng
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');         // Tàng hình ở mép
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
-            window.textureAnhSangMin = new THREE.CanvasTexture(canvas);
+            window.textureBuiVangMin = new THREE.CanvasTexture(canvas);
         }
 
         const mat = new THREE.PointsMaterial({
-            color: 0xffdd00, size: window.isMobile ? 4.0 : 8.0, map: window.textureAnhSangMin, 
+            color: 0xffdd00, size: window.isMobile ? 5.0 : 8.0, map: window.textureBuiVangMin, 
             transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
         });
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngKizaru.push({ system: pts, velocities: vels, life: 15, type: 'explosion' }); 
+        hieuUngKizaru.push({ system: pts, velocities: vels, life: 35, type: 'explosion' }); 
     }
 
 
 
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN CHUẨN ĐAO QUANG NHIỀU LỚP)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN MỊN MÀNG - KHÔNG SỌC)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // 🌟 LỚP 1: Vỏ ngoài mờ ảo, bự và tỏa sáng
+        // 🌟 LỚP VỎ: Vàng óng, mờ ảo
         const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 1.5, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
             color: colorHex, transparent: true, opacity: 0.6, 
@@ -145,7 +147,7 @@
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // 🌟 LỚP 2: Lõi đặc trắng toát, sắc lẹm, chém đứt không khí
+        // 🌟 LỚP LÕI: Trắng toát, dày dặn
         const geoLoi = new THREE.CylinderGeometry(banKinh * 0.8, banKinh * 0.8, 0.8, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
             color: 0xffffff, transparent: true, opacity: 1.0, 
@@ -153,25 +155,13 @@
         });
         const meshLoi = new THREE.Mesh(geoLoi, matLoi);
 
-        // 🌟 LỚP 3: Vệt năng lượng xé gió (Hiệu ứng tia tia lướt phía sau)
-        const geoVet = new THREE.CylinderGeometry(banKinh * 1.1, banKinh * 1.1, 2.5, 24, 1, true, 0, Math.PI);
-        const matVet = new THREE.MeshBasicMaterial({ 
-            color: 0xffaa00, transparent: true, opacity: 0.3, 
-            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false,
-            wireframe: true // Bật lưới để tạo vệt xước xước cực đẹp!
-        });
-        const meshVet = new THREE.Mesh(geoVet, matVet);
-        
         const luoiDaoGroup = new THREE.Group();
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
-        luoiDaoGroup.add(meshVet);
+        // ĐÃ VỨT BỎ CÁI LỚP WIREFRAME (SỌC SỌC) VÀO SỌT RÁC! 🗑️
 
-        luoiDaoGroup.rotation.y = -Math.PI / 2; // Bụng hướng tới trước, sừng vuốt ra sau
-
-        // 🌟 TĂNG KHỐI LƯỢNG VÀ ĐỘ DÀY
-        // Scale Y = 2.0 để đao quang dày dặn, nhìn từ xa vẫn thấy một mảng sáng khổng lồ!
-        luoiDaoGroup.scale.set(2.0, 2.0, 3.0); 
+        luoiDaoGroup.rotation.y = -Math.PI / 2; // Bụng đâm tới, sừng vuốt ra sau
+        luoiDaoGroup.scale.set(2.0, 2.0, 3.0);  // Giữ nguyên độ bành trướng khổng lồ
 
         group.add(luoiDaoGroup);
         return group;
@@ -378,19 +368,22 @@
             }
         }
 
-        // Cập nhật hạt bụi sáng nổ lấp lánh
+        // 🌟 Cập nhật hạt bụi vàng nổ tung tóe và rơi lả tả
         for (let i = hieuUngKizaru.length - 1; i >= 0; i--) {
             let h = hieuUngKizaru[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             for (let j = 0; j < posArr.length / 3; j++) {
-                posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
+                posArr[j * 3] += h.velocities[j].x; 
+                posArr[j * 3 + 1] += h.velocities[j].y; 
+                posArr[j * 3 + 2] += h.velocities[j].z;
                 
-                h.velocities[j].x *= 0.8; // Cản lực để nổ ra xong khựng lại
-                h.velocities[j].y *= 0.8; 
-                h.velocities[j].z *= 0.8; 
+                // 🌟 Lực cản không khí và Trọng lực
+                h.velocities[j].x *= 0.9; // Tản ra 2 bên chậm dần
+                h.velocities[j].z *= 0.9; 
+                h.velocities[j].y -= 0.5; // Bị hút rơi lả tả xuống đất giống Jimbei!
             }
             h.system.geometry.attributes.position.needsUpdate = true;
-            h.system.material.opacity = h.life / 25;
+            h.system.material.opacity = h.life / 35; // Mờ dần
 
             if (h.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
