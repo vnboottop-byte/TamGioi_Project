@@ -129,14 +129,15 @@
     }
 
     // ==========================================
-    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN VÁ: VÀNH KHĂN 2D SẮC LẸM)
+    // 🔪 KỸ XẢO 1: LƯỠI ĐAO BÁN NGUYỆT CHIÊU E (BẢN VÁ: VÀNH KHĂN 3D VỚI VOLUME)
     // ==========================================
     function taoHinhBanNguyet(banKinh, colorHex) {
         const group = new THREE.Group();
         
-        // 1. Dùng RingGeometry (Vành khăn 2D) cắt nửa vòng (Math.PI) để tạo Bán Nguyệt
-        // Bán kính trong = banKinh * 0.7, Bán kính ngoài = banKinh
-        const geoVo = new THREE.RingGeometry(banKinh * 0.7, banKinh, 32, 1, 0, Math.PI);
+        // 🌟 SỬ DỤNG CylinderGeometry CẮT NỬA, CHO NÓ CÓ CHIỀU CAO THỰC SỰ ĐỂ TẠO VOLUME (ĐỘ DÀY)
+        // height = 1.0 cho nó một độ dày thực sự (không phải mỏng dính như pho mát)
+        // openEnded = true để không có nắp đầu và nắp cuối, tạo hiệu ứng rỗng như vệt sáng
+        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 1.0, 32, 1, true, 0, Math.PI); 
         const matVo = new THREE.MeshBasicMaterial({ 
             color: colorHex, 
             transparent: true, 
@@ -147,8 +148,8 @@
         });
         const meshVo = new THREE.Mesh(geoVo, matVo);
         
-        // 2. Lõi trắng chói lóa (Sắc bén hơn) nằm lồng bên trong
-        const geoLoi = new THREE.RingGeometry(banKinh * 0.8, banKinh * 0.9, 32, 1, 0, Math.PI);
+        // Lõi trắng chói lóa nằm lồng bên trong
+        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.9, banKinh * 0.9, 0.9, 32, 1, true, 0, Math.PI);
         const matLoi = new THREE.MeshBasicMaterial({ 
             color: 0xffffff, 
             transparent: true, 
@@ -164,12 +165,14 @@
         luoiDaoGroup.add(meshVo);
         luoiDaoGroup.add(meshLoi);
 
-        // 🌟 BẺ CONG LƯỠI ĐAO XUỐNG MẶT ĐẤT VÀ CHĨA VỀ PHÍA TRƯỚC
-        luoiDaoGroup.rotation.x = -Math.PI / 2; // Lật nằm ngang sát mặt đất
-        luoiDaoGroup.rotation.z = Math.PI;      // Xoay phần bụng lưỡi liềm (vòng cung) hướng tới trước
+        // 🌟 BẺ CONG LƯỠI ĐAO VÀ CHĨA VỀ PHÍA TRƯỚC
+        luoiDaoGroup.rotation.x = Math.PI; // Lật ngược lại để hướng bụng cong ra trước
+        luoiDaoGroup.rotation.z = Math.PI / 2; // Xoay để bụng cong nằm ngang sát mặt đất
         
+        // 🌟 DÙNG SCALE ĐỂ TRẢI RỘNG RA ĐÚNG NHƯ ẢNH
         // Ép dẹt trục X để lưỡi liềm dãn rộng ra hai bên như cánh chim
-        luoiDaoGroup.scale.set(1.5, 1.0, 1.0);
+        // Tôi tăng Scale X lên 3.0 (từ 1.5 ban nãy) cho nó sweeping cực kỳ đã mắt!
+        luoiDaoGroup.scale.set(3, 1.0, 1.0); 
 
         group.add(luoiDaoGroup);
         return group;
