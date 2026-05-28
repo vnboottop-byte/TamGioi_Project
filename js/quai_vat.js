@@ -146,56 +146,48 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
 
 
 
-
-function thucHienCaiChetCuaBoss(boss) {
-    // 1. CHỈ CHẠY ANIMATION CHẾT NẾU CHƯA CHẾT (Tránh lặp lại)
-    if (!boss.isDead) {
-        boss.isDead = true; 
+function thucHienCaiChetCuaBoss(boss, isServerConfirmed = false) {
+    // 1. CHỈ CHẠY ANIMATION CHẾT 1 LẦN DỰA THEO CLIENT (Cho game mượt)
+    if (!boss.isDeadVisual) {
+        boss.isDeadVisual = true; 
         boss.hp = 0; 
         boss.state = 'DEAD';
         boss.mesh.userData.ignore = true; 
 
         if (typeof boss.playAnim === 'function') boss.playAnim('DIE');
-        
         if (boss.tagEl) {
             boss.tagEl.style.display = 'none';
-            if (boss.tagEl.parentNode) boss.tagEl.parentNode.removeChild(boss.tagEl);
+        }
+    }
+
+    // 2. CHỈ NHẬN EXP VÀ ĐỒ KHI SERVER ĐÃ CHỐT SỔ TỬ! (isServerConfirmed = true)
+    if (isServerConfirmed && !boss.daNhanExp) {
+        boss.daNhanExp = true;      // Đóng dấu xác nhận đã nhận quà
+
+        let bossLevel = boss.level || 1;
+        let expNhanDuoc = bossLevel * 20;
+        if (typeof window.congKinhNghiem === 'function') {
+            window.congKinhNghiem(expNhanDuoc, bossLevel);
         }
 
+        if (typeof window.taoHieuUngLootVang === 'function') {
+            // 🌟 ĐÃ NỐI DÂY CHUẨN XÁC: Gọi Server nhả đồ sau khi nó đã biết Boss chết!
+            window.taoHieuUngLootVang(boss.mesh.position, boss.id);
+        }
+
+        // Dọn xác sau 3 giây kể từ khi chốt sổ
         setTimeout(() => {
             window.danhSachQuaiVat = window.danhSachQuaiVat.filter(q => q.id !== boss.id);
             if (boss.mesh) {
                 scene.remove(boss.mesh);
                 if (typeof window.donRac3D === 'function') window.donRac3D(boss.mesh);
             }
+            if (boss.tagEl && boss.tagEl.parentNode) {
+                boss.tagEl.parentNode.removeChild(boss.tagEl);
+            }
         }, 3000);
     }
-
-    // 2. LOGIC NHẬN EXP (Tách riêng ra ngoài để luôn được chạy)
-    if (boss.daNhanExp) return; // Nếu đã nhận rồi thì không cho nhận nữa
-    boss.daNhanExp = true;      // Đóng dấu xác nhận đã nhận quà
-
-    let bossLevel = boss.level || 1;
-    let expNhanDuoc = bossLevel * 20;
-    if (typeof window.congKinhNghiem === 'function') {
-        window.congKinhNghiem(expNhanDuoc, bossLevel);
-    }
-
-
-
-
-    // (Bên dưới đoạn window.congKinhNghiem...)
-    if (typeof window.taoHieuUngLootVang === 'function') {
-        // 🌟 ĐÃ NỐI DÂY: Bắt buộc truyền boss.id để Server soi Database chống Hack!
-        window.taoHieuUngLootVang(boss.mesh.position, boss.id);
-    }
-
-
-
-
 }
-
-
 
 
 
@@ -206,20 +198,17 @@ window.dameGomChoBoss = window.dameGomChoBoss || {};
 window.bossSyncTimer = window.bossSyncTimer || {};
 
 
-
-
 window.chemTrungBoss = function (bossId, dame) {
     let boss = window.danhSachQuaiVat.find(q => q.id == bossId);
     
-    // 🌟 MỞ KHÓA: Cho phép chém ngay cả khi Radar đã báo chết (isDead = true) để vớt lại EXP!
-    // Nhưng nếu đã bú EXP rồi (daNhanExp = true) thì tha cho nó.
+    // Nếu boss không tồn tại hoặc đã bú xong EXP/Đồ thì tha cho nó
     if (!boss || boss.daNhanExp) return;
 
     boss.hp -= dame; if (boss.hp < 0) boss.hp = 0;
     if (boss.tagEl) { let bar = boss.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%'; }
 
-    // Chết tức thì (Dự đoán Client)
-    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss);
+    // Chết tức thì phần NHÌN (Dự đoán Client - isServerConfirmed = false)
+    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss, false);
     else if (typeof boss.playAnim === 'function' && boss.state !== 'ATTACK') boss.playAnim('HIT');
 
     window.dameGomChoBoss[bossId] = (window.dameGomChoBoss[bossId] || 0) + dame;
@@ -234,14 +223,13 @@ window.chemTrungBoss = function (bossId, dame) {
 
             let fd = new FormData(); fd.append('boss_id', bossId); fd.append('damage', dmgThucTe);
 
-
-
             fetch('api/danh_boss.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {
                 if (data.status === 'success') { 
-                    boss.hp = data.hp;  // 🌟 ĐÃ SỬA: Bắt đúng biến 'hp' từ PHP gửi về!
-                    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss); 
+                    boss.hp = data.hp;  
+                    // 🌟 MẤU CHỐT LÀ ĐÂY: Báo cho Client biết Server đã duyệt tử hình (isServerConfirmed = true)
+                    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss, true); 
                 } else if (data.status === 'dead') {
-                    thucHienCaiChetCuaBoss(boss);
+                    thucHienCaiChetCuaBoss(boss, true);
                 }
             }).catch(e => { });
 
@@ -250,7 +238,6 @@ window.chemTrungBoss = function (bossId, dame) {
         }, 1000);
     }
 };
-
 
 
 
