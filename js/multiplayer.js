@@ -11,7 +11,6 @@ window.khoModelMau = {}; // 🌟 KHO CHỨA MODEL MẪU ĐỂ NHÂN BẢN (CHỐ
 
 
 
-
 // 🌟 BỘ MÁY AI PHIÊN DỊCH ANIMATION TỰ ĐỘNG (DÙNG CHO 1000 NHÂN VẬT)
 window.phienDichAnimation = function(mixer, clips) {
     const kq = {};
@@ -19,24 +18,26 @@ window.phienDichAnimation = function(mixer, clips) {
     clips.forEach(clip => {
         let tenGoc = clip.name.toUpperCase();
         let act = mixer.clipAction(clip);
-        kq[tenGoc] = act; // Vẫn giữ lại tên gốc của 3D Artist
+        kq[tenGoc] = act; 
         
-        // 🧠 AI tự quét từ khóa để tạo Bí danh (Alias) chuẩn Game
         if (tenGoc.includes('RUN') || tenGoc.includes('WALK')) kq['CHAYBO'] = act;
-        if (tenGoc.includes('JUMP') || tenGoc.includes('FLY')) kq['BAY'] = act;
+        
+        // 🌟 Bổ sung từ khóa nhận diện Bay/Bơi
+        if (tenGoc.includes('JUMP') || tenGoc.includes('FLY') || tenGoc.includes('FLOAT') || tenGoc.includes('SWIM')) kq['BAY'] = act;
+        
         if (tenGoc.includes('DAMAGE') || tenGoc.includes('HIT')) kq['HIT'] = act;
         if (tenGoc.includes('LOSE') || tenGoc.includes('DIE') || tenGoc.includes('DEATH')) kq['CHET'] = act;
         
-        // 🧠 Xử lý riêng cho phái có tư thế ngồi (Jimbei Cưỡi Rồng)
         if (tenGoc.includes('IDLE') || tenGoc.includes('WAIT')) {
             if (tenGoc.includes('HOME') || tenGoc.includes('SIT')) kq['NHANROI_CUOITHU'] = act;
             if (!kq['NHANROI']) kq['NHANROI'] = act; 
         }
     });
     
-    // Ràng buộc mốc chống lỗi (Nếu Model nghèo nàn thiếu hoạt ảnh)
     if (!kq['NHANROI_CUOITHU']) kq['NHANROI_CUOITHU'] = kq['NHANROI'];
-    if (!kq['CHAYBO']) kq['CHAYBO'] = kq['NHANROI']; 
+    
+    // 🌟 THUẬT TOÁN THÔNG MINH: Nếu không có Animation CHẠY BỘ, lấy Animation BAY đắp vào!
+    if (!kq['CHAYBO']) kq['CHAYBO'] = kq['BAY'] || kq['NHANROI']; 
     
     return kq;
 };
