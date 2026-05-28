@@ -1,6 +1,6 @@
 // ==========================================
 // 🐉 HỆ THỐNG KỸ NĂNG: GOKU (SIÊU SAIYAN)
-// 👑 TÍNH NĂNG: KAMEHAMEHA LIÊN TỤC & CHUỖI TỤ KHÍ GENKI DAMA (QUẢ CẦU KÊNH KHI)
+// 👑 TÍNH NĂNG: KAMEHAMEHA & GENKI DAMA XUẤT PHÁT TỪ TAY (Object_31)
 // ==========================================
 
 (function () {
@@ -8,7 +8,6 @@
     const hieuUngGoku = [];
     const danhSachSoBayGK = [];
 
-    // 🌟 ĐỒNG BỘ THỜI GIAN HỒI CHIÊU (Chuẩn combo)
     const THOI_GIAN_HOI = { 'Q': 2000, 'E': 5000, 'R': 8000, 'F': 18000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
@@ -26,7 +25,6 @@
         danhSachSoBayGK.push({ el: div, pos: pos3D.clone(), life: 40, offsetY: 0 });
     }
 
-    // 🎯 RADAR TÌM MỤC TIÊU
     window.layMucTieuGanNhatGK = function(viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
@@ -56,7 +54,6 @@
         return targetQuai;
     };
 
-    // 💥 XỬ LÝ SÁT THƯƠNG VÀ NẢY SỐ
     function gaySatThuongGK(tamNo, luongSatThuong, banKinh, mauSac = '#ffcc00') {
         let daTrung = false;
         if (typeof remotePlayers !== 'undefined') {
@@ -100,10 +97,40 @@
     }
 
     // ==========================================
-    // 🌟 TRẠM ĐÚC KỸ XẢO HÌNH ẢNH (VFX)
+    // 🎯 HỆ THỐNG DÒ TÌM TỌA ĐỘ BÀN TAY (Object_31)
     // ==========================================
+    window.layViTriTayGoku = function(nvc, fallbackHuong) {
+        let tayPos = new THREE.Vector3();
+        let obj31 = null;
+        
+        if (nvc) {
+            // Tối ưu hóa: Dò tìm 1 lần rồi lưu lại (Cache) để chống lag
+            if (nvc.userData && nvc.userData.object31) {
+                obj31 = nvc.userData.object31;
+            } else {
+                nvc.traverse((child) => {
+                    // Dò tìm chính xác tên Object_31 mà Sếp yêu cầu
+                    if (child.name === 'Object_31' || child.name.includes('Object_31')) {
+                        obj31 = child;
+                        if (!nvc.userData) nvc.userData = {};
+                        nvc.userData.object31 = child; 
+                    }
+                });
+            }
+        }
+        
+        if (obj31) {
+            // Nếu tìm thấy, lấy tọa độ thật 3D của 2 bàn tay đang chắp lại
+            obj31.getWorldPosition(tayPos);
+        } else {
+            // Lốp dự phòng nếu lỡ người chơi khác load lỗi model
+            if (nvc) nvc.getWorldPosition(tayPos);
+            tayPos.y += 5;
+            if (fallbackHuong) tayPos.add(fallbackHuong.clone().multiplyScalar(2));
+        }
+        return tayPos;
+    };
 
-    // 1. Quả cầu năng lượng (Cho Q và F)
     function taoCauAnhSang(banKinh, colorHex) {
         const group = new THREE.Group();
         const geoLoi = new THREE.SphereGeometry(banKinh * 0.7, 16, 16);
@@ -118,12 +145,10 @@
         return group;
     }
 
-    // 2. Tia Lazer Kamehameha liên tục (Cho E và R)
     function taoTiaKamehameha(radius, colorHex) {
         const group = new THREE.Group();
-        // Cột sáng mặc định dài 1 đơn vị, ta sẽ scale.z nó lên theo khoảng cách
         const geoLoi = new THREE.CylinderGeometry(radius * 0.5, radius * 0.5, 1, 16);
-        geoLoi.rotateX(Math.PI / 2); // Nằm ngang
+        geoLoi.rotateX(Math.PI / 2); 
         const matLoi = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false });
         const loi = new THREE.Mesh(geoLoi, matLoi);
         
@@ -200,7 +225,6 @@
             if (targetQuai && targetQuai.mesh) {
                 let hit = window.layHitbox(targetQuai.mesh);
                 mucTieuGoc = hit.tamNguc.clone();
-                // Tự động xoay mặt vào mục tiêu
                 let dummy = new THREE.Object3D(); dummy.position.copy(nvc.position); dummy.lookAt(mucTieuGoc.x, nvc.position.y, mucTieuGoc.z);
                 nvc.quaternion.copy(dummy.quaternion);
                 nvc.getWorldDirection(huongMat);
@@ -216,15 +240,16 @@
             }
         }
 
-        let tayPos = viTriGoc.clone().add(new THREE.Vector3(0, 5, 0)).add(huongMat.clone().multiplyScalar(2));
-
         // =====================================
-        // Q: BẮN 1 QUẢ CẦU NHANH (ATTACK)
+        // Q: BẮN 1 QUẢ CẦU NHANH TỪ TAY (Object_31)
         // =====================================
         if (phim === 'Q') {
             if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK');
             
-            let cauQ = taoCauAnhSang(2.0, 0xffcc00); // Cầu vàng
+            // 🛑 Lấy tọa độ CHÍNH XÁC của đôi bàn tay
+            let tayPos = window.layViTriTayGoku(nvc, huongMat);
+            
+            let cauQ = taoCauAnhSang(2.0, 0xffcc00);
             cauQ.position.copy(tayPos);
             cauQ.lookAt(mucTieuGoc);
             scene.add(cauQ);
@@ -233,67 +258,60 @@
         }
         
         // =====================================
-        // E: KAMEHAMEHA 1 GIÂY (ATTACKhold)
+        // E: KAMEHAMEHA 1 GIÂY
         // =====================================
         else if (phim === 'E') {
             if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACKhold');
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(1200); // Khóa 1s
+            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(1200);
 
-            let tiaE = taoTiaKamehameha(3.0, 0x00ffff); // Tia xanh lơ
+            let tiaE = taoTiaKamehameha(3.0, 0x00ffff); 
             scene.add(tiaE);
             
-            // 30 tick = ~1 giây
             kyNangGoku.push({ mesh: tiaE, type: 'TIA_KAME', life: 30, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.15, isRemote: isRemote, color: 0x00ffff });
         }
 
         // =====================================
-        // R: ĐẠI KAMEHAMEHA 2 GIÂY (ATTACKhold)
+        // R: ĐẠI KAMEHAMEHA 2 GIÂY 
         // =====================================
         else if (phim === 'R') {
             if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACKhold');
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(2200); // Khóa 2s
+            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(2200);
 
-            let tiaR = taoTiaKamehameha(5.0, 0xff0000); // Tia đỏ Kaio-ken
+            let tiaR = taoTiaKamehameha(5.0, 0xff0000); 
             scene.add(tiaR);
             
-            // 60 tick = ~2 giây
             kyNangGoku.push({ mesh: tiaR, type: 'TIA_KAME', life: 60, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.2, isRemote: isRemote, color: 0xff0000 });
         }
 
         // =====================================
-        // F: CHUỖI TỤ KHÍ QUẢ CẦU KÊNH KHI (END1 -> START -> hold -> ATTACK -> END)
+        // F: CHUỖI TỤ KHÍ QUẢ CẦU KÊNH KHI 
         // =====================================
         else if (phim === 'F') {
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(3500); // Khóa cứng 3.5s để diễn kịch
+            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(3500); 
             
-            // Bước 1: GỌI END1
             if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('END1');
 
-            // Bước 2: GỌI START (Sau 600ms)
             setTimeout(() => {
                 if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('START');
             }, 600);
 
-            // Bước 3: GỌI HOLD & GIỮ 1 GIÂY (Sau 1200ms)
             setTimeout(() => {
                 if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('hold');
             }, 1200);
 
-            // Bước 4: GỌI ATTACK VÀ PHÓNG CẦU (Sau 1200ms + 1000ms = 2200ms)
             setTimeout(() => {
                 if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK');
                 
-                // Lấy tọa độ mới nhất vì Goku có thể đã bị quái đẩy
-                let tayPosMoi = viTriGoc.clone().add(new THREE.Vector3(0, 8, 0)).add(huongMat.clone().multiplyScalar(2));
+                // 🛑 Hút tọa độ Bàn tay NGAY LÚC NÀY để đảm bảo chính xác khi animation vung tay
+                let tayPosMoi = window.layViTriTayGoku(nvc, huongMat);
                 
-                let cauGenki = taoCauAnhSang(1.0, 0x00aaff); // Bắt đầu bằng size 1.0 rất nhỏ
+                let cauGenki = taoCauAnhSang(1.0, 0x00aaff); 
                 cauGenki.position.copy(tayPosMoi);
                 cauGenki.lookAt(mucTieuGoc);
                 scene.add(cauGenki);
                 
                 kyNangGoku.push({ mesh: cauGenki, type: 'GENKI_DAMA', speed: 6.0, life: 150, targetPos: mucTieuGoc.clone(), damage: dameGoc * 2.0, isRemote: isRemote });
 
-                // Bước 5: ĐỒNG THỜI GỌI END (Sau khi phóng 200ms)
                 setTimeout(() => {
                     if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('END');
                 }, 200);
@@ -310,7 +328,6 @@
             let s = kyNangGoku[i]; 
             s.life--;
 
-            // 🌟 1. CẦU THƯỜNG (CHIÊU Q)
             if (s.type === 'CAU_THUONG') {
                 s.mesh.translateZ(s.speed);
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
@@ -320,13 +337,11 @@
                 }
             }
             
-            // 🌟 2. QUẢ CẦU KÊNH KHI (CHIÊU F)
             else if (s.type === 'GENKI_DAMA') {
                 s.mesh.translateZ(s.speed);
                 
-                // 🛑 QUẢ CẦU TỰ ĐỘNG PHÌNH TO LÊN KHI BAY (Tối đa scale x20)
                 if (s.mesh.scale.x < 20.0) {
-                    s.mesh.scale.addScalar(0.25); // To lên liên tục theo từng khung hình
+                    s.mesh.scale.addScalar(0.25); 
                 }
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 5) {
@@ -336,54 +351,47 @@
                 }
             }
 
-            // 🌟 3. TIA LAZER KAMEHAMEHA LIÊN TỤC (E & R)
             else if (s.type === 'TIA_KAME') {
                 if (s.owner && s.owner.parent) {
-                    // Cập nhật vị trí nòng súng liên tục theo tay người bắn
                     let fwd = new THREE.Vector3(); s.owner.getWorldDirection(fwd);
-                    let startPos = new THREE.Vector3(); s.owner.getWorldPosition(startPos);
-                    startPos.add(new THREE.Vector3(0, 5, 0)).add(fwd.multiplyScalar(2));
                     
-                    // Cập nhật mục tiêu liên tục
+                    // 🛑 VẬT LÝ BÁM DÍNH: Tia Lazer sinh ra chính xác từ tay (Object_31) liên tục từng mili-giây
+                    let startPos = window.layViTriTayGoku(s.owner, fwd);
+                    
                     if (!s.isRemote) {
                         let mucTieuMoi = window.layMucTieuGanNhatGK(startPos);
                         if (mucTieuMoi && mucTieuMoi.mesh) {
                             let hit = window.layHitbox(mucTieuMoi.mesh);
                             s.targetPos = hit.tamNguc.clone();
-                            // Ép nhân vật bẻ cổ ngắm theo quái
                             let dummy = new THREE.Object3D(); dummy.position.copy(s.owner.position); dummy.lookAt(s.targetPos.x, s.owner.position.y, s.targetPos.z);
                             s.owner.quaternion.slerp(dummy.quaternion, 0.2);
                         }
                     }
 
-                    // Kéo giãn tia lazer từ Tay -> Quái
                     let endPos = s.targetPos;
                     let dist = startPos.distanceTo(endPos);
                     if (dist < 1) dist = 1;
 
-                    s.mesh.scale.z = dist; // Giãn chiều dài
+                    s.mesh.scale.z = dist; 
                     let midPoint = new THREE.Vector3().lerpVectors(startPos, endPos, 0.5);
                     s.mesh.position.copy(midPoint);
                     s.mesh.lookAt(endPos);
 
-                    // Sát thương duy trì (Mỗi 5 frames / ~150ms nổ dame 1 lần)
                     if (s.life % 5 === 0) {
                         taoVuNoKame(endPos, s.color, 8);
                         if (!s.isRemote) gaySatThuongGK(endPos, s.damage, 8, (s.color === 0xff0000 ? '#ff0000' : '#00ffff'));
                     }
                 } else {
-                    s.life = 0; // Người bắn bay màu thì tắt tia
+                    s.life = 0; 
                 }
             }
 
-            // Dọn rác
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                 kyNangGoku.splice(i, 1);
             }
         }
 
-        // Tàn lửa VFX
         for (let i = hieuUngGoku.length - 1; i >= 0; i--) {
             let h = hieuUngGoku[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
@@ -401,7 +409,6 @@
             }
         }
 
-        // Số bay UI
         for (let i = danhSachSoBayGK.length - 1; i >= 0; i--) {
             let it = danhSachSoBayGK[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -415,26 +422,22 @@
     setInterval(window.updateCombatGoku, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI (ÉP TƯ THẾ)
+    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI 
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('goku')) {
         window.HePhaiHienTai = {
             tenPhai: "Siêu Saiyan Goku",
             khoiTao: function () {
-                console.log("🐉 KAMEHAMEHA! Goku đã đáp xuống chiến trường!");
+                console.log("🐉 Lõi Kamehameha kích hoạt: Đạn bắn ra từ Object_31!");
 
                 if (window.animationsMap) {
-                    // 🛑 ÉP CHẾT: Mọi chuyển động (Chạy, Đi Bộ, Rơi) đều đổi thành BAY
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK') || k.includes('JUMP') || k.includes('FALL')) {
-                            // Nếu có anim BAY thì lấy BAY đè lên
                             if (window.animationsMap['BAY']) window.animationsMap[key] = window.animationsMap['BAY'];
                             else if (window.animationsMap['FLY']) window.animationsMap[key] = window.animationsMap['FLY'];
                         }
                     }
-
-                    // 🛑 ÉP CHẾT: Đứng im là NHANROI
                     if (window.animationsMap['NHANROI']) {
                         window.animationsMap['IDLE'] = window.animationsMap['NHANROI'];
                         window.animationsMap['WAIT'] = window.animationsMap['NHANROI'];
