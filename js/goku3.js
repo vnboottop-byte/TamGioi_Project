@@ -1,6 +1,6 @@
 // ==========================================
 // 🐉 HỆ THỐNG KỸ NĂNG: GOKU (SIÊU SAIYAN)
-// 👑 V5: HACK LÕI ENGINE (CHỐNG KẸT COMBO) & ÉP QUẢ CẦU PHÌNH TO
+// 👑 V6: SỬA LỖI TRÀN VÒNG LẶP + QUẢ CẦU KÊNH KHI TẠI CHỖ + CHỐNG LỌT BỤNG QUÁI
 // ==========================================
 
 (function () {
@@ -236,12 +236,11 @@
             }
         }
 
-        // 🛑 HÀM BỌC THÉP: LIÊN TỤC RESET ĐỒNG HỒ ENGINE ĐỂ CHỐNG BỊ KẸT / ĐÈ ANIMATION BAY
         function hackKhoaEngine(tenChieu, thoiGian) {
             if (!isRemote) {
                 if (typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(thoiGian);
                 window.dangMuaChieu = true; 
-                window.thoiDiemBatDauMua = Date.now(); // RESET BỘ ĐẾM 1.5 GIÂY CỦA ENGINE!
+                window.thoiDiemBatDauMua = Date.now(); 
                 if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenChieu);
             }
         }
@@ -286,39 +285,42 @@
         }
 
         // =====================================
-        // F: CHUỖI TỤ KHÍ CẦU KÊNH KHI (VƯỢT RÀO ENGINE 100%)
+        // F: CHUỖI TỤ KHÍ CẦU KÊNH KHI (VƯỢT RÀO ENGINE + ÉP CẦU TẠI CHỖ)
         // =====================================
         else if (phim === 'F') {
-            // Bước 1: Gọi END1 (Đã được dán mác ATTACK_END1)
             hackKhoaEngine('ATTACK_END1', 800);
 
-            // Bước 2: Gọi START sau 600ms
-            setTimeout(() => {
+            // 🛑 GỠ BỎ TÌNH TRẠNG KẸT TIMEOUT BẰNG CÁCH DÙNG ID CỤ THỂ
+            if (window.timeoutGoku_Start) clearTimeout(window.timeoutGoku_Start);
+            if (window.timeoutGoku_Hold) clearTimeout(window.timeoutGoku_Hold);
+            if (window.timeoutGoku_Atk) clearTimeout(window.timeoutGoku_Atk);
+            if (window.timeoutGoku_End) clearTimeout(window.timeoutGoku_End);
+
+            window.timeoutGoku_Start = setTimeout(() => {
                 hackKhoaEngine('ATTACK_START', 800);
             }, 600);
 
-            // Bước 3: Gọi HOLD sau 1200ms
-            setTimeout(() => {
+            window.timeoutGoku_Hold = setTimeout(() => {
                 hackKhoaEngine('ATTACK_HOLD', 1200);
             }, 1200);
 
-            // Bước 4: TUNG ĐÒN sau 2200ms
-            setTimeout(() => {
+            window.timeoutGoku_Atk = setTimeout(() => {
                 hackKhoaEngine('ATTACK', 1000);
                 
                 let tayPosMoi = window.layViTriTayGoku(nvc, huongMat);
-                // 🛑 Đẩy nhẹ quả cầu ra xa ngực 4 mét để lúc phóng to nó không nuốt chửng Goku
-                tayPosMoi.add(huongMat.clone().multiplyScalar(4));
+                
+                // 🛑 BÍ QUYẾT: ĐẨY CAO LÊN TRỜI ĐỂ KHÔNG BỊ LỌT VÀO BỤNG QUÁI!
+                // Thay vì đẩy về phía trước mặt, ta đẩy hẳn quả cầu lên cao 15 mét so với tay Goku.
+                let viTriTrenCao = tayPosMoi.clone().add(new THREE.Vector3(0, 15, 0));
 
                 let cauGenki = taoCauAnhSang(1.0, 0x00aaff); 
-                cauGenki.position.copy(tayPosMoi);
-                cauGenki.lookAt(mucTieuGoc);
+                cauGenki.position.copy(viTriTrenCao);
                 scene.add(cauGenki);
                 
-                kyNangGoku.push({ mesh: cauGenki, type: 'GENKI_DAMA', speed: 6.0, life: 150, targetPos: mucTieuGoc.clone(), damage: dameGoc * 2.0, isRemote: isRemote });
+                // 🛑 LOẠI BỎ CHẾ ĐỘ BAY (speed = 0), CHỈ CHO PHÌNH TO TẠI CHỖ
+                kyNangGoku.push({ mesh: cauGenki, type: 'GENKI_DAMA_TAI_CHO', speed: 0, life: 45, owner: nvc, targetPos: null, damage: dameGoc * 3.0, isRemote: isRemote });
 
-                // Bước 5: Gọi END kết thúc chuỗi
-                setTimeout(() => {
+                window.timeoutGoku_End = setTimeout(() => {
                     hackKhoaEngine('ATTACK_END', 1000);
                 }, 300);
 
@@ -343,20 +345,30 @@
                 }
             }
             
-            else if (s.type === 'GENKI_DAMA') {
-                s.mesh.translateZ(s.speed);
-                
-                // 🛑 CÁCH PHÓNG TO AN TOÀN 100% (ÉP TRỰC TIẾP MATRIX)
+            // 🌟 2. QUẢ CẦU KÊNH KHI TẠI CHỖ (GENKI DAMA)
+            else if (s.type === 'GENKI_DAMA_TAI_CHO') {
+                // Phình to khổng lồ gấp 40 lần
                 let curScale = s.mesh.scale.x;
-                if (curScale < 30.0) { // Cầu Kênh Khi khổng lồ gấp 30 lần
-                    curScale += 0.5; // Phình to cực nhanh
+                if (curScale < 40.0) { 
+                    curScale += 1.2; // Phình nhanh hơn
                     s.mesh.scale.set(curScale, curScale, curScale); 
                 }
 
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 10) {
-                    taoVuNoKame(s.mesh.position, 0x00aaff, 35);
-                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 35); 
-                    s.life = 0;
+                // Cập nhật vị trí luôn nằm trên đỉnh đầu Goku (dù Goku đang bị đẩy đi)
+                if (s.owner && s.owner.parent) {
+                    let tayMoi = window.layViTriTayGoku(s.owner, null);
+                    s.mesh.position.lerp(tayMoi.clone().add(new THREE.Vector3(0, 15, 0)), 0.5);
+                }
+
+                // Hết 45 tick (~1.5s) nổ dame một vùng siêu rộng
+                if (s.life <= 0) {
+                    taoVuNoKame(s.mesh.position, 0x00aaff, 50); // Nổ siêu bự
+                    if (!s.isRemote) {
+                        // Trừ hao chiều cao 15m để dọng sát thương xuống đất
+                        let tamNoThatSu = s.mesh.position.clone();
+                        tamNoThatSu.y = (s.owner && s.owner.position) ? s.owner.position.y : 0;
+                        gaySatThuongGK(tamNoThatSu, s.damage, 50); 
+                    }
                 }
             }
 
@@ -436,10 +448,9 @@
         window.HePhaiHienTai = {
             tenPhai: "Siêu Saiyan Goku",
             khoiTao: function () {
-                console.log("🐉 Lõi Kamehameha kích hoạt: Combo F đã được Hack vượt rào Engine V52!");
+                console.log("🐉 Lõi Kamehameha kích hoạt: Fix triệt để kẹt chuỗi chiêu F!");
 
                 if (window.animationsMap) {
-                    // 🛑 ÉP CHẾT CẤM ĐI BỘ
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK') || k.includes('JUMP') || k.includes('FALL')) {
@@ -453,8 +464,6 @@
                         if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap['NHANROI'];
                     }
 
-                    // 🛑 BÍ QUYẾT TỐI THƯỢNG: TRÁO RUỘT TỪ ĐIỂN ĐỂ LỪA MÁY QUÉT ENGINE V52
-                    // Engine V52 cấm múa các chiêu không có chữ ATTACK, nên ta tự dán mác ATTACK cho tụi nó!
                     if (window.animationsMap['END1']) window.animationsMap['ATTACK_END1'] = window.animationsMap['END1'];
                     if (window.animationsMap['START']) window.animationsMap['ATTACK_START'] = window.animationsMap['START'];
                     if (window.animationsMap['HOLD']) window.animationsMap['ATTACK_HOLD'] = window.animationsMap['HOLD'];
