@@ -330,11 +330,31 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
         const anims = {};
         if (gltfAnimations) { gltfAnimations.forEach(clip => { anims[clip.name.toUpperCase()] = mixer.clipAction(clip); }); }
 
+
+
+
+
         const tag = document.createElement('div');
         const mauHienTai = (hpCurrent !== null) ? hpCurrent : hpMax;
-        tag.innerHTML = `<div style="color:#ff0000; font-weight:bold; font-size:18px; text-shadow:1px 1px 0 #000; text-align:center;"><span style="color:#f1c40f;">[Lv.${level}]</span> 👑 ${tenQuai}</div><div style="width:100px; height:6px; background:rgba(0,0,0,0.5); border:1px solid #fff; border-radius:3px; margin:0 auto;"><div class="hp-bar" style="width:${(mauHienTai / hpMax) * 100}%; height:100%; background:#2ecc71;"></div></div>`;
+        
+        // 🌟 BẢN VÁ: Cảm biến tự động thu nhỏ font chữ và thanh máu
+        let sizeChu = window.isMobile ? "9px" : "12px";
+        let widthMau = window.isMobile ? "40px" : "60px";
+        
+        tag.innerHTML = `
+            <div style="color:#ff0000; font-weight:bold; font-size:${sizeChu}; text-shadow:1px 1px 0 #000; text-align:center; white-space:nowrap;">
+                <span style="color:#f1c40f;">[Lv.${level}]</span> 👑 ${tenQuai}
+            </div>
+            <div style="width:${widthMau}; height:4px; background:rgba(0,0,0,0.5); border:1px solid #fff; border-radius:2px; margin:2px auto 0 auto;">
+                <div class="hp-bar" style="width:${(mauHienTai / hpMax) * 100}%; height:100%; background:#2ecc71; transition: width 0.2s;"></div>
+            </div>`;
+            
         tag.style.cssText = 'position:absolute; pointer-events:none; z-index:10; transform:translate(-50%, -100%); display:none;';
         document.body.appendChild(tag);
+
+
+
+
 
         const info = {
             id: id, classCode: classCode, level: level, isBoss: isBoss, mesh: quai, mixer: mixer, anims: anims, tagEl: tag,
