@@ -212,26 +212,40 @@ window.xuLyHangDoiChupAnh = function() {
         window.thumb3D.cam.position.set(0, 0, 15); window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
+
+
+
+
+
+
     if (typeof window.taiHoacNhanBanAsset === 'function') {
-        window.taiHoacNhanBanAsset(url, (model) => {
+        // 🌟 BẢN VÁ: Hứng thêm biến animations từ kho Asset
+        window.taiHoacNhanBanAsset(url, (model, animations) => {
             let pivot = new THREE.Group(); window.thumb3D.scene.add(pivot); pivot.add(model);
 
+            // 🌟 ÉP XƯƠNG VỀ DÁNG NHÀN RỖI TRƯỚC KHI CHỤP ẢNH CHỐNG LỖI T-POSE
+            if (animations && animations.length > 0) {
+                let tempMixer = new THREE.AnimationMixer(model);
+                let clipChon = animations[0];
+                for (let clip of animations) {
+                    let ten = clip.name.toUpperCase();
+                    if (ten.includes('IDLE') || ten.includes('NHANROI') || ten.includes('WAIT') || ten.includes('STAND')) {
+                        clipChon = clip; break;
+                    }
+                }
+                tempMixer.clipAction(clipChon).play();
+                tempMixer.update(0.1); // Nhích thời gian 0.1s để xương khớp vào đúng nếp
+            }
 
-
-
-
-
-            // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO THUMBNAIL (Studio chụp ảnh chợ đen, lò rèn, ô túi đồ)
+            // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO THUMBNAIL (Studio chụp ảnh)
             let targetSize = 8.5;
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 11.5;
+            else if (loaiDo === 'mount') targetSize = 6.5; // Thú cưỡi bóp nhỏ khung chụp ảnh lại
+            else if (loaiDo === 'model') targetSize = 8.5; 
             
             if (typeof window.canBangModelUI === 'function') {
                 window.canBangModelUI(model, targetSize);
             }
-
-
-
-
 
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
             else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0); 
@@ -244,7 +258,7 @@ window.xuLyHangDoiChupAnh = function() {
             setTimeout(() => {
                 window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
                 let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
-                window.THUMBNAIL_CACHE[cacheKey] = dataURL; // Lưu đúng mã ổ khóa
+                window.THUMBNAIL_CACHE[cacheKey] = dataURL; 
                 window.thumb3D.scene.remove(pivot); 
                 window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
             }, 100); 
@@ -252,6 +266,13 @@ window.xuLyHangDoiChupAnh = function() {
     } else {
         window.THUMBNAIL_CACHE[cacheKey] = 'ERROR'; window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
     }
+
+
+
+
+
+
+    
 };
 
 
