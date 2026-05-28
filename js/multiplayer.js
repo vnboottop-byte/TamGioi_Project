@@ -850,10 +850,10 @@ window.radarDongBoThucTe = function () {
                 
                 let bossLocal = window.danhSachQuaiVat.find(q => q.id == id);
                 
-                // 🌟 TỐI ƯU MOBILE: Đo khoảng cách, xa quá 2500m thì KHÔNG thèm tải Boss vào RAM!
+                // 🌟 TỐI ƯU: Ép Boss đẻ gần lại
                 let bossPos = new THREE.Vector3(parseFloat(bossSQL.pos_x), parseFloat(bossSQL.pos_y), parseFloat(bossSQL.pos_z));
                 let khoangCach = (window.playerModel) ? window.playerModel.position.distanceTo(bossPos) : 0;
-                let maxDist = window.isMobile ? 2500 : 8000;
+                let maxDist = window.isMobile ? 1500 : 3000; 
 
                 // NẾU CHƯA CÓ MÀ MÁU > 0 -> BÀN TAY SÁNG THẾ ĐẺ RA!
                 if (!bossLocal && sqlHp > 0 && khoangCach <= maxDist) {
