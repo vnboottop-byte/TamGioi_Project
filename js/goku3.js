@@ -1,6 +1,6 @@
 // ==========================================
 // 🐉 HỆ THỐNG KỸ NĂNG: GOKU (SIÊU SAIYAN)
-// 👑 TÍNH NĂNG: KAMEHAMEHA & GENKI DAMA XUẤT PHÁT TỪ TAY (Object_31)
+// 👑 V5: HACK LÕI ENGINE (CHỐNG KẸT COMBO) & ÉP QUẢ CẦU PHÌNH TO
 // ==========================================
 
 (function () {
@@ -97,19 +97,17 @@
     }
 
     // ==========================================
-    // 🎯 HỆ THỐNG DÒ TÌM TỌA ĐỘ BÀN TAY (Object_31)
+    // 🎯 HỆ THỐNG DÒ TÌM BÀN TAY (Object_31)
     // ==========================================
     window.layViTriTayGoku = function(nvc, fallbackHuong) {
         let tayPos = new THREE.Vector3();
         let obj31 = null;
         
         if (nvc) {
-            // Tối ưu hóa: Dò tìm 1 lần rồi lưu lại (Cache) để chống lag
             if (nvc.userData && nvc.userData.object31) {
                 obj31 = nvc.userData.object31;
             } else {
                 nvc.traverse((child) => {
-                    // Dò tìm chính xác tên Object_31 mà Sếp yêu cầu
                     if (child.name === 'Object_31' || child.name.includes('Object_31')) {
                         obj31 = child;
                         if (!nvc.userData) nvc.userData = {};
@@ -120,10 +118,8 @@
         }
         
         if (obj31) {
-            // Nếu tìm thấy, lấy tọa độ thật 3D của 2 bàn tay đang chắp lại
             obj31.getWorldPosition(tayPos);
         } else {
-            // Lốp dự phòng nếu lỡ người chơi khác load lỗi model
             if (nvc) nvc.getWorldPosition(tayPos);
             tayPos.y += 5;
             if (fallbackHuong) tayPos.add(fallbackHuong.clone().multiplyScalar(2));
@@ -240,15 +236,23 @@
             }
         }
 
+        // 🛑 HÀM BỌC THÉP: LIÊN TỤC RESET ĐỒNG HỒ ENGINE ĐỂ CHỐNG BỊ KẸT / ĐÈ ANIMATION BAY
+        function hackKhoaEngine(tenChieu, thoiGian) {
+            if (!isRemote) {
+                if (typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(thoiGian);
+                window.dangMuaChieu = true; 
+                window.thoiDiemBatDauMua = Date.now(); // RESET BỘ ĐẾM 1.5 GIÂY CỦA ENGINE!
+                if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenChieu);
+            }
+        }
+
         // =====================================
-        // Q: BẮN 1 QUẢ CẦU NHANH TỪ TAY (Object_31)
+        // Q: BẮN 1 QUẢ CẦU
         // =====================================
         if (phim === 'Q') {
-            if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK');
+            hackKhoaEngine('ATTACK', 1000);
             
-            // 🛑 Lấy tọa độ CHÍNH XÁC của đôi bàn tay
             let tayPos = window.layViTriTayGoku(nvc, huongMat);
-            
             let cauQ = taoCauAnhSang(2.0, 0xffcc00);
             cauQ.position.copy(tayPos);
             cauQ.lookAt(mucTieuGoc);
@@ -261,8 +265,7 @@
         // E: KAMEHAMEHA 1 GIÂY
         // =====================================
         else if (phim === 'E') {
-            if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACKhold');
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(1200);
+            hackKhoaEngine('ATTACKhold', 1500);
 
             let tiaE = taoTiaKamehameha(3.0, 0x00ffff); 
             scene.add(tiaE);
@@ -274,8 +277,7 @@
         // R: ĐẠI KAMEHAMEHA 2 GIÂY 
         // =====================================
         else if (phim === 'R') {
-            if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACKhold');
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(2200);
+            hackKhoaEngine('ATTACKhold', 2500);
 
             let tiaR = taoTiaKamehameha(5.0, 0xff0000); 
             scene.add(tiaR);
@@ -284,27 +286,30 @@
         }
 
         // =====================================
-        // F: CHUỖI TỤ KHÍ QUẢ CẦU KÊNH KHI 
+        // F: CHUỖI TỤ KHÍ CẦU KÊNH KHI (VƯỢT RÀO ENGINE 100%)
         // =====================================
         else if (phim === 'F') {
-            if (!isRemote && typeof window.kichHoatKhiencAnimation === 'function') window.kichHoatKhiencAnimation(3500); 
-            
-            if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('END1');
+            // Bước 1: Gọi END1 (Đã được dán mác ATTACK_END1)
+            hackKhoaEngine('ATTACK_END1', 800);
 
+            // Bước 2: Gọi START sau 600ms
             setTimeout(() => {
-                if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('START');
+                hackKhoaEngine('ATTACK_START', 800);
             }, 600);
 
+            // Bước 3: Gọi HOLD sau 1200ms
             setTimeout(() => {
-                if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('hold');
+                hackKhoaEngine('ATTACK_HOLD', 1200);
             }, 1200);
 
+            // Bước 4: TUNG ĐÒN sau 2200ms
             setTimeout(() => {
-                if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK');
+                hackKhoaEngine('ATTACK', 1000);
                 
-                // 🛑 Hút tọa độ Bàn tay NGAY LÚC NÀY để đảm bảo chính xác khi animation vung tay
                 let tayPosMoi = window.layViTriTayGoku(nvc, huongMat);
-                
+                // 🛑 Đẩy nhẹ quả cầu ra xa ngực 4 mét để lúc phóng to nó không nuốt chửng Goku
+                tayPosMoi.add(huongMat.clone().multiplyScalar(4));
+
                 let cauGenki = taoCauAnhSang(1.0, 0x00aaff); 
                 cauGenki.position.copy(tayPosMoi);
                 cauGenki.lookAt(mucTieuGoc);
@@ -312,9 +317,10 @@
                 
                 kyNangGoku.push({ mesh: cauGenki, type: 'GENKI_DAMA', speed: 6.0, life: 150, targetPos: mucTieuGoc.clone(), damage: dameGoc * 2.0, isRemote: isRemote });
 
+                // Bước 5: Gọi END kết thúc chuỗi
                 setTimeout(() => {
-                    if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('END');
-                }, 200);
+                    hackKhoaEngine('ATTACK_END', 1000);
+                }, 300);
 
             }, 2200);
         }
@@ -340,13 +346,16 @@
             else if (s.type === 'GENKI_DAMA') {
                 s.mesh.translateZ(s.speed);
                 
-                if (s.mesh.scale.x < 20.0) {
-                    s.mesh.scale.addScalar(0.25); 
+                // 🛑 CÁCH PHÓNG TO AN TOÀN 100% (ÉP TRỰC TIẾP MATRIX)
+                let curScale = s.mesh.scale.x;
+                if (curScale < 30.0) { // Cầu Kênh Khi khổng lồ gấp 30 lần
+                    curScale += 0.5; // Phình to cực nhanh
+                    s.mesh.scale.set(curScale, curScale, curScale); 
                 }
 
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 5) {
-                    taoVuNoKame(s.mesh.position, 0x00aaff, 25);
-                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 25); 
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 10) {
+                    taoVuNoKame(s.mesh.position, 0x00aaff, 35);
+                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 35); 
                     s.life = 0;
                 }
             }
@@ -355,7 +364,6 @@
                 if (s.owner && s.owner.parent) {
                     let fwd = new THREE.Vector3(); s.owner.getWorldDirection(fwd);
                     
-                    // 🛑 VẬT LÝ BÁM DÍNH: Tia Lazer sinh ra chính xác từ tay (Object_31) liên tục từng mili-giây
                     let startPos = window.layViTriTayGoku(s.owner, fwd);
                     
                     if (!s.isRemote) {
@@ -422,15 +430,16 @@
     setInterval(window.updateCombatGoku, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI 
+    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI (HACK VƯỢT RÀO ENGINE)
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('goku')) {
         window.HePhaiHienTai = {
             tenPhai: "Siêu Saiyan Goku",
             khoiTao: function () {
-                console.log("🐉 Lõi Kamehameha kích hoạt: Đạn bắn ra từ Object_31!");
+                console.log("🐉 Lõi Kamehameha kích hoạt: Combo F đã được Hack vượt rào Engine V52!");
 
                 if (window.animationsMap) {
+                    // 🛑 ÉP CHẾT CẤM ĐI BỘ
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK') || k.includes('JUMP') || k.includes('FALL')) {
@@ -443,6 +452,14 @@
                         window.animationsMap['WAIT'] = window.animationsMap['NHANROI'];
                         if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap['NHANROI'];
                     }
+
+                    // 🛑 BÍ QUYẾT TỐI THƯỢNG: TRÁO RUỘT TỪ ĐIỂN ĐỂ LỪA MÁY QUÉT ENGINE V52
+                    // Engine V52 cấm múa các chiêu không có chữ ATTACK, nên ta tự dán mác ATTACK cho tụi nó!
+                    if (window.animationsMap['END1']) window.animationsMap['ATTACK_END1'] = window.animationsMap['END1'];
+                    if (window.animationsMap['START']) window.animationsMap['ATTACK_START'] = window.animationsMap['START'];
+                    if (window.animationsMap['HOLD']) window.animationsMap['ATTACK_HOLD'] = window.animationsMap['HOLD'];
+                    else if (window.animationsMap['hold']) window.animationsMap['ATTACK_HOLD'] = window.animationsMap['hold'];
+                    if (window.animationsMap['END']) window.animationsMap['ATTACK_END'] = window.animationsMap['END'];
                 }
             },
             tungChieu: window.tungComboGoku,
