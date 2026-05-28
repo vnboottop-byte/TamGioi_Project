@@ -1,6 +1,6 @@
 // ==========================================
 // 👦 HỆ THỐNG KỸ NĂNG: BỘ BA ASL (ACE - SABO - LUFFY)
-// 👑 TÍNH NĂNG: RANDOM IDLE TĂNG ĐỘNG + RANDOM ATTACK LOẠN ĐẢ
+// 👑 BẢN VÁ LỖI V2: TRÁO RUỘT TỪ ĐIỂN & ÉP BUỘC ANIMATION
 // ==========================================
 
 (function() {
@@ -32,7 +32,6 @@
         danhSachSoBayASL.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    // 🌟 ĐỒNG BỘ HỒI CHIÊU 4 GIÂY CHO TOÀN BỘ KỸ NĂNG
     const THOI_GIAN_HOI = { 'Q': 4000, 'E': 4000, 'R': 4000, 'F': 4000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
@@ -171,7 +170,6 @@
     // 🌟 AI: RANDOM ATTACK TỪ 1 ĐẾN 5 CÔNG BẰNG TUYỆT ĐỐI
     function bốcChiêuTấnCôngNgẫuNhiên() {
         const khoChiêu = ['ATTACK1', 'ATTACK2', 'ATTACK3', 'ATTACK4', 'ATTACK5'];
-        // Thuật toán bốc thăm không thiên vị: Lấy Random(0 -> 0.99) nhân với 5, rồi làm tròn xuống
         return khoChiêu[Math.floor(Math.random() * khoChiêu.length)];
     }
 
@@ -183,7 +181,9 @@
         if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
         choHoiChieu[phim] = bayGio;
 
-        // UI Đồng hồ
+        // BÍ QUYẾT 1: KHÓA MÕM ENGINE GỐC NGAY LẬP TỨC ĐỂ NÓ KHÔNG CHÈN ATTACK1
+        window.dangMuaChieu = true;
+
         if (!isRemote) {
             let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
             if (!nutKyNang) {
@@ -226,8 +226,6 @@
 
         let viTriGoc = nvc.position.clone();
         let targetQuai = layQuaiVatGanNhatASL(viTriGoc);
-        
-        window.dangMuaChieu = false; 
 
         if (targetQuai) {
             const dameChiTiet = { 'Q': 1.0, 'E': 1.2, 'R': 1.5, 'F': 2.0 };
@@ -235,67 +233,76 @@
             window.trangThaiASL.target = targetQuai;
             window.trangThaiASL.skillKey = phim;
             window.trangThaiASL.dameRatio = dameChiTiet[phim];
-        } else {
-            window.trangThaiASL.state = 'IDLE'; 
             
-            // 🌟 NẾU ĐÁNH KHÔNG KHÍ CŨNG RANDOM BỘ ATTACK 1-5 MỚI CHỊU
+            // Ép chạy bộ khi lướt tới
+            if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHAYBO');
+        } else {
+            // ĐÁNH KHÔNG KHÍ
+            window.trangThaiASL.state = 'HITTING'; 
             let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
-            if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
+            
+            // ÉP CHIÊU BẰNG LỆNH MẠNH NHẤT
+            if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAtk);
+            else if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
             
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
             taoVuNoASL(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
+
+            // Giữ khóa 1 giây cho múa xong rồi mới thả
+            setTimeout(() => { 
+                window.dangMuaChieu = false; 
+                window.trangThaiASL.state = 'IDLE';
+            }, 1000);
         }
     };
 
     // ========================================================
-    // 🌟 AI: RANDOM NHÀN RỖI MỖI 5 -> 10 GIÂY
+    // 🌟 AI: RANDOM NHÀN RỖI (TRÁO RUỘT TỪ ĐIỂN ĐỂ LỪA ENGINE)
     // ========================================================
     window.vongLapNhanRoiASL = null;
     function batDauAutoNhanRoi() {
         if (window.vongLapNhanRoiASL) clearTimeout(window.vongLapNhanRoiASL);
         
-        // Random thời gian từ 5000ms đến 10000ms
         let thoiGianCho = 5000 + Math.random() * 5000; 
 
         window.vongLapNhanRoiASL = setTimeout(() => {
-            // Chỉ múa nhàn rỗi khi nhân vật ĐANG ĐỨNG IM và KHÔNG TUNG CHIÊU
             if (window.trangThaiASL.state === 'IDLE' && !window.dangMuaChieu) {
-                // Rút thăm 13 hành động nhàn rỗi
                 const khoNhanRoi = [];
                 for(let i=1; i<=13; i++) khoNhanRoi.push('NHANROI' + i);
                 
-                let hanhDongRandom = khoNhanRoi[Math.floor(Math.random() * khoNhanRoi.length)];
+                let tenAnim = khoNhanRoi[Math.floor(Math.random() * khoNhanRoi.length)];
                 
-                if (typeof window.playAnim === 'function') {
-                    window.playAnim(hanhDongRandom);
+                // BÍ QUYẾT 2: TRÁO RUỘT TỪ ĐIỂN! 
+                // Khi Engine Game tự động gọi 'NHANROI', nó sẽ bốc phải cái ruột mới này!
+                if (window.animationsMap && window.animationsMap[tenAnim]) {
+                    window.animationsMap['NHANROI'] = window.animationsMap[tenAnim];
+                    if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[tenAnim];
+                    
+                    // Phát ngay lập tức
+                    if (typeof window.playAnim === 'function') window.playAnim('NHANROI');
                 }
             }
-            // Gọi lại chính nó để tạo vòng lặp vô tận
             batDauAutoNhanRoi();
         }, thoiGianCho);
     }
 
-    if (window.SCRIPT_PHAI_CUA_TOI && (window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe') || window.SCRIPT_PHAI_CUA_TOI.includes('asl'))) {
+    if (window.SCRIPT_PHAI_CUA_TOI && (window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe') || window.SCRIPT_PHAI_CUA_TOI.includes('asl') || window.SCRIPT_PHAI_CUA_TOI.includes('asl.js'))) {
 
         window.HePhaiHienTai = {
             tenPhai: "Bộ Ba Băng Đảng Nhí ASL",
             khoiTao: function () {
-                console.log("🔥 Biệt Đội ASL Đã Sẵn Sàng Quậy Phá!");
+                console.log("🔥 Biệt Đội ASL Đã Sẵn Sàng (Bản Vá Lỗi Auto Anim)!");
                 
                 if (window.playerModel && (!window.MOUNT_URL || window.MOUNT_URL.trim() === "")) {
                     window.playerModel.scale.multiplyScalar(1.6); 
                 }
 
-                // 🌟 CHÉP ĐÈ TỪ ĐIỂN ANIMATION: CẤM BAY, CHỈ CÓ CHẠY BỘ VÀ NHÀN RỖI CHUẨN
                 if (window.animationsMap) {
-                    // Dồn toàn bộ BAY thành CHAYBO
                     if (window.animationsMap['CHAYBO']) {
                         window.animationsMap['BAY'] = window.animationsMap['CHAYBO'];
                         window.animationsMap['FLY'] = window.animationsMap['CHAYBO'];
                     }
-                    
-                    // Mặc định cho đứng im là NHANROI1
                     if (window.animationsMap['NHANROI1']) {
                         window.animationsMap['NHANROI'] = window.animationsMap['NHANROI1'];
                         if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap['NHANROI1'];
@@ -338,7 +345,11 @@
 
                 if (window.trangThaiASL.state === 'DASHING' && window.trangThaiASL.target) {
                     let t = window.trangThaiASL.target;
-                    if (t.isDead) { window.trangThaiASL.state = 'IDLE'; return; }
+                    if (t.isDead) { 
+                        window.trangThaiASL.state = 'IDLE'; 
+                        window.dangMuaChieu = false;
+                        return; 
+                    }
                     
                     let tHit = window.layHitbox(t.mesh);
                     let myHit = window.layHitbox(nvc);
@@ -364,9 +375,10 @@
                     else {
                         window.trangThaiASL.state = 'HITTING';
                         
-                        // 🌟 TỚI NƠI ĐÁNH TRÚNG THÌ RANDOM CHIÊU TỪ 1 ĐẾN 5
+                        // 🌟 TỚI NƠI ĐÁNH TRÚNG THÌ RANDOM CHIÊU TỪ 1 ĐẾN 5 & ÉP KỸ NĂNG MẠNH NHẤT
                         let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
-                        if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
+                        if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAtk);
+                        else if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
                         
                         let banKinhNo = (window.trangThaiASL.skillKey === 'F') ? 15 : 5;
                         taoVuNoASL(tHit.tamNguc, nvc.up.clone().normalize(), 0xffaa00, banKinhNo);
@@ -387,7 +399,11 @@
                             camera.position.y = camY; camera.position.x = camX; 
                         }, 120);
                         
-                        setTimeout(() => { if(window.trangThaiASL.state === 'HITTING') window.trangThaiASL.state = 'IDLE'; }, 300);
+                        // Đợi 1 giây múa xong mới thả tự do cho Engine
+                        setTimeout(() => { 
+                            window.dangMuaChieu = false;
+                            if(window.trangThaiASL.state === 'HITTING') window.trangThaiASL.state = 'IDLE'; 
+                        }, 1000);
                     }
                 }
 
