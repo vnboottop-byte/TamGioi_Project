@@ -298,7 +298,7 @@
             const pivotGroup = new THREE.Group(); 
             
             // 🛑 TỐI ƯU F: Đẩy điểm xoay tâm lên 25 mét (Thay vì 15 mét) để không che khuất góc nhìn nhân vật
-            pivotGroup.position.copy(viTriGoc).add(upVector.clone().multiplyScalar(25)); 
+            pivotGroup.position.copy(viTriGoc).add(upVector.clone().multiplyScalar(50)); 
             pivotGroup.up.copy(upVector);
             pivotGroup.lookAt(mucTieuGoc);
             
