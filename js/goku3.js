@@ -1,6 +1,6 @@
 // ==========================================
 // 🐉 HỆ THỐNG KỸ NĂNG: GOKU (SIÊU SAIYAN)
-// 👑 V6: SỬA LỖI TRÀN VÒNG LẶP + QUẢ CẦU KÊNH KHI TẠI CHỖ + CHỐNG LỌT BỤNG QUÁI
+// 👑 V7: GENKI DAMA TẦM NHIỆT (Homing Missile) - Đánh là chắc chắn trúng!
 // ==========================================
 
 (function () {
@@ -96,9 +96,6 @@
         return daTrung;
     }
 
-    // ==========================================
-    // 🎯 HỆ THỐNG DÒ TÌM BÀN TAY (Object_31)
-    // ==========================================
     window.layViTriTayGoku = function(nvc, fallbackHuong) {
         let tayPos = new THREE.Vector3();
         let obj31 = null;
@@ -207,6 +204,7 @@
         let viTriGoc = new THREE.Vector3(); 
         let huongMat = new THREE.Vector3(); 
         let mucTieuGoc = new THREE.Vector3();
+        let targetQuaiGlobal = null; 
         const dameGoc = window.DAME_CUA_TOI || 100;
 
         if (isRemote) {
@@ -217,9 +215,9 @@
             nvc.getWorldPosition(viTriGoc); 
             nvc.getWorldDirection(huongMat); huongMat.normalize();
             
-            let targetQuai = window.layMucTieuGanNhatGK(viTriGoc);
-            if (targetQuai && targetQuai.mesh) {
-                let hit = window.layHitbox(targetQuai.mesh);
+            targetQuaiGlobal = window.layMucTieuGanNhatGK(viTriGoc);
+            if (targetQuaiGlobal && targetQuaiGlobal.mesh) {
+                let hit = window.layHitbox(targetQuaiGlobal.mesh);
                 mucTieuGoc = hit.tamNguc.clone();
                 let dummy = new THREE.Object3D(); dummy.position.copy(nvc.position); dummy.lookAt(mucTieuGoc.x, nvc.position.y, mucTieuGoc.z);
                 nvc.quaternion.copy(dummy.quaternion);
@@ -285,46 +283,44 @@
         }
 
         // =====================================
-        // F: CHUỖI TỤ KHÍ CẦU KÊNH KHI (VƯỢT RÀO ENGINE + ÉP CẦU TẠI CHỖ)
+        // F: QUẢ CẦU KÊNH KHI TẦM NHIỆT (ĐÁNH LÀ CHẮC TRÚNG)
         // =====================================
         else if (phim === 'F') {
-            hackKhoaEngine('ATTACK_END1', 800);
+            // Bước 1: Khóa động tác tụ khí 1 giây
+            hackKhoaEngine('ATTACKhold', 1500); 
 
-            // 🛑 GỠ BỎ TÌNH TRẠNG KẸT TIMEOUT BẰNG CÁCH DÙNG ID CỤ THỂ
-            if (window.timeoutGoku_Start) clearTimeout(window.timeoutGoku_Start);
-            if (window.timeoutGoku_Hold) clearTimeout(window.timeoutGoku_Hold);
-            if (window.timeoutGoku_Atk) clearTimeout(window.timeoutGoku_Atk);
-            if (window.timeoutGoku_End) clearTimeout(window.timeoutGoku_End);
+            if (window.timeoutGoku_F) clearTimeout(window.timeoutGoku_F);
 
-            window.timeoutGoku_Start = setTimeout(() => {
-                hackKhoaEngine('ATTACK_START', 800);
-            }, 600);
+            // Bước 2: Đúng 1 giây sau (1000ms), quăng cầu
+            window.timeoutGoku_F = setTimeout(() => {
+                // Đổi dáng ném để khỏi đơ
+                if (!isRemote && typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK');
 
-            window.timeoutGoku_Hold = setTimeout(() => {
-                hackKhoaEngine('ATTACK_HOLD', 1200);
-            }, 1200);
-
-            window.timeoutGoku_Atk = setTimeout(() => {
-                hackKhoaEngine('ATTACK', 1000);
+                let huongMoi = new THREE.Vector3(); nvc.getWorldDirection(huongMoi); huongMoi.normalize();
+                let tayPosMoi = window.layViTriTayGoku(nvc, huongMoi);
                 
-                let tayPosMoi = window.layViTriTayGoku(nvc, huongMat);
-                
-                // 🛑 BÍ QUYẾT: ĐẨY CAO LÊN TRỜI ĐỂ KHÔNG BỊ LỌT VÀO BỤNG QUÁI!
-                // Thay vì đẩy về phía trước mặt, ta đẩy hẳn quả cầu lên cao 15 mét so với tay Goku.
-                let viTriTrenCao = tayPosMoi.clone().add(new THREE.Vector3(0, 15, 0));
+                // 🛑 Sinh ra quả cầu TO LÙ LÙ ngay trước mặt (cách 5 mét)
+                tayPosMoi.add(huongMoi.clone().multiplyScalar(5));
 
-                let cauGenki = taoCauAnhSang(1.0, 0x00aaff); 
-                cauGenki.position.copy(viTriTrenCao);
+                let cauGenki = taoCauAnhSang(2.0, 0x00aaff); 
+                cauGenki.scale.set(10, 10, 10); // Phóng to chà bá lửa ngay lập tức
+                cauGenki.position.copy(tayPosMoi);
+                cauGenki.lookAt(mucTieuGoc);
                 scene.add(cauGenki);
                 
-                // 🛑 LOẠI BỎ CHẾ ĐỘ BAY (speed = 0), CHỈ CHO PHÌNH TO TẠI CHỖ
-                kyNangGoku.push({ mesh: cauGenki, type: 'GENKI_DAMA_TAI_CHO', speed: 0, life: 45, owner: nvc, targetPos: null, damage: dameGoc * 3.0, isRemote: isRemote });
+                // 🛑 TRUYỀN `targetObj` ĐỂ NÓ KHÓA TẦM NHIỆT VÀO QUÁI
+                kyNangGoku.push({ 
+                    mesh: cauGenki, 
+                    type: 'GENKI_DAMA_TAM_NHIET', 
+                    speed: 6.0, 
+                    life: 200, 
+                    targetPos: mucTieuGoc.clone(), 
+                    targetObj: targetQuaiGlobal, // Dùng để dò nhiệt
+                    damage: dameGoc * 3.0, 
+                    isRemote: isRemote 
+                });
 
-                window.timeoutGoku_End = setTimeout(() => {
-                    hackKhoaEngine('ATTACK_END', 1000);
-                }, 300);
-
-            }, 2200);
+            }, 1000); // Đúng 1 giây sau tụ khí
         }
     };
 
@@ -345,30 +341,42 @@
                 }
             }
             
-            // 🌟 2. QUẢ CẦU KÊNH KHI TẠI CHỖ (GENKI DAMA)
-            else if (s.type === 'GENKI_DAMA_TAI_CHO') {
-                // Phình to khổng lồ gấp 40 lần
-                let curScale = s.mesh.scale.x;
-                if (curScale < 40.0) { 
-                    curScale += 1.2; // Phình nhanh hơn
-                    s.mesh.scale.set(curScale, curScale, curScale); 
-                }
-
-                // Cập nhật vị trí luôn nằm trên đỉnh đầu Goku (dù Goku đang bị đẩy đi)
-                if (s.owner && s.owner.parent) {
-                    let tayMoi = window.layViTriTayGoku(s.owner, null);
-                    s.mesh.position.lerp(tayMoi.clone().add(new THREE.Vector3(0, 15, 0)), 0.5);
-                }
-
-                // Hết 45 tick (~1.5s) nổ dame một vùng siêu rộng
-                if (s.life <= 0) {
-                    taoVuNoKame(s.mesh.position, 0x00aaff, 50); // Nổ siêu bự
-                    if (!s.isRemote) {
-                        // Trừ hao chiều cao 15m để dọng sát thương xuống đất
-                        let tamNoThatSu = s.mesh.position.clone();
-                        tamNoThatSu.y = (s.owner && s.owner.position) ? s.owner.position.y : 0;
-                        gaySatThuongGK(tamNoThatSu, s.damage, 50); 
+            // 🌟 2. QUẢ CẦU KÊNH KHI TẦM NHIỆT (Homing Missile)
+            else if (s.type === 'GENKI_DAMA_TAM_NHIET') {
+                // 🛑 A. HỆ THỐNG DÒ NHIỆT BÁM ĐUỔI
+                if (s.targetObj && !s.targetObj.isDead && s.targetObj.mesh) {
+                    let hit = window.layHitbox(s.targetObj.mesh);
+                    s.targetPos = hit.tamNguc.clone(); // Liên tục update tọa độ quái đang chạy
+                } else if (!s.isRemote) {
+                    // Nếu con quái mục tiêu vừa ngỏm, tự động radar dò tìm con khác gần nhất để ném tiếp!
+                    let mucTieuMoi = window.layMucTieuGanNhatGK(s.mesh.position);
+                    if (mucTieuMoi && mucTieuMoi.mesh) {
+                        s.targetObj = mucTieuMoi;
+                        let hit = window.layHitbox(mucTieuMoi.mesh);
+                        s.targetPos = hit.tamNguc.clone();
                     }
+                }
+
+                // 🛑 B. BẺ LÁI QUẢ CẦU
+                if (s.targetPos) {
+                    const dummy = new THREE.Object3D();
+                    dummy.position.copy(s.mesh.position);
+                    dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15); // Bẻ lái êm ái như tên lửa
+                }
+
+                s.mesh.translateZ(s.speed); // Tiến về phía trước mặt (đã bẻ lái)
+                
+                // Phình to thêm tí nữa lúc bay cho ngầu
+                if (s.mesh.scale.x < 30.0) { 
+                    s.mesh.scale.addScalar(0.4); 
+                }
+
+                // Chạm mặt là NỔ tung xác
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 15) {
+                    taoVuNoKame(s.mesh.position, 0x00aaff, 40);
+                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 40); 
+                    s.life = 0;
                 }
             }
 
@@ -442,13 +450,13 @@
     setInterval(window.updateCombatGoku, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI (HACK VƯỢT RÀO ENGINE)
+    // 🌟 KHỞI TẠO BỘ TỪ ĐIỂN AI
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('goku')) {
         window.HePhaiHienTai = {
             tenPhai: "Siêu Saiyan Goku",
             khoiTao: function () {
-                console.log("🐉 Lõi Kamehameha kích hoạt: Fix triệt để kẹt chuỗi chiêu F!");
+                console.log("🐉 Lõi Kamehameha kích hoạt: Genki Dama Tầm Nhiệt Bám Đuổi!");
 
                 if (window.animationsMap) {
                     for (let key in window.animationsMap) {
@@ -463,12 +471,6 @@
                         window.animationsMap['WAIT'] = window.animationsMap['NHANROI'];
                         if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap['NHANROI'];
                     }
-
-                    if (window.animationsMap['END1']) window.animationsMap['ATTACK_END1'] = window.animationsMap['END1'];
-                    if (window.animationsMap['START']) window.animationsMap['ATTACK_START'] = window.animationsMap['START'];
-                    if (window.animationsMap['HOLD']) window.animationsMap['ATTACK_HOLD'] = window.animationsMap['HOLD'];
-                    else if (window.animationsMap['hold']) window.animationsMap['ATTACK_HOLD'] = window.animationsMap['hold'];
-                    if (window.animationsMap['END']) window.animationsMap['ATTACK_END'] = window.animationsMap['END'];
                 }
             },
             tungChieu: window.tungComboGoku,
