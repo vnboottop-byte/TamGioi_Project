@@ -1947,7 +1947,153 @@ let idleTimer = null;
 
 
 
+// ==========================================
+// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V51 - ĐA DẠNG HÓA AUTO-RANDOM TOÀN CẦU)
+// ==========================================
+function playAnim(animName) {
+    if (window.isTestingAnimation) return;
 
+    let upName = animName.toUpperCase();
+    let dangCuoiThu = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
+    let laChieuTanCong = upName.includes('CHIEU') || upName.includes('ATTACK') || upName.includes('PUNCH') || upName.includes('KICK') || upName.includes('COMBO') || upName === 'TANCONG' || upName.includes('SKILL');
+    let laHanhDongNguoi = laChieuTanCong || upName === 'CHET' || upName === 'DIE' || upName === 'DEATH';
+
+    // 🛡️ LÁ CHẮN MÚA CHIÊU: Bảo vệ 2 giây
+    if (window.dangMuaChieu && !laHanhDongNguoi) {
+        if (upName === 'CHAYBO' || upName === 'DIBO' || upName === 'BAY') {
+            let dangCuaDongTay = window.isKeyboardMoving || window.isMoving;
+            if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể" && !window.isAutoAFK && upName !== 'BAY' && dangCuaDongTay) {
+                window.dangMuaChieu = false;
+            } else {
+                let thoiGianDaQua = Date.now() - (window.thoiDiemBatDauMua || 0);
+                let tgCho = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") ? 2000 : 1500;
+                if (thoiGianDaQua >= tgCho) window.dangMuaChieu = false;
+                else return; // Vẫn đang trong thời gian múa -> BỎ QUA lệnh
+            }
+        } else {
+            return;
+        }
+    }
+
+    // ==========================================
+    // 🐎 NHÁNH 1: ĐANG CƯỠI THÚ
+    // ==========================================
+    if (dangCuoiThu) {
+        if (laHanhDongNguoi) {
+            if (window.dangMuaChieu && !laChieuTanCong) return;
+            if (window.animationsMapChar) {
+                let actionChar = window.animationsMapChar[upName];
+                if (!actionChar && laChieuTanCong) {
+                    // Cưỡi thú cũng tự động Random Attack
+                    let keysChar = Object.keys(window.animationsMapChar).filter(k => k.includes('ATTACK') || k.includes('SKILL'));
+                    if (keysChar.length > 0) actionChar = window.animationsMapChar[keysChar[Math.floor(Math.random() * keysChar.length)]];
+                }
+                if (!actionChar) actionChar = window.animationsMapChar['NHANROI'] || window.animationsMapChar['IDLE'] || Object.values(window.animationsMapChar)[0];
+
+                if (actionChar) {
+                    if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
+                    window.currentActionChar = actionChar;
+                    window.currentActionChar.reset().fadeIn(0.2).play();
+                    window.currentAnimNameChar = upName;
+                    if (laChieuTanCong) kichHoatKhiencAnimation(actionChar.getClip().duration * 1000);
+                }
+            }
+            return;
+        } else {
+            if (!window.dangMuaChieu && window.animationsMapChar) {
+                let lenhNguoi = 'NHANROI';
+                if (window.currentAnimNameChar !== lenhNguoi) {
+                    let keysIdle = Object.keys(window.animationsMapChar).filter(k => k.includes('NHANROI') || k.includes('IDLE'));
+                    let actionChar = null;
+                    if (keysIdle.length > 0) actionChar = window.animationsMapChar[keysIdle[Math.floor(Math.random() * keysIdle.length)]];
+                    if (!actionChar) actionChar = Object.values(window.animationsMapChar)[0];
+
+                    if (actionChar) {
+                        if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
+                        window.currentActionChar = actionChar;
+                        window.currentActionChar.reset().fadeIn(0.2).play();
+                        window.currentAnimNameChar = lenhNguoi;
+                    }
+                }
+            }
+        }
+    }
+    // ==========================================
+    // 🏃 NHÁNH 2: NGƯỜI CHẠY BỘ (LÕI QUÉT ĐA HOẠT ẢNH TỰ ĐỘNG)
+    // ==========================================
+    else {
+        let checkName = upName;
+        if (checkName === 'IDLE' || checkName === 'WAIT') checkName = 'NHANROI';
+        if (checkName === 'WALK' || checkName === 'RUN' || checkName === 'DIBO') checkName = 'CHAYBO';
+        if (checkName === 'FLY') checkName = 'BAY';
+        if (checkName === 'DEATH') checkName = 'DIE';
+
+        let action = null;
+        let finalAnimName = checkName;
+
+        // ƯU TIÊN 1: NẾU TRUYỀN TÊN CHÍNH XÁC (Vd: ATTACK3) -> BỐC THẲNG TAY
+        if (animationsMap[upName]) {
+            action = animationsMap[upName];
+            finalAnimName = upName;
+        }
+        else {
+            // ƯU TIÊN 2: NẾU LÀ LỆNH CHUNG CHUNG (NHANROI, ATTACK...) -> MỞ RƯƠNG BỐC THĂM!
+            let danhSachPhuHop = [];
+            let tatCaKey = Object.keys(animationsMap);
+
+            if (checkName === 'NHANROI') {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT'));
+            }
+            else if (laChieuTanCong) {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO'));
+            }
+            else if (checkName === 'CHAYBO') {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK'));
+            }
+            else if (checkName === 'BAY') {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('JUMP') || k.includes('FALL'));
+            }
+            else if (checkName === 'DIE') {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('DIE') || k.includes('DEATH'));
+            }
+
+            // Bốc thăm ngẫu nhiên 1 hành động trong rương
+            if (danhSachPhuHop.length > 0) {
+                finalAnimName = danhSachPhuHop[Math.floor(Math.random() * danhSachPhuHop.length)];
+                action = animationsMap[finalAnimName];
+            }
+        }
+
+        // 🛑 BÍ QUYẾT TỐI THƯỢNG: Lưu Tên Thực Tế Để Chống Lặp
+        if (currentAnimName === finalAnimName) return;
+        if (!action) return;
+
+        if (currentAction) currentAction.fadeOut(0.2);
+        currentAction = action;
+        currentAction.reset().fadeIn(0.2).play();
+        currentAnimName = finalAnimName; // 🌟 Lưu tên thật (Vd: NHANROI12) chứ không lưu chữ 'NHANROI' nữa!
+
+        if (laChieuTanCong) {
+            kichHoatKhiencAnimation(currentAction.getClip().duration * 1000);
+        }
+    }
+}
+
+// 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
+function kichHoatKhiencAnimation(thoiGianTheoAnim) {
+    window.dangMuaChieu = true;
+    window.thoiDiemBatDauMua = Date.now();
+
+    let thoiGianKhoa = thoiGianTheoAnim || 1500;
+    if (thoiGianKhoa < 500) thoiGianKhoa = 500;
+    if (thoiGianKhoa > 2000) thoiGianKhoa = 1500;
+
+    if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
+    window.khoaAnimTimeout = setTimeout(() => {
+        window.dangMuaChieu = false;
+    }, thoiGianKhoa);
+}
+// ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
 
 
 
@@ -1956,6 +2102,8 @@ function playIdle() {
     if (idleTimer) clearInterval(idleTimer); playAnim('NHANROI'); 
     idleTimer = setInterval(() => { if (!window.isMoving && !window.isKeyboardMoving) playAnim('NHANROI'); }, 8000); 
 }
+
+
 
 const clock = new THREE.Clock(); let lastSendTime = 0; 
 const bayHud = document.createElement('div');
