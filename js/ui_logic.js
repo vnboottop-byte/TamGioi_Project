@@ -491,25 +491,31 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
         let model = gltf.scene;
         window.inv3D.model = model;
 
+
+
+
         if (gltf.animations && gltf.animations.length > 0) {
             window.inv3D.mixer = new THREE.AnimationMixer(model);
-            window.inv3D.mixer.clipAction(gltf.animations[0]).play();
+            let clipChon = gltf.animations[0];
+            // 🌟 LỌC ANIMATION ĐỨNG IM CHO TÚI ĐỒ
+            for (let clip of gltf.animations) {
+                let ten = clip.name.toUpperCase();
+                if (ten.includes('IDLE') || ten.includes('NHANROI') || ten.includes('WAIT') || ten.includes('STAND')) {
+                    clipChon = clip; break;
+                }
+            }
+            window.inv3D.mixer.clipAction(clipChon).play();
         }
-
-
-
 
         // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO KHUNG 3D TÚI ĐỒ (CỘT PHẢI)
         let targetSize = 16;
         if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 22;
+        else if (loaiDo === 'mount') targetSize = 13; // Thú cưỡi bóp nhỏ lại để ko lòi đuôi/cánh
+        else if (loaiDo === 'model') targetSize = 16;
         
         if (typeof window.canBangModelUI === 'function') {
             window.canBangModelUI(model, targetSize);
         }
-
-
-
-
 
         // 🌟 TẠO HỘP PIVOT BỌC MÔ HÌNH LẠI
         let pivot = new THREE.Group();
