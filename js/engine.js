@@ -1948,7 +1948,7 @@ let idleTimer = null;
 
 
 // ==========================================
-// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V52 - FIX LỖI T-POSE THÚ CƯỠI)
+// 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V53 - BÙ TRỪ MODEL KHÔNG CHÂN)
 // ==========================================
 function playAnim(animName) {
     if (window.isTestingAnimation) return;
@@ -1968,14 +1968,13 @@ function playAnim(animName) {
                 let thoiGianDaQua = Date.now() - (window.thoiDiemBatDauMua || 0);
                 let tgCho = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể") ? 2000 : 1500;
                 if (thoiGianDaQua >= tgCho) window.dangMuaChieu = false;
-                else return; // Vẫn đang trong thời gian múa -> BỎ QUA lệnh
+                else return; 
             }
         } else {
             return;
         }
     }
 
-    // Đồng bộ tên lệnh chuẩn
     let checkName = upName;
     if (checkName === 'IDLE' || checkName === 'WAIT') checkName = 'NHANROI';
     if (checkName === 'WALK' || checkName === 'RUN' || checkName === 'DIBO') checkName = 'CHAYBO';
@@ -1986,9 +1985,7 @@ function playAnim(animName) {
     // 🐎 NHÁNH 1: ĐANG CƯỠI THÚ
     // ==========================================
     if (dangCuoiThu) {
-        // 1.1 XỬ LÝ NGƯỜI CƯỠI Ở TRÊN (window.animationsMapChar)
         if (laHanhDongNguoi) {
-            // Nếu là đánh/chết -> người làm, thú không cần
             if (window.dangMuaChieu && !laChieuTanCong) return;
             if (window.animationsMapChar) {
                 let actionChar = window.animationsMapChar[upName];
@@ -2007,7 +2004,6 @@ function playAnim(animName) {
                 }
             }
         } else {
-            // Khi di chuyển, người cưỡi chỉ được phép ngồi nhàn rỗi
             if (!window.dangMuaChieu && window.animationsMapChar) {
                 let lenhNguoi = 'NHANROI';
                 if (window.currentAnimNameChar !== lenhNguoi) {
@@ -2026,7 +2022,7 @@ function playAnim(animName) {
             }
         }
 
-        // 1.2 🌟 XỬ LÝ CON THÚ BÊN DƯỚI (window.animationsMap) - ĐÂY LÀ ĐOẠN KHÔI PHỤC!
+        // 🌟 XỬ LÝ CON THÚ BÊN DƯỚI
         if (!laHanhDongNguoi && animationsMap) {
             let actionThu = animationsMap[checkName];
             let finalAnimThu = checkName;
@@ -2035,14 +2031,20 @@ function playAnim(animName) {
                 let keysThu = Object.keys(animationsMap);
                 let danhSachPhuHop = [];
                 if (checkName === 'NHANROI') danhSachPhuHop = keysThu.filter(k => k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT'));
-                else if (checkName === 'CHAYBO') danhSachPhuHop = keysThu.filter(k => k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK'));
-                else if (checkName === 'BAY') danhSachPhuHop = keysThu.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('JUMP') || k.includes('RUN')); // Rồng ko có fly thì xài run
-
+                else if (checkName === 'CHAYBO') {
+                    danhSachPhuHop = keysThu.filter(k => k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK'));
+                    // 🌟 BẢN VÁ: THÚ CƯỠI KHÔNG CÓ CHÂN THÌ TÌM ANIMATION BAY ĐỂ ĐẮP VÀO
+                    if (danhSachPhuHop.length === 0) {
+                        danhSachPhuHop = keysThu.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('FLOAT') || k.includes('SWIM'));
+                    }
+                }
+                else if (checkName === 'BAY') danhSachPhuHop = keysThu.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('JUMP') || k.includes('RUN'));
+                
                 if (danhSachPhuHop.length > 0) {
                     finalAnimThu = danhSachPhuHop[Math.floor(Math.random() * danhSachPhuHop.length)];
                     actionThu = animationsMap[finalAnimThu];
                 } else if (keysThu.length > 0) {
-                    finalAnimThu = keysThu[0]; // Bí quá thì bốc đại cái đầu tiên
+                    finalAnimThu = keysThu[0];
                     actionThu = animationsMap[finalAnimThu];
                 }
             }
@@ -2054,8 +2056,7 @@ function playAnim(animName) {
                 currentAnimName = finalAnimThu;
             }
         }
-
-        return; // Dứt điểm nhánh cưỡi thú
+        return; 
     }
 
     // ==========================================
@@ -2064,23 +2065,26 @@ function playAnim(animName) {
     let action = null;
     let finalAnimName = checkName;
 
-    // ƯU TIÊN 1: NẾU TRUYỀN TÊN CHÍNH XÁC (Vd: ATTACK3) -> BỐC THẲNG TAY
     if (animationsMap[upName]) {
         action = animationsMap[upName];
         finalAnimName = upName;
     }
     else {
-        // ƯU TIÊN 2: NẾU LÀ LỆNH CHUNG CHUNG (NHANROI, ATTACK...) -> MỞ RƯƠNG BỐC THĂM!
         let danhSachPhuHop = [];
         let tatCaKey = Object.keys(animationsMap);
 
         if (checkName === 'NHANROI') danhSachPhuHop = tatCaKey.filter(k => k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT'));
         else if (laChieuTanCong) danhSachPhuHop = tatCaKey.filter(k => k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO'));
-        else if (checkName === 'CHAYBO') danhSachPhuHop = tatCaKey.filter(k => k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK'));
+        else if (checkName === 'CHAYBO') {
+            danhSachPhuHop = tatCaKey.filter(k => k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK'));
+            // 🌟 BẢN VÁ: NHÂN VẬT KHÔNG CÓ CHÂN THÌ TÌM ANIMATION BAY ĐỂ ĐẮP VÀO
+            if (danhSachPhuHop.length === 0) {
+                danhSachPhuHop = tatCaKey.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('FLOAT') || k.includes('SWIM'));
+            }
+        }
         else if (checkName === 'BAY') danhSachPhuHop = tatCaKey.filter(k => k.includes('BAY') || k.includes('FLY') || k.includes('JUMP') || k.includes('FALL'));
         else if (checkName === 'DIE') danhSachPhuHop = tatCaKey.filter(k => k.includes('DIE') || k.includes('DEATH'));
 
-        // Bốc thăm ngẫu nhiên 1 hành động trong rương
         if (danhSachPhuHop.length > 0) {
             finalAnimName = danhSachPhuHop[Math.floor(Math.random() * danhSachPhuHop.length)];
             action = animationsMap[finalAnimName];
@@ -2090,14 +2094,13 @@ function playAnim(animName) {
         }
     }
 
-    // 🛑 BÍ QUYẾT TỐI THƯỢNG: Lưu Tên Thực Tế Để Chống Lặp
     if (currentAnimName === finalAnimName) return;
     if (!action) return;
 
     if (currentAction) currentAction.fadeOut(0.2);
     currentAction = action;
     currentAction.reset().fadeIn(0.2).play();
-    currentAnimName = finalAnimName; // 🌟 Lưu tên thật (Vd: NHANROI12) chứ không lưu chữ 'NHANROI' nữa!
+    currentAnimName = finalAnimName; 
 
     if (laChieuTanCong) {
         kichHoatKhiencAnimation(currentAction.getClip().duration * 1000);
