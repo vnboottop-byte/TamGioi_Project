@@ -3213,44 +3213,28 @@ window.xuLyXoaMapChunk = function(mapData) {
 
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM (UNLOAD BOSS CHUNK)
 window.xuLyXoaBossTheoMap = function (mapId) {
-    // Duyệt ngược mảng để xóa an toàn
+    // 🌟 THU HẸP TẦM ĐỐT RÁC
+    let maxDistToKeep = window.isMobile ? 3000 : 6000;
+
     for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
         let quai = window.danhSachQuaiVat[i];
-        
-        // Giả sử Sếp gán mapId cho quai vật lúc sinh ra, hoặc kiểm tra khoảng cách
-        // Ở đây ta xóa những con quái đang ở quá xa (ví dụ: > 110.000m)
         let khoangCach = playerModel.position.distanceTo(quai.mesh.position);
         
-        if (khoangCach > 8000) {
-            // 1. Đuổi việc Worker (Báo cho não AI ngừng tính toán)
+        if (khoangCach > maxDistToKeep) {
             if (window.aiWorkers) {
                 let workerIndex = i % window.MAX_WORKERS;
-                if (window.aiWorkers[workerIndex]) {
-                    window.aiWorkers[workerIndex].postMessage({ type: 'REMOVE_BOSS', id: quai.id });
-                }
+                if (window.aiWorkers[workerIndex]) window.aiWorkers[workerIndex].postMessage({ type: 'REMOVE_BOSS', id: quai.id });
             }
-
-            // 2. Dọn rác thẻ Tên HTML
-            if (quai.tagEl) {
-                quai.tagEl.remove(); // Xóa hẳn thẻ div khỏi DOM
-            }
-
-            // 3. Đốt sạch VRAM Mô hình 3D
+            if (quai.tagEl) quai.tagEl.remove();
             if (quai.mesh) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh);
                 else scene.remove(quai.mesh);
             }
-
-            // 4. Xóa sổ khỏi danh sách hiện tại
             window.danhSachQuaiVat.splice(i, 1);
             console.log(`🔴 Đã dọn dẹp Boss [${quai.id}] ở xa để giải phóng RAM!`);
         }
     }
 };
-
-
-
-
 
 // 4. VÒNG LẶP SINH TỬ (RADAR QUÉT KHOẢNG CÁCH MỖI 2 GIÂY)
 setInterval(() => {
@@ -3262,16 +3246,10 @@ setInterval(() => {
     window.THONG_TIN_CAC_MAP.forEach(mapData => {
         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
         let khoangCach = pPos.distanceTo(mPos);
-
-
-
-
-
-
-        // 🌟 BỘ LỌC BÁN KÍNH TỐI ƯU CHO MOBILE (Chống văng Game OOM)
-        let rLoad = window.isMobile ? 3000 : 10000;
-        let rBoss = window.isMobile ? 1500 : 5000;
-        let rUnload = window.isMobile ? 4500 : 12000; // Cách 1500m so với rLoad để chống giật lag do Load/Unload liên tục
+        // 🌟 ÉP CỰ LY GẦN LẠI: Tránh tải cả nửa vòng Trái Đất!
+        let rLoad = window.isMobile ? 2000 : 4000;    // Cách 4km nạp Đất
+        let rBoss = window.isMobile ? 1500 : 3000;    // Cách 3km nạp Boss
+        let rUnload = window.isMobile ? 3000 : 6000;  // Xa 6km là đốt rác Map
 
         // ==========================================
         // 🟢 TẦNG 1: LOAD ĐẤT ĐAI
