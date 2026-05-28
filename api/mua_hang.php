@@ -80,7 +80,7 @@ try {
     elseif ($item['item_type'] === 'weapon2') $column = "current_weapon2_url"; // 🎯 Đã nhận diện vũ khí phụ!
     elseif ($item['item_type'] === 'model') $column = "current_model_url";
 
-    if ($column != "") {
+   if ($column != "") {
         // A. Cập nhật Model vào nhân vật
         $stmt_eq = $conn->prepare("UPDATE game_characters SET $column = ? WHERE username = ?");
         $stmt_eq->bind_param("ss", $item['model_url'], $username);
@@ -91,23 +91,63 @@ try {
         $stmt_off->bind_param("ss", $username, $item['item_type']);
         $stmt_off->execute();
 
-        // C. Mặc món đồ VỪA MUA vào người (cập nhật ID túi đồ vừa sinh ra ở Bước 6)
+        // C. Mặc món đồ VỪA MUA vào người
         $new_inv_id = $stmt_add_ruong->insert_id;
         $stmt_on = $conn->prepare("UPDATE user_inventory SET is_equipped = 1 WHERE id = ?");
         $stmt_on->bind_param("i", $new_inv_id);
         $stmt_on->execute();
+
+        // 🌟 BẢN VÁ 1: NẾU LÀ SKIN ĐOẠT XÁ (ALL) THÌ ÉP CUSTOM_SCRIPT VÀO NGƯỜI
+        if ($item['item_type'] === 'model' && $item['required_class'] === 'ALL') {
+            $tenFileGoc = basename($item['model_url']); 
+            $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
+            $mangTen = explode('_', $tenKhongDuoi);
+            $tenNhanVat = end($mangTen);
+            $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
+            $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+        } else if ($item['item_type'] === 'model' && $item['required_class'] !== 'ALL') {
+            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
+        }
+
+        // 🌟 BẢN VÁ 2: CẬP NHẬT LẠI MÁU VÀ DAME NGAY TỨC KHẮC
+        $stmt_wp = $conn->prepare("SELECT s.bonus_hp, s.bonus_damage, i.upgrade_level FROM user_inventory i JOIN shop_items s ON i.item_id = s.id WHERE i.username = ? AND i.is_equipped = 1");
+        $stmt_wp->bind_param("s", $username); $stmt_wp->execute();
+        $res_wp = $stmt_wp->get_result();
+        
+        $buff_hp = 0; $buff_dmg = 0;
+        $heSoKiemThe = [1.0, 1.05, 1.12, 1.22, 1.35, 1.50, 1.70, 1.95, 2.25, 2.60, 3.10, 3.70, 4.50, 5.50, 6.80, 8.50];
+        
+        while($wp = $res_wp->fetch_assoc()) {
+            $lvl_wp = (int)$wp['upgrade_level'];
+            $heSoCong = isset($heSoKiemThe[$lvl_wp]) ? $heSoKiemThe[$lvl_wp] : 1.0;
+            $buff_hp += (int)$wp['bonus_hp'] * $heSoCong;
+            $buff_dmg += (int)$wp['bonus_damage'] * $heSoCong;
+        }
+
+        $stmt_user = $conn->prepare("SELECT level FROM game_characters WHERE username = ?");
+        $stmt_user->bind_param("s", $username); $stmt_user->execute();
+        $uData = $stmt_user->get_result()->fetch_assoc();
+        $lvl = (int)$uData['level'];
+
+        $hp_max_moi = 1000 + (($lvl - 1) * 30) + $buff_hp;
+        $damage_moi = 100 + (($lvl - 1) * 3) + $buff_dmg;
+
+        $conn->query("UPDATE game_characters SET hp_max = $hp_max_moi, damage = $damage_moi WHERE username = '$username'");
     }
 
-    // 🌟 CHỐT GIAO DỊCH THÀNH CÔNG
+    // 🌟 CHỐT GIAO DỊCH THÀNH CÔNG VÀ NÉM INFO VỀ CHO CLIENT
     $conn->commit();
     echo json_encode([
         'status' => 'success', 
         'msg' => '🎉 Mua thành công ' . $item['name'] . '!', 
-        'tien_con_lai' => $new_balance
+        'tien_con_lai' => $new_balance,
+        'item_type' => $item['item_type'],
+        'model_url' => $item['model_url'],
+        'new_damage' => isset($damage_moi) ? $damage_moi : null,
+        'new_hp' => isset($hp_max_moi) ? $hp_max_moi : null
     ]);
 
 } catch (Exception $e) {
-    // NẾU CÓ BẤT KỲ LỖI GÌ HOẶC THIẾU TIỀN -> HỦY BỎ MỌI THAO TÁC SQL (Rollback)
     $conn->rollback();
     echo json_encode(['status' => 'error', 'msg' => $e->getMessage()]);
 }
