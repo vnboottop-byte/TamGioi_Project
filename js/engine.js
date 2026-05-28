@@ -3873,9 +3873,10 @@ setInterval(() => {
                             let bossPos = new THREE.Vector3(parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
                             let khoangCach = window.playerModel.position.distanceTo(bossPos);
 
-                            if (khoangCach < 6000) {
-                                console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hồi sinh sau 10 phút!`);
-
+                            // 🌟 KHỚP CỰ LY HỒI SINH
+                            let maxDistRespawn = window.isMobile ? 1500 : 3000;
+                            if (khoangCach < maxDistRespawn) {
+                                console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hồi sinh!`);
                                 if (typeof window.sinhRaQuaiVat === 'function') {
                                     window.sinhRaQuaiVat(
                                         parseFloat(bossServer.pos_x),
@@ -3902,32 +3903,23 @@ setInterval(() => {
         }).catch(err => {
             // Lỗi mạng lặt vặt (rớt mạng vài mili-giây) thì bỏ qua, 10s sau nó tự làm lại
         });
-
 }, 10000); // 10000 ms = Cứ 10 giây chạy 1 lần
-
-
-
 
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
 // =================================================================
-
 if (window.botAutoTimer) clearInterval(window.botAutoTimer); 
-
 window.isAutoAFK = false;
 window.tamQuetMax = 10000;   
 window.botMucTieuId = null;  
 window.botState = 'IDLE';    
-
 // Mặc định cho phái viễn chiến (Đánh xa)
 window.tamXaXungDot = 45; 
 window.tamDungHinh = 40;   
-
 window.toggleAutoTreoMay = function() {
     window.isAutoAFK = !window.isAutoAFK;
     let btn = document.getElementById('btnAutoAFK');
     let txt = document.getElementById('textAuto');
-    
     if (window.isAutoAFK) {
         btn.style.borderColor = '#2ecc71';
         btn.style.boxShadow = '0 0 15px #2ecc71';
@@ -3941,7 +3933,6 @@ window.toggleAutoTreoMay = function() {
         btn.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
         txt.innerText = 'Auto: TẮT';
         txt.style.color = '#fff';
-        
         window.botMucTieuId = null; 
         window.botState = 'IDLE';
         window.isMoving = false; 
@@ -3956,12 +3947,10 @@ window.botAutoTimer = setInterval(() => {
     let nvc = window.playerModel;
     let mangQuai = window.danhSachQuaiVat || []; 
     let quaiTotNhat = null;
-
     // 🌟 BẢN VÁ AAA: NHẬN DIỆN CẬN CHIẾN ĐỂ THU HẸP TẦM ĐÁNH
     let laCanChien = window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe');
     let RANGE_CHASE = laCanChien ? 20 : window.tamXaXungDot;  // 🌟 Thu hẹp: Boss văng 20m là lết theo
     let RANGE_STOP = laCanChien ? 12 : window.tamDungHinh;    // 🌟 Thu hẹp: Chạy vào sát nách 12m mới tung chiêu Lướt
-
     // --- BƯỚC 1: KIỂM TRA MỒI CŨ ---
     if (window.botMucTieuId) {
         quaiTotNhat = mangQuai.find(q => q.id === window.botMucTieuId);
