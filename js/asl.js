@@ -1,6 +1,6 @@
 // ==========================================
 // 👦 HỆ THỐNG KỸ NĂNG: BỘ BA ASL (ACE - SABO - LUFFY)
-// 👑 BẢN V3: FIX KẸT ANIMATION + CHUẨN 10 GIÂY ĐỔI IDLE
+// 👑 BẢN V4: GIỮ KHOẢNG CÁCH 10M + HOẠT ẢNH TỰ LƯỚT RÚT VỀ
 // ==========================================
 
 (function() {
@@ -170,9 +170,7 @@
     // 🌟 AI: RANDOM ATTACK TỪ 1 ĐẾN 5 (CHUẨN 100%)
     function bốcChiêuTấnCôngNgẫuNhiên() {
         const khoChiêu = ['ATTACK1', 'ATTACK2', 'ATTACK3', 'ATTACK4', 'ATTACK5'];
-        let chon = khoChiêu[Math.floor(Math.random() * khoChiêu.length)];
-        console.log("⚔️ Đã bốc trúng chiêu:", chon); // Log ra để Sếp soi xem nó đổi thật không!
-        return chon;
+        return khoChiêu[Math.floor(Math.random() * khoChiêu.length)];
     }
 
     window.tungComboASL = function (phim, isRemote = false) {
@@ -183,7 +181,6 @@
         if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
         choHoiChieu[phim] = bayGio;
 
-        // BÍ QUYẾT 1: KHÓA CHẶT TRẠNG THÁI MÚA CHIÊU CỦA ENGINE GỐC
         window.dangMuaChieu = true;
 
         if (!isRemote) {
@@ -213,55 +210,47 @@
 
         if (targetQuai) {
             const dameChiTiet = { 'Q': 1.0, 'E': 1.2, 'R': 1.5, 'F': 2.0 };
-            window.trangThaiASL.state = 'DASHING'; // Đang lao tới
+            window.trangThaiASL.state = 'DASHING';
             window.trangThaiASL.target = targetQuai;
             window.trangThaiASL.skillKey = phim;
             window.trangThaiASL.dameRatio = dameChiTiet[phim];
             
             if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHAYBO');
         } else {
-            // 🛑 XỬ LÝ ĐÁNH KHÔNG KHÍ 🛑
             window.trangThaiASL.state = 'HITTING'; 
             let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
             
-            // Ép thẳng Engine phải múa chiêu ngẫu nhiên này
-            if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
+            if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAtk);
+            else if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
             
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
             taoVuNoASL(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
 
-            // Bắt buộc sau 1 giây phải trở về tư thế Nhàn Rỗi
             setTimeout(() => { 
                 window.dangMuaChieu = false; 
                 window.trangThaiASL.state = 'IDLE';
                 if(typeof window.playAnim === 'function') window.playAnim('NHANROI');
-            }, 1000);
+            }, 1200);
         }
     };
 
     // ========================================================
-    // 🌟 AI: RANDOM NHÀN RỖI (CHUẨN 10 GIÂY THAY ĐỔI)
+    // 🌟 AI: RANDOM NHÀN RỖI (TRÁO RUỘT TỪ ĐIỂN MỖI 10 GIÂY)
     // ========================================================
     window.vongLapNhanRoiASL = null;
     function batDauAutoNhanRoi() {
-        if (window.vongLapNhanRoiASL) clearInterval(window.vongLapNhanRoiASL); // Xóa vòng lặp cũ chống kẹt
+        if (window.vongLapNhanRoiASL) clearInterval(window.vongLapNhanRoiASL);
         
-        // 🛑 BÍ QUYẾT 2: SET CHUẨN ĐÚNG 10 GIÂY MỘT LẦN!
         window.vongLapNhanRoiASL = setInterval(() => {
             if (window.trangThaiASL.state === 'IDLE' && !window.dangMuaChieu) {
                 const khoNhanRoi = [];
                 for(let i=1; i<=13; i++) khoNhanRoi.push('NHANROI' + i);
-                
                 let tenAnim = khoNhanRoi[Math.floor(Math.random() * khoNhanRoi.length)];
-                console.log("💤 Đang đổi dáng nhàn rỗi sang:", tenAnim);
                 
                 if (window.animationsMap && window.animationsMap[tenAnim]) {
-                    // Đổi ruột
                     window.animationsMap['NHANROI'] = window.animationsMap[tenAnim];
                     if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[tenAnim];
-                    
-                    // 🛑 TRUYỀN THẲNG TÊN THẬT (Vd: NHANROI5) ĐỂ ÉP ENGINE PHẢI THAY ĐỔI HÌNH ẢNH!
                     if (typeof window.playAnim === 'function') window.playAnim(tenAnim);
                 }
             }
@@ -273,7 +262,7 @@
         window.HePhaiHienTai = {
             tenPhai: "Bộ Ba Băng Đảng Nhí ASL",
             khoiTao: function () {
-                console.log("🔥 Biệt Đội ASL: Trị Bệnh Kẹt Hoạt Ảnh Thành Công!");
+                console.log("🔥 Biệt Đội ASL: Bản Cập Nhật Giữ Khoảng Cách 10m!");
                 
                 if (window.playerModel && (!window.MOUNT_URL || window.MOUNT_URL.trim() === "")) {
                     window.playerModel.scale.multiplyScalar(1.6); 
@@ -290,7 +279,6 @@
                     }
                 }
 
-                // Kích hoạt AI 10 giây Random
                 batDauAutoNhanRoi();
 
                 const vuKhiLoader = new THREE.GLTFLoader();
@@ -329,7 +317,7 @@
                     if (t.isDead) { 
                         window.trangThaiASL.state = 'IDLE'; 
                         window.dangMuaChieu = false;
-                        if(typeof window.playAnim === 'function') window.playAnim('NHANROI'); // Boss chết thì đứng nhàn rỗi lại
+                        if(typeof window.playAnim === 'function') window.playAnim('NHANROI');
                         return; 
                     }
                     
@@ -350,42 +338,51 @@
                     dummy.lookAt(nvc.position.clone().add(vecToTarget));
                     nvc.quaternion.slerp(dummy.quaternion, 0.3); 
                     
-                    if (khoangCach > 2.2) {
+                    // 🛑 BÍ QUYẾT 1: PHANH XE CÁCH ĐÚNG 10 MÉT
+                    if (khoangCach > 10.0) {
                         nvc.position.lerp(diemDen, 0.25); 
                         if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
                     } 
                     else {
-                        // 🛑 BÍ QUYẾT 3: KHÓA CỨNG TRẠNG THÁI HITTING, CHỈ BỐC THĂM ĐÚNG 1 LẦN DUY NHẤT RỒI THÔI!
                         window.trangThaiASL.state = 'HITTING';
                         
                         let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
-                        if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
+                        if(typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAtk);
+                        else if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
                         
-                        let banKinhNo = (window.trangThaiASL.skillKey === 'F') ? 15 : 5;
-                        taoVuNoASL(tHit.tamNguc, nvc.up.clone().normalize(), 0xffaa00, banKinhNo);
-                        gaySatThuongASL(tHit.tamNguc, (window.DAME_CUA_TOI || 200) * window.trangThaiASL.dameRatio, banKinhNo);
+                        // 🛑 BÍ QUYẾT 2: DELAY SÁT THƯƠNG 400MS
+                        // Chờ cái bóng của Animation nhào lên 10m chạm mặt Boss mới nổ máu!
+                        setTimeout(() => {
+                            // Nhỡ trong 400ms đó con boss bị thằng khác đánh chết thì thôi
+                            if (!window.trangThaiASL.target || window.trangThaiASL.target.isDead) return;
+                            
+                            let banKinhNo = (window.trangThaiASL.skillKey === 'F') ? 15 : 5;
+                            taoVuNoASL(tHit.tamNguc, nvc.up.clone().normalize(), 0xffaa00, banKinhNo);
+                            gaySatThuongASL(tHit.tamNguc, (window.DAME_CUA_TOI || 200) * window.trangThaiASL.dameRatio, banKinhNo);
+                            
+                            if(window.currentActionChar) {
+                                window.currentActionChar.setEffectiveTimeScale(0.01);
+                                setTimeout(() => { if(window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
+                            }
+                            
+                            let camY = camera.position.y; let camX = camera.position.x;
+                            let shake = setInterval(() => { 
+                                camera.position.y = camY + (Math.random()-0.5) * 1.5; 
+                                camera.position.x = camX + (Math.random()-0.5) * 1.5; 
+                            }, 20);
+                            setTimeout(() => { 
+                                clearInterval(shake); 
+                                camera.position.y = camY; camera.position.x = camX; 
+                            }, 120);
+                        }, 400); // <-- THỜI GIAN BAY CỦA BÓNG TỚI ĐỊCH
                         
-                        if(window.currentActionChar) {
-                            window.currentActionChar.setEffectiveTimeScale(0.01);
-                            setTimeout(() => { if(window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
-                        }
-                        
-                        let camY = camera.position.y; let camX = camera.position.x;
-                        let shake = setInterval(() => { 
-                            camera.position.y = camY + (Math.random()-0.5) * 1.5; 
-                            camera.position.x = camX + (Math.random()-0.5) * 1.5; 
-                        }, 20);
-                        setTimeout(() => { 
-                            clearInterval(shake); 
-                            camera.position.y = camY; camera.position.x = camX; 
-                        }, 120);
-                        
-                        // Đợi đúng 1 giây đánh xong thì giải phóng mặt bằng, ép quay về đứng im
+                        // 🛑 BÍ QUYẾT 3: TĂNG THỜI GIAN KHÓA LÊN 1.2S
+                        // Đủ thời gian cho cái Animation múa xong đập Boss rồi TỰ LÙI VỀ lại 10m
                         setTimeout(() => { 
                             window.dangMuaChieu = false;
                             window.trangThaiASL.state = 'IDLE'; 
                             if(typeof window.playAnim === 'function') window.playAnim('NHANROI');
-                        }, 1000);
+                        }, 1200);
                     }
                 }
 
