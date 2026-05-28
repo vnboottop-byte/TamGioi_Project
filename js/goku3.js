@@ -8,7 +8,8 @@
     const hieuUngGoku = [];
     const danhSachSoBayGK = [];
 
-    const THOI_GIAN_HOI = { 'Q': 2000, 'E': 5000, 'R': 8000, 'F': 18000 };
+    // 🌟 ĐỒNG BỘ THỜI GIAN HỒI CHIÊU CHUẨN PHÁP SƯ / KIZARU
+    const THOI_GIAN_HOI = { 'Q': 1500, 'E': 5000, 'R': 8000, 'F': 15000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     window.tongSoChuNoi_GK = 0;
@@ -271,7 +272,7 @@
             }
         }
 
-        // Q: BẮN 1 QUẢ CẦU
+        // Q: BẮN 1 QUẢ CẦU (Hồi 1.5s - Đánh 1 lần)
         if (phim === 'Q') {
             hackKhoaEngine('ATTACK', 1000);
             let tayPos = window.layViTriTayGoku(nvc, huongMat);
@@ -279,26 +280,32 @@
             cauQ.position.copy(tayPos);
             cauQ.lookAt(mucTieuGoc);
             scene.add(cauQ);
-            kyNangGoku.push({ mesh: cauQ, type: 'CAU_THUONG', speed: 10.0, life: 100, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.5, isRemote: isRemote });
+            
+            // ⚖️ CÂN BẰNG: 1 hit x 0.4 = 0.4
+            kyNangGoku.push({ mesh: cauQ, type: 'CAU_THUONG', speed: 10.0, life: 100, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.4, isRemote: isRemote });
         }
         
-        // E: KAMEHAMEHA 1 GIÂY
+        // E: KAMEHAMEHA 1 GIÂY (Hồi 5s - Multi-hit 6 lần)
         else if (phim === 'E') {
             hackKhoaEngine('ATTACKhold', 1500);
             let tiaE = taoTiaKamehameha(3.0, 0x00ffff); 
             scene.add(tiaE);
-            kyNangGoku.push({ mesh: tiaE, type: 'TIA_KAME', life: 30, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.15, isRemote: isRemote, color: 0x00ffff });
+            
+            // ⚖️ CÂN BẰNG: 6 hit x 0.1 = Tổng 0.6
+            kyNangGoku.push({ mesh: tiaE, type: 'TIA_KAME', life: 30, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.1, isRemote: isRemote, color: 0x00ffff });
         }
 
-        // R: ĐẠI KAMEHAMEHA 2 GIÂY 
+        // R: ĐẠI KAMEHAMEHA 2 GIÂY (Hồi 8s - Multi-hit 12 lần)
         else if (phim === 'R') {
             hackKhoaEngine('ATTACKhold', 2500);
             let tiaR = taoTiaKamehameha(5.0, 0xff0000); 
             scene.add(tiaR);
-            kyNangGoku.push({ mesh: tiaR, type: 'TIA_KAME', life: 60, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.2, isRemote: isRemote, color: 0xff0000 });
+            
+            // ⚖️ CÂN BẰNG: 12 hit x 0.1 = Tổng 1.2
+            kyNangGoku.push({ mesh: tiaR, type: 'TIA_KAME', life: 60, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.1, isRemote: isRemote, color: 0xff0000 });
         }
 
-        // F: QUẢ CẦU KÊNH KHI TẦM NHIỆT (HOMING)
+        // F: QUẢ CẦU KÊNH KHI TẦM NHIỆT (Hồi 15s - Bom Hạt Nhân)
         else if (phim === 'F') {
             hackKhoaEngine('ATTACKhold', 1500); 
             if (window.timeoutGoku_F) clearTimeout(window.timeoutGoku_F);
@@ -315,6 +322,7 @@
                 cauGenki.lookAt(mucTieuGoc);
                 scene.add(cauGenki);
                 
+                // ⚖️ CÂN BẰNG: Tuyệt kỹ tối thượng nổ 1 phát x 2.0 (Sát thương hủy diệt)
                 kyNangGoku.push({ 
                     mesh: cauGenki, 
                     type: 'GENKI_DAMA_TAM_NHIET', 
@@ -322,7 +330,7 @@
                     life: 200, 
                     targetPos: mucTieuGoc.clone(), 
                     targetObj: targetQuaiGlobal, 
-                    damage: dameGoc * 3.0, 
+                    damage: dameGoc * 2.0, 
                     isRemote: isRemote 
                 });
             }, 1000); 
