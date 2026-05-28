@@ -1001,23 +1001,31 @@ window.capNhatAIQuaiVat = function (delta) {
         }
 
         // ========================================================
-        // 🏷️ BẢN VÁ LIVE-RADAR 2D: ÉP BẢNG TÊN HIỆN ĐÚNG TRÊN ĐỈNH ĐẦU
+        // 🏷️ BẢN VÁ LIVE-RADAR 2D: ÉP BẢNG TÊN HIỆN ĐÚNG TRÊN ĐỈNH ĐẦU VÀ ẨN KHI Ở XA
         // ========================================================
         if (quai.tagEl && typeof camera !== 'undefined') {
             const worldPos = new THREE.Vector3();
             quai.mesh.getWorldPosition(worldPos);
             
-            // Đẩy bảng tên lên cao qua đỉnh đầu con Boss dựa vào kích thước hình thể thật
-            let chieuCaoBoss = quai.chieuCaoThuc || 5;
-            let viTriTag = worldPos.clone().add(quai.upVector.clone().multiplyScalar(chieuCaoBoss + 2.0));
-            
-            viTriTag.project(camera);
-            if (viTriTag.z < 1) {
-                quai.tagEl.style.left = `${(viTriTag.x * 0.5 + 0.5) * window.innerWidth}px`;
-                quai.tagEl.style.top = `${(viTriTag.y * -0.5 + 0.5) * window.innerHeight}px`;
-                quai.tagEl.style.display = 'block'; // Bật hiện hình bảng tên chuẩn chỉ
+            // 🌟 CHỐNG NHÌN XUYÊN TÂM TRÁI ĐẤT: Giấu tên nếu Boss cách xa hơn 800m (PC) hoặc 500m (Mobile)
+            let khoangCachDenSep = worldPos.distanceTo(playerModel.position);
+            let tamNhinTen = window.isMobile ? 500 : 800; 
+
+            if (khoangCachDenSep > tamNhinTen) {
+                quai.tagEl.style.display = 'none'; // Ở xa quá thì tàng hình tên đi cho sạch màn hình
             } else {
-                quai.tagEl.style.display = 'none';
+                // Đẩy bảng tên lên cao qua đỉnh đầu con Boss
+                let chieuCaoBoss = quai.chieuCaoThuc || 5;
+                let viTriTag = worldPos.clone().add(quai.upVector.clone().multiplyScalar(chieuCaoBoss + 2.0));
+                
+                viTriTag.project(camera);
+                if (viTriTag.z < 1) {
+                    quai.tagEl.style.left = `${(viTriTag.x * 0.5 + 0.5) * window.innerWidth}px`;
+                    quai.tagEl.style.top = `${(viTriTag.y * -0.5 + 0.5) * window.innerHeight}px`;
+                    quai.tagEl.style.display = 'block'; // Bật hiện hình bảng tên chuẩn chỉ
+                } else {
+                    quai.tagEl.style.display = 'none';
+                }
             }
         }
 
