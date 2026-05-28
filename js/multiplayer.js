@@ -74,10 +74,32 @@ function taoBanSaoNguoiChoi(identity, data) {
     let rp = { status: 'loading', pos: new THREE.Vector3(data.x, data.y, data.z) };
     window.remotePlayers[identity] = rp;
 
+
+
+
     const tag = document.createElement('div');
-    tag.innerHTML = `<div style="color:#00ffff; font-weight:bold; font-size:16px; text-shadow:1px 1px 0 #000;">${identity}</div><div style="width:80px; height:5px; background:rgba(0,0,0,0.5); border:1px solid #fff;"><div class="hp-bar" style="width:${(data.hp/data.maxHp)*100}%; height:100%; background:#e74c3c;"></div></div>`;
+    
+    // 🌟 BẢN VÁ: Thu nhỏ bảng tên người chơi
+    let sizeChu = window.isMobile ? "10px" : "13px";
+    let widthMau = window.isMobile ? "45px" : "65px";
+
+    tag.innerHTML = `
+        <div style="color:#00ffff; font-weight:bold; font-size:${sizeChu}; text-shadow:1px 1px 0 #000; text-align:center; white-space:nowrap;">
+            ${identity}
+        </div>
+        <div style="width:${widthMau}; height:4px; background:rgba(0,0,0,0.5); border:1px solid #fff; margin:2px auto 0 auto; border-radius:2px;">
+            <div class="hp-bar" style="width:${(data.hp/data.maxHp)*100}%; height:100%; background:#e74c3c; transition: width 0.2s;"></div>
+        </div>`;
+        
     tag.style.cssText = 'position:absolute; pointer-events:none; z-index:9; transform:translate(-50%, -100%); display:none;';
     document.body.appendChild(tag);
+
+
+
+
+
+
+
     rp.tag = tag;
 
 
