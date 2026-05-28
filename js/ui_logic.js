@@ -1575,3 +1575,95 @@ window.huyTreoChoDen = function(aucId) {
 
 
 
+// ==========================================
+// 🌟 HÀM THẦN THÁNH: CẬP NHẬT 3D LÊN NGƯỜI NGAY LẬP TỨC KHÔNG CẦN F5 (CHỐNG LỖI TO BẰNG VŨ TRỤ)
+// ==========================================
+window.capNhatTrangBi3DNgayLapTuc = function (itemType, url3D, capDoDap = 0) {
+    if (!window.nhanVatChinh) return;
+
+    if (itemType === 'model' || itemType === 'mount') {
+        // Đối với Skin và Thú cưỡi, hệ thống xương quá phức tạp, bắt buộc phải F5 để tái tạo cấu trúc chuẩn
+        window.hienThongBaoGame("✨ Đang tái tạo hình thể và Tọa kỵ, xin chờ giây lát...", true);
+        setTimeout(() => location.reload(), 1500);
+        return;
+    }
+
+    if (url3D === '') {
+        // Tháo vũ khí
+        if (itemType === 'weapon' && window.vuKhiModel) {
+            window.vuKhiModel.visible = false;
+            if (window.vuKhiModel.parent) window.vuKhiModel.parent.remove(window.vuKhiModel);
+            window.vuKhiModel = null;
+        }
+        if (itemType === 'weapon2' && window.HePhaiHienTai && typeof window.HePhaiHienTai.khoiTao === 'function') {
+            window.WEAPON2_URL = '';
+            if (window.cungTrenTay && window.cungTrenTay.parent) window.cungTrenTay.parent.remove(window.cungTrenTay);
+            if (window.sungXungKich && window.sungXungKich.parent) window.sungXungKich.parent.remove(window.sungXungKich);
+            if (window.truongHoThe && window.truongHoThe.parent) window.truongHoThe.parent.remove(window.truongHoThe);
+        }
+        return;
+    }
+
+    // 🌟 MẶC VŨ KHÍ CHÍNH (KIẾM, GẬY...)
+    if (itemType === 'weapon') {
+        window.WEAPON_URL = url3D;
+        window.WEAPON_LEVEL = capDoDap;
+
+        if (window.vuKhiModel && window.vuKhiModel.parent) {
+            window.vuKhiModel.parent.remove(window.vuKhiModel);
+            if (typeof window.donRac3D === 'function') window.donRac3D(window.vuKhiModel);
+        }
+
+        if (typeof window.taiHoacNhanBanAsset === 'function') {
+            window.taiHoacNhanBanAsset(url3D, (vuKhi) => {
+                window.vuKhiModel = vuKhi;
+
+                // 🌟 THUẬT TOÁN ĐO KÍCH THƯỚC CHỐNG LỖI TO BẰNG VŨ TRỤ
+                vuKhi.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(vuKhi);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z);
+
+                // Thu nhỏ vũ khí về kích thước 1.2 mét chuẩn
+                if (maxDim > 0.05) {
+                    let tyLe = 1.2 / maxDim;
+                    vuKhi.scale.set(tyLe, tyLe, tyLe);
+                }
+
+                let tayCam = null;
+                window.nhanVatChinh.traverse(c => {
+                    if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND_L'))) {
+                        tayCam = c;
+                    }
+                });
+
+                if (tayCam) {
+                    tayCam.add(vuKhi);
+                    vuKhi.position.set(0, 0, 0);
+                    vuKhi.rotation.set(0, 0, 0);
+                } else {
+                    window.nhanVatChinh.add(vuKhi);
+                    vuKhi.position.set(1, 1, 0);
+                }
+
+                if (capDoDap > 0 && typeof window.bocHaoQuang3D === 'function') {
+                    window.bocHaoQuang3D(vuKhi, capDoDap);
+                }
+            });
+        }
+    }
+    // 🌟 MẶC VŨ KHÍ PHỤ (CUNG, SÚNG, TRƯỢNG...)
+    else if (itemType === 'weapon2') {
+        window.WEAPON2_URL = url3D;
+
+        // Dọn vũ khí 2 cũ đang cầm
+        if (window.cungTrenTay && window.cungTrenTay.parent) window.cungTrenTay.parent.remove(window.cungTrenTay);
+        if (window.sungXungKich && window.sungXungKich.parent) window.sungXungKich.parent.remove(window.sungXungKich);
+        if (window.truongHoThe && window.truongHoThe.parent) window.truongHoThe.parent.remove(window.truongHoThe);
+
+        // Gọi lại hàm khởi tạo của Hệ Phái hiện tại để nó tự động load và nắn bóp vũ khí 2 mới
+        if (window.HePhaiHienTai && typeof window.HePhaiHienTai.khoiTao === 'function') {
+            window.HePhaiHienTai.khoiTao();
+        }
+    }
+};
