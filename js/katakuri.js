@@ -230,7 +230,7 @@
                 let pos = viTriGoc.clone().add(upVector.clone().multiplyScalar(5)); 
                 
                 // 🛑 TỐI ƯU Q: Đẩy rộng nách đạn ra xa gấp đôi (4 mét thay vì 1.5 mét) để thông thoáng camera
-                let lechNgang = rightVector.clone().multiplyScalar(i === 0 ? -4.0 : 4.0); 
+                let lechNgang = rightVector.clone().multiplyScalar(i === 0 ? -15.0 : 15.0); 
                 pos.add(lechNgang);
                 
                 tay.position.copy(pos); tay.up.copy(upVector); tay.lookAt(mucTieuGoc); scene.add(tay);
