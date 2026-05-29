@@ -351,38 +351,70 @@
 
     setInterval(window.updateCombatZoro, 30);
 
-    // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
-    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
 
+
+
+
+
+// ==========================================
+    // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
+    // ==========================================
+    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+        
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Rút xương Blender thành công!");
+                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback!");
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
+                    
+                    // 🌟 BIẾN CẢM BIẾN NHẬN DIỆN HOẠT ẢNH ĐỘC LẬP
+                    let coBay = false;
+                    let coChay = false;
+                    let animBay = null;
+                    let animChay = null;
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
+                        
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-
+                        
+                        // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
+                        if (k.includes('BAY') || k.includes('FLY')) {
+                            coBay = true;
+                            animBay = window.animationsMap[key];
+                            window.animationsMap['BAY'] = animBay;
+                        }
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) {
-                            window.animationsMap['CHAYBO'] = window.animationsMap[key];
-                            window.animationsMap['BAY'] = window.animationsMap[key];
-                            window.animationsMap['FLY'] = window.animationsMap[key];
+                            coChay = true;
+                            animChay = window.animationsMap[key];
+                            window.animationsMap['CHAYBO'] = animChay;
                         }
                     }
 
+                    // 🌟 BÙ TRỪ THÔNG MINH (CHỐNG GHI ĐÈ XÓA MẤT ANIMATION BAY)
+                    if (coChay && !coBay) {
+                        window.animationsMap['BAY'] = animChay;
+                        window.animationsMap['FLY'] = animChay;
+                    }
+                    if (coBay && !coChay) {
+                        window.animationsMap['CHAYBO'] = animBay;
+                        window.animationsMap['RUN'] = animBay;
+                    }
+
+                    // Set Nhàn rỗi mặc định
                     if (window.KHO_ANIM_NHANROI.length === 0) window.KHO_ANIM_NHANROI.push('NHANROI');
                     let defaultIdle = window.KHO_ANIM_NHANROI[0];
                     window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
                     if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
                 }
 
+                // Vòng lặp đổi dáng đứng Nhàn rỗi
                 if (window.vongLapNhanRoiZR) clearInterval(window.vongLapNhanRoiZR);
                 window.vongLapNhanRoiZR = setInterval(() => {
                     if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI.length > 0) {
