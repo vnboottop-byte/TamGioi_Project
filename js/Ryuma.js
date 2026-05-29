@@ -161,7 +161,7 @@
                 const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim;
-
+                
                 // 🌟 THÔNG SỐ VÀNG CỦA SẾP (TUYỆT ĐỐI KHÔNG ĐỔI)
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 v.rotation.set(0, 0, 0);
@@ -190,7 +190,7 @@
 
         if (isRemote === false) {
             let bayGio = Date.now();
-
+            
             // 🛡️ BẢN VÁ TỐI THƯỢNG: LÁ CHẮN CHỐNG SPAM GÂY GIẬT TUNG NGƯỜI
             // Khóa mõm Auto-Attack hoặc đè phím, ép phải cách nhau 800ms mới được bốc thăm chiêu mới!
             if (bayGio - window.thoiDiemChemCuoi_ZR < 800) return;
@@ -292,10 +292,10 @@
             }
 
             // 🌟 THÔNG SỐ VÀNG CỦA SẾP
-            if (phim === 'Q') phongKiemQuang(2, 1.0, 35, 'Q');
-            else if (phim === 'E') phongKiemQuang(4, 0.6, 40, 'E');
-            else if (phim === 'R') phongKiemQuang(6, 0.5, 50, 'R');
-            else if (phim === 'F') phongKiemQuang(8, 0.5, 70, 'F');
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 35, 'Q');
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 40, 'E');
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 50, 'R');
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 70, 'F');
 
         }, 300);
     };
@@ -306,7 +306,7 @@
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
-
+                 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
                     s.life = 0;
@@ -351,12 +351,7 @@
 
     setInterval(window.updateCombatZoro, 30);
 
-
-
-
-
-
-// ==========================================
+  // ==========================================
     // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
@@ -385,7 +380,7 @@
                         }
                         
                         // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
-                        if (k.includes('BAY') || k.includes('FLY')) {
+                        if (k.includes('BAY') || k.includes('FLY') || k.includes('JUMP')) {
                             coBay = true;
                             animBay = window.animationsMap[key];
                             window.animationsMap['BAY'] = animBay;
