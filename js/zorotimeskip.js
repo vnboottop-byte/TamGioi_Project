@@ -260,6 +260,13 @@
                         
                         const kq = taoKiemQuangFile(kichCo);
                         kq.position.copy(nòngGoc);
+
+
+
+                        kq.position.add(huongMat.clone().multiplyScalar(1.5)); // Đẩy ra trước 2.5 mét
+
+
+
                         kq.up.copy(upVector);
 
                         let doLan = (soNhatChem > 1) ? 3.0 : 0;
