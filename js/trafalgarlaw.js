@@ -241,8 +241,8 @@
 
             nvc.traverse(c => {
                 if (c.isBone) {
-                    if (c.name === 'Bone002_0184') xuongTayPhai = c;
-                    if (c.name === 'Bone006_0188') xuongTayTrai = c;
+                    if (c.name === 'weapon_03_joint_050') xuongTayPhai = c;
+                    if (c.name === 'weapon_02_joint_040') xuongTayTrai = c;
                 }
             });
 
