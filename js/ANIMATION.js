@@ -24,9 +24,20 @@ const DOI_TEN = {
     22: "ATTACK",
     23: "ATTACK",
     24: "ATTACK",
-    17: "IDLE",       
-    15: "DIE",        
-    1:  "ATTACK",     
+    25: "ATTACK",
+    26: "ATTACK",
+    27: "ATTACK",
+    28: "ATTACK",
+    29: "ATTACK",
+    30: "ATTACK",
+    31: "ATTACK",
+    32: "ATTACK",
+    33: "ATTACK",
+    34: "ATTACK",
+    35: "ATTACK",
+    36: "IDLE",       
+    37: "DIE",        
+    38: "ATTACK",     
      
 };
 const DANH_SACH_XOA = [
