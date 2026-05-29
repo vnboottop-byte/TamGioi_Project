@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: TRÁI ÁC QUỶ OPE OPE / KIẾM KHÁCH (BẢN FINAL)
-// 👑 CÔNG NGHỆ: FIX ĐỨNG GIẬT GIẬT + ĐÚC 6 LOẠI KIẾM QUANG CHỐNG CRASH
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH (MASTER FILE - BẢN FINAL)
+// 👑 CÔNG NGHỆ: LÁ CHẮN CHỐNG SPAM GÂY GIẬT + BẢO TỒN VRAM + THÔNG SỐ VÀNG CỦA SẾP
 // ==========================================
 
 (function () {
@@ -26,7 +26,6 @@
         danhSachSoBayZR.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    // 📡 RADAR KHÓA MỤC TIÊU 
     window.layMucTieuGanNhatZR = function (viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
@@ -136,12 +135,11 @@
     }
 
     // ==========================================
-    // 🌟 ĐÚC 6 LOẠI KIẾM QUANG: BẢO TỒN 100% VRAM (CHỐNG CRASH)
+    // 🌟 ĐÚC 6 LOẠI KIẾM QUANG: BẢO TỒN 100% VRAM
     // ==========================================
     function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
 
-        // 🎲 Bốc thăm ngẫu nhiên 1 trong 6 thanh kiếm quang
         let soNgauNhien = Math.floor(Math.random() * 6) + 1;
         let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb';
 
@@ -149,8 +147,6 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
 
                 v.traverse(c => {
-                    // 🛑 BẢO TOÀN VRAM: KHÔNG LÀM GÌ CẢ NGOÀI VIỆC BẬT TRANSPARENT!
-                    // Không Clone Geometry, không Clone Material, không ép Emissive bậy bạ!
                     if (c.isMesh && c.material) {
                         if (Array.isArray(c.material)) {
                             c.material.forEach(m => m.transparent = true);
@@ -165,6 +161,8 @@
                 const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim;
+
+                // 🌟 THÔNG SỐ VÀNG CỦA SẾP (TUYỆT ĐỐI KHÔNG ĐỔI)
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 v.rotation.set(0, 0, 0);
                 group.add(v);
@@ -179,8 +177,10 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO CÓ CHÉM XÉO CHỮ X
+    // 🏹 HÀM XẢ COMBO 
     // ==========================================
+    window.thoiDiemChemCuoi_ZR = window.thoiDiemChemCuoi_ZR || 0;
+
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
@@ -189,9 +189,15 @@
         if (!nvc) return;
 
         if (isRemote === false) {
+            let bayGio = Date.now();
+
+            // 🛡️ BẢN VÁ TỐI THƯỢNG: LÁ CHẮN CHỐNG SPAM GÂY GIẬT TUNG NGƯỜI
+            // Khóa mõm Auto-Attack hoặc đè phím, ép phải cách nhau 800ms mới được bốc thăm chiêu mới!
+            if (bayGio - window.thoiDiemChemCuoi_ZR < 800) return;
+            window.thoiDiemChemCuoi_ZR = bayGio;
+
             window.dangMuaChieu = true;
-            // 🌟 FIX ĐỨNG GIẬT GIẬT: Xóa trí nhớ Engine để ép nó múa lại từ đầu dù bốc trúng chiêu cũ!
-            window.currentAnimName = '';
+            window.currentAnimName = ''; // An tâm xóa trí nhớ vì đã có khiên 800ms bảo vệ
 
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
@@ -253,9 +259,7 @@
                         const kq = taoKiemQuangFile(kichCo);
                         kq.position.copy(nòngGoc);
 
-                        // 🌟 FIX LỖI SKILL MỌC SAU LƯNG: Đẩy kiếm ra phía trước mặt Sếp 2.5 mét!
                         kq.position.add(huongMat.clone().multiplyScalar(2.5));
-
                         kq.up.copy(upVector);
 
                         let doLan = (soNhatChem > 1) ? 3.0 : 0;
@@ -287,31 +291,21 @@
                 }
             }
 
-            // Q = 1 Chém ngang 
+            // 🌟 THÔNG SỐ VÀNG CỦA SẾP
             if (phim === 'Q') phongKiemQuang(1, 1.0, 35, 'Q');
-            // E = 2 Chém xéo chữ X
             else if (phim === 'E') phongKiemQuang(2, 0.6, 40, 'E');
-            // R = 3 Chém dọc + xéo
             else if (phim === 'R') phongKiemQuang(3, 0.5, 50, 'R');
-            // F = 4 Chém ngôi sao
             else if (phim === 'F') phongKiemQuang(4, 0.5, 70, 'F');
 
         }, 300);
     };
 
-    // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU CHỐNG LAG
-    // ==========================================
     window.updateCombatZoro = function () {
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i]; s.life--;
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
-
-
-                s.mesh.rotateZ(0.05);
-                 
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
@@ -320,15 +314,12 @@
             }
 
             if (s.life <= 0) {
-                // 🛑 LÁ CHẮN TỐI CAO BẢO VỆ VRAM: Tuyệt đối không giao cho hàm donRac3D tiêu hủy 
-                // Chỉ tháo nó ra khỏi màn hình. Trình dọn rác của trình duyệt sẽ tự lo phần còn lại.
                 if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
                 if (typeof scene !== 'undefined') scene.remove(s.mesh);
                 kyNangZoro.splice(i, 1);
             }
         }
 
-        // Tàn dư vụ nổ hạt xanh
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
@@ -343,7 +334,6 @@
             h.system.material.opacity = h.life / 25;
 
             if (h.life <= 0) {
-                // Hạt nổ tạo mới hoàn toàn nên có thể dùng donRac3D
                 if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
                 hieuUngZoro.splice(i, 1);
             }
@@ -361,7 +351,9 @@
 
     setInterval(window.updateCombatZoro, 30);
 
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('zoro') || window.SCRIPT_PHAI_CUA_TOI.includes('law')) {
+    // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
+    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
