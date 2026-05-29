@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V4)
-// 👑 CÔNG NGHỆ: FIX LỖI CRASH VRAM + FIX LỖI TỌA ĐỘ MỤC TIÊU
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V4 - BỌC THÉP VRAM)
+// 👑 CÔNG NGHỆ: PHÓNG KIEMQUANG.glb + TỰ DỌN RÁC AN TOÀN CHỐNG CRASH
 // ==========================================
 
 (function () {
@@ -121,8 +121,8 @@
         if (!window.textureKiemKhieZR) {
             let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
             let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');   
-            gradient.addColorStop(0.3, 'rgba(46, 204, 113, 0.9)'); 
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');   // Lõi trắng sắc bén
+            gradient.addColorStop(0.3, 'rgba(46, 204, 113, 0.9)'); // Viền xanh lá lục bảo
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
             window.textureKiemKhieZR = new THREE.CanvasTexture(canvas);
@@ -137,8 +137,8 @@
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 }); 
     }
 
-    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY 
-    window.matKiemQuangCache = null; // 🛑 Kho chứa vật liệu tự chế
+    // 🌟 ĐÚC KIẾM QUANG (DÙNG CHUNG VẬT LIỆU CHỐNG TRÀN VRAM)
+    window.matKiemQuangShared = null;
     function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
@@ -147,22 +147,23 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh) {
-                        // 🛑 TỐI ƯU VRAM TUYỆT ĐỐI: Không cho clone Geometry, chỉ chia sẻ dùng chung 1 loại Material Haki Xanh
-                        if (!window.matKiemQuangCache && c.material) {
-                            window.matKiemQuangCache = Array.isArray(c.material) ? c.material[0].clone() : c.material.clone();
-                            window.matKiemQuangCache.transparent = true;
-                            window.matKiemQuangCache.emissive = new THREE.Color(0x2ecc71);
-                            window.matKiemQuangCache.emissiveIntensity = 1.2;
+                        // 🛑 TỐI ƯU VRAM: Tất cả kiếm quang dùng chung 1 lớp Vật liệu (Material) duy nhất
+                        if (!window.matKiemQuangShared && c.material) {
+                            window.matKiemQuangShared = c.material.clone();
+                            window.matKiemQuangShared.transparent = true;
+                            window.matKiemQuangShared.emissive = new THREE.Color(0x2ecc71); 
+                            window.matKiemQuangShared.emissiveIntensity = 1.2;
+                            window.matKiemQuangShared.needsUpdate = true;
                         }
-                        if (window.matKiemQuangCache) {
-                            c.material = window.matKiemQuangCache;
+                        if (window.matKiemQuangShared) {
+                            c.material = window.matKiemQuangShared;
                         }
                     }
                 });
                 
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
-                const size = box.getSize(new THREE.Vector3());
+                const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
@@ -174,7 +175,7 @@
         return group;
     }
 
-    // 🌟 BỐC THĂM HOẠT ẢNH CHÉM NGẪU NHIÊN
+    // 🌟 BỐC THĂM HOẠT ẢNH CHÉM NGẪU NHIÊN KIỂU ASL
     function bocAnimChemNgauNhien() {
         if (window.KHO_ANIM_TANCONG.length === 0) return 'ATTACK1';
         return window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
@@ -300,9 +301,10 @@
             }
 
             if (s.life <= 0) {
-                // 🛑 BẢN VÁ CRASH VRAM: KHÔNG BAO GIỜ GỌI donRac3D ĐỂ ĐỐT PHÁP BẢO DÙNG CHUNG! CHỈ GỠ KHỎI SCENE!
+                // 🛑 BẢN VÁ CRASH VRAM TUYỆT ĐỐI: KHÔNG dùng donRac3D, chỉ tháo gỡ khỏi Scene
+                // Bởi vì Geometry và Material của thanh kiếm quang đã được đưa vào kho dùng chung!
                 if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                scene.remove(s.mesh);
+                if (typeof scene !== 'undefined') scene.remove(s.mesh);
                 kyNangZoro.splice(i, 1);
             }
         }
@@ -321,8 +323,12 @@
             h.system.material.opacity = h.life / 25;
 
             if (h.life <= 0) {
-                // Hạt nổ Particle được tạo riêng lẻ nên có quyền gọi donRac3D
-                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                // 🛑 BẢN VÁ CRASH VRAM: Tự phân hủy rác (Hạt nổ) một cách thủ công, từ chối giao cho donRac3D
+                if (h.system.parent) h.system.parent.remove(h.system);
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
+                // Tuyệt đối không dispose cái window.textureKiemKhieZR dùng chung!
                 hieuUngZoro.splice(i, 1);
             }
         }
