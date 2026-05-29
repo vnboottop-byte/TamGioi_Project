@@ -292,10 +292,10 @@
             }
 
             // 🌟 THÔNG SỐ VÀNG CỦA SẾP
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 35, 'Q');
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 40, 'E');
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 50, 'R');
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 70, 'F');
+            if (phim === 'Q') phongKiemQuang(2, 1.0, 35, 'Q');
+            else if (phim === 'E') phongKiemQuang(4, 0.6, 40, 'E');
+            else if (phim === 'R') phongKiemQuang(6, 0.5, 50, 'R');
+            else if (phim === 'F') phongKiemQuang(8, 0.5, 70, 'F');
 
         }, 300);
     };
