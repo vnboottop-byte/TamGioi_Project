@@ -385,7 +385,7 @@
                         }
                         
                         // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
-                        if (k.includes('BAY') || k.includes('FLY') || k.includes('JUMP')) {
+                        if (k.includes('BAY') || k.includes('FLY') || k.includes('CHAYBO')) {
                             coBay = true;
                             animBay = window.animationsMap[key];
                             window.animationsMap['BAY'] = animBay;
