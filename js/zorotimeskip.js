@@ -442,7 +442,7 @@
                         }
                     }
                 }, 12000);
-            }
+            },
             tungChieu: window.tungComboZoro,
             capNhat: function () { }
         };
