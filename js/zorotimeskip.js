@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V4 - BỌC THÉP VRAM)
-// 👑 CÔNG NGHỆ: PHÓNG KIEMQUANG.glb + TỰ DỌN RÁC AN TOÀN CHỐNG CRASH
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V5 - BỌC THÉP VRAM)
+// 👑 CÔNG NGHỆ: FIX TẬN GỐC CRASH WEBGL + CHÉM 1-2-3-4 NHỊP TỪ XƯƠNG TAY
 // ==========================================
 
 (function () {
@@ -8,7 +8,7 @@
     const hieuUngZoro = [];
     const danhSachSoBayZR = [];
 
-    // Kho lưu trữ hoạt ảnh quét tự động (Từ 26 chiêu múa)
+    // Kho lưu trữ hoạt ảnh quét tự động
     window.KHO_ANIM_NHANROI = [];
     window.KHO_ANIM_TANCONG = [];
 
@@ -137,8 +137,7 @@
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 }); 
     }
 
-    // 🌟 ĐÚC KIẾM QUANG (DÙNG CHUNG VẬT LIỆU CHỐNG TRÀN VRAM)
-    window.matKiemQuangShared = null;
+    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY TU TIÊN (CHỐNG CRASH)
     function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
@@ -146,17 +145,15 @@
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
-                    if (c.isMesh) {
-                        // 🛑 TỐI ƯU VRAM: Tất cả kiếm quang dùng chung 1 lớp Vật liệu (Material) duy nhất
-                        if (!window.matKiemQuangShared && c.material) {
-                            window.matKiemQuangShared = c.material.clone();
-                            window.matKiemQuangShared.transparent = true;
-                            window.matKiemQuangShared.emissive = new THREE.Color(0x2ecc71); 
-                            window.matKiemQuangShared.emissiveIntensity = 1.2;
-                            window.matKiemQuangShared.needsUpdate = true;
-                        }
-                        if (window.matKiemQuangShared) {
-                            c.material = window.matKiemQuangShared;
+                    // 🛑 CHÌA KHÓA BẢO TỒN VRAM: Không clone Material, chỉ đổi màu hợp lệ!
+                    if (c.isMesh && c.material) {
+                        c.material.transparent = true;
+                        // Kiểm tra nếu material có hỗ trợ emissive (Standard/Phong) thì mới set
+                        if (c.material.emissive) {
+                            c.material.emissive.setHex(0x2ecc71); // Haki xanh lá phát sáng
+                            c.material.emissiveIntensity = 1.2;
+                        } else if (c.material.color) {
+                            c.material.color.setHex(0x2ecc71); // Nếu là Basic Material
                         }
                     }
                 });
@@ -168,6 +165,7 @@
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 
+                // Bẻ kiếm quang nằm ngang chĩa tới trước giống hệ Tu Tiên
                 v.rotation.x = Math.PI / 2; 
                 group.add(v);
             });
@@ -175,14 +173,14 @@
         return group;
     }
 
-    // 🌟 BỐC THĂM HOẠT ẢNH CHÉM NGẪU NHIÊN KIỂU ASL
+    // 🌟 BỐC THĂM HOẠT ẢNH CHÉM NGẪU NHIÊN 
     function bocAnimChemNgauNhien() {
         if (window.KHO_ANIM_TANCONG.length === 0) return 'ATTACK1';
         return window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO ZORO
+    // 🏹 HÀM XẢ COMBO ZORO (ĐÃ CHỈNH NHỊP 1-2-3-4)
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -191,7 +189,7 @@
         }
         if (!nvc) return;
 
-        // Bỏ biến Cooldown ở đây đi, controller.js đã khóa nút bên ngoài rồi. Vào được đây là quất luôn!
+        // Xả chiêu lập tức (Bộ đếm Cooldown đã được controller.js ngoài game quản lý)
         if (isRemote === false) {
             window.dangMuaChieu = true;
             let randomAttackClip = bocAnimChemNgauNhien(); 
@@ -211,7 +209,7 @@
             viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
             let targetRadar = window.layMucTieuGanNhatZR(viTriGocToTam);
             
-            // 🛑 BẢN VÁ LỖI TARGET: Lấy chính xác toạ độ ngực của đối tượng radar
+            // Lấy chính xác toạ độ ngực của đối tượng radar
             if (targetRadar && targetRadar.mesh) {
                 let hit = window.layHitbox(targetRadar.mesh);
                 mucTieu = hit.tamNguc.clone();
@@ -230,12 +228,13 @@
 
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // ⏳ TRỄ 300MS CHỜ VUNG TAY 
+        // ⏳ TRỄ 300MS CHỜ VUNG TAY TẠO LỰC CHÉM
         setTimeout(() => {
             let tayPhaiPos = viTriGocToTam.clone();
             let tayTraiPos = viTriGocToTam.clone();
             let xuongTayPhai = null; let xuongTayTrai = null;
 
+            // 🧠 TRUY VẾT ĐÍCH DANH 2 XƯƠNG CẦM KIẾM BLENDER CỦA SẾP
             nvc.traverse(c => {
                 if (c.isBone) {
                     if (c.name === 'Bone002_0184') xuongTayPhai = c;
@@ -243,20 +242,25 @@
                 }
             });
 
+            // Lấy tọa độ không gian thật từ xương tay nếu có
             if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
             else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
 
             if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
             else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
 
+            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP (Q=1, E=2, R=3, F=4)
             function phongKiemQuang(soNhatChem, heSoDame, kichCo) {
                 for (let i = 0; i < soNhatChem; i++) {
                     setTimeout(() => {
+                        // Chém luân phiên Tay Phải -> Tay Trái
                         let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
+                        
                         const kq = taoKiemQuangFile(kichCo);
                         kq.position.copy(nòngGoc);
                         kq.up.copy(upVector);
 
+                        // Rải rác điểm rơi ra 1 xíu để đi thành chùm
                         let doLan = (soNhatChem > 1) ? 3.0 : 0;
                         let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, 0));
                         
@@ -264,21 +268,21 @@
                         scene.add(kq);
 
                         kyNangZoro.push({ 
-                            mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
+                            mesh: kq, type: 'BAY_THANG', speed: 10.0, life: 80, 
                             targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote 
                         });
-                    }, i * 150); 
+                    }, i * 150); // Khoảng cách 150ms mỗi nhát chém
                 }
             }
 
             // Q = 1 Chém
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 3.5);
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 3.0);
             // E = 2 Chém
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 4.0);
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 3.5);
             // R = 3 Chém
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 5.0);
-            // F = 4 Chém 
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 7.0); 
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 4.0);
+            // F = 4 Chém (Múa 4 đường)
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 5.0); 
 
         }, 300);
     };
@@ -292,23 +296,24 @@
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
+                // Cho kiếm quang xoay như mũi khoan
                 s.mesh.rotateZ(0.2);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
+                    taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 8);
                     s.life = 0;
                 }
             }
 
             if (s.life <= 0) {
-                // 🛑 BẢN VÁ CRASH VRAM TUYỆT ĐỐI: KHÔNG dùng donRac3D, chỉ tháo gỡ khỏi Scene
-                // Bởi vì Geometry và Material của thanh kiếm quang đã được đưa vào kho dùng chung!
+                // 🛑 BẢN VÁ CRASH VRAM TUYỆT ĐỐI: CHỈ GỠ KHỎI SCENE, KHÔNG DÙNG donRac3D
                 if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
                 if (typeof scene !== 'undefined') scene.remove(s.mesh);
                 kyNangZoro.splice(i, 1);
             }
         }
 
+        // Tàn dư vụ nổ (Hạt Haki xanh)
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
@@ -317,18 +322,14 @@
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4; 
+                h.velocities[j].y -= 0.4; // Trọng lực hút rơi xuống đất
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
 
             if (h.life <= 0) {
-                // 🛑 BẢN VÁ CRASH VRAM: Tự phân hủy rác (Hạt nổ) một cách thủ công, từ chối giao cho donRac3D
-                if (h.system.parent) h.system.parent.remove(h.system);
-                if (typeof scene !== 'undefined') scene.remove(h.system);
-                if (h.system.geometry) h.system.geometry.dispose();
-                if (h.system.material) h.system.material.dispose();
-                // Tuyệt đối không dispose cái window.textureKiemKhieZR dùng chung!
+                // Hạt nổ tạo mới hoàn toàn nên có thể dùng donRac3D
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
                 hieuUngZoro.splice(i, 1);
             }
         }
@@ -362,6 +363,7 @@
                         let k = key.toUpperCase();
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
+                            // Cẩn thận đừng nhét CHET vào lúc random đánh
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
                         
