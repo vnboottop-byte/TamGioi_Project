@@ -375,6 +375,7 @@
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('zoro')) {
         window.HePhaiHienTai = {
             tenPhai: "Kiếm Khách Zoro",
+
             khoiTao: function () {
                 console.log("⚔️ Tam Kiếm Phái Thức Tỉnh! Rút xương Blender thành công!");
 
@@ -382,26 +383,54 @@
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
 
+                    // 🌟 BIẾN CẢM BIẾN NHẬN DIỆN HOẠT ẢNH ĐỘC LẬP
+                    let coBay = false;
+                    let coChay = false;
+                    let animBay = null;
+                    let animChay = null;
+
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
+
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-                        
+
+                        // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
+                        if (k.includes('BAY') || k.includes('FLY') || k.includes('JUMP')) {
+                            coBay = true;
+                            animBay = window.animationsMap[key];
+                            window.animationsMap['BAY'] = animBay;
+                        }
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) {
-                            window.animationsMap['CHAYBO'] = window.animationsMap[key];
-                            window.animationsMap['BAY'] = window.animationsMap[key];
-                            window.animationsMap['FLY'] = window.animationsMap[key];
+                            coChay = true;
+                            animChay = window.animationsMap[key];
+                            window.animationsMap['CHAYBO'] = animChay;
                         }
                     }
 
+                    // 🌟 BÙ TRỪ THÔNG MINH (CHỐNG GHI ĐÈ XÓA MẤT ANIMATION CỦA MODEL KHÁC)
+                    // Nếu Model có Chạy nhưng không có Bay (Vd: Người bình thường) -> Lấy Chạy đắp vào Bay
+                    if (coChay && !coBay) {
+                        window.animationsMap['BAY'] = animChay;
+                        window.animationsMap['FLY'] = animChay;
+                    }
+                    // Nếu Model có Bay nhưng không có Chạy (Vd: Rồng, Cá, Ma) -> Lấy Bay đắp vào Chạy
+                    if (coBay && !coChay) {
+                        window.animationsMap['CHAYBO'] = animBay;
+                        window.animationsMap['RUN'] = animBay;
+                    }
+                    // TRƯỜNG HỢP CÓ CẢ 2: KHOẢNG MÃ NÀY SẼ KHÔNG CHẠY, BẢO TOÀN 100% HOẠT ẢNH GỐC CỦA SẾP!
+
+                    // Set Nhàn rỗi mặc định
                     if (window.KHO_ANIM_NHANROI.length === 0) window.KHO_ANIM_NHANROI.push('NHANROI');
                     let defaultIdle = window.KHO_ANIM_NHANROI[0];
                     window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
                     if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
                 }
 
+                // Vòng lặp đổi dáng đứng Nhàn rỗi
                 if (window.vongLapNhanRoiZR) clearInterval(window.vongLapNhanRoiZR);
                 window.vongLapNhanRoiZR = setInterval(() => {
                     if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI.length > 0) {
@@ -413,7 +442,7 @@
                         }
                     }
                 }, 12000);
-            },
+            }
             tungChieu: window.tungComboZoro,
             capNhat: function () { }
         };
