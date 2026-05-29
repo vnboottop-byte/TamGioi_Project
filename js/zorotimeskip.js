@@ -140,10 +140,13 @@
     // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY (BỐC THĂM NGẪU NHIÊN 6 LOẠI)
     window.matKiemQuangShared = {}; // Sửa thành Object để chứa 6 loại vật liệu khác nhau
     
+    
+        
+        // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY (BỐC THĂM 6 LOẠI + FIX CRASH VRAM TUYỆT ĐỐI)
     function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
         
-        // 🎲 Thuật toán bốc thăm công bằng 100% từ 1 đến 6
+        // 🎲 Thuật toán bốc thăm hên xui từ 1 đến 6
         let soNgauNhien = Math.floor(Math.random() * 6) + 1; 
         let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb'; 
         
@@ -151,20 +154,17 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh) {
-                        // Cứu rỗi Lò Đốt Rác: Clone khung xương
+                        // 🛑 BẢO TỒN VRAM: Clone khung xương để không dính dáng bản gốc
                         if (c.geometry) c.geometry = c.geometry.clone(); 
                         
-                        // 🛑 BẢO TỒN VRAM: Lưu vật liệu theo từng số (1 đến 6)
-                        if (c.material) {
-                            if (!window.matKiemQuangShared[soNgauNhien]) {
-                                window.matKiemQuangShared[soNgauNhien] = Array.isArray(c.material) ? c.material[0].clone() : c.material.clone();
-                                window.matKiemQuangShared[soNgauNhien].transparent = true;
-                                window.matKiemQuangShared[soNgauNhien].emissive = new THREE.Color(0x2ecc71); // Haki xanh lá
-                                window.matKiemQuangShared[soNgauNhien].emissiveIntensity = 1.2;
-                            }
-                            // Gắn vật liệu xài chung vào để chống sập WebGL
-                            c.material = window.matKiemQuangShared[soNgauNhien];
-                        }
+                        // 🛑 THAY MÁU VẬT LIỆU: Bứt bỏ hoàn toàn vật liệu cũ của file .glb
+                        // Đắp một lớp áo MỚI TINH, AN TOÀN 100% không bao giờ gây lỗi Shader
+                        c.material = new THREE.MeshBasicMaterial({
+                            color: 0x2ecc71, // Xanh lá lục bảo
+                            transparent: true,
+                            opacity: 0.9,
+                            side: THREE.DoubleSide // Sáng cả 2 mặt
+                        });
                     }
                 });
                 
@@ -324,22 +324,24 @@
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
-                // Cho kiếm quang xoay như mũi khoan
-                s.mesh.rotateZ(0.05);
+                // 🛑 Lưu ý: Đoạn này Sếp có thể tắt (bỏ rotateZ) nếu muốn nó bay thẳng không xoay nhé
+                // s.mesh.rotateZ(0.05);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 8);
+                    taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
                     s.life = 0;
                 }
             }
 
             if (s.life <= 0) {
-                // 🛑 BẢN VÁ CRASH VRAM TUYỆT ĐỐI: CHỈ GỠ KHỎI SCENE, KHÔNG DÙNG donRac3D
-                if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                // 🌟 VẬT LIỆU ĐÃ ĐỘC LẬP: Cứ tự tin gọi donRac3D để giải phóng bộ nhớ!
+                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); 
+                else scene.remove(s.mesh);
+                
                 kyNangZoro.splice(i, 1);
             }
         }
+    
 
         // Tàn dư vụ nổ (Hạt Haki xanh)
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
