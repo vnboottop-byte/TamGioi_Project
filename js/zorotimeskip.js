@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V2)
-// 👑 CÔNG NGHỆ: PHÓNG KIẾM QUANG TỪ XƯƠNG TAY + FIX LỖI ĐỨNG IM
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V3)
+// 👑 CÔNG NGHỆ: PHÓNG KIEMQUANG.glb TỪ XƯƠNG TAY + FIX LỖI CRASH VRAM
 // ==========================================
 
 (function () {
@@ -8,7 +8,7 @@
     const hieuUngZoro = [];
     const danhSachSoBayZR = [];
 
-    // Kho lưu trữ hoạt ảnh quét tự động
+    // Kho lưu trữ hoạt ảnh quét tự động (Từ 26 chiêu múa)
     window.KHO_ANIM_NHANROI = [];
     window.KHO_ANIM_TANCONG = [];
 
@@ -146,11 +146,26 @@
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
-                    if (c.isMesh && c.material) {
-                        c.material = c.material.clone();
-                        c.material.transparent = true;
-                        c.material.emissive = new THREE.Color(0x2ecc71); // Haki xanh lá phát sáng
-                        c.material.emissiveIntensity = 1.2; 
+                    // 🛑 BẢN VÁ LỖI CRASH VRAM: BẮT BUỘC DEEP CLONE GEOMETRY & MATERIAL
+                    if (c.isMesh) {
+                        if (c.geometry) c.geometry = c.geometry.clone(); // Cứu rỗi Lò Đốt Rác
+                        
+                        if (c.material) {
+                            if (Array.isArray(c.material)) {
+                                c.material = c.material.map(m => {
+                                    let mClone = m.clone();
+                                    mClone.transparent = true;
+                                    mClone.emissive = new THREE.Color(0x2ecc71); // Haki xanh lá phát sáng
+                                    mClone.emissiveIntensity = 1.2;
+                                    return mClone;
+                                });
+                            } else {
+                                c.material = c.material.clone();
+                                c.material.transparent = true;
+                                c.material.emissive = new THREE.Color(0x2ecc71); 
+                                c.material.emissiveIntensity = 1.2; 
+                            }
+                        }
                     }
                 });
                 
@@ -185,7 +200,7 @@
         }
         if (!nvc) return;
 
-        // 🌟 BẢN VÁ LỖI "ĐỨNG IM": Đã gỡ bỏ lệnh Check Cooldown trùng lặp với Controller.js
+        // 🌟 BẢN VÁ LỖI "ĐỨNG IM": Bỏ bộ đếm Cooldown cục bộ đi, hệ thống Controller.js đã lo vụ Khóa nút rồi!
         if (isRemote === false) {
             window.dangMuaChieu = true;
             let randomAttackClip = bocAnimChemNgauNhien(); // Tự động lấy 1 trong 26 chiêu
@@ -217,13 +232,13 @@
 
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // ⏳ TRỄ 300MS CHỜ VUNG TAY
+        // ⏳ TRỄ 300MS CHỜ VUNG TAY TẠO ĐỘ LỰC CỦA HOẠT ẢNH
         setTimeout(() => {
             let tayPhaiPos = viTriGocToTam.clone();
             let tayTraiPos = viTriGocToTam.clone();
             let xuongTayPhai = null; let xuongTayTrai = null;
 
-            // 🧠 TRUY VẾT HAI XƯƠNG BLENDER TAY CẦM KIẾM
+            // 🧠 TRUY VẾT HAI XƯƠNG BLENDER TAY CẦM KIẾM THEO ĐÚNG TÊN SẾP CUNG CẤP
             nvc.traverse(c => {
                 if (c.isBone) {
                     if (c.name === 'Bone002_0184') xuongTayPhai = c;
@@ -231,14 +246,14 @@
                 }
             });
 
-            // Lấy tọa độ không gian thật
+            // Lấy tọa độ không gian thật từ xương tay nếu có
             if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
             else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
 
             if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
             else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
 
-            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP (Giống Luffy xả nắm đấm)
+            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP 
             function phongKiemQuang(soNhatChem, heSoDame, kichCo) {
                 for (let i = 0; i < soNhatChem; i++) {
                     setTimeout(() => {
@@ -270,7 +285,7 @@
             else if (phim === 'E') phongKiemQuang(2, 0.6, 4.0);
             // R = 3 Chém
             else if (phim === 'R') phongKiemQuang(3, 0.5, 5.0);
-            // F = 4 Chém (Tuyệt Kỹ Cửu Kiếm Phái múa 4 đường)
+            // F = 4 Chém (Múa 4 đường)
             else if (phim === 'F') phongKiemQuang(4, 0.5, 7.0); 
 
         }, 300);
