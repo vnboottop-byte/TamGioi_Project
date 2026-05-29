@@ -137,23 +137,33 @@
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 }); 
     }
 
-    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY TU TIÊN (CHỐNG CRASH)
+    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY (BỐC THĂM NGẪU NHIÊN 6 LOẠI)
+    window.matKiemQuangShared = {}; // Sửa thành Object để chứa 6 loại vật liệu khác nhau
+    
     function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
-        let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
+        
+        // 🎲 Thuật toán bốc thăm công bằng 100% từ 1 đến 6
+        let soNgauNhien = Math.floor(Math.random() * 6) + 1; 
+        let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb'; 
         
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
-                    // 🛑 CHÌA KHÓA BẢO TỒN VRAM: Không clone Material, chỉ đổi màu hợp lệ!
-                    if (c.isMesh && c.material) {
-                        c.material.transparent = true;
-                        // Kiểm tra nếu material có hỗ trợ emissive (Standard/Phong) thì mới set
-                        if (c.material.emissive) {
-                            c.material.emissive.setHex(0x2ecc71); // Haki xanh lá phát sáng
-                            c.material.emissiveIntensity = 1.2;
-                        } else if (c.material.color) {
-                            c.material.color.setHex(0x2ecc71); // Nếu là Basic Material
+                    if (c.isMesh) {
+                        // Cứu rỗi Lò Đốt Rác: Clone khung xương
+                        if (c.geometry) c.geometry = c.geometry.clone(); 
+                        
+                        // 🛑 BẢO TỒN VRAM: Lưu vật liệu theo từng số (1 đến 6)
+                        if (c.material) {
+                            if (!window.matKiemQuangShared[soNgauNhien]) {
+                                window.matKiemQuangShared[soNgauNhien] = Array.isArray(c.material) ? c.material[0].clone() : c.material.clone();
+                                window.matKiemQuangShared[soNgauNhien].transparent = true;
+                                window.matKiemQuangShared[soNgauNhien].emissive = new THREE.Color(0x2ecc71); // Haki xanh lá
+                                window.matKiemQuangShared[soNgauNhien].emissiveIntensity = 1.2;
+                            }
+                            // Gắn vật liệu xài chung vào để chống sập WebGL
+                            c.material = window.matKiemQuangShared[soNgauNhien];
                         }
                     }
                 });
@@ -165,13 +175,14 @@
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 
-                // Bẻ kiếm quang nằm ngang chĩa tới trước giống hệ Tu Tiên
-                v.rotation.set(0, 0, 0);
+                // Bẻ kiếm quang nằm ngang chĩa tới trước
+                v.rotation.x = Math.PI / 2; 
                 group.add(v);
             });
         }
         return group;
     }
+    
 
     // 🌟 BỐC THĂM HOẠT ẢNH CHÉM NGẪU NHIÊN 
     function bocAnimChemNgauNhien() {
