@@ -1,16 +1,12 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V1)
-// 👑 CÔNG NGHỆ: MÁY QUÉT XƯƠNG BLENDER CHUẨN X-QUANG + COMBO XẢ LIÊN TỤC LUFFY STYLE
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH ZORO (TAM KIẾM PHÁI V2)
+// 👑 CÔNG NGHỆ: PHÓNG KIẾM QUANG TỪ XƯƠNG TAY + FIX LỖI ĐỨNG IM
 // ==========================================
 
 (function () {
     const kyNangZoro = [];
     const hieuUngZoro = [];
     const danhSachSoBayZR = [];
-
-    // ⏳ BỘ KHÓA COOLDOWN SIÊU TỐC HỆ PHÁI LUFFY (ĐỒNG BỘ 4 GIÂY CHO CẢ 4 CHIÊU)
-    const THOI_GIAN_HOI = { 'Q': 4000, 'E': 4000, 'R': 4000, 'F': 4000 };
-    const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
     // Kho lưu trữ hoạt ảnh quét tự động
     window.KHO_ANIM_NHANROI = [];
@@ -31,7 +27,7 @@
         danhSachSoBayZR.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    // 📡 RADAR KHÓA MỤC TIÊU TẦM NHIỆT KIZARU (150M)
+    // 📡 RADAR KHÓA MỤC TIÊU 
     window.layMucTieuGanNhatZR = function(viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
@@ -102,7 +98,7 @@
     window.thoiDiemNoCuoiCungZR = window.thoiDiemNoCuoiCungZR || 0;
 
     // 💥 HIỆU ỨNG VẾT CHÉM HAKI XANH LÁ
-    function taoVuNoKiemKhieZR(pos, isRemote = false, luongDame = 100, banKinh = 12) {
+    function taoVuNoKiemQuangZR(pos, isRemote = false, luongDame = 100, banKinh = 12) {
         if (isRemote === false && luongDame > 0) gaySatThuongZR(pos, luongDame, banKinh);
         else if (typeof isRemote === 'number' && isRemote > 0) {
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
@@ -141,10 +137,11 @@
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 }); 
     }
 
-    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY TU TIÊN SYSTEM
-    function taoKiemZoro(scaleSize, weaponUrl) {
+    // 🌟 ĐÚC KIẾM QUANG ĐƯỜNG BAY 
+    function taoKiemQuangFile(scaleSize) {
         const group = new THREE.Group();
-        let urlCanTai = weaponUrl || window.WEAPON_URL || 'uploads/anims/PHIKIEM.glb'; 
+        // Load file KIEMQUANG.glb (Yêu cầu phải có file này trong thư mục uploads/anims/)
+        let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
         
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
@@ -152,8 +149,8 @@
                     if (c.isMesh && c.material) {
                         c.material = c.material.clone();
                         c.material.transparent = true;
-                        c.material.emissive = new THREE.Color(0x2ecc71); // Tint Haki xanh lá
-                        c.material.emissiveIntensity = 0.8; 
+                        c.material.emissive = new THREE.Color(0x2ecc71); // Haki xanh lá phát sáng
+                        c.material.emissiveIntensity = 1.2; 
                     }
                 });
                 
@@ -164,11 +161,8 @@
                 let tiLeChuan = scaleSize / maxDim; 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 
-                // Bẻ kiếm nằm ngang hướng dọc theo trục Z phóng đi chuẩn Tu Tiên
+                // Bẻ kiếm quang nằm ngang chĩa tới trước
                 v.rotation.x = Math.PI / 2; 
-                v.rotation.y = 0;
-                v.rotation.z = 0;
-
                 group.add(v);
             });
         }
@@ -182,7 +176,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO SÂN CHƠI MẠNG LƯỚI
+    // 🏹 HÀM XẢ COMBO ZORO
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -191,14 +185,10 @@
         }
         if (!nvc) return;
 
-        // Bộ kiểm duyệt Cooldown máy chủ cục bộ
+        // 🌟 BẢN VÁ LỖI "ĐỨNG IM": Đã gỡ bỏ lệnh Check Cooldown trùng lặp với Controller.js
         if (isRemote === false) {
-            let bayGio = Date.now();
-            if (bayGio - window.cd_thoiDiemBopCo[phim] < THOI_GIAN_HOI[phim]) return;
-            window.cd_thoiDiemBopCo[phim] = bayGio;
-
             window.dangMuaChieu = true;
-            let randomAttackClip = bocAnimChemNgauNhien();
+            let randomAttackClip = bocAnimChemNgauNhien(); // Tự động lấy 1 trong 26 chiêu
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
         }
 
@@ -216,25 +206,24 @@
             let targetRadar = window.layMucTieuGanNhatZR(viTriGocToTam);
             mucTieu = targetRadar ? targetRadar.clone() : viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
 
-            // Phát sóng Livekit đồng bộ
+            // Phát sóng Livekit
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro', 
-                    origin: {x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z}, target: {x: mucTieu.x, y: mucTieu.y, z: mucTieu.z}, dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z}, weaponUrl: window.WEAPON_URL
+                    origin: {x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z}, target: {x: mucTieu.x, y: mucTieu.y, z: mucTieu.z}, dir: {x: huongMat.x, y: huongMat.y, z: huongMat.z}, weaponUrl: ""
                 })), { reliable: true });
             }
         }
 
         const dameGoc = window.DAME_CUA_TOI || 100;
-        let vuKhiThucTe = weaponUrl || window.WEAPON_URL;
 
-        // ⏳ TRỄ 300MS THEO KIZARU ĐỂ KHỚP ĐỘ VUNG KIẾM CỦA KHUNG XƯƠNG
+        // ⏳ TRỄ 300MS CHỜ VUNG TAY
         setTimeout(() => {
             let tayPhaiPos = viTriGocToTam.clone();
             let tayTraiPos = viTriGocToTam.clone();
             let xuongTayPhai = null; let xuongTayTrai = null;
 
-            // 🧠 TRUY VẾT HAI XƯƠNG BLENDER ĐÍCH DANH CỦA SẾP YÊU CẦU
+            // 🧠 TRUY VẾT HAI XƯƠNG BLENDER TAY CẦM KIẾM
             nvc.traverse(c => {
                 if (c.isBone) {
                     if (c.name === 'Bone002_0184') xuongTayPhai = c;
@@ -242,85 +231,47 @@
                 }
             });
 
-            // Nếu tìm thấy xương Blender thì hốt tọa độ thế giới thật, không tìm thấy thì tính toán vector bù trừ Tu Tiên
+            // Lấy tọa độ không gian thật
             if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
             else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
 
             if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
             else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
 
-            // =====================================
-            // ⚔️ CHIÊU Q: TAM THẬP LỤC PHIỀN NÃO PHONG (36 POUND PHOENIX)
-            // =====================================
-            if (phim === 'Q') {
-                const kiemQ = taoKiemZoro(2.5, vuKhiThucTe);
-                kiemQ.position.copy(tayPhaiPos);
-                kiemQ.up.copy(upVector);
-                kiemQ.lookAt(mucTieu);
-                scene.add(kiemQ);
-
-                // ⚖️ CÂN BẰNG: Chém nhanh 1 phát nhịp x 0.45 dame
-                kyNangZoro.push({ mesh: kiemQ, type: 'BAY_THANG', speed: 11.0, life: 50, targetPos: mucTieu.clone(), damage: dameGoc * 0.45, isRemote: isRemote });
-            }
-            // =====================================
-            // 🌪️ CHIÊU E: TATSUMAKI (VÒI RỒNG KIẾM KHÍ MULTI-HIT)
-            // ==========================================
-            else if (phim === 'E') {
-                // Đập tan cấu trúc rác! Đúc 6 nhịp chém lướt bắn luân phiên từ 2 tay (Luffy Style)
-                for (let i = 0; i < 6; i++) {
+            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP (Giống Luffy xả nắm đấm)
+            function phongKiemQuang(soNhatChem, heSoDame, kichCo) {
+                for (let i = 0; i < soNhatChem; i++) {
                     setTimeout(() => {
-                        let nòngTay = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
-                        const kiemE = taoKiemZoro(2.0, vuKhiThucTe);
-                        kiemE.position.copy(nòngTay);
-                        kiemE.up.copy(upVector);
-
-                        // Tạo góc tản mác xoáy nhẹ quanh mục tiêu làm vòi rồng
-                        let lechXoay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 6));
-                        kiemE.lookAt(lechXoay);
-                        scene.add(kiemE);
-
-                        // ⚖️ CÂN BẰNG: 6 nhịp x 0.1 dame = 0.6 tổng dame
-                        kyNangZoro.push({ mesh: kiemE, type: 'BAY_THANG', speed: 9.0, life: 60, targetPos: lechXoay, damage: dameGoc * 0.1, isRemote: isRemote });
-                    }, i * 80); // Giãn cách 80ms mỗi nhát chém siêu tốc
-                }
-            }
-            // =====================================
-            // ⚔️ CHIÊU R: THIÊN BÁT THẬP PHIỀN NÃO PHONG (1080 POUND PHOENIX)
-            // =====================================
-            else if (phim === 'R') {
-                // Xả ra 4 luồng kiếm khí chéo nhau rượt mục tiêu
-                for (let i = 0; i < 4; i++) {
-                    setTimeout(() => {
-                        const kiemR = taoKiemZoro(3.5, vuKhiThucTe);
-                        // Xuất phát đồng loạt từ hai tâm xương Blender của Sếp
                         let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
-                        kiemR.position.copy(nòngGoc);
-                        kiemR.up.copy(upVector);
-                        kiemR.lookAt(mucTieu);
-                        scene.add(kiemR);
+                        
+                        // Đúc kiếm quang
+                        const kq = taoKiemQuangFile(kichCo);
+                        kq.position.copy(nòngGoc);
+                        kq.up.copy(upVector);
 
-                        // ⚖️ CÂN BẰNG: 4 nhịp nặng x 0.25 dame = 1.0 tổng dame
-                        kyNangZoro.push({ mesh: kiemR, type: 'BAY_TÂM_NHIỆT', speed: 10.0, life: 80, targetPos: mucTieu.clone(), damage: dameGoc * 0.25, isRemote: isRemote, upVector: upVector.clone() });
-                    }, i * 120);
+                        // Rải rác điểm rơi ra 1 xíu để nó đi thành chùm
+                        let doLan = (soNhatChem > 1) ? 3.0 : 0;
+                        let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, 0));
+                        
+                        kq.lookAt(targetBay);
+                        scene.add(kq);
+
+                        kyNangZoro.push({ 
+                            mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
+                            targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote 
+                        });
+                    }, i * 150); // Khoảng cách 150ms mỗi nhát chém
                 }
             }
-            // =====================================
-            // 👁️ CHIÊU F: TAM THIÊN THẾ GIỚI (SAN CHÂN SEKAI - TUYỆT KỸ)
-            // =====================================
-            else if (phim === 'F') {
-                const pivotGroup = new THREE.Group();
-                pivotGroup.position.copy(viTriGocToTam).add(upVector.clone().multiplyScalar(15));
-                pivotGroup.up.copy(upVector);
-                pivotGroup.lookAt(mucTieu);
 
-                const kiemKhongLo = taoKiemZoro(12.0, vuKhiThucTe); // Đúc thanh đao quang khổng lồ 12m
-                kiemKhongLo.rotateX(-Math.PI * 0.8);
-                pivotGroup.add(kiemKhongLo);
-                scene.add(pivotGroup);
-
-                // ⚖️ CÂN BẰNG: Tuyệt kỹ kết liễu dứt điểm x 1.6 dame cực mạnh
-                kyNangZoro.push({ mesh: pivotGroup, type: 'F_SLASH', ticks: 0, life: 100, targetPos: mucTieu.clone(), damage: dameGoc * 1.6, isRemote: isRemote });
-            }
+            // Q = 1 Chém
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 3.5);
+            // E = 2 Chém
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 4.0);
+            // R = 3 Chém
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 5.0);
+            // F = 4 Chém (Tuyệt Kỹ Cửu Kiếm Phái múa 4 đường)
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 7.0); 
 
         }, 300);
     };
@@ -332,46 +283,13 @@
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i]; s.life--;
 
-            // Xử lý đạn kiếm khí bay thẳng thường (Q và E)
-            if (s.type === 'Q' || s.type === 'BAY_THANG') {
+            if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
-                // Cho kiếm xoay trục xoắn ma sát không khí nhìn cho ngầu
+                // Cho kiếm quang xoay như mũi khoan
                 s.mesh.rotateZ(0.2);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    taoVuNoKiemKhieZR(s.targetPos, s.isRemote, s.damage, 6);
-                    s.life = 0;
-                }
-            }
-            // Xử lý kiếm khí tầm nhiệt rượt đuổi mục tiêu (Chiêu R)
-            else if (s.type === 'BAY_TÂM_NHIỆT') {
-                s.mesh.translateZ(s.speed);
-                s.mesh.rotateZ(0.4);
-
-                if (s.targetPos) {
-                    if (!s.isRemote) {
-                        const mucTieuMoi = window.layMucTieuGanNhatZR(s.mesh.position);
-                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
-                    }
-                    const dummy = new THREE.Object3D();
-                    dummy.position.copy(s.mesh.position);
-                    dummy.up.copy(s.upVector);
-                    dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.25); // Bẻ cua khét lẹt 25% rượt quái
-                }
-
-                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 6 || s.life <= 0) {
-                    taoVuNoKiemKhieZR(s.targetPos, s.isRemote, s.damage, 10);
-                    s.life = 0;
-                }
-            }
-            // Xử lý múa đao khổng lồ sả từ trên trời xuống (Chiêu F)
-            else if (s.type === 'F_SLASH') {
-                s.ticks++;
-                s.mesh.children[0].rotateX(0.08); // Quét kiếm quang gầm rú xuống mặt đất
-
-                if (s.ticks > 35 || s.life <= 0) {
-                    taoVuNoKiemKhieZR(s.targetPos, s.isRemote, s.damage, 25);
+                    taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
                     s.life = 0;
                 }
             }
@@ -382,7 +300,6 @@
             }
         }
 
-        // Tốc độ bay bụi lửa hạt Haki xanh lá lả tả rơi
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
@@ -391,7 +308,7 @@
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4; // Trọng lực hút hạt rơi rụng xuống đất
+                h.velocities[j].y -= 0.4; 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
@@ -402,7 +319,6 @@
             }
         }
 
-        // Dọn chữ nổi
         for (let i = danhSachSoBayZR.length - 1; i >= 0; i--) {
             let it = danhSachSoBayZR[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -432,7 +348,10 @@
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
-                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')) window.KHO_ANIM_TANCONG.push(key);
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
+                            // Cẩn thận đừng nhét CHET vào lúc random đánh
+                            if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
+                        }
                         
                         // Gom di chuyển ép thành bộ chạy bộ không chân siêu tốc
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) {
@@ -448,7 +367,7 @@
                     if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
                 }
 
-                // Luồng đổi tư thế đứng ngầu lòi gác kiếm của ASL
+                // Luồng đổi tư thế đứng ngầu lòi gác kiếm
                 if (window.vongLapNhanRoiZR) clearInterval(window.vongLapNhanRoiZR);
                 window.vongLapNhanRoiZR = setInterval(() => {
                     if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI.length > 0) {
