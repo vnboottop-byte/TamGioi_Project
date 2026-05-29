@@ -293,13 +293,13 @@
             }
 
             // Q = 1 Chém ngang
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 30, 'Q');
+            if (phim === 'Q') phongKiemQuang(4, 1.0, 30, 'Q');
             // E = 2 Chém xéo chữ X
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 30, 'E');
+            else if (phim === 'E') phongKiemQuang(6, 0.6, 30, 'E');
             // R = 3 Chém dọc + xéo
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 30, 'R');
+            else if (phim === 'R') phongKiemQuang(8, 0.5, 30, 'R');
             // F = 4 Chém ngôi sao
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 30, 'F');
+            else if (phim === 'F') phongKiemQuang(12, 0.5, 30, 'F');
 
         }, 300);
     };
