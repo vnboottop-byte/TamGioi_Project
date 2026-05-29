@@ -249,40 +249,57 @@
             if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
             else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
 
-            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP (Q=1, E=2, R=3, F=4)
-            function phongKiemQuang(soNhatChem, heSoDame, kichCo) {
+            // 🌟 HÀM XẢ COMBO KIẾM QUANG ĐA NHỊP CÓ BẺ GÓC
+            function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
                 for (let i = 0; i < soNhatChem; i++) {
                     setTimeout(() => {
-                        // Chém luân phiên Tay Phải -> Tay Trái
                         let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
                         
                         const kq = taoKiemQuangFile(kichCo);
                         kq.position.copy(nòngGoc);
                         kq.up.copy(upVector);
 
-                        // Rải rác điểm rơi ra 1 xíu để đi thành chùm
                         let doLan = (soNhatChem > 1) ? 3.0 : 0;
                         let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, 0));
                         
                         kq.lookAt(targetBay);
+
+                        // 🌟 BÍ THUẬT BẺ GÓC CHÉM Ở ĐÂY
+                        if (kieuChem === 'E') {
+                            // E (2 Hit): Chém xéo tạo thành chữ X (Lệch 45 độ trái/phải)
+                            let gocXoay = (i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4); 
+                            kq.rotateZ(gocXoay); 
+                        } 
+                        else if (kieuChem === 'R') {
+                            // R (3 Hit): Nhát 1 chém dọc (90 độ), nhát 2 và 3 chém xéo
+                            let gocXoay = (i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3));
+                            kq.rotateZ(gocXoay);
+                        } 
+                        else if (kieuChem === 'F') {
+                            // F (4 Hit): Múa kiếm chém loạn xạ các góc (Lệch 60 độ mỗi nhát)
+                            let gocXoay = (i * Math.PI) / 3; 
+                            kq.rotateZ(gocXoay);
+                        }
+                        // Q giữ nguyên chém ngang (Không bẻ góc)
+
                         scene.add(kq);
 
                         kyNangZoro.push({ 
-                            mesh: kq, type: 'BAY_THANG', speed: 10.0, life: 80, 
+                            mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
                             targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote 
                         });
                     }, i * 150); // Khoảng cách 150ms mỗi nhát chém
                 }
             }
 
-            // Q = 1 Chém
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 20);
-            // E = 2 Chém
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 20);
-            // R = 3 Chém
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 20);
-            // F = 4 Chém (Múa 4 đường)
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 20); 
+            // Q = 1 Chém ngang
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 30, 'Q');
+            // E = 2 Chém xéo chữ X
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 30, 'E');
+            // R = 3 Chém dọc + xéo
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 30, 'R');
+            // F = 4 Chém ngôi sao
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 30, 'F');
 
         }, 300);
     };
