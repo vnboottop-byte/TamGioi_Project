@@ -297,7 +297,7 @@
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
                 // Cho kiếm quang xoay như mũi khoan
-                s.mesh.rotateZ(0.2);
+                s.mesh.rotateZ(0.1);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 8);
