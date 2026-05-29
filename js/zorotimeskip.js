@@ -166,7 +166,7 @@
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 
                 // Bẻ kiếm quang nằm ngang chĩa tới trước giống hệ Tu Tiên
-                v.rotation.x = Math.PI / 2; 
+                v.rotation.set(0, 0, 0);
                 group.add(v);
             });
         }
@@ -276,13 +276,13 @@
             }
 
             // Q = 1 Chém
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 3.0);
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 10.0);
             // E = 2 Chém
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 3.5);
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 10.5);
             // R = 3 Chém
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 4.0);
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 15.0);
             // F = 4 Chém (Múa 4 đường)
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 5.0); 
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 15.0); 
 
         }, 300);
     };
