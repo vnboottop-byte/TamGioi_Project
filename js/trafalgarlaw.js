@@ -166,8 +166,7 @@
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
                 let tiLeChuan = scaleSize / maxDim;
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-
-                v.rotation.x = Math.PI / 2;
+                v.rotation.set(0, 0, 0);
                 group.add(v);
             });
         }
@@ -289,13 +288,13 @@
             }
 
             // Q = 1 Chém ngang 
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 3.5, 'Q');
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 35, 'Q');
             // E = 2 Chém xéo chữ X
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 4.0, 'E');
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 40, 'E');
             // R = 3 Chém dọc + xéo
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 5.0, 'R');
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 50, 'R');
             // F = 4 Chém ngôi sao
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 7.0, 'F');
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 70, 'F');
 
         }, 300);
     };
@@ -309,7 +308,10 @@
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
-                // Đã tắt rotateZ để giữ vững tư thế đao chém chữ X
+
+
+                s.mesh.rotateZ(0.05);
+                 
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     taoVuNoKiemQuangZR(s.targetPos, s.isRemote, s.damage, 6);
