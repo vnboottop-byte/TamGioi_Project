@@ -276,13 +276,13 @@
             }
 
             // Q = 1 Chém
-            if (phim === 'Q') phongKiemQuang(1, 1.0, 10.0);
+            if (phim === 'Q') phongKiemQuang(1, 1.0, 20);
             // E = 2 Chém
-            else if (phim === 'E') phongKiemQuang(2, 0.6, 10.5);
+            else if (phim === 'E') phongKiemQuang(2, 0.6, 20);
             // R = 3 Chém
-            else if (phim === 'R') phongKiemQuang(3, 0.5, 15.0);
+            else if (phim === 'R') phongKiemQuang(3, 0.5, 20);
             // F = 4 Chém (Múa 4 đường)
-            else if (phim === 'F') phongKiemQuang(4, 0.5, 15.0); 
+            else if (phim === 'F') phongKiemQuang(4, 0.5, 20); 
 
         }, 300);
     };
