@@ -263,7 +263,7 @@
 
 
 
-                        kq.position.add(huongMat.clone().multiplyScalar(1.5)); // Đẩy ra trước 2.5 mét
+                        kq.position.add(huongMat.clone().multiplyScalar(-1.5)); // Đẩy ra trước 2.5 mét
 
 
 
