@@ -184,7 +184,7 @@
         });
 
         // ===============================================
-        // 🔥 CHIÊU Q: MŨI KHOAN TỐC ĐỘ CAO (Xoay trục Z)
+        // 🔥 CHIÊU Q: MŨI KHOAN TỐC ĐỘ CAO (VIÊN ĐẠN NHỎ LẠI 50%)
         // ===============================================
         if (phim === 'Q') {
             let soVien = 10;
@@ -194,7 +194,7 @@
                     let diemBan = viTriGocToTam.clone();
                     if (tayBan) tayBan.getWorldPosition(diemBan);
 
-                    const lua = taoLuaFile('fire1', 8); // To hơn một chút để dễ nhìn
+                    const lua = taoLuaFile('fire1', 4); // 🌟 Đã bóp nhỏ 50% (Từ 8 xuống 4)
                     lua.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
 
                     let doLan = 3.0;
@@ -205,7 +205,7 @@
 
                     kyNangAce.push({
                         mesh: lua, type: 'BAY_THANG', speed: 6.0, life: 100,
-                        skillId: 'Q', // Đánh dấu chiêu để vòng lặp biết bề xoay
+                        skillId: 'Q',
                         targetPos: targetBay, damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 10
                     });
                 }, 200 + (i * 150));
@@ -213,7 +213,7 @@
         }
 
         // ===============================================
-        // 🔥 CHIÊU E: XOAY TRỤC Y QUANH MÌNH
+        // 🔥 CHIÊU E: HỎA ĐẠN NÉM THẲNG (KHÔNG XOAY)
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
@@ -227,14 +227,14 @@
 
                 kyNangAce.push({
                     mesh: lua, type: 'BAY_THANG', speed: 4.5, life: 120,
-                    skillId: 'E',
+                    skillId: 'E', // 🌟 Tí nữa vòng lặp vật lý sẽ bỏ qua không xoay chiêu này
                     targetPos: mucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 15
                 });
             }, 1300);
         }
 
         // ===============================================
-        // 🔥 CHIÊU R: THIÊN THẠCH VIÊM ĐẾ (Hạ độ cao, xoay trục Y)
+        // 🔥 CHIÊU R: THIÊN THẠCH VIÊM ĐẾ (ĐÂM XUỐNG CHÂN MỤC TIÊU)
         // ===============================================
         else if (phim === 'R') {
             setTimeout(() => {
@@ -243,21 +243,22 @@
                 if (xuongTayTrai) xuongTayTrai.getWorldPosition(diemBanTrai);
 
                 let diemBan = new THREE.Vector3().addVectors(diemBanPhai, diemBanTrai).multiplyScalar(0.5);
+                diemBan.y += 15.0; // Xuất phát tít trên cao
 
-                // 🛑 Tạo điểm bắn TÍT TRÊN TRỜI (Cao 15 mét so với tay)
-                diemBan.y += 15.0;
+                // 🌟 ĐỒNG BỘ TOẠ ĐỘ ĐẤT: ÉP ĐIỂM ĐÁP XUỐNG CHÂN MỤC TIÊU (Giống chiêu F)
+                let diemChanMucTieu = mucTieu.clone();
+                diemChanMucTieu.y = window.matDatY || 0;
 
                 const lua = taoLuaFile('fire3', 45);
                 lua.position.copy(diemBan);
-
-                // Nhìn xuống dưới đất (Chỗ con quái)
-                lua.lookAt(mucTieu);
+                lua.lookAt(diemChanMucTieu); // Lao thẳng xuống chân quái
                 scene.add(lua);
 
                 kyNangAce.push({
                     mesh: lua, type: 'BAY_THANG', speed: 5.0, life: 250,
                     skillId: 'R',
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 30
+                    targetPos: diemChanMucTieu, // Đâm trúng sàn chân quái thì nổ
+                    damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 30
                 });
             }, 1000);
         }
@@ -295,32 +296,33 @@
         for (let i = kyNangAce.length - 1; i >= 0; i--) {
             let s = kyNangAce[i]; s.life--;
 
-            // 🛑 XỬ LÝ XOAY BẰNG CODE CHO TỪNG CHIÊU
+            // 🛑 XỬ LÝ XOAY BẰNG CODE THEO LOGIC MỚI CỦA SẾP
             if (s.mesh) {
-                if (s.skillId === 'Q') s.mesh.rotateZ(0.8); // Q - Mũi khoan: Xoay cực nhanh quanh trục dọc của đạn
-                // 🌟 SỬA LỖI: Đổi rotateY thành rotateZ để E và R cũng "xoay mủi khoan" thay vì "con quay"
-                if (s.skillId === 'E') s.mesh.rotateZ(0.4); // E - Hỏa đạn: Xoay mủi khoan khi bay tới
-                if (s.skillId === 'R') s.mesh.rotateZ(0.2); // R - Viêm Đế: Xoay mủi khoan chậm, khổng lồ
+                if (s.skillId === 'Q') s.mesh.rotateZ(0.8); // Q - Mũi khoan: Xoay tít trục Z dọc đạn
+
+                // Chiêu E: Đã bứt bỏ hoàn toàn lệnh xoay ở đây -> Ném đi giữ nguyên tư thế!
+
+                if (s.skillId === 'R') s.mesh.rotateY(0.2); // R - Viêm Đế: Đổi trục xoay thành rotateY (Lốc xoáy quanh mình khi lao xuống)
 
                 if (s.skillId === 'F') {
-                    s.mesh.rotateY(0.3); // Hỏa Trụ: Vừa xoay vừa phình to
+                    s.mesh.rotateY(0.3); // F - Hỏa Trụ: Vừa xoay vừa phình to ra 50m
                     if (s.currentScale < s.maxScale) {
-                        s.currentScale += 1.5; // Tốc độ phình to
+                        s.currentScale += 1.5;
                         s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                     }
                 }
             }
 
-            // 🛑 DI CHUYỂN
+            // 🛑 DI CHUYỂN VÀ XỬ LÝ VA CHẠM ĐÍCH
             if (s.type === 'BAY_THANG') {
-                s.mesh.translateZ(s.speed); // Lao tới phía trước (Với chiêu R nó sẽ tự động lao từ trên trời xuống)
+                s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
 
                     if (s.skillId === 'R') {
                         s.type = 'NO_TAI_CHO';
-                        s.life = 60; // Nổ chạm đất thì nằm im nổ thêm 2 giây
+                        s.life = 60; // Viêm Đế đâm xuống sàn chân quái sẽ nằm im diễn nốt nổ 2 giây
                     } else {
                         s.life = 0;
                     }
@@ -333,6 +335,9 @@
                 kyNangAce.splice(i, 1);
             }
         }
+
+            // Giữ nguyên vòng lặp hiển thị số dame ở dưới...
+    
 
         // 🛑 PHỤC HỒI CODE HIỂN THỊ DAME MÁU
         for (let i = danhSachSoBayAce.length - 1; i >= 0; i--) {
