@@ -366,7 +366,7 @@
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback!");
+                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback & Khóa Chân!");
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
@@ -378,24 +378,24 @@
                     let animBay = null;
                     let animChay = null;
 
-
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
-
-                        // 🛑 LÁ CHẮN KHÓA CHÂN (XÓA ROOT MOTION):
-                        // Ép tất cả các chiêu Tấn công phải đứng đánh tại chỗ, cấm lướt đi!
-                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
-                            clip.tracks = clip.tracks.filter(track => {
-                                let tenTrack = track.name.toLowerCase();
-                                // Xóa bỏ các dòng lệnh làm dịch chuyển (position) xương gốc (armature, hips, root)
-                                if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
-                                    return false; // Cắt đứt track này!
-                                }
-                                return true; // Giữ lại các chuyển động vung tay, đá chân (Rotation)
-                            });
-                        }
                         
+                        // 🛑 LÁ CHẮN KHÓA CHÂN (XÓA ROOT MOTION) - BẢN VÁ CHỐNG LỖI UNDEFINED
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
+                            // Phải kiểm tra xem clip và tracks có tồn tại không mới được lọc (Chống sập game)
+                            if (clip && clip.tracks) {
+                                clip.tracks = clip.tracks.filter(track => {
+                                    let tenTrack = track.name.toLowerCase();
+                                    if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
+                                        return false; 
+                                    }
+                                    return true; 
+                                });
+                            }
+                        }
+
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
