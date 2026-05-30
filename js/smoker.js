@@ -450,3 +450,21 @@
         window.HePhaiHienTai.khoiTao();
     }
 })();
+
+
+3: "ATTACK1", OK CHIEU E
+    4: "ATTACK2", OK CHIEU Q
+    5: "ATTACK3", OK CHIEU Q
+    6: "ATTACK4", OK CHIEU R
+   
+    12: "ATTACK5", OK CHIEU F
+    
+    15: "NHANROI1",
+    16: "NHANROI2",
+  
+    20: "NHANROI3",
+   
+    23: "CHAYBO",
+  
+    29: "NHANROI4",
+    
