@@ -290,8 +290,7 @@
                     }, i * 150);
                 }
             }
-
-            
+           
             // 🌟 THÔNG SỐ VÀNG CỦA SẾP (ĐÃ CÂN BẰNG CHUẨN 7.8 DPS)
             // Q = 1 Chém (1 hit x 0.4 = 0.4 Dame)
             if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
@@ -359,12 +358,7 @@
 
     setInterval(window.updateCombatZoro, 30);
 
-
-
-
-
-
-// ==========================================
+    // ==========================================
     // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
