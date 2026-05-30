@@ -290,12 +290,19 @@
                     }, i * 150);
                 }
             }
+           
+            // 🌟 THÔNG SỐ VÀNG CỦA SẾP (ĐÃ CÂN BẰNG CHUẨN 7.8 DPS)
+            // Q = 1 Chém (1 hit x 0.4 = 0.4 Dame)
+            if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
 
-            // 🌟 THÔNG SỐ VÀNG CỦA SẾP
-            if (phim === 'Q') phongKiemQuang(2, 1.0, 35, 'Q');
-            else if (phim === 'E') phongKiemQuang(4, 0.6, 40, 'E');
-            else if (phim === 'R') phongKiemQuang(6, 0.5, 50, 'R');
-            else if (phim === 'F') phongKiemQuang(8, 0.5, 70, 'F');
+            // E = 2 Chém (2 hit x 0.3 = 0.6 Dame)
+            else if (phim === 'E') phongKiemQuang(2, 0.3, 40, 'E');
+
+            // R = 4 Chém (4 hit x 0.125 = 0.5 Dame)
+            else if (phim === 'R') phongKiemQuang(4, 0.125, 50, 'R');
+
+            // F = 8 Chém Tuyệt Kỹ (8 hit x 0.125 = 1.0 Dame)
+            else if (phim === 'F') phongKiemQuang(8, 0.125, 70, 'F');
 
         }, 300);
     };
@@ -351,12 +358,7 @@
 
     setInterval(window.updateCombatZoro, 30);
 
-
-
-
-
-
-// ==========================================
+    // ==========================================
     // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
