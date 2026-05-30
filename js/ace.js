@@ -297,9 +297,10 @@
 
             // 🛑 XỬ LÝ XOAY BẰNG CODE CHO TỪNG CHIÊU
             if (s.mesh) {
-                if (s.skillId === 'Q') s.mesh.rotateZ(0.8); // Mũi khoan: Xoay cực nhanh quanh trục dọc của đạn
-                if (s.skillId === 'E') s.mesh.rotateY(0.4); // Hỏa đạn: Xoay lốc xoáy quanh trục thẳng đứng
-                if (s.skillId === 'R') s.mesh.rotateY(0.2); // Viêm Đế: Lốc xoáy chậm, khổng lồ
+                if (s.skillId === 'Q') s.mesh.rotateZ(0.8); // Q - Mũi khoan: Xoay cực nhanh quanh trục dọc của đạn
+                // 🌟 SỬA LỖI: Đổi rotateY thành rotateZ để E và R cũng "xoay mủi khoan" thay vì "con quay"
+                if (s.skillId === 'E') s.mesh.rotateZ(0.4); // E - Hỏa đạn: Xoay mủi khoan khi bay tới
+                if (s.skillId === 'R') s.mesh.rotateZ(0.2); // R - Viêm Đế: Xoay mủi khoan chậm, khổng lồ
 
                 if (s.skillId === 'F') {
                     s.mesh.rotateY(0.3); // Hỏa Trụ: Vừa xoay vừa phình to
