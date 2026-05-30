@@ -350,10 +350,11 @@
    
 
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU FUJITORA
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU FUJITORA (ĐÃ FIX TRÀN RAM)
     // ==========================================
     window.updateCombatFuji = function () {
 
+        // 1. VÒNG LẶP VẬT LÝ THIÊN THẠCH & KIẾM KHÍ
         for (let i = kyNangFuji.length - 1; i >= 0; i--) {
             let s = kyNangFuji[i]; s.life--;
 
@@ -366,14 +367,13 @@
                     s.mesh.translateZ(s.speed);
                 }
 
-                // 🌟 GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH
+                // GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH
                 if (s.isMeteor && huongBay) {
-                    if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); // Xoay mủi khoan
+                    if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2);
 
-                    let dirNguoc = huongBay.clone().negate(); // Phun lửa ngược về sau
+                    let dirNguoc = huongBay.clone().negate();
                     taoDuoiLuaFuji(s.mesh.position, dirNguoc, s.speed);
 
-                    // Gia tốc trọng trường
                     if (s.isUltimate) {
                         s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0;
                     } else {
@@ -388,14 +388,19 @@
                 }
             }
 
+            // 🛑 DỌN RÁC MODEL 3D TẬN GỐC
             if (s.life <= 0) {
-                if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                scene.remove(s.mesh);
+                if (typeof window.donRac3D === 'function') {
+                    window.donRac3D(s.mesh); // Dùng hàm dọn rác chuẩn của Engine nếu có
+                } else {
+                    if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
+                    if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                }
                 kyNangFuji.splice(i, 1);
             }
         }
 
-        // Cập nhật Bụi Lửa & Đuôi Lửa
+        // 2. VÒNG LẶP HẠT BỤI LỬA & ĐUÔI LỬA
         for (let i = hieuUngFuji.length - 1; i >= 0; i--) {
             let h = hieuUngFuji[i]; h.life--;
 
@@ -403,12 +408,11 @@
                 let posArr = h.system.geometry.attributes.position.array;
                 for (let j = 0; j < posArr.length / 3; j++) {
                     posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                    // Lực cản không khí
                     h.velocities[j].multiplyScalar(0.9);
                 }
                 h.system.geometry.attributes.position.needsUpdate = true;
                 h.system.material.opacity = h.life / 20;
-                h.system.material.size *= 0.95; // Nhỏ dần biến thành tàn tro
+                h.system.material.size *= 0.95;
             } else {
                 let posArr = h.system.geometry.attributes.position.array;
                 for (let j = 0; j < posArr.length / 3; j++) {
@@ -419,17 +423,29 @@
                 h.system.material.opacity = h.life / 30;
             }
 
-            if (h.life <= 0) { scene.remove(h.system); hieuUngFuji.splice(i, 1); }
+            // 🛑 DỌN RÁC HẠT (CHỐNG TRÀN VRAM CARD MÀN HÌNH)
+            if (h.life <= 0) {
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose(); // Tiêu hủy lưới rỗng
+                if (h.system.material) h.system.material.dispose(); // Tiêu hủy chất liệu
+                hieuUngFuji.splice(i, 1);
+            }
         }
 
-        // Cập nhật Số dame
+        // 3. VÒNG LẶP SỐ DAME TRÊN MÀN HÌNH
         for (let i = danhSachSoBayFuji.length - 1; i >= 0; i--) {
             let it = danhSachSoBayFuji[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else it.el.style.display = 'none';
-            if (it.life <= 0) { it.el.remove(); danhSachSoBayFuji.splice(i, 1); window.tongSoChuNoi_Fuji--; }
+
+            // 🛑 DỌN RÁC THẺ DIV HTML
+            if (it.life <= 0) {
+                it.el.remove(); // Gỡ DOM khỏi trình duyệt
+                danhSachSoBayFuji.splice(i, 1);
+                window.tongSoChuNoi_Fuji--;
+            }
         }
     };
 
