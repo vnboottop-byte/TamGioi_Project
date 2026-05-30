@@ -132,7 +132,7 @@
         hieuUngAokiji.push({ system: pts, velocities: vels, life: 30 });
     }
 
-    // 🌟 4. ĐÚC MODEL: BỌC LỚP BĂNG GIÁ CHO THIÊN THẠCH
+    // 🌟 4. ĐÚC MODEL: BỌC LỚP BĂNG GIÁ CHO THIÊN THẠCH (BẢN VÁ LỖI TÀNG HÌNH)
     function taoVatTheAokiji(tenFile, scaleSize, isBăngHóa = false) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -141,15 +141,18 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        if (!Array.isArray(c.material)) c.material = [c.material];
-                        c.material.forEach(m => {
+                        // 🛑 Lấy danh sách vật liệu ra xử lý TẠM, KHÔNG ghi đè cấu trúc Array của Engine
+                        let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
+
+                        danhSachMat.forEach(m => {
                             m.transparent = true;
-                            // 🌟 BÍ THUẬT: NHUỘM MODEL THÀNH CỤC BĂNG XANH
+                            // 🌟 BÍ THUẬT BĂNG HÓA AN TOÀN (Kiểm tra xem vật liệu có hỗ trợ không mới ép)
                             if (isBăngHóa) {
-                                m.color.setHex(0xaaddff); // Màu xanh băng
-                                m.emissive.setHex(0x003366); // Phát sáng nhẹ
-                                m.opacity = 0.85; // Nhìn xuyên thấu như pha lê
-                                m.metalness = 0.8; m.roughness = 0.1; // Bóng loáng
+                                if (m.color) m.color.setHex(0xaaddff); // Màu xanh băng
+                                if (m.emissive) m.emissive.setHex(0x003366); // Phát sáng
+                                m.opacity = 0.85; // Trong suốt
+                                if (m.metalness !== undefined) m.metalness = 0.8;
+                                if (m.roughness !== undefined) m.roughness = 0.1;
                             }
                         });
                     }
