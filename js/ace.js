@@ -194,7 +194,7 @@
                     let diemBan = viTriGocToTam.clone();
                     if (tayBan) tayBan.getWorldPosition(diemBan);
 
-                    const lua = taoLuaFile('fire1', 4); // 🌟 Đã bóp nhỏ 50% (Từ 8 xuống 4)
+                    const lua = taoLuaFile('fire1', 2); // 🌟 Đã bóp nhỏ 50% (Từ 8 xuống 4)
                     lua.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
 
                     let doLan = 3.0;
