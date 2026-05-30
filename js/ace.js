@@ -95,6 +95,55 @@
     }
 
     // ==========================================
+    // 💥 HIỆU ỨNG NỔ: TÀN LỬA VĂNG & ÂM THANH
+    // ==========================================
+    const hieuUngAce = []; // Mảng chứa bụi lửa
+
+    function taoHieuUngNoAce(pos, isBig = false) {
+        // 1. KÍCH HOẠT ÂM THANH NỔ CỦA ENGINE
+        if (typeof window.playSound3D === 'function') {
+            window.playSound3D('no', pos); // Phát âm thanh nổ tại vị trí 3D
+        } else if (typeof window.playSound === 'function') {
+            window.playSound('no');
+        }
+
+        // 2. TẠO BỤI LỬA (Hạt văng tứ tung không sóng xung kích)
+        const soLuong = isBig ? 120 : 30; // Chiêu R, F nổ to thì nhiều hạt hơn
+        const geo = new THREE.BufferGeometry();
+        const posArr = new Float32Array(soLuong * 3);
+        const vels = [];
+
+        for (let i = 0; i < soLuong; i++) {
+            posArr[i * 3] = pos.x; posArr[i * 3 + 1] = pos.y + (isBig ? 2 : 1); posArr[i * 3 + 2] = pos.z;
+            
+            // Vector hướng bay văng ra (Hình cầu)
+            let speed = isBig ? (Math.random() * 2 + 1) : (Math.random() * 1 + 0.5);
+            let vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
+            vels.push(vec);
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+
+        // Vẽ hạt lửa cam rực rỡ
+        if (!window.textureBuiLuaAce) {
+            let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
+            let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
+            gradient.addColorStop(0.2, 'rgba(255, 100, 0, 1)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
+            window.textureBuiLuaAce = new THREE.CanvasTexture(canvas);
+        }
+
+        const mat = new THREE.PointsMaterial({
+            color: 0xff5500, size: window.isMobile ? 3.0 : 6.0, map: window.textureBuiLuaAce,
+            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending, depthWrite: false
+        });
+
+        const pts = new THREE.Points(geo, mat); scene.add(pts);
+        hieuUngAce.push({ system: pts, velocities: vels, life: 30 }); // Tồn tại 30 frame
+    }
+
+    // ==========================================
     // 🌟 ĐÚC VẬT THỂ LỬA BẰNG HÀM ENGINE GỐC ĐỂ KHÔNG BỊ LỖI
     // ==========================================
     function taoLuaFile(tenFile, scaleSize) {
@@ -266,24 +315,29 @@
         // ===============================================
         // 🔥 CHIÊU F: HỎA TRỤ (Xoay tròn & Phình to ra 50m)
         // ===============================================
+        // ===============================================
+        // 🔥 CHIÊU F: HỎA TRỤ (Xoay tròn & Phình to ra 50m)
+        // ===============================================
         else if (phim === 'F') {
             setTimeout(() => {
                 let diemNo = mucTieu.clone();
                 diemNo.y = window.matDatY || 0;
 
-                // Scale gốc cực nhỏ: Bắt đầu từ 5m
                 const lua = taoLuaFile('fire4', 5);
                 lua.position.copy(diemNo);
                 scene.add(lua);
 
                 kyNangAce.push({
                     mesh: lua, type: 'NO_TAI_CHO', speed: 0,
-                    life: 120, // Tồn tại 120 frame
-                    skillId: 'F', currentScale: 5, maxScale: 50, // Tham số để làm phình to
-                    targetPos: diemNo, damage: dameGoc * 1.5, isRemote: isRemote, noBanKinh: 40
+                    life: 120, 
+                    skillId: 'F', currentScale: 5, maxScale: 50, 
+                    targetPos: diemNo, damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 40
                 });
 
                 gaySatThuongAce(diemNo, dameGoc * 1.0, 40);
+                
+                // 🌟 BÙM! TẠO BỤI LỬA NỔ KHỔNG LỒ TẠI CHỖ
+                taoHieuUngNoAce(diemNo, true); 
 
             }, 500);
         }
@@ -296,16 +350,12 @@
         for (let i = kyNangAce.length - 1; i >= 0; i--) {
             let s = kyNangAce[i]; s.life--;
 
-            // 🛑 BẢN VÁ TỐI THƯỢNG: Chỉ xoay cái ruột 3D (children[0]), giữ nguyên cái vỏ bên ngoài!
             if (s.mesh && s.mesh.children.length > 0) {
                 let ruotLua = s.mesh.children[0];
-
-                if (s.skillId === 'Q') ruotLua.rotateZ(0.8); // Q - Mũi khoan: Xoay tít quanh lõi ngang
-
-                if (s.skillId === 'R') ruotLua.rotateY(0.2); // R - Viêm Đế: Xoay lốc xoáy quanh trục dọc của chính nó
-
+                if (s.skillId === 'Q') ruotLua.rotateZ(0.8); 
+                if (s.skillId === 'R') ruotLua.rotateY(0.2); 
                 if (s.skillId === 'F') {
-                    ruotLua.rotateY(0.3); // F - Hỏa Trụ
+                    ruotLua.rotateY(0.3); 
                     if (s.currentScale < s.maxScale) {
                         s.currentScale += 1.5;
                         s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
@@ -313,23 +363,24 @@
                 }
             }
 
-            // 🛑 ĐỘNG CƠ TÌM ĐƯỜNG TUYỆT ĐỐI (Toán học Vector)
             if (s.type === 'BAY_THANG') {
                 if (s.targetPos) {
-                    // Kéo 1 đường thẳng tắp từ tọa độ đạn tới chân quái vật, không bao giờ bị bẻ lái!
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                     s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                 } else {
                     s.mesh.translateZ(s.speed);
                 }
 
-                // Kích nổ khi chạm đích
+                // 🛑 BÙM! KHI ĐẠN CHẠM ĐÍCH
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🌟 KÍCH HOẠT HIỆU ỨNG NỔ (R nổ to, Q E nổ nhỏ)
+                    taoHieuUngNoAce(s.targetPos, s.skillId === 'R');
 
                     if (s.skillId === 'R') {
                         s.type = 'NO_TAI_CHO';
-                        s.life = 60; // Đâm trúng sàn thì đứng im diễn lốc xoáy nổ tiếp
+                        s.life = 60; 
                     } else {
                         s.life = 0;
                     }
@@ -343,7 +394,31 @@
             }
         }
 
-        // 🛑 PHỤC HỒI CODE HIỂN THỊ DAME MÁU
+        // 🌟 DIỄN HOẠT HIỆU ỨNG TÀN LỬA VĂNG RA
+        for (let i = hieuUngAce.length - 1; i >= 0; i--) {
+            let h = hieuUngAce[i]; h.life--;
+            let posArr = h.system.geometry.attributes.position.array;
+            for (let j = 0; j < posArr.length / 3; j++) {
+                posArr[j * 3] += h.velocities[j].x;
+                posArr[j * 3 + 1] += h.velocities[j].y;
+                posArr[j * 3 + 2] += h.velocities[j].z;
+                
+                // Hiệu ứng vật lý: Tàn lửa bị cản bởi không khí chậm dần và bốc lên nhẹ
+                h.velocities[j].x *= 0.85; 
+                h.velocities[j].z *= 0.85;
+                h.velocities[j].y *= 0.85; 
+                h.velocities[j].y += 0.05; // Bốc lên
+            }
+            h.system.geometry.attributes.position.needsUpdate = true;
+            h.system.material.opacity = h.life / 30; // Mờ dần rồi biến mất
+
+            if (h.life <= 0) {
+                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                hieuUngAce.splice(i, 1);
+            }
+        }
+
+        // CODE HIỂN THỊ DAME MÁU (Giữ nguyên)
         for (let i = danhSachSoBayAce.length - 1; i >= 0; i--) {
             let it = danhSachSoBayAce[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
