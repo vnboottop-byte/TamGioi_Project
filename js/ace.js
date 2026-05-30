@@ -1,6 +1,6 @@
 // ==========================================
-// 🔥 MÔN PHÁI ĐOẠT XÁ: HỎA QUYỀN PORTGAS D. ACE (BẢN CHUẨN)
-// 👑 CÔNG NGHỆ: SKILL ĐỘC LẬP + KHÓA CHÂN + VRAM SAFE + ĐẠN ĐẠO ĐA DẠNG
+// 🔥 MÔN PHÁI ĐOẠT XÁ: HỎA QUYỀN PORTGAS D. ACE (BẢN AAA)
+// 👑 CÔNG NGHỆ: AUTO-ANIMATION MODEL + XẢ ĐẠN 10 NHỊP + FIX XOÁ RÁC
 // ==========================================
 
 (function () {
@@ -94,7 +94,7 @@
     }
 
     // ==========================================
-    // 🌟 ĐÚC VẬT THỂ LỬA (VRAM SAFE)
+    // 🌟 ĐÚC VẬT THỂ LỬA & AUTO KÍCH HOẠT ANIMATION
     // ==========================================
     function taoLuaFile(tenFile, scaleSize) {
         const group = new THREE.Group();
@@ -103,16 +103,24 @@
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
-                    // Cứu rỗi VRAM: Chỉ bật transparent, tuyệt đối không clone hay ép màu bậy bạ
                     if (c.isMesh && c.material) {
                         if (Array.isArray(c.material)) {
                             c.material.forEach(m => { m.transparent = true; m.blending = THREE.AdditiveBlending; });
                         } else {
                             c.material.transparent = true;
-                            c.material.blending = THREE.AdditiveBlending; // Lửa phải dùng Additive để phát sáng rực rỡ
+                            c.material.blending = THREE.AdditiveBlending;
                         }
                     }
                 });
+
+                // 🛑 BÍ THUẬT: ĐỌC VÀ KÍCH HOẠT ANIMATION CỦA CHÍNH MODEL HIỆU ỨNG
+                if (v.animations && v.animations.length > 0) {
+                    let mixer = new THREE.AnimationMixer(v);
+                    let action = mixer.clipAction(v.animations[0]); // Gọi Animation đầu tiên
+                    action.setEffectiveTimeScale(1.5); // 🚀 TĂNG TỐC ĐỘ CHÁY LÊN 1.5 LẦN!
+                    action.play();
+                    group.userData.mixer = mixer; // Gắn mixer vào để Engine cập nhật mỗi khung hình
+                }
 
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
@@ -128,9 +136,6 @@
         return group;
     }
 
-    // ==========================================
-    // 🏹 HÀM XẢ COMBO HỎA QUYỀN ACE
-    // ==========================================
     window.thoiDiemChemCuoi_Ace = window.thoiDiemChemCuoi_Ace || 0;
 
     window.tungComboAce = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
@@ -140,7 +145,6 @@
         }
         if (!nvc) return;
 
-        // 🌟 KHÓA CỨNG ANIMATION THEO TỪNG PHÍM
         let animCanMua = 'ATTACK1';
         if (phim === 'Q') animCanMua = 'ATTACK1';
         if (phim === 'E') animCanMua = 'ATTACK2';
@@ -154,8 +158,6 @@
 
             window.dangMuaChieu = true;
             window.currentAnimName = ''; 
-            
-            // Ép model múa đúng động tác của chiêu đó
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
         }
 
@@ -189,64 +191,62 @@
 
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // Bóc tách xương tay chuẩn Ace
         let xuongTayPhai = null; let xuongTayTrai = null;
         nvc.traverse(c => {
-            // Lọc ưu tiên xương trước, nếu không có thì lấy thịt
             if (c.name === 'RHand_Palm_015' || (c.name === 'Object_20' && !xuongTayPhai)) xuongTayPhai = c;
             if (c.name === 'LHand_Palm_011' || (c.name === 'Object_16' && !xuongTayTrai)) xuongTayTrai = c;
         });
 
         // ===============================================
-        // 🔥 CHIÊU Q: HỎA QUYỀN LIÊN HOÀN (Bắn xen kẽ trái phải, tốc độ chậm hơn đạn)
+        // 🔥 CHIÊU Q: 10 MODEL XEN KẼ (NHỎ NHƯ NẮM ĐẤM)
         // ===============================================
         if (phim === 'Q') {
-            let soVien = 6;
+            let soVien = 10; // Tăng từ 6 lên 10 viên
             for (let i = 0; i < soVien; i++) {
                 setTimeout(() => {
                     let tayBan = (i % 2 === 0) ? xuongTayPhai : xuongTayTrai;
                     let diemBan = viTriGocToTam.clone();
                     if (tayBan) tayBan.getWorldPosition(diemBan);
 
-                    const lua = taoLuaFile('fire1', 15);
+                    const lua = taoLuaFile('fire1', 5); // 🛑 Thu nhỏ scale từ 15 xuống 5
                     lua.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
                     
-                    let doLan = 4.0; // Tản mác một chút cho tự nhiên
+                    let doLan = 4.0;
                     let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * doLan, (Math.random() - 0.5) * doLan, 0));
                     
                     lua.lookAt(targetBay);
                     scene.add(lua);
 
                     kyNangAce.push({
-                        mesh: lua, type: 'BAY_THANG', speed: 6.0, life: 100, // Tốc độ 6.0 (Chậm hơn kiếm 12.0)
+                        mesh: lua, type: 'BAY_THANG', speed: 6.0, life: 100, 
                         targetPos: targetBay, damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 10
                     });
-                }, 200 + (i * 200)); // Delay ban đầu 200ms, mỗi viên cách nhau 200ms
+                }, 200 + (i * 150)); // Bắn nhanh dần đều
             }
         }
 
         // ===============================================
-        // 🔥 CHIÊU E: HỎA ĐẠN TẬP TRUNG (Delay 1 giây, bắn tay phải)
+        // 🔥 CHIÊU E: LÙI DELAY 1300ms 
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
                 let diemBan = viTriGocToTam.clone();
                 if (xuongTayPhai) xuongTayPhai.getWorldPosition(diemBan);
 
-                const lua = taoLuaFile('fire2', 25); // Model fire2 (hoặc fire1 nếu Sếp không có)
+                const lua = taoLuaFile('fire2', 25);
                 lua.position.copy(diemBan).add(huongMat.clone().multiplyScalar(2.0));
                 lua.lookAt(mucTieu);
                 scene.add(lua);
 
                 kyNangAce.push({
-                    mesh: lua, type: 'BAY_THANG', speed: 4.5, life: 120, // Tốc độ siêu chậm
+                    mesh: lua, type: 'BAY_THANG', speed: 4.5, life: 120, 
                     targetPos: mucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 15
                 });
-            }, 1000); // 🕒 Delay chuẩn 1 giây theo yêu cầu
+            }, 1300); // 🕒 Chờ animation thêm 300ms (1000 -> 1300)
         }
 
         // ===============================================
-        // 🔥 CHIÊU R: ĐẠI VIÊM GIỚI - VIÊM ĐẾ (Tạo giữa 2 tay, ném đi sau 1s)
+        // 🔥 CHIÊU R: VIÊM ĐẾ (GIỮ LẠI KHÔNG XOÁ SỚM)
         // ===============================================
         else if (phim === 'R') {
             setTimeout(() => {
@@ -254,46 +254,44 @@
                 if (xuongTayPhai) xuongTayPhai.getWorldPosition(diemBanPhai);
                 if (xuongTayTrai) xuongTayTrai.getWorldPosition(diemBanTrai);
 
-                // Lấy trung điểm giữa 2 bàn tay đang giơ lên cao
                 let diemBan = new THREE.Vector3().addVectors(diemBanPhai, diemBanTrai).multiplyScalar(0.5);
-                diemBan.y += 2.0; // Đẩy quả cầu lửa lên cao một chút cho đẹp
+                diemBan.y += 2.0;
 
-                const lua = taoLuaFile('fire3', 45); // Kích thước to khổng lồ
+                const lua = taoLuaFile('fire3', 45); 
                 lua.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.0));
                 lua.lookAt(mucTieu);
                 scene.add(lua);
 
                 kyNangAce.push({
-                    mesh: lua, type: 'BAY_THANG', speed: 5.0, life: 150, 
+                    mesh: lua, type: 'BAY_THANG', speed: 5.0, 
+                    life: 250, // 🚀 Tăng thời gian sống lên cực dài để không bị bốc hơi giữa đường
+                    isUltimate: true, // Đánh dấu là chiêu R để xử lý lúc nổ
                     targetPos: mucTieu.clone(), damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 30
                 });
-            }, 1000); // 🕒 Delay 1 giây (Thời gian đang gồng tay lên đầu)
+            }, 1000); 
         }
 
         // ===============================================
-        // 🔥 CHIÊU F: HỎA TRỤ KHỔNG LỒ (Gọi ngay dưới chân quái, tồn tại 3 giây)
+        // 🔥 CHIÊU F: HỎA TRỤ KHỔNG LỒ 
         // ===============================================
         else if (phim === 'F') {
             setTimeout(() => {
-                // Xác định tọa độ mặt đất của mục tiêu
                 let diemNo = mucTieu.clone();
-                diemNo.y = window.matDatY || 0; // Ép dính xuống sàn
+                diemNo.y = window.matDatY || 0; 
 
-                const lua = taoLuaFile('fire4', 60); // Cột lửa siêu to
+                const lua = taoLuaFile('fire4', 60);
                 lua.position.copy(diemNo);
                 scene.add(lua);
 
-                // Loại này KHÔNG bay, chỉ đứng yên tại chỗ
                 kyNangAce.push({
                     mesh: lua, type: 'NO_TAI_CHO', speed: 0, 
-                    life: 90, // Tồn tại 90 frame (~3 giây) để diễn xong animation
+                    life: 120, // 🚀 120 frame (~4 giây) để ngọn lửa cháy cho xong animation
                     targetPos: diemNo, damage: dameGoc * 1.5, isRemote: isRemote, noBanKinh: 40
                 });
                 
-                // Gây sát thương nổ ngay lập tức khi cột lửa trồi lên
                 gaySatThuongAce(diemNo, dameGoc * 1.5, 40);
 
-            }, 500); // Mất 0.5s từ lúc dậm chân/vung tay tới khi lửa trồi lên
+            }, 500); 
         }
     };
 
@@ -304,20 +302,28 @@
         for (let i = kyNangAce.length - 1; i >= 0; i--) {
             let s = kyNangAce[i]; s.life--;
 
-            if (s.type === 'BAY_THANG') {
-                s.mesh.translateZ(s.speed);
-                // Nếu đạn bay đến đích -> Nổ gây dame
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
-                    s.life = 0;
-                }
-            }
-            else if (s.type === 'NO_TAI_CHO') {
-                // Không di chuyển, chỉ trừ dần thời gian sống
-                // Sếp có thể thêm code xoay xoắn ốc ở đây nếu muốn: s.mesh.rotateY(0.1);
+            // 🛑 CHẠY ANIMATION CỦA TỪNG HIỆU ỨNG LỬA
+            if (s.mesh && s.mesh.userData && s.mesh.userData.mixer) {
+                s.mesh.userData.mixer.update(0.03); // Cập nhật khung hình Animation
             }
 
-            // Dọn rác an toàn
+            if (s.type === 'BAY_THANG') {
+                s.mesh.translateZ(s.speed);
+                
+                // Khi chạm đích
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
+                    gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🛑 CHỮA BỆNH "XOÁ RÁC SỚM" CHO CHIÊU R
+                    if (s.isUltimate) {
+                        s.type = 'NO_TAI_CHO'; // Chuyển sang đứng yên tại chỗ
+                        s.life = 60;           // Cho nó sống thêm 2 giây để bùng nổ đẹp mắt
+                    } else {
+                        s.life = 0; // Các viên đạn Q, E thì nổ xong xoá luôn
+                    }
+                }
+            }
+
             if (s.life <= 0) {
                 if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
                 if (typeof scene !== 'undefined') scene.remove(s.mesh);
@@ -335,7 +341,7 @@
         window.HePhaiHienTai = {
             tenPhai: "Hỏa Quyền",
             khoiTao: function () {
-                console.log("🔥 Đã kế thừa ý chí của Ace! Kích hoạt Động cơ Khóa Chân an toàn!");
+                console.log("🔥 Đã kế thừa ý chí của Ace! Kích hoạt Auto-Animation lửa!");
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
@@ -348,7 +354,6 @@
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
                         
-                        // 🛑 LÁ CHẮN KHÓA CHÂN: ÉP ĐỨNG ĐÁNH TẠI CHỖ
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
                             if (clip && clip.tracks) {
                                 clip.tracks = clip.tracks.filter(track => {
@@ -359,7 +364,6 @@
                             }
                         }
 
-                        // Phân loại Animation dựa theo danh sách của Sếp cung cấp
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL')) window.KHO_ANIM_TANCONG.push(key);
                         
