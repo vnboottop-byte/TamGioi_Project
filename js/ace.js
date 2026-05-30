@@ -296,16 +296,16 @@
         for (let i = kyNangAce.length - 1; i >= 0; i--) {
             let s = kyNangAce[i]; s.life--;
 
-            // 🛑 XỬ LÝ XOAY BẰNG CODE THEO LOGIC MỚI CỦA SẾP
-            if (s.mesh) {
-                if (s.skillId === 'Q') s.mesh.rotateZ(0.8); // Q - Mũi khoan: Xoay tít trục Z dọc đạn
+            // 🛑 BẢN VÁ TỐI THƯỢNG: Chỉ xoay cái ruột 3D (children[0]), giữ nguyên cái vỏ bên ngoài!
+            if (s.mesh && s.mesh.children.length > 0) {
+                let ruotLua = s.mesh.children[0];
 
-                // Chiêu E: Đã bứt bỏ hoàn toàn lệnh xoay ở đây -> Ném đi giữ nguyên tư thế!
+                if (s.skillId === 'Q') ruotLua.rotateZ(0.8); // Q - Mũi khoan: Xoay tít quanh lõi ngang
 
-                if (s.skillId === 'R') s.mesh.rotateY(0.2); // R - Viêm Đế: Đổi trục xoay thành rotateY (Lốc xoáy quanh mình khi lao xuống)
+                if (s.skillId === 'R') ruotLua.rotateY(0.2); // R - Viêm Đế: Xoay lốc xoáy quanh trục dọc của chính nó
 
                 if (s.skillId === 'F') {
-                    s.mesh.rotateY(0.3); // F - Hỏa Trụ: Vừa xoay vừa phình to ra 50m
+                    ruotLua.rotateY(0.3); // F - Hỏa Trụ
                     if (s.currentScale < s.maxScale) {
                         s.currentScale += 1.5;
                         s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
@@ -313,16 +313,23 @@
                 }
             }
 
-            // 🛑 DI CHUYỂN VÀ XỬ LÝ VA CHẠM ĐÍCH
+            // 🛑 ĐỘNG CƠ TÌM ĐƯỜNG TUYỆT ĐỐI (Toán học Vector)
             if (s.type === 'BAY_THANG') {
-                s.mesh.translateZ(s.speed);
+                if (s.targetPos) {
+                    // Kéo 1 đường thẳng tắp từ tọa độ đạn tới chân quái vật, không bao giờ bị bẻ lái!
+                    let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
+                    s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                } else {
+                    s.mesh.translateZ(s.speed);
+                }
 
+                // Kích nổ khi chạm đích
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
 
                     if (s.skillId === 'R') {
                         s.type = 'NO_TAI_CHO';
-                        s.life = 60; // Viêm Đế đâm xuống sàn chân quái sẽ nằm im diễn nốt nổ 2 giây
+                        s.life = 60; // Đâm trúng sàn thì đứng im diễn lốc xoáy nổ tiếp
                     } else {
                         s.life = 0;
                     }
@@ -335,9 +342,6 @@
                 kyNangAce.splice(i, 1);
             }
         }
-
-            // Giữ nguyên vòng lặp hiển thị số dame ở dưới...
-    
 
         // 🛑 PHỤC HỒI CODE HIỂN THỊ DAME MÁU
         for (let i = danhSachSoBayAce.length - 1; i >= 0; i--) {
