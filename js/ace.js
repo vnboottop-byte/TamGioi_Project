@@ -204,9 +204,9 @@
                     scene.add(lua);
 
                     kyNangAce.push({
-                        mesh: lua, type: 'BAY_THANG', speed: 6.0, life: 100,
-                        skillId: 'Q',
-                        targetPos: targetBay, damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 10
+                        mesh: lua, type: 'BAY_THANG', speed: 6.0, life: 100, 
+                        skillId: 'Q', 
+                        targetPos: targetBay, damage: dameGoc * 0.04, isRemote: isRemote, noBanKinh: 10 // 🌟 Sửa thành 0.04
                     });
                 }, 200 + (i * 150));
             }
@@ -258,7 +258,7 @@
                     mesh: lua, type: 'BAY_THANG', speed: 5.0, life: 250,
                     skillId: 'R',
                     targetPos: diemChanMucTieu, // Đâm trúng sàn chân quái thì nổ
-                    damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 30
+                    damage: dameGoc * 0.5, isRemote: isRemote, noBanKinh: 30
                 });
             }, 1000);
         }
@@ -283,7 +283,7 @@
                     targetPos: diemNo, damage: dameGoc * 1.5, isRemote: isRemote, noBanKinh: 40
                 });
 
-                gaySatThuongAce(diemNo, dameGoc * 1.5, 40);
+                gaySatThuongAce(diemNo, dameGoc * 1.0, 40);
 
             }, 500);
         }
