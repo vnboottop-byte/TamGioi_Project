@@ -1,6 +1,6 @@
 // ==========================================
-// ❄️ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC AOKIJI (KUZAN)
-// 👑 CÔNG NGHỆ: AURA TUYẾT VĨNH CỬU + BĂNG HÓA MODEL + DPS E-SPORTS
+// ❄️ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC AOKIJI (KUZAN) - BẢN FINAL FIX GIẬT & VISUAL
+// 👑 CÔNG NGHỆ: OPTIMIZED AURA + MULTI-HIT ORBIT + HIGH-ALTITUDE ARC
 // ==========================================
 
 (function () {
@@ -97,10 +97,10 @@
 
     // 🌟 3. BỤI BĂNG (MÀU TRẮNG XANH)
     function taoHieuUngNoAK(pos, isBig = false) {
-        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
+        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos);
         else if (typeof window.playSound === 'function') window.playSound('no');
 
-        const soLuong = isBig ? 120 : 30; 
+        const soLuong = isBig ? 120 : 30;
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
@@ -132,7 +132,7 @@
         hieuUngAokiji.push({ system: pts, velocities: vels, life: 30 });
     }
 
-    // 🌟 4. ĐÚC MODEL: BỌC LỚP BĂNG GIÁ CHO THIÊN THẠCH (BẢN VÁ LỖI TÀNG HÌNH)
+    // 🌟 4. ĐÚC MODEL AN TOÀN TRÁNH LỖI TÀNG HÌNH
     function taoVatTheAokiji(tenFile, scaleSize, isBăngHóa = false) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -141,16 +141,13 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        // 🛑 Lấy danh sách vật liệu ra xử lý TẠM, KHÔNG ghi đè cấu trúc Array của Engine
                         let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
-
                         danhSachMat.forEach(m => {
                             m.transparent = true;
-                            // 🌟 BÍ THUẬT BĂNG HÓA AN TOÀN (Kiểm tra xem vật liệu có hỗ trợ không mới ép)
                             if (isBăngHóa) {
-                                if (m.color) m.color.setHex(0xaaddff); // Màu xanh băng
-                                if (m.emissive) m.emissive.setHex(0x003366); // Phát sáng
-                                m.opacity = 0.85; // Trong suốt
+                                if (m.color) m.color.setHex(0xaaddff);
+                                if (m.emissive) m.emissive.setHex(0x003366);
+                                m.opacity = 0.85;
                                 if (m.metalness !== undefined) m.metalness = 0.8;
                                 if (m.roughness !== undefined) m.roughness = 0.1;
                             }
@@ -170,7 +167,6 @@
         return group;
     }
 
-    // KIẾM KHÍ CHUẨN (MÀU BĂNG) DÀNH CHO CHIÊU Q
     function taoKiemQuangBăng(scaleSize) {
         const group = new THREE.Group();
         let soNgauNhien = Math.floor(Math.random() * 6) + 1;
@@ -182,7 +178,7 @@
                     if (c.isMesh && c.material) {
                         let m = Array.isArray(c.material) ? c.material[0] : c.material;
                         m.transparent = true;
-                        m.color.setHex(0x00ffff); // Ép màu xanh băng cho kiếm khí
+                        m.color.setHex(0x00ffff);
                     }
                 });
                 v.updateMatrixWorld(true);
@@ -209,7 +205,6 @@
         }
         if (!nvc) return;
 
-        // BẮT MAP ANIMATION CHUẨN AOKIJI
         let animCanMua = 'ATTACK1';
         if (phim === 'Q') animCanMua = 'ATTACK1';
         if (phim === 'E') animCanMua = 'ATTACK4';
@@ -227,7 +222,7 @@
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
         let viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
-        
+
         let mucTieu = null;
         if (isRemote) {
             mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
@@ -235,7 +230,7 @@
             let targetRadar = window.layMucTieuGanNhatAK(viTriGocToTam);
             if (targetRadar && targetRadar.mesh) mucTieu = window.layHitbox(targetRadar.mesh).tamNguc.clone();
             else mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
-            
+
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'TUNG_CHIEU', skillType: phim, className: 'Aokiji',
@@ -248,7 +243,7 @@
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
-        // ❄️ CHIÊU Q (ATTACK1): LƯỠI KIẾM BĂNG 
+        // ❄️ CHIÊU Q (ATTACK1): LƯỠI KIẾM BĂNG
         // ===============================================
         if (phim === 'Q') {
             setTimeout(() => {
@@ -260,41 +255,46 @@
                 kyNangAokiji.push({
                     mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
                     targetPos: mucTieu.clone(), damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 10
-                }); // DPS: 1 hit x 10 lần = 4.0
+                });
             }, 300);
         }
 
         // ===============================================
-        // ❄️ CHIÊU E (ATTACK4): BÃO TUYẾT QUAY QUANH QUÁI (3 GIÂY)
+        // ❄️ CHIÊU E (ATTACK4): BÃO TUYẾT PHÓNG TO GẤP 3 (CÓ DAME KHU VỰC LIÊN TỤC)
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
-                const baoTuyet = taoVatTheAokiji('TUYET', 20, false); // Gắn tuyết gốc
-                baoTuyet.position.copy(diemChanMucTieu);
+                const baoTuyet = taoVatTheAokiji('TUYET', 60, false); // 🌟 Phóng to từ 20 lên 60 (gấp 3 lần)
+
+                // Nâng tâm bão cao lên mặt đất 3m để chắc chắn không bị chìm
+                let tamBaoNo = diemChanMucTieu.clone();
+                tamBaoNo.y += 3.0;
+
+                baoTuyet.position.copy(tamBaoNo);
                 scene.add(baoTuyet);
 
                 kyNangAokiji.push({
-                    mesh: baoTuyet, type: 'BAO_ORBIT', speed: 0.1, life: 90, // Tồn tại 3s (90 frames)
-                    tamQuay: diemChanMucTieu, gocXoay: 0, banKinh: 5,
-                    damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 20
-                }); // DPS: 1 nổ x 3 lần = 1.8
+                    mesh: baoTuyet, type: 'BAO_ORBIT', speed: 0.15, life: 90,
+                    tamQuay: tamBaoNo, gocXoay: 0, banKinh: 6, ticksDame: 0, // 🌟 Tham số quét dame khu vực
+                    damage: dameGoc * 0.06, // Chia nhỏ dame (0.06 * 10 hit liên tục = 0.6 tổng)
+                    isRemote: isRemote, noBanKinh: 20
+                });
             }, 500);
         }
 
         // ===============================================
-        // ❄️ CHIÊU R (ATTACK5): 5 THIÊN THẠCH BĂNG XÉO 
+        // ❄️ CHIÊU R (ATTACK5): 5 THIÊN THẠCH CAO ĐỘ (RƠI XÉO DỐC ĐÚNG CHẤT)
         // ===============================================
         else if (phim === 'R') {
             for (let i = 0; i < 5; i++) {
                 setTimeout(() => {
-                    const thienThach = taoVatTheAokiji('THIENTHACH', 15, true); // 🌟 isBăngHóa = true
-                    
-                    // Điểm xuất phát: Trên cao và lùi về sau nhân vật
-                    let posXuatPhat = viTriGocToTam.clone().add(upVector.clone().multiplyScalar(30)).sub(huongMat.clone().multiplyScalar(15));
-                    posXuatPhat.x += (Math.random() - 0.5) * 20; // Lệch random
-                    posXuatPhat.z += (Math.random() - 0.5) * 20;
+                    const thienThach = taoVatTheAokiji('THIENTHACH', 18, true);
 
-                    // Điểm đáp: Xung quanh mục tiêu (Không thẳng hàng)
+                    // 🌟 VÁ CAO ĐỘ: Đẩy độ cao xuất phát lên trời 60M và kéo sát về nhân vật để góc rơi dốc hơn
+                    let posXuatPhat = viTriGocToTam.clone().add(upVector.clone().multiplyScalar(60)).sub(huongMat.clone().multiplyScalar(5));
+                    posXuatPhat.x += (Math.random() - 0.5) * 25;
+                    posXuatPhat.z += (Math.random() - 0.5) * 25;
+
                     let posDap = diemChanMucTieu.clone();
                     posDap.x += (Math.random() - 0.5) * 15;
                     posDap.z += (Math.random() - 0.5) * 15;
@@ -304,15 +304,15 @@
                     scene.add(thienThach);
 
                     kyNangAokiji.push({
-                        mesh: thienThach, type: 'BAY_THANG', speed: 8.0, life: 150,
+                        mesh: thienThach, type: 'BAY_THANG', speed: 9.0, life: 150,
                         targetPos: posDap, damage: dameGoc * 0.1, isRemote: isRemote, noBanKinh: 20
-                    }); // DPS: 5 hit x 0.1 = 0.5 (Tung 2 lần = 1.0)
+                    });
                 }, i * 200);
             }
         }
 
         // ===============================================
-        // ❄️ CHIÊU F (ATTACK3): MƯA THIÊN THẠCH BĂNG 3 GIÂY DIỆN RỘNG
+        // ❄️ CHIÊU F (ATTACK3): MƯA THIÊN THẠCH KHỔNG LỒ (CAO 5 LẦN, RỘNG 45M)
         // ===============================================
         else if (phim === 'F') {
             let tongThoiGian = 3000;
@@ -321,26 +321,28 @@
 
             for (let i = 0; i < soLuongMua; i++) {
                 setTimeout(() => {
-                    const thienThach = taoVatTheAokiji('THIENTHACH', 12, true); // Mưa nhỏ hơn 1 xíu
-                    
-                    // Rơi diện rộng khu vực mục tiêu
-                    let posDap = diemChanMucTieu.clone();
-                    posDap.x += (Math.random() - 0.5) * 40;
-                    posDap.z += (Math.random() - 0.5) * 40;
+                    // 🌟 KHỐI BĂNG TO HƠN 3 LẦN: Tăng scale từ 12 lên 36!
+                    const thienThach = taoVatTheAokiji('THIENTHACH', 36, true);
 
-                    // Xuất phát từ trên trời đâm thẳng hoặc xéo xuống
+                    // 🌟 MỞ RỘNG TẦM QUÉT SÁT THƯƠNG LAN: Random phạm vi rơi rộng 45m quanh mục tiêu
+                    let posDap = diemChanMucTieu.clone();
+                    posDap.x += (Math.random() - 0.5) * 45;
+                    posDap.z += (Math.random() - 0.5) * 45;
+
+                    // 🌟 CAO LÊN THÊM 5 LẦN: Tăng độ cao xuất phát từ 35m lên hẳn 175M trên không trung!
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.y += 35; 
-                    posXuatPhat.x += (Math.random() - 0.5) * 10;
+                    posXuatPhat.y += 175;
+                    posXuatPhat.x += (Math.random() - 0.5) * 20;
+                    posXuatPhat.z += (Math.random() - 0.5) * 20;
 
                     thienThach.position.copy(posXuatPhat);
                     thienThach.lookAt(posDap);
                     scene.add(thienThach);
 
                     kyNangAokiji.push({
-                        mesh: thienThach, type: 'BAY_THANG', speed: 9.0, life: 100,
-                        targetPos: posDap, damage: dameGoc * 0.066, isRemote: isRemote, noBanKinh: 15
-                    }); // DPS: 15 hit x 0.066 = 1.0
+                        mesh: thienThach, type: 'BAY_THANG', speed: 12.0, life: 120, // Tăng tốc độ bay cho kịp cự ly 175m
+                        targetPos: posDap, damage: dameGoc * 0.066, isRemote: isRemote, noBanKinh: 25 // Sát thương nổ lan rộng hơn
+                    });
                 }, i * delayPerMeteor);
             }
         }
@@ -350,8 +352,8 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU AOKIJI
     // ==========================================
     window.updateCombatAokiji = function () {
-        
-        // 🌟 DUY TRÌ AURA TUYẾT XUNG QUANH NHÂN VẬT 20M (40 SIZE)
+
+        // 🌟 BẢN VÁ HIỆU NĂNG AURA TUYẾT: Theo tọa độ mượt mà, không chạy hàm update tỉ lệ gây giật lag
         let nvc = window.playerModel || window.nhanVatChinh;
         if (nvc) {
             if (!window.aokijiAura) {
@@ -359,15 +361,14 @@
                 scene.add(window.aokijiAura);
             }
             window.aokijiAura.position.copy(nvc.position);
-            window.aokijiAura.rotateY(0.01); // Xoay nhẹ nhàng 
+            window.aokijiAura.rotateY(0.01);
         }
 
-        // Xử lý đạn đạo
         for (let i = kyNangAokiji.length - 1; i >= 0; i--) {
             let s = kyNangAokiji[i]; s.life--;
 
             if (s.type === 'BAY_THANG') {
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.5); // Thiên thạch xoay trục mũi khoan
+                if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.5);
 
                 if (s.targetPos) {
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
@@ -380,18 +381,24 @@
                     s.life = 0;
                 }
             }
-            // 🌟 VẬT LÝ BÃO TUYẾT LỆCH TRỤC
+            // 🌟 VẬT LÝ BÃO TUYẾT QUÉT DAME LIÊN TỤC THEO KHU VỰC
             else if (s.type === 'BAO_ORBIT') {
                 s.gocXoay += s.speed;
-                // Bắt nó bay vòng tròn xung quanh mục tiêu
                 s.mesh.position.x = s.tamQuay.x + Math.cos(s.gocXoay) * s.banKinh;
                 s.mesh.position.z = s.tamQuay.z + Math.sin(s.gocXoay) * s.banKinh;
-                
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.2); // Tự xoay bản thân bão tuyết
 
-                // Hết 3 giây -> Gom damage nổ diện rộng 1 lần
-                if (s.life === 1) {
-                    gaySatThuongAK(s.tamQuay, s.damage, s.noBanKinh);
+                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.2);
+
+                // Quét kiểm tra gây sát thương liên tục mỗi 10 frame (~0.3 giây/lần)
+                s.ticksDame++;
+                if (s.ticksDame % 10 === 0) {
+                    gaySatThuongAK(s.mesh.position, s.damage, 15);
+                    taoHieuUngNoAK(s.mesh.position, false); // Nổ băng nhỏ rào rào
+                }
+
+                // Khi hết chu kỳ 3 giây -> Phát nổ khổng lồ cú chót
+                if (s.life <= 1) {
+                    gaySatThuongAK(s.tamQuay, s.damage * 2, s.noBanKinh);
                     taoHieuUngNoAK(s.tamQuay, true);
                 }
             }
@@ -409,7 +416,7 @@
             let posArr = h.system.geometry.attributes.position.array;
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.02; // Tuyết bay lên nhè nhẹ
+                h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.02;
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 30;
