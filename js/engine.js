@@ -2394,7 +2394,16 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                     }
                 } else {
                     if (window.keys && !window.keys.space) {
-                        if (isFlying) { if (typeof playAnim === 'function') playAnim('BAY'); } else { if (typeof playIdle === 'function') playIdle(); }
+                        // 🌟 BẢN VÁ: NHẬN DIỆN "BAY FAKE" (Do mượn animation Chạy Bộ)
+                        let laBayFake = (window.animationsMap && window.animationsMap['BAY'] === window.animationsMap['CHAYBO']);
+                        
+                        if (isFlying && !laBayFake) { 
+                            // Nếu có cánh bay thật sự -> Giữ dáng bay lơ lửng
+                            if (typeof playAnim === 'function') playAnim('BAY'); 
+                        } else { 
+                            // Nếu bay fake hoặc đang ở mặt đất -> Đứng yên nhàn rỗi!
+                            if (typeof playIdle === 'function') playIdle(); 
+                        }
                     }
                     if (!dangChuDongDoiDoCao && doCao < 0.05) playerModel.position.y = matDatY;
                 }
@@ -2585,8 +2594,14 @@ if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { cu
                     }
                 } else {
                     if (window.keys && !window.keys.space) {
-                        if (isFlying) { if (typeof playAnim === 'function') playAnim('BAY'); }
-                        else if (currentAnimName === 'CHAYBO' || currentAnimName === 'DIBO' || currentAnimName === 'BAY') { if (typeof playIdle === 'function') playIdle(); }
+                        // 🌟 BẢN VÁ: NHẬN DIỆN "BAY FAKE" 
+                        let laBayFake = (window.animationsMap && window.animationsMap['BAY'] === window.animationsMap['CHAYBO']);
+                        
+                        if (isFlying && !laBayFake) { 
+                            if (typeof playAnim === 'function') playAnim('BAY'); 
+                        } else { 
+                            if (typeof playIdle === 'function') playIdle(); 
+                        }
                     }
                     if (!dangChuDongDoiDoCao) {
                         let dCenter = playerModel.position.distanceTo(tamHanhTinh);
