@@ -450,3 +450,17 @@
         window.HePhaiHienTai.khoiTao();
     }
 })();
+
+
+
+
+6: "ATTACK1", OK CHIEU Q
+7: "ATTACK2", OK CHIEU Q
+8: "ATTACK3", OK BANG TUYET
+
+17: "NHANROI1",
+    18: "NHANROI2",
+        25: "CHAYBO",
+            27: "ATTACK4", OK  BANG TUYET
+28: "ATTACK5", OK BA8NG TUYET
+31: "NHANROI3",
