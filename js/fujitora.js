@@ -266,6 +266,8 @@
         // 🔥 CHIÊU E (ATTACK8): 3 THIÊN THẠCH LỬA (RƠI NHANH)
         // ===============================================
         else if (phim === 'E') {
+
+
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
                     const thienThach = taoVatTheFuji('THIENTHACH', 25, true); 
@@ -274,6 +276,7 @@
                     posXuatPhat.y += 50; // Rơi từ 50m
                     posXuatPhat.x += (Math.random() - 0.5) * 15; 
                     posXuatPhat.z += (Math.random() - 0.5) * 15;
+                    
 
                     let posDap = posXuatPhat.clone();
                     posDap.y = diemChanMucTieu.y;
