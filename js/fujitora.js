@@ -145,54 +145,14 @@
         hieuUngFuji.push({ system: pts, velocities: vels, life: 30 });
     }
 
-    // 🌟 ĐUÔI LỬA THIÊN THẠCH (HIỆU ỨNG XÉ KHÍ QUYỂN CỰC MẠNH)
-    function taoDuoiLuaFuji(mesh, speed, isFalling) {
-        if (window.isMobile && Math.random() > 0.3) return; // Giảm tải nhẹ cho Mobile
-
-        const pos = mesh.position;
-        const soLuong = 10; // Xịt 10 hạt cùng lúc tạo thành luồng lửa dày đặc
+    // 🌟 ĐUÔI LỬA THIÊN THẠCH
+    function taoDuoiLuaFuji(pos) {
+        if (window.isMobile || Math.random() > 0.4) return; // Giảm tải mobile
         const geo = new THREE.BufferGeometry();
-        const posArr = new Float32Array(soLuong * 3);
-        const vels = [];
-
-        // Tính toán hướng gió tạt lại: Thiên thạch rơi xuống -> Lửa tuôn ngược lên trên
-        let huongNguocLai = new THREE.Vector3(0, 1, 0);
-        if (!isFalling) {
-            mesh.getWorldDirection(huongNguocLai);
-            huongNguocLai.negate();
-        }
-
-        for (let i = 0; i < soLuong; i++) {
-            // Lửa bọc xung quanh bề ngoài của thiên thạch thay vì chỉ ở tâm
-            let banKinhXuatPhat = 3.0 + Math.random() * 5.0;
-            let offset = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(banKinhXuatPhat);
-
-            posArr[i * 3] = pos.x + offset.x;
-            posArr[i * 3 + 1] = pos.y + offset.y;
-            posArr[i * 3 + 2] = pos.z + offset.z;
-
-            // Gia tốc bay của tàn lửa bị văng ngược lại dựa trên tốc độ rơi của đá
-            let tocDoHat = (speed * 0.4) + Math.random();
-            let vec = huongNguocLai.clone().multiplyScalar(tocDoHat).add(offset.multiplyScalar(0.08));
-            vels.push(vec);
-        }
-
-        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-
-        // Trộn 3 màu nhiệt độ tạo cảm giác lửa thật
-        const bangMau = [0xffdd00, 0xff5500, 0xaa0000]; // Vàng, Cam, Đỏ
-        const mauChon = bangMau[Math.floor(Math.random() * bangMau.length)];
-
-        const mat = new THREE.PointsMaterial({
-            color: mauChon,
-            size: 8.0 + Math.random() * 6.0, // Hạt lửa to nhỏ ngẫu nhiên cuồn cuộn
-            transparent: true, opacity: 1.0,
-            map: window.textureBuiFuji,
-            blending: THREE.AdditiveBlending, depthWrite: false
-        });
-
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([pos.x + (Math.random()-0.5)*2, pos.y + Math.random()*2, pos.z + (Math.random()-0.5)*2]), 3));
+        const mat = new THREE.PointsMaterial({ color: 0xff4400, size: 2.0, transparent: true, opacity: 0.8, map: window.textureBuiFuji, blending: THREE.AdditiveBlending, depthWrite: false });
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngFuji.push({ system: pts, velocities: vels, life: 25, type: 'trail' });
+        hieuUngFuji.push({ system: pts, velocities: [new THREE.Vector3(0, 0.1, 0)], life: 15, type: 'trail' });
     }
 
     // 🌟 3. ĐÚC MODEL: THIÊN THẠCH LỬA & KIẾM TÍM
