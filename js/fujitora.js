@@ -353,43 +353,37 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU FUJITORA
     // ==========================================
     window.updateCombatFuji = function () {
-        
+
         for (let i = kyNangFuji.length - 1; i >= 0; i--) {
             let s = kyNangFuji[i]; s.life--;
 
             if (s.type === 'BAY_THANG') {
+                let huongBay = null;
                 if (s.targetPos) {
-                    let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
+                    huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                     s.mesh.position.add(huongBay.multiplyScalar(s.speed));
-                } else s.mesh.translateZ(s.speed);
+                } else {
+                    s.mesh.translateZ(s.speed);
+                }
+
+                // 🌟 GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH
+                if (s.isMeteor && huongBay) {
+                    if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); // Xoay mủi khoan
+
+                    let dirNguoc = huongBay.clone().negate(); // Phun lửa ngược về sau
+                    taoDuoiLuaFuji(s.mesh.position, dirNguoc, s.speed);
+
+                    // Gia tốc trọng trường
+                    if (s.isUltimate) {
+                        s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0;
+                    } else {
+                        s.speed *= 1.08; if (s.speed > 15.0) s.speed = 15.0;
+                    }
+                }
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh, s.isKiem);
-                    taoHieuUngNoFuji(s.targetPos, false, s.isKiem);
-                    s.life = 0;
-                }
-            }
-            // 🌟 VẬT LÝ THIÊN THẠCH RƠI XUỐNG
-            else if (s.type === 'ROI_THANG_XUONG') {
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); // Thiên thạch xoay mủi khoan
-
-                // Gia tốc trọng trường
-                if (s.isUltimate) {
-                    s.speed *= 1.03; // Chiêu R rơi chậm tăng tốc chậm
-                    if (s.speed > 8.0) s.speed = 8.0; 
-                } else {
-                    s.speed *= 1.08; // E và F rơi nhanh
-                    if (s.speed > 15.0) s.speed = 15.0; 
-                }
-                
-                s.mesh.position.y -= s.speed;
-                
-                // Tạo đuôi lửa xẹt xẹt khi bay
-                taoDuoiLuaFuji(s.mesh.position);
-
-                if (s.mesh.position.y <= s.targetPos.y + 2) {
-                    gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh);
-                    taoHieuUngNoFuji(s.targetPos, s.isUltimate, false); // Nổ siêu to nếu là R
+                    taoHieuUngNoFuji(s.targetPos, s.isUltimate, s.isKiem);
                     s.life = 0;
                 }
             }
@@ -404,24 +398,27 @@
         // Cập nhật Bụi Lửa & Đuôi Lửa
         for (let i = hieuUngFuji.length - 1; i >= 0; i--) {
             let h = hieuUngFuji[i]; h.life--;
-            
+
             if (h.type === 'trail') {
                 let posArr = h.system.geometry.attributes.position.array;
                 for (let j = 0; j < posArr.length / 3; j++) {
                     posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
+                    // Lực cản không khí
+                    h.velocities[j].multiplyScalar(0.9);
                 }
                 h.system.geometry.attributes.position.needsUpdate = true;
-                h.system.material.opacity = h.life / 15;
+                h.system.material.opacity = h.life / 20;
+                h.system.material.size *= 0.95; // Nhỏ dần biến thành tàn tro
             } else {
                 let posArr = h.system.geometry.attributes.position.array;
                 for (let j = 0; j < posArr.length / 3; j++) {
                     posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                    h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.05; 
+                    h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.05;
                 }
                 h.system.geometry.attributes.position.needsUpdate = true;
                 h.system.material.opacity = h.life / 30;
             }
-            
+
             if (h.life <= 0) { scene.remove(h.system); hieuUngFuji.splice(i, 1); }
         }
 
@@ -435,6 +432,9 @@
             if (it.life <= 0) { it.el.remove(); danhSachSoBayFuji.splice(i, 1); window.tongSoChuNoi_Fuji--; }
         }
     };
+
+
+
     setInterval(window.updateCombatFuji, 30);
 
     // ==========================================
