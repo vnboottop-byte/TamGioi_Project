@@ -354,6 +354,51 @@
             } else { it.el.style.display = 'none'; }
             if (it.life <= 0) { it.el.remove(); danhSachSoBayZR.splice(i, 1); window.tongSoChuNoi_ZR--; }
         }
+
+
+
+        // ========================================================
+        // 🌟 SIÊU ĐỘNG CƠ ROOT MOTION (HÚT LỰC TỪ ANIMATION)
+        // ========================================================
+        if (window.rootBoneRM && window.dangMuaChieu) {
+            // Lấy tọa độ xương chậu ngay trong Frame hiện tại do Blender điều khiển
+            let currentAnimPos = window.rootBoneRM.position.clone();
+
+            // Nếu đây là nhịp chém đầu tiên, set mốc gốc
+            if (window.isNewAttackRM) {
+                window.oldAnimLocalPos = currentAnimPos.clone();
+                window.isNewAttackRM = false;
+            }
+
+            // Tính toán khoảng cách xương chậu vừa lướt đi trong 1 mili-giây qua
+            let deltaLocal = new THREE.Vector3().subVectors(currentAnimPos, window.oldAnimLocalPos);
+            deltaLocal.y = 0; // Cắt bỏ trục Y (Lên xuống) để không cãi nhau với Trọng lực Engine
+
+            // Nếu Animation có lướt đi (Dù chỉ 1 milimet)
+            if (deltaLocal.lengthSq() > 0.000001) {
+                
+                // Quy đổi lực lướt cục bộ (Local) ra hướng mặt thật của nhân vật (World Space)
+                let deltaWorld = deltaLocal.applyQuaternion(window.playerModel.quaternion);
+
+                // 🚀 BƯỚC NHẢY ALPHA: Cộng thẳng lực lướt đó vào tọa độ THẬT (Hitbox & Camera)
+                window.playerModel.position.add(deltaWorld);
+
+                // Ghi nhớ mốc mới cho Frame tiếp theo
+                window.oldAnimLocalPos.copy(currentAnimPos);
+            }
+
+            // ⛓️ XÍCH CỔ XƯƠNG CHẬU: Ép xương chậu về lại mốc 0 để chống bị lướt X2 (Vật lý + Ảo ảnh)
+            window.rootBoneRM.position.x = window.baselineRootPos.x;
+            window.rootBoneRM.position.z = window.baselineRootPos.z;
+
+        } else {
+            // Hết chém -> Lên đạn sẵn sàng cho chiêu tiếp theo
+            window.isNewAttackRM = true; 
+        }
+
+
+
+
     };
 
     setInterval(window.updateCombatZoro, 30);
@@ -366,72 +411,57 @@
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback & Khóa Chân!");
+                console.log("⚔️ Kiếm Phái Đột Phá: Kích hoạt Động Cơ ROOT MOTION 1vs1!");
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
                     
-                    // 🌟 BIẾN CẢM BIẾN NHẬN DIỆN HOẠT ẢNH ĐỘC LẬP
-                    let coBay = false;
-                    let coChay = false;
-                    let animBay = null;
-                    let animChay = null;
+                    let coBay = false; let coChay = false;
+                    let animBay = null; let animChay = null;
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
-                        let clip = window.animationsMap[key];
-                        
-                        // 🛑 LÁ CHẮN KHÓA CHÂN (XÓA ROOT MOTION) - BẢN VÁ CHỐNG LỖI UNDEFINED
-                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
-                            // Phải kiểm tra xem clip và tracks có tồn tại không mới được lọc (Chống sập game)
-                            if (clip && clip.tracks) {
-                                clip.tracks = clip.tracks.filter(track => {
-                                    let tenTrack = track.name.toLowerCase();
-                                    if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
-                                        return false; 
-                                    }
-                                    return true; 
-                                });
-                            }
-                        }
+                        // 🛑 TRẢ TỰ DO: Không dùng .filter để cắt track position nữa! Cho phép xương hông di chuyển!
 
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
                         
-                        // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
-                        if (k.includes('BAY') || k.includes('FLY')) {
-                            coBay = true;
-                            animBay = window.animationsMap[key];
-                            window.animationsMap['BAY'] = animBay;
-                        }
-                        if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) {
-                            coChay = true;
-                            animChay = window.animationsMap[key];
-                            window.animationsMap['CHAYBO'] = animChay;
-                        }
+                        if (k.includes('BAY') || k.includes('FLY')) { coBay = true; animBay = window.animationsMap[key]; window.animationsMap['BAY'] = animBay; }
+                        if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) { coChay = true; animChay = window.animationsMap[key]; window.animationsMap['CHAYBO'] = animChay; }
                     }
 
-                    // 🌟 BÙ TRỪ THÔNG MINH (CHỐNG GHI ĐÈ XÓA MẤT ANIMATION BAY)
-                    if (coChay && !coBay) {
-                        window.animationsMap['BAY'] = animChay;
-                        window.animationsMap['FLY'] = animChay;
-                    }
-                    if (coBay && !coChay) {
-                        window.animationsMap['CHAYBO'] = animBay;
-                        window.animationsMap['RUN'] = animBay;
-                    }
+                    if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
+                    if (coBay && !coChay) { window.animationsMap['CHAYBO'] = animBay; window.animationsMap['RUN'] = animBay; }
 
-                    // Set Nhàn rỗi mặc định
                     if (window.KHO_ANIM_NHANROI.length === 0) window.KHO_ANIM_NHANROI.push('NHANROI');
                     let defaultIdle = window.KHO_ANIM_NHANROI[0];
                     window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
                     if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
                 }
 
-                // Vòng lặp đổi dáng đứng Nhàn rỗi
+                // ========================================================
+                // 🌟 BỘ DÒ TÌM XƯƠNG GỐC (ROOT BONE) ĐỂ PHỤC VỤ ROOT MOTION
+                // ========================================================
+                window.rootBoneRM = null;
+                window.baselineRootPos = new THREE.Vector3(); // Ghi nhớ mốc tọa độ 0 của xương chậu
+                window.isNewAttackRM = true;
+
+                if (window.playerModel) {
+                    window.playerModel.traverse(c => {
+                        // Tự động quét: Xương đầu tiên không có cha là Xương (Thường là Hips/Pelvis) chính là Root Bone
+                        if (c.isBone && !window.rootBoneRM) {
+                            if (c.parent && !c.parent.isBone) {
+                                window.rootBoneRM = c;
+                                window.baselineRootPos.copy(c.position);
+                                console.log("🎯 Đã khóa mục tiêu Xương Gốc (Root Bone):", c.name);
+                            }
+                        }
+                    });
+                }
+
                 if (window.vongLapNhanRoiZR) clearInterval(window.vongLapNhanRoiZR);
                 window.vongLapNhanRoiZR = setInterval(() => {
                     if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI.length > 0) {
