@@ -94,45 +94,62 @@
     }
 
     // ==========================================
-    // 🌟 ĐÚC VẬT THỂ LỬA & AUTO KÍCH HOẠT ANIMATION
+    // 🌟 ĐÚC VẬT THỂ LỬA (VƯỢT RÀO ENGINE ĐỂ BẢO TỒN 100% ANIMATION)
     // ==========================================
+    window.KHO_GLTF_ACE = window.KHO_GLTF_ACE || {};
+
     function taoLuaFile(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
-        if (typeof window.taiHoacNhanBanAsset === 'function') {
-            window.taiHoacNhanBanAsset(urlCanTai, (v) => {
-                v.traverse(c => {
-                    if (c.isMesh && c.material) {
-                        if (Array.isArray(c.material)) {
-                            c.material.forEach(m => { m.transparent = true; m.blending = THREE.AdditiveBlending; });
-                        } else {
-                            c.material.transparent = true;
-                            c.material.blending = THREE.AdditiveBlending;
-                        }
-                    }
-                });
+        // Hàm tiêm Animation sau khi đã có File Gốc nguyên vẹn
+        function kichHoatLua(gltfGoc) {
+            // 🛑 Cứu rỗi Khung xương: Dùng SkeletonUtils để nhân bản không bị liệt, nếu không có thì clone thường
+            let v = (typeof THREE.SkeletonUtils !== 'undefined') ? THREE.SkeletonUtils.clone(gltfGoc.scene) : gltfGoc.scene.clone();
 
-                // 🛑 BÍ THUẬT: ĐỌC VÀ KÍCH HOẠT ANIMATION CỦA CHÍNH MODEL HIỆU ỨNG
-                if (v.animations && v.animations.length > 0) {
-                    let mixer = new THREE.AnimationMixer(v);
-                    let action = mixer.clipAction(v.animations[0]); // Gọi Animation đầu tiên
-                    action.setEffectiveTimeScale(1.5); // 🚀 TĂNG TỐC ĐỘ CHÁY LÊN 1.5 LẦN!
-                    action.play();
-                    group.userData.mixer = mixer; // Gắn mixer vào để Engine cập nhật mỗi khung hình
+            v.traverse(c => {
+                if (c.isMesh && c.material) {
+                    c.material = c.material.clone();
+                    c.material.transparent = true;
+                    c.material.blending = THREE.AdditiveBlending;
                 }
-
-                v.updateMatrixWorld(true);
-                const box = new THREE.Box3().setFromObject(v);
-                const size = new THREE.Vector3(); box.getSize(size);
-                const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                let tiLeChuan = scaleSize / maxDim;
-
-                v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-                v.rotation.set(0, 0, 0);
-                group.add(v);
             });
+
+            // 🌟 ĐÁNH THỨC ANIMATION TỪ FILE GLTF GỐC (Chắc chắn 1000% không bị Undefined nữa)
+            if (gltfGoc.animations && gltfGoc.animations.length > 0) {
+                let mixer = new THREE.AnimationMixer(v);
+                let action = mixer.clipAction(gltfGoc.animations[0]); // Gọi Animation đầu tiên
+                action.setEffectiveTimeScale(1.5); // 🚀 TĂNG TỐC ĐỘ CHÁY 1.5x
+                action.play();
+                group.userData.mixer = mixer; // Đưa mixer ra ngoài để vòng lặp Vật lý quay đều
+            }
+
+            v.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(v);
+            const size = new THREE.Vector3(); box.getSize(size);
+            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            let tiLeChuan = scaleSize / maxDim;
+
+            v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+            v.rotation.set(0, 0, 0);
+            group.add(v);
         }
+
+        // Tự động kiểm tra Kho lưu trữ, nếu chưa có thì tải mới bằng GLTFLoader chuẩn
+        if (window.KHO_GLTF_ACE[urlCanTai]) {
+            kichHoatLua(window.KHO_GLTF_ACE[urlCanTai]);
+        } else {
+            if (typeof THREE.GLTFLoader !== 'undefined') {
+                let loader = new THREE.GLTFLoader();
+                loader.load(urlCanTai, function (gltf) {
+                    window.KHO_GLTF_ACE[urlCanTai] = gltf; // Cất nguyên bản vào kho
+                    kichHoatLua(gltf);
+                });
+            } else {
+                console.error("Game chưa nạp GLTFLoader!");
+            }
+        }
+
         return group;
     }
 
