@@ -143,6 +143,7 @@
         hieuUngAce.push({ system: pts, velocities: vels, life: 30 }); // Tồn tại 30 frame
     }
 
+   
     // ==========================================
     // 🌟 ĐÚC VẬT THỂ LỬA BẰNG HÀM ENGINE GỐC ĐỂ KHÔNG BỊ LỖI
     // ==========================================
@@ -150,17 +151,32 @@
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
+        // 🌟 BƠM ÁNH SÁNG: Gắn bóng đèn tỏa sáng Vàng Cam lan tỏa môi trường xung quanh
+        if (tenFile === 'fire1') {
+            const denLua = new THREE.PointLight(0xffaa00, 3.0, 30); // Màu vàng cam, cường độ 3.0, tầm hắt sáng 30m
+            group.add(denLua);
+        }
+
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     // Đắp vật liệu cho nó phát sáng mạnh
                     if (c.isMesh && c.material) {
-                        if (Array.isArray(c.material)) {
-                            c.material.forEach(m => { m.transparent = true; m.blending = THREE.AdditiveBlending; });
-                        } else {
-                            c.material.transparent = true;
-                            c.material.blending = THREE.AdditiveBlending;
-                        }
+                        let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
+                        
+                        danhSachMat.forEach(m => { 
+                            m.transparent = true; 
+                            m.blending = THREE.AdditiveBlending; 
+                            
+                            // 🌟 BƠM PHÁT QUANG TRỰC TIẾP VÀO MODEL CHIÊU Q
+                            if (tenFile === 'fire1') {
+                                if (m.color) m.color.setHex(0xffaa00); // Nhuộm vỏ ngoài Vàng Cam
+                                if (m.emissive) {
+                                    m.emissive.setHex(0xffdd00); // Lõi rực màu Vàng Chói
+                                    m.emissiveIntensity = 4.0; // Ép cường độ phát sáng lên x4 để kích hoạt Bloom chói mắt
+                                }
+                            }
+                        });
                     }
                 });
 
