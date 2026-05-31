@@ -331,6 +331,11 @@
         for (let i = kyNangWB.length - 1; i >= 0; i--) {
             let s = kyNangWB[i]; s.life--;
 
+            // 🌟 CHẠY HOẠT ẢNH BÊN TRONG CỦA ĐẠN (NẾU CÓ)
+            if (s.mesh.userData && s.mesh.userData.mixer) {
+                s.mesh.userData.mixer.update(0.03); // Engine update 30ms/frame
+            }
+
             // KIẾM KHÍ BAY THẲNG (CHIÊU Q)
             if (s.type === 'BAY_THANG') {
                 if (s.targetPos) {
