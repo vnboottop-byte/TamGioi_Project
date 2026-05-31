@@ -385,8 +385,11 @@
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 35; // Mờ dần
 
+            // 🛑 VÁ DỌN RÁC HẠT ÁNH SÁNG (KIZARU)
             if (h.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
                 hieuUngKizaru.splice(i, 1);
             }
         }
