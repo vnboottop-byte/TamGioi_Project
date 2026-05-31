@@ -387,9 +387,13 @@
                 }
             }
 
+            // 🛑 VÁ DỌN RÁC MODEL ACE
             if (s.life <= 0) {
-                if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
+                else {
+                    if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
+                    if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                }
                 kyNangAce.splice(i, 1);
             }
         }
@@ -412,8 +416,11 @@
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 30; // Mờ dần rồi biến mất
 
+            // 🛑 VÁ DỌN RÁC HẠT BỤI ACE
             if (h.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
                 hieuUngAce.splice(i, 1);
             }
         }
