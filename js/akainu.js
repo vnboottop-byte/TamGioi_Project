@@ -269,22 +269,25 @@
             }
         }
         // ===============================================
-        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN 100% KATAKURI F) -> DPS: 1 hit x 0.6 = 0.6
+        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN ĐẠI KIẾM TU TIÊN)
         // ===============================================
         else if (phim === 'E') {
-            let viTriChan = nvc.position.clone(); // 🌟 Lấy chuẩn sát mặt đất như Katakuri
-            const pivotGroup = new THREE.Group();
-            pivotGroup.position.copy(viTriChan).add(upVector.clone().multiplyScalar(50)); // Cao 50m chuẩn
+            let pivotGroup = new THREE.Group(); 
+            pivotGroup.position.copy(diemChanMucTieu); // 🌟 Tâm xoay đặt tại chân mục tiêu
             pivotGroup.up.copy(upVector);
-            pivotGroup.lookAt(diemChanMucTieu); // Nhìn chuẩn vào chân quái
+            pivotGroup.lookAt(viTriGocToTam); // Hướng trục về phía nhân vật
+            
+            const tayGiga = taoVatTheAk('tayakainu', 18.0, true); 
+            // 🌟 Đặt Nắm Đấm giơ cao tít trên trời, ngả về phía sau tâm xoay
+            tayGiga.position.set(0, 50, -40); 
+            tayGiga.lookAt(0, 0, 0); // Chĩa nắm đấm thẳng vào tâm xoay (chân mục tiêu)
+            
+            pivotGroup.add(tayGiga); 
+            scene.add(pivotGroup);
 
-            const tayGiga = taoVatTheAk('tayakainu', 13.0, true); // Size 13.0 chuẩn Katakuri
-            tayGiga.rotateX(-Math.PI * 0.8);
-            pivotGroup.add(tayGiga); scene.add(pivotGroup);
-
-            kyNangAkainu.push({
-                mesh: pivotGroup, swordMesh: tayGiga, speed: 0, life: 200, ticks: 0,
-                type: 'F_CHOP', delay: 0, targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 25
+            kyNangAkainu.push({ 
+                mesh: pivotGroup, speed: 0.15, life: 100, ticks: 0, 
+                type: 'DAI_KIEM_CHOP', targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 25
             });
         }
         // ===============================================
@@ -353,6 +356,42 @@
             let s = kyNangAkainu[i]; 
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
+            // 🌟 VÁ CHIÊU Q: HỒI SINH QUỸ ĐẠO VÒNG TRÒN BAY GOM
+            if (s.type === 'BAY_THANG_GOM') {
+                if (s.targetPos) {
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15); 
+                }
+                s.mesh.translateZ(s.speed);
+
+                let dirNguoc = new THREE.Vector3(); s.mesh.getWorldDirection(dirNguoc); dirNguoc.negate();
+                taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed * 0.5);
+
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
+                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                    taoHieuUngNoAk(s.targetPos, false);
+                    s.life = 0;
+                }
+            }
+            
+            // 🌟 VÁ CHIÊU E: BỔ TRỤC XOAY TỐC ĐỘ CAO (ĐẠI KIẾM TU TIÊN)
+            else if (s.type === 'DAI_KIEM_CHOP') {
+                s.mesh.rotateX(-s.speed); // Bổ gập xuống đất
+                s.ticks++;
+                
+                // Hiệu ứng xịt đuôi lửa magma khi tay đang bổ xuống
+                if (s.mesh.children[0]) {
+                    let tayPos = new THREE.Vector3();
+                    s.mesh.children[0].getWorldPosition(tayPos);
+                    taoDuoiLuaAk(tayPos, new THREE.Vector3(0, 1, 0), 2.0); // Lửa bốc lên trời
+                }
+
+                if (s.ticks > 12) { // Rơi siêu tốc độ cái RẦM trong 12 khung hình
+                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                    taoHieuUngNoAk(s.targetPos, true); // Nổ chấn động
+                    s.life = 0;
+                }
+            }
 
             // 🌟 TÍCH HỢP XỬ LÝ CHUNG CHO QUỸ ĐẠO BAY_THANG VÀ THIÊN THẠCH
             if (s.type === 'BAY_THANG') {
