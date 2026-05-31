@@ -290,7 +290,7 @@
                     }, i * 150);
                 }
             }
-           
+
             // 🌟 THÔNG SỐ VÀNG CỦA SẾP (ĐÃ CÂN BẰNG CHUẨN 7.8 DPS)
             // Q = 1 Chém (1 hit x 0.4 = 0.4 Dame)
             if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
@@ -307,7 +307,12 @@
         }, 300);
     };
 
+    // ==========================================
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO (ĐÃ FIX TRÀN RAM)
+    // ==========================================
     window.updateCombatZoro = function () {
+
+        // 1. VÒNG LẶP KIẾM QUANG BAY
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i]; s.life--;
 
@@ -320,39 +325,54 @@
                 }
             }
 
+            // 🛑 VÁ DỌN RÁC MODEL KIẾM QUANG
             if (s.life <= 0) {
-                if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
+                else {
+                    if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
+                    if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                }
                 kyNangZoro.splice(i, 1);
             }
         }
 
+        // 2. VÒNG LẶP HẠT VỤ NỔ XANH LÁ
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
+
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4;
+                h.velocities[j].y -= 0.4; // Trọng lực hút hạt rơi xuống
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
 
+            // 🛑 VÁ DỌN RÁC HẠT (CHỐNG TRÀN VRAM TẬN GỐC)
             if (h.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(h.system); else scene.remove(h.system);
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
                 hieuUngZoro.splice(i, 1);
             }
         }
 
+        // 3. VÒNG LẶP SỐ DAME TRÊN MÀN HÌNH (Đã chuẩn)
         for (let i = danhSachSoBayZR.length - 1; i >= 0; i--) {
             let it = danhSachSoBayZR[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { it.el.style.display = 'none'; }
-            if (it.life <= 0) { it.el.remove(); danhSachSoBayZR.splice(i, 1); window.tongSoChuNoi_ZR--; }
+
+            if (it.life <= 0) {
+                it.el.remove();
+                danhSachSoBayZR.splice(i, 1);
+                window.tongSoChuNoi_ZR--;
+            }
         }
     };
 
@@ -362,16 +382,16 @@
     // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
-        
+
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback!");
+                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Smart Fallback & Khóa Chân!");
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
-                    
+
                     // 🌟 BIẾN CẢM BIẾN NHẬN DIỆN HOẠT ẢNH ĐỘC LẬP
                     let coBay = false;
                     let coChay = false;
@@ -380,12 +400,27 @@
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
-                        
+                        let clip = window.animationsMap[key];
+
+                        // 🛑 LÁ CHẮN KHÓA CHÂN (XÓA ROOT MOTION) - BẢN VÁ CHỐNG LỖI UNDEFINED
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
+                            // Phải kiểm tra xem clip và tracks có tồn tại không mới được lọc (Chống sập game)
+                            if (clip && clip.tracks) {
+                                clip.tracks = clip.tracks.filter(track => {
+                                    let tenTrack = track.name.toLowerCase();
+                                    if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
+                                        return false;
+                                    }
+                                    return true;
+                                });
+                            }
+                        }
+
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-                        
+
                         // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
                         if (k.includes('BAY') || k.includes('FLY')) {
                             coBay = true;
