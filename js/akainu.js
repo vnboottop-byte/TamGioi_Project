@@ -268,25 +268,26 @@
             }
         }
         // ===============================================
-        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (COPY KATAKURI F) -> DPS: 1 hit x 0.6 = 0.6
+        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN 100% KATAKURI F) -> DPS: 1 hit x 0.6 = 0.6
         // ===============================================
         else if (phim === 'E') {
-            const pivotGroup = new THREE.Group(); 
-            pivotGroup.position.copy(viTriGocToTam).add(upVector.clone().multiplyScalar(40)); // Điểm xoay trên cao 40m
+            let viTriChan = nvc.position.clone(); // 🌟 Lấy chuẩn sát mặt đất như Katakuri
+            const pivotGroup = new THREE.Group();
+            pivotGroup.position.copy(viTriChan).add(upVector.clone().multiplyScalar(50)); // Cao 50m chuẩn
             pivotGroup.up.copy(upVector);
-            pivotGroup.lookAt(mucTieu);
-            
-            const tayGiga = taoVatTheAk('tayakainu', 15.0, true); // Tay khổng lồ nhuộm Magma
-            tayGiga.rotateX(-Math.PI * 0.8); 
+            pivotGroup.lookAt(diemChanMucTieu); // Nhìn chuẩn vào chân quái
+
+            const tayGiga = taoVatTheAk('tayakainu', 13.0, true); // Size 13.0 chuẩn Katakuri
+            tayGiga.rotateX(-Math.PI * 0.8);
             pivotGroup.add(tayGiga); scene.add(pivotGroup);
 
-            kyNangAkainu.push({ 
-                mesh: pivotGroup, swordMesh: tayGiga, speed: 0, life: 200, ticks: 0, 
-                type: 'F_CHOP', delay: 0, targetPos: mucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 25
+            kyNangAkainu.push({
+                mesh: pivotGroup, swordMesh: tayGiga, speed: 0, life: 200, ticks: 0,
+                type: 'F_CHOP', delay: 0, targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 25
             });
         }
         // ===============================================
-        // 🌋 CHIÊU R: MƯA LƯU TINH (COPY FUJITORA F NHƯNG DÙNG THIENTHACH1) -> DPS: 15 hit x 0.04 = 0.6
+        // 🌋 CHIÊU R: MƯA LƯU TINH (ĐÃ FIX TÊN FILE VÀ QUỸ ĐẠO) -> DPS: 15 hit x 0.04 = 0.6
         // ===============================================
         else if (phim === 'R') {
             let tongThoiGian = 3000;
@@ -295,45 +296,46 @@
 
             for (let i = 0; i < soLuongMua; i++) {
                 setTimeout(() => {
-                    const thienThach = taoVatTheAk('THIENTHACH1', 32, true); // 🌟 THIENTHACH1 Nhuộm Magma
-                    
+                    const thienThach = taoVatTheAk('THIENTHACH', 32, true); // 🌟 Đổi lại THIENTHACH chuẩn tránh lỗi tàng hình
+
                     let posDap = diemChanMucTieu.clone();
-                    posDap.x += (Math.random() - 0.5) * 45; 
+                    posDap.x += (Math.random() - 0.5) * 45;
                     posDap.z += (Math.random() - 0.5) * 45;
 
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.y += 160 + Math.random() * 40; // Cao 160m
-                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); // Góc xéo về sau
+                    posXuatPhat.y += 160 + Math.random() * 40;
+                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80));
 
                     thienThach.position.copy(posXuatPhat);
                     thienThach.lookAt(posDap);
                     scene.add(thienThach);
 
                     kyNangAkainu.push({
-                        mesh: thienThach, type: 'ROI_THANG_XUONG', speed: 3.5, life: 150, isMeteor: true,
+                        mesh: thienThach, type: 'BAY_THANG', speed: 3.5, life: 150, isMeteor: true,
                         targetPos: posDap, damage: dameGoc * 0.04, isRemote: isRemote, noBanKinh: 25
                     });
                 }, 500 + i * delayPerMeteor);
             }
         }
         // ===============================================
-        // 🌋 CHIÊU F: KHỐI DUNG NHAM KHỔNG LỒ (COPY FUJITORA R DÙNG THIENTHACH2) -> DPS: 1 hit x 1.0 = 1.0
+        // 🌋 CHIÊU F: KHỐI DUNG NHAM KHỔNG LỒ (FIX KHÔNG XOAY MŨI KHOAN) -> DPS: 1 hit x 1.0 = 1.0
         // ===============================================
         else if (phim === 'F') {
             setTimeout(() => {
-                const thienThach = taoVatTheAk('THIENTHACH2', 60, true); // 🌟 THIENTHACH2 Nhuộm Magma Khổng lồ
-                
+                const thienThach = taoVatTheAk('THIENTHACH2', 60, true);
+
                 let posDap = diemChanMucTieu.clone();
                 let posXuatPhat = posDap.clone();
-                posXuatPhat.y += 140; // Cao 140m
-                posXuatPhat.sub(huongMat.clone().multiplyScalar(70)); // Góc xéo
+                posXuatPhat.y += 140;
+                posXuatPhat.sub(huongMat.clone().multiplyScalar(70));
 
                 thienThach.position.copy(posXuatPhat);
                 thienThach.lookAt(posDap);
                 scene.add(thienThach);
 
                 kyNangAkainu.push({
-                    mesh: thienThach, type: 'ROI_THANG_XUONG', speed: 1.0, life: 250, isMeteor: true, isUltimate: true,
+                    mesh: thienThach, type: 'BAY_THANG', speed: 1.0, life: 250, isMeteor: true, isUltimate: true,
+                    noRotate: true, // 🌟 BÍ THUẬT: Cờ cấm xoay
                     targetPos: posDap, damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 45
                 });
             }, 1000);
@@ -351,21 +353,34 @@
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
 
-            // Xử lý quỹ đạo Gom mục tiêu (Chiêu Q của Katakuri R)
-            if (s.type === 'BAY_THANG_GOM') {
+            // 🌟 TÍCH HỢP XỬ LÝ CHUNG CHO QUỸ ĐẠO BAY_THANG VÀ THIÊN THẠCH
+            if (s.type === 'BAY_THANG') {
+                let huongBay = null;
                 if (s.targetPos) {
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.2); 
+                    huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
+                    s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                } else {
+                    s.mesh.translateZ(s.speed);
                 }
-                s.mesh.translateZ(s.speed);
 
-                // Thêm hiệu ứng xịt lửa nhỏ đằng sau nắm đấm
-                let dirNguoc = new THREE.Vector3(); s.mesh.getWorldDirection(dirNguoc); dirNguoc.negate();
-                taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed * 0.5);
+                // 🌟 GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH (R, F)
+                if (s.isMeteor && huongBay) {
+                    // 🌟 KHÔNG XOAY NẾU CÓ CỜ noRotate (CHIÊU F)
+                    if (!s.noRotate && s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2);
 
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
-                    gaySatThuongAk(s.mesh.position, s.damage, s.noBanKinh);
-                    taoHieuUngNoAk(s.mesh.position, false);
+                    let dirNguoc = huongBay.clone().negate();
+                    taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed);
+
+                    if (s.isUltimate) {
+                        s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0;
+                    } else {
+                        s.speed *= 1.08; if (s.speed > 15.0) s.speed = 15.0;
+                    }
+                }
+
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
+                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                    taoHieuUngNoAk(s.targetPos, s.isUltimate);
                     s.life = 0;
                 }
             }
