@@ -94,6 +94,7 @@
     }
 
     // 🌟 2. ĐÚC MODEL BỌC THÉP TỐI ƯU
+    // 🌟 2. ĐÚC MODEL BỌC THÉP TỐI ƯU (CÓ CHẠY ANIMATION CHO ĐẠN)
     function taoVatTheWB(tenFile, scaleSize, isHaki = false) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -105,17 +106,26 @@
                         let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
                         danhSachMat.forEach(m => {
                             m.transparent = true;
-                            if (isHaki) { // 🌟 BÍ THUẬT: ÉP MÀU HAKI ĐEN TÍM
+                            if (isHaki) { // 🌟 BÍ THUẬT: ÉP MÀU HAKI ĐEN - TÍM ĐẬM
                                 m.map = null; 
-                                if (m.color) m.color.setHex(0x110022); 
+                                if (m.color) m.color.setHex(0x0a001a); // Đen ám tím
                                 if (m.emissive) {
-                                    m.emissive.setHex(0x5500aa); 
+                                    m.emissive.setHex(0x330066); // Sáng tím đậm
                                     m.emissiveIntensity = 3.0; 
                                 }
                             }
                         });
                     }
                 });
+
+                // 🌟 BÍ THUẬT: KÍCH HOẠT ANIMATION BÊN TRONG MODEL ĐẠN (energy.glb)
+                if (v.animations && v.animations.length > 0) {
+                    let mixer = new THREE.AnimationMixer(v);
+                    mixer.clipAction(v.animations[0]).play();
+                    group.userData = group.userData || {};
+                    group.userData.mixer = mixer; // Lưu lại để chạy trong vòng lặp
+                }
+
                 v.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(v);
                 const size = new THREE.Vector3(); box.getSize(size);
@@ -201,43 +211,43 @@
         // ===============================================
         // ⚔️ NHÓM CHIÊU Q: DỰA VÀO ANIMATION ĐÃ BỐC
         // ===============================================
-        if (animCanMua === 'ATTACK5') { // 5 KIẾM KHÍ LIÊN HOÀN (DPS: 5 x 0.08 = 0.4)
+        if (animCanMua === 'ATTACK5') { // 5 KIẾM KHÍ LIÊN HOÀN
             for (let i = 0; i < 5; i++) {
                 setTimeout(() => {
                     const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 30); 
                     kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
                     kq.lookAt(mucTieu); scene.add(kq);
-                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, targetPos: mucTieu.clone(), damage: dameGoc * 0.08, noBanKinh: 12 }); 
+                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 8.0, life: 100, targetPos: mucTieu.clone(), damage: dameGoc * 0.08, noBanKinh: 12 }); 
                 }, 200 * i);
             }
         } 
-        else if (animCanMua === 'ATTACK6') { // KIẾM KHÍ NGÔI SAO 6 CẠNH (DPS: 3 x 0.133 = 0.4)
+        else if (animCanMua === 'ATTACK6') { // 🌟 KIẾM KHÍ NGÔI SAO LỤC GIÁC BAY CHẬM
             setTimeout(() => {
-                const gocXoay = [0, Math.PI / 3, -Math.PI / 3]; // Xoay 0, 60 độ, -60 độ
+                const gocXoay = [0, Math.PI / 3, -Math.PI / 3]; // Xếp 3 nhát chém thành hình dấu *
                 for (let i = 0; i < 3; i++) {
-                    const kq = taoVatTheWB('KIEMQUANG1', 40); 
+                    const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 40); // Lấy random giống liên hoàn
                     kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
-                    kq.lookAt(mucTieu); // Nhìn quái trước
-                    kq.rotateZ(gocXoay[i]); // Rồi mới xoay trục Z tạo hình ngôi sao
+                    kq.lookAt(mucTieu); 
+                    kq.rotateZ(gocXoay[i]); 
                     scene.add(kq);
-                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 10.0, life: 80, targetPos: mucTieu.clone(), damage: dameGoc * 0.133, noBanKinh: 15 }); 
+                    // Ép speed = 4.0 để bay chậm lại cho dễ ngắm
+                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 4.0, life: 150, targetPos: mucTieu.clone(), damage: dameGoc * 0.133, noBanKinh: 20 }); 
                 }
             }, 300);
         }
-        else if (animCanMua === 'ATTACK7') { // KIẾM KHÍ HAKI ĐEN TÍM BAY CHẬM (DPS: 1 x 0.4 = 0.4)
+        else if (animCanMua === 'ATTACK7') { // 🌟 KIẾM KHÍ HAKI ĐEN TÍM BAY SIÊU CHẬM
             setTimeout(() => {
-                const kq = taoVatTheWB('KIEMQUANG1', 50, true); // True = Bật nhuộm Haki
+                const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50, true); // Bật nhuộm Haki Đen Tím
                 kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
                 kq.lookAt(mucTieu);
-                kq.rotateZ(Math.PI / 2); // Dựng đứng thanh kiếm
+                kq.rotateZ(Math.PI / 2); // Dựng đứng
                 scene.add(kq);
-                kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 5.0, life: 120, targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 20 }); 
+                // Ép speed = 3.0 lù lù tiến tới áp bức đối thủ
+                kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 3.0, life: 180, targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 25 }); 
             }, 300);
         }
 
-        // ===============================================
-        // 🔮 CHIÊU E: BẮN 10 QUẢ CẦU (DPS: 10 x 0.06 = 0.6)
-        // ===============================================
+        // (Lưu ý: Giữ nguyên đoạn else if (animCanMua === 'ATTACK4') của chiêu E ở đây)
         else if (animCanMua === 'ATTACK4') { 
             for (let i = 0; i < 10; i++) {
                 setTimeout(() => {
@@ -258,38 +268,39 @@
         }
 
         // ===============================================
-        // 🔮 CHIÊU R: NHÓM CHIÊU TỤ LỰC & RƠI TỪ TRỜI
+        // 🔮 CHIÊU R: NHÓM CHIÊU TỤ LỰC (XUẤT PHÁT 1M, PHÌNH TO, BAY CHẬM)
         // ===============================================
-        else if (animCanMua === 'ATTACK2') { // TỤ 1 GIÂY BẮN 1 QUẢ TO DẦN (DPS: 1 x 0.6 = 0.6)
+        else if (animCanMua === 'ATTACK2') { // 🌟 BẮN 1 QUẢ TO TỪ 1M LÊN
             setTimeout(() => {
                 let diemBan = viTriGocToTam.clone();
                 if (tayChieuR) tayChieuR.getWorldPosition(diemBan);
 
-                const cauEnergy = taoVatTheWB('energy', 10);
+                const cauEnergy = taoVatTheWB('energy', 1); // Bắt đầu siêu nhỏ 1m
                 cauEnergy.position.copy(diemBan).add(huongMat.clone().multiplyScalar(2.0));
                 cauEnergy.lookAt(mucTieu); scene.add(cauEnergy);
 
                 kyNangWB.push({ 
-                    mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 6.0, life: 150, 
-                    currentScale: 10, maxScale: 40, growthRate: 1.0,
+                    mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 3.5, life: 250, // Bay chậm ngắm nghía
+                    currentScale: 1, maxScale: 40, growthRate: 0.6, // To dần
                     targetPos: mucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 30 
                 });
-            }, 1000); // Chờ 1 giây
+            }, 1000); 
         }
-        else if (animCanMua === 'ATTACK3') { // TỤ 500ms RƠI QUẢ CẦU TO TỪ TRỜI XUỐNG (DPS: 1 x 0.6 = 0.6)
+        else if (animCanMua === 'ATTACK3') { // 🌟 RƠI THIÊN THẠCH TỪ 1M TỪ TRÊN TRỜI XUỐNG
             setTimeout(() => {
-                const cauEnergy = taoVatTheWB('energy', 20);
-                let posXuatPhat = diemChanMucTieu.clone(); posXuatPhat.y += 100; // Trên cao
+                const cauEnergy = taoVatTheWB('energy', 1); // Bắt đầu siêu nhỏ 1m
+                let posXuatPhat = diemChanMucTieu.clone(); posXuatPhat.y += 100; 
                 cauEnergy.position.copy(posXuatPhat);
                 cauEnergy.lookAt(diemChanMucTieu); scene.add(cauEnergy);
 
                 kyNangWB.push({ 
-                    mesh: cauEnergy, type: 'ROI_THANG_PHINH_TO', speed: 4.0, life: 150, 
-                    currentScale: 20, maxScale: 60, growthRate: 1.5,
+                    mesh: cauEnergy, type: 'ROI_THANG_PHINH_TO', speed: 2.0, life: 250, // Rơi chậm
+                    currentScale: 1, maxScale: 60, growthRate: 0.8, // Phình to trong lúc rơi
                     targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 40 
                 });
-            }, 500); // Chờ 500ms
+            }, 500); 
         }
+        
 
         // ===============================================
         // 🌋 CHIÊU F: TỤ 1 GIÂY BẮN RA SÓNG CHẤN ĐỘNG NỨT VỠ (DPS: 1 x 1.0 = 1.0)
