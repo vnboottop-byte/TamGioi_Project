@@ -170,7 +170,8 @@
                             m.transparent = true;
                             // 🌋 BÍ THUẬT: NHUỘM DUNG NHAM ĐỎ BẦM CHO THIÊN THẠCH & TAY
                             if (isMagma) {
-                                if (m.color) m.color.setHex(0x330000); // Đá dung nham sậm
+                                m.map = null; // 🌟 Lột sạch vân đá cũ để màu Đỏ Đô lên ngôi!
+                                if (m.color) m.color.setHex(0x550000); // Màu Đỏ Đô / Đỏ sẫm nguyên chất
                                 if (m.emissive) {
                                     m.emissive.setHex(0xff2200); // Lõi đỏ cam rực rỡ
                                     m.emissiveIntensity = 2.0; 
