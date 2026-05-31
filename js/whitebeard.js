@@ -513,7 +513,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI
     // ==========================================
-    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('whitebeard')) {
         window.HePhaiHienTai = {
             tenPhai: "Tứ Hoàng Râu Trắng",
             khoiTao: function () {

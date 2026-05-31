@@ -484,7 +484,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI
     // ==========================================
-    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('akainu')) {
         window.HePhaiHienTai = {
             tenPhai: "Đô Đốc Akainu",
             khoiTao: function () {
