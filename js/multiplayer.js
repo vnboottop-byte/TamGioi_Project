@@ -607,15 +607,14 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
 
 
-                            // TẠI FILE: multiplayer.js
-                            // 🌟 BẢN VÁ AAA: LAZY LOAD - TỰ ĐỘNG HỌC LỎM VÕ CÔNG CỦA KẺ ĐỊCH
+                            // 🌟 BẢN VÁ AAA: LAZY LOAD - TỰ ĐỘNG HỌC LỎM VÕ CÔNG (CHỐNG BUG ĐOẠT XÁ)
                             else if (data.type === 'TUNG_CHIEU') {
-                                let tenHam = 'tungCombo' + data.className; 
-                                
+                                let tenHam = 'tungCombo' + data.className;
+
                                 // 1. Nếu trong não đã có sẵn võ công này thì tung chiêu luôn!
                                 if (typeof window[tenHam] === 'function') {
                                     window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                } 
+                                }
                                 // 2. NẾU CHƯA BIẾT CHIÊU NÀY -> TỰ ĐỘNG TẢI FILE SÁCH VÕ CÔNG VỀ HỌC NGAY!
                                 else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
@@ -624,23 +623,39 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
                                     console.log("⏳ Kẻ địch xài chiêu lạ! Đang Auto-Download data của: " + data.className);
 
+                                    // 🛡️ BÍ THUẬT: SAO LƯU LINH HỒN CỦA NGƯỜI CHƠI CHÍNH TRƯỚC KHI TẢI FILE LẠ
+                                    let backupHePhai = window.HePhaiHienTai;
+                                    let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : [];
+                                    let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : [];
+                                    let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
+
                                     let theScript = document.createElement('script');
-                                    // Quy tắc 1: Thử tải theo tên chuẩn (VD: js/jimbei.js)
                                     theScript.src = 'js/' + data.className.toLowerCase() + '.js';
 
-                                    theScript.onload = function() {
+                                    theScript.onload = function () {
+                                        // 🛡️ BÍ THUẬT: PHỤC HỒI LINH HỒN (ĐÁ VĂNG KẺ ĐOẠT XÁ RA NGOÀI)
+                                        window.HePhaiHienTai = backupHePhai;
+                                        window.KHO_ANIM_NHANROI = backupIdle;
+                                        window.KHO_ANIM_TANCONG = backupAtk;
+                                        if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
+
                                         console.log("✅ Đã học xong võ công của: " + data.className);
                                         if (typeof window[tenHam] === 'function') {
                                             window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                         }
                                     };
 
-                                    theScript.onerror = function() {
-                                        // Quy tắc 2: Nếu file ko tồn tại, thử tải theo đuôi cũ (VD: js/phai_jimbei.js)
+                                    theScript.onerror = function () {
                                         let scriptDuPhong = document.createElement('script');
                                         scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js';
-                                        
-                                        scriptDuPhong.onload = function() {
+
+                                        scriptDuPhong.onload = function () {
+                                            // 🛡️ PHỤC HỒI LINH HỒN TẠI FILE DỰ PHÒNG
+                                            window.HePhaiHienTai = backupHePhai;
+                                            window.KHO_ANIM_NHANROI = backupIdle;
+                                            window.KHO_ANIM_TANCONG = backupAtk;
+                                            if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
+
                                             console.log("✅ Đã học xong võ công của: " + data.className);
                                             if (typeof window[tenHam] === 'function') {
                                                 window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
