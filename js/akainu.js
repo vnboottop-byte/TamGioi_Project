@@ -257,7 +257,7 @@
                 const posNgoai = mucTieu.clone().add(huongRaNgoai.multiplyScalar(35)); 
                 posNgoai.add(upVector.clone().multiplyScalar(12)); 
                 
-                const tayAkainu = taoVatTheAk('tayakainu', 30.5, true); 
+                const tayAkainu = taoVatTheAk('tayakainu', 15.5, true); 
                 tayAkainu.position.copy(posNgoai); 
                 tayAkainu.up.copy(upVector);
                 tayAkainu.lookAt(mucTieu); scene.add(tayAkainu);
