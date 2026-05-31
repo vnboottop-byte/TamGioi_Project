@@ -434,6 +434,7 @@
                 }
             }
             // 🌟 CHIÊU F: NỔ SÓNG CHẤN ĐỘNG NỨT VỠ BẦU TRỜI
+            // 🌟 CHIÊU F: NỔ SÓNG CHẤN ĐỘNG NỨT VỠ BẦU TRỜI
             else if (s.type === 'BAY_THANG_PHINH_TO_F') {
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
@@ -447,15 +448,18 @@
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongWB(s.targetPos, s.damage, s.noBanKinh);
                     
-                    // 🌟 BÍ THUẬT: ĐẠN CHẠM ĐÍCH -> GỌI MẢNH VỠ VFX VÀ XÓA TỐC ĐỘ BAY ĐỂ NÓ NỞ RA TẠI CHỖ
                     const vfx = taoVatTheWB('vfxenergy', 30);
                     vfx.position.copy(s.targetPos); scene.add(vfx);
                     kyNangWB.push({ 
                         mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, 
-                        currentScale: 30, maxScale: 400, growthRate: 15.0 // Phóng to cực đại chớp nhoáng
+                        currentScale: 30, maxScale: 400, growthRate: 15.0
                     });
+
+                    // 💥 BÍ THUẬT: ĐỘNG ĐẤT 25px + XÉ RÁCH KHÔNG GIAN BẰNG CODE THUẦN
+                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500); 
+                    if (typeof window.taoVetNutBangCodeWB === 'function') window.taoVetNutBangCodeWB(s.targetPos);
                     
-                    s.life = 0; // Xóa viên đạn đi
+                    s.life = 0; 
                 }
             }
             // 🌟 VẬT LÝ VỤ NỔ CHẤN ĐỘNG (ĐỨNG YÊN VÀ PHÌNH TO RA KHẮP BẢN ĐỒ)
