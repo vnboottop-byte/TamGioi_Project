@@ -269,25 +269,24 @@
             }
         }
         // ===============================================
-        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN ĐẠI KIẾM TU TIÊN)
+        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN 100% F ĐẠI KIẾM TU TIÊN)
         // ===============================================
         else if (phim === 'E') {
-            let pivotGroup = new THREE.Group(); 
-            pivotGroup.position.copy(diemChanMucTieu); // 🌟 Tâm xoay đặt tại chân mục tiêu
+            const pivotGroup = new THREE.Group(); 
+            // 🌟 Đặt tâm xoay trên đỉnh đầu nhân vật (cao lên 15m)
+            pivotGroup.position.copy(viTriGocToTam).add(upVector.clone().multiplyScalar(15)); 
             pivotGroup.up.copy(upVector);
-            pivotGroup.lookAt(viTriGocToTam); // Hướng trục về phía nhân vật
+            pivotGroup.lookAt(mucTieu); // Trục hướng thẳng về phía quái
             
-            const tayGiga = taoVatTheAk('tayakainu', 18.0, true); 
-            // 🌟 Đặt Nắm Đấm giơ cao tít trên trời, ngả về phía sau tâm xoay
-            tayGiga.position.set(0, 50, -40); 
-            tayGiga.lookAt(0, 0, 0); // Chĩa nắm đấm thẳng vào tâm xoay (chân mục tiêu)
+            const tayGiga = taoVatTheAk('tayakainu', 15.0, true); // Phóng to bàn tay khổng lồ
+            tayGiga.rotateX(-Math.PI * 0.8); // 🌟 Bẻ ngửa cánh tay ra tít phía sau lưng
             
             pivotGroup.add(tayGiga); 
             scene.add(pivotGroup);
 
             kyNangAkainu.push({ 
-                mesh: pivotGroup, speed: 0.15, life: 100, ticks: 0, 
-                type: 'DAI_KIEM_CHOP', targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 25
+                mesh: pivotGroup, swordMesh: tayGiga, speed: 0, life: 100, ticks: 0, 
+                type: 'F_CHOP_TUTIEN', targetPos: mucTieu.clone(), damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 30
             });
         }
         // ===============================================
