@@ -148,6 +148,58 @@
         return xuong;
     }
 
+    // 🌟 BÍ THUẬT: ĐỘNG CƠ RUNG MÀN HÌNH (SCREEN SHAKE)
+    window.kichHoatDongDat = function (cuongDo, thoiGian) {
+        let canvas = document.querySelector('canvas');
+        if (!canvas) return;
+        let thoiGianConLai = thoiGian; let cuongDoHienTai = cuongDo;
+        if (window.vongLapDongDat) clearInterval(window.vongLapDongDat);
+        window.vongLapDongDat = setInterval(() => {
+            if (thoiGianConLai <= 0) {
+                clearInterval(window.vongLapDongDat); canvas.style.transform = 'translate(0px, 0px)'; return;
+            }
+            canvas.style.transform = `translate(${(Math.random() - 0.5) * cuongDoHienTai}px, ${(Math.random() - 0.5) * cuongDoHienTai}px)`;
+            thoiGianConLai -= 30; cuongDoHienTai *= 0.95; 
+        }, 30);
+    };
+
+    // 🌟 BÍ THUẬT: THUẬT TOÁN VẼ VẾT NỨT KHÔNG GIAN BẰNG CODE (TÍM ĐEN NHẸ)
+    window.taoVetNutBangCodeWB = function(pos) {
+        const soTia = 15 + Math.floor(Math.random() * 10); // Đẻ ra 15-25 tia nứt
+        const material = new THREE.LineBasicMaterial({ 
+            color: 0x330055, // 🌟 Màu Tím Đen Nhẹ
+            transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending 
+        });
+
+        const points = [];
+        for(let i=0; i<soTia; i++) {
+            let angle = (i / soTia) * Math.PI * 2 + (Math.random() - 0.5);
+            let d1 = 5 + Math.random() * 5;
+            let px1 = Math.cos(angle)*d1, py1 = Math.sin(angle)*d1, pz1 = (Math.random()-0.5)*d1;
+            points.push(0, 0, 0, px1, py1, pz1); // Nhánh chính
+            
+            if (Math.random() > 0.2) { // Rẽ nhánh phụ 1
+                let a2 = angle + (Math.random() - 0.5); let d2 = d1 + 3 + Math.random() * 5;
+                let px2 = Math.cos(a2)*d2, py2 = Math.sin(a2)*d2, pz2 = (Math.random()-0.5)*d2;
+                points.push(px1, py1, pz1, px2, py2, pz2);
+                
+                if (Math.random() > 0.5) { // Rẽ nhánh phụ 2 (nứt vỡ vụn)
+                    let a3 = a2 + (Math.random() - 0.5); let d3 = d2 + 3 + Math.random() * 5;
+                    points.push(px2, py2, pz2, Math.cos(a3)*d3, Math.sin(a3)*d3, (Math.random()-0.5)*d3);
+                }
+            }
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        geometry.setDrawRange(0, 0); // 🌟 Ép tàng hình để vẽ từ từ
+
+        const line = new THREE.LineSegments(geometry, material);
+        line.position.copy(pos); line.scale.set(4, 4, 4); // Phóng to chùm vết nứt
+        scene.add(line);
+
+        kyNangWB.push({ mesh: line, type: 'VET_NUT_CODE', life: 75, maxDraw: points.length, currentDraw: 0, growth: 8 });
+    }
+
     window.thoiDiemChemCuoi_WB = window.thoiDiemChemCuoi_WB || 0;
 
     // ==========================================
@@ -235,14 +287,13 @@
                 }
             }, 300);
         }
-        else if (animCanMua === 'ATTACK7') { // 🌟 KIẾM KHÍ HAKI ĐEN TÍM BAY SIÊU CHẬM
+        else if (animCanMua === 'ATTACK7') { // 🌟 KIẾM KHÍ BAY SIÊU CHẬM (ĐÃ GỠ BỌC HAKI XẤU)
             setTimeout(() => {
-                const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50, true); // Bật nhuộm Haki Đen Tím
+                const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50); // Bỏ tham số true
                 kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
                 kq.lookAt(mucTieu);
                 kq.rotateZ(Math.PI / 2); // Dựng đứng
                 scene.add(kq);
-                // Ép speed = 3.0 lù lù tiến tới áp bức đối thủ
                 kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 3.0, life: 180, targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 25 }); 
             }, 300);
         }
