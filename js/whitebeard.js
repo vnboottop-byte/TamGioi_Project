@@ -470,6 +470,17 @@
                 }
             }
 
+            // 🌟 VẬT LÝ VẾT NỨT: TỪ TỪ XÉ RÁCH KHÔNG GIAN (VẼ DẦN DẦN)
+            else if (s.type === 'VET_NUT_CODE') {
+                if (s.currentDraw < s.maxDraw) {
+                    s.currentDraw += s.growth; // Tốc độ tia nứt bò ra
+                    s.mesh.geometry.setDrawRange(0, Math.floor(s.currentDraw));
+                }
+                if (s.life <= 15) { // Phai mờ trong 0.5s cuối
+                    s.mesh.material.opacity = s.life / 15;
+                }
+            }
+
             // 🛑 DỌN RÁC MODEL 3D TẬN GỐC
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') {
