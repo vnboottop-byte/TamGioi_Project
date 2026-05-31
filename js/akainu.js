@@ -197,7 +197,7 @@
     window.thoiDiemChemCuoi_Ak = window.thoiDiemChemCuoi_Ak || 0;
 
     // ==========================================
-    // 🌋 TUNG CHIÊU AKAINU
+    // 🌋 TUNG CHIÊU AKAINU (BẢN FIX CHUẨN ĐẠI TAY VÀ MƯA DUNG NHAM)
     // ==========================================
     window.tungComboAkainu = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -206,7 +206,7 @@
         }
         if (!nvc) return;
 
-        // Bốc thăm đòn đánh (Giống Nami/Zoro)
+        // Bốc thăm đòn đánh
         let animCanMua = 'ATTACK1';
         if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
             animCanMua = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
@@ -244,7 +244,7 @@
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
-        // 🌋 CHIÊU Q: VÒNG TRÒN NẮM ĐẤM (COPY KATAKURI R) -> DPS: 8 hit x 0.05 = 0.4
+        // 🌋 CHIÊU Q: VÒNG TRÒN NẮM ĐẤM (COPY CHUẨN KATAKURI R) -> DPS: 8 hit x 0.05 = 0.4
         // ===============================================
         if (phim === 'Q') {
             const soLuong = 8;
@@ -257,7 +257,7 @@
                 const posNgoai = mucTieu.clone().add(huongRaNgoai.multiplyScalar(35)); 
                 posNgoai.add(upVector.clone().multiplyScalar(12)); 
                 
-                const tayAkainu = taoVatTheAk('tayakainu', 3.5, true); // Nhuộm Magma
+                const tayAkainu = taoVatTheAk('tayakainu', 3.5, true); 
                 tayAkainu.position.copy(posNgoai); 
                 tayAkainu.up.copy(upVector);
                 tayAkainu.lookAt(mucTieu); scene.add(tayAkainu);
@@ -269,17 +269,17 @@
             }
         }
         // ===============================================
-        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (CHUẨN 100% F ĐẠI KIẾM TU TIÊN)
+        // 🌋 CHIÊU E: ĐẠI THỦ GIÁNG XUỐNG (BƠM TAY KHỔNG LỒ size 18 & FIX PIVOT ĐỈNH ĐẦU TU TIÊN)
         // ===============================================
         else if (phim === 'E') {
             const pivotGroup = new THREE.Group(); 
-            // 🌟 Đặt tâm xoay trên đỉnh đầu nhân vật (cao lên 15m)
+            // 🌟 Đặt tâm xoay CỐ ĐỊNH trên đỉnh đầu nhân vật (cao lên 15m chuẩn Tutien)
             pivotGroup.position.copy(viTriGocToTam).add(upVector.clone().multiplyScalar(15)); 
             pivotGroup.up.copy(upVector);
             pivotGroup.lookAt(mucTieu); // Trục hướng thẳng về phía quái
             
-            const tayGiga = taoVatTheAk('tayakainu', 15.0, true); // Phóng to bàn tay khổng lồ
-            tayGiga.rotateX(-Math.PI * 0.8); // 🌟 Bẻ ngửa cánh tay ra tít phía sau lưng
+            const tayGiga = taoVatTheAk('tayakainu', 18.0, true); // 🌟 Phóng to Đại Thủ size 18 khổng lồ y hệt Đại Kiếm
+            tayGiga.rotateX(-Math.PI * 0.8); // 🌟 Bẻ ngửa cánh tay ra tít phía sau lưng y hệt Đại Kiếm
             
             pivotGroup.add(tayGiga); 
             scene.add(pivotGroup);
@@ -290,7 +290,7 @@
             });
         }
         // ===============================================
-        // 🌋 CHIÊU R: MƯA LƯU TINH (ĐÃ FIX TÊN FILE VÀ QUỸ ĐẠO) -> DPS: 15 hit x 0.04 = 0.6
+        // 🌋 CHIÊU R: MƯA LƯU TINH (ĐÃ FIX TÊN FILE VÀ ĐỎ ĐÔ DUNG NHAM)
         // ===============================================
         else if (phim === 'R') {
             let tongThoiGian = 3000;
@@ -299,15 +299,15 @@
 
             for (let i = 0; i < soLuongMua; i++) {
                 setTimeout(() => {
-                    const thienThach = taoVatTheAk('THIENTHACH', 32, true); // 🌟 Đổi lại THIENTHACH chuẩn tránh lỗi tàng hình
-
+                    const thienThach = taoVatTheAk('THIENTHACH', 32, true); 
+                    
                     let posDap = diemChanMucTieu.clone();
-                    posDap.x += (Math.random() - 0.5) * 45;
+                    posDap.x += (Math.random() - 0.5) * 45; 
                     posDap.z += (Math.random() - 0.5) * 45;
 
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.y += 160 + Math.random() * 40;
-                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80));
+                    posXuatPhat.y += 160 + Math.random() * 40; 
+                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); 
 
                     thienThach.position.copy(posXuatPhat);
                     thienThach.lookAt(posDap);
@@ -321,16 +321,16 @@
             }
         }
         // ===============================================
-        // 🌋 CHIÊU F: KHỐI DUNG NHAM KHỔNG LỒ (FIX KHÔNG XOAY MŨI KHOAN) -> DPS: 1 hit x 1.0 = 1.0
+        // 🌋 CHIÊU F: KHỐI DUNG NHAM KHỔNG LỒ (ĐÃ FIX KHÔNG XOAY MŨI KHOAN)
         // ===============================================
         else if (phim === 'F') {
             setTimeout(() => {
-                const thienThach = taoVatTheAk('THIENTHACH2', 60, true);
-
+                const thienThach = taoVatTheAk('THIENTHACH2', 60, true); 
+                
                 let posDap = diemChanMucTieu.clone();
                 let posXuatPhat = posDap.clone();
-                posXuatPhat.y += 140;
-                posXuatPhat.sub(huongMat.clone().multiplyScalar(70));
+                posXuatPhat.y += 140; 
+                posXuatPhat.sub(huongMat.clone().multiplyScalar(70)); 
 
                 thienThach.position.copy(posXuatPhat);
                 thienThach.lookAt(posDap);
@@ -338,15 +338,14 @@
 
                 kyNangAkainu.push({
                     mesh: thienThach, type: 'BAY_THANG', speed: 1.0, life: 250, isMeteor: true, isUltimate: true,
-                    noRotate: true, // 🌟 BÍ THUẬT: Cờ cấm xoay
+                    noRotate: true, // Cờ cấm xoay
                     targetPos: posDap, damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 45
                 });
             }, 1000);
         }
     };
-
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU AKAINU (ĐÃ FIX TRÀN RAM)
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU AKAINU ( FIX LỖI GOM Q VÀ BỔ E TU TIÊN)
     // ==========================================
     window.updateCombatAkainu = function () {
         
@@ -355,6 +354,7 @@
             let s = kyNangAkainu[i]; 
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
+
             // 🌟 VÁ CHIÊU Q: HỒI SINH QUỸ ĐẠO VÒNG TRÒN BAY GOM
             if (s.type === 'BAY_THANG_GOM') {
                 if (s.targetPos) {
@@ -367,33 +367,31 @@
                 taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed * 0.5);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
-                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
-                    taoHieuUngNoAk(s.targetPos, false);
+                    gaySatThuongAk(s.mesh.position, s.damage, s.noBanKinh);
+                    taoHieuUngNoAk(s.mesh.position, false);
                     s.life = 0;
                 }
             }
-            
-            // 🌟 VÁ CHIÊU E: BỔ TRỤC XOAY TỐC ĐỘ CAO (ĐẠI KIẾM TU TIÊN)
-            else if (s.type === 'DAI_KIEM_CHOP') {
-                s.mesh.rotateX(-s.speed); // Bổ gập xuống đất
-                s.ticks++;
-                
-                // Hiệu ứng xịt đuôi lửa magma khi tay đang bổ xuống
-                if (s.mesh.children[0]) {
+            // 🌟 VÁ CHIÊU E: VẬT LÝ BỔ TRỤC XOAY CHUẨN F ĐẠI KIẾM TU TIÊN (TỪ ĐẦU NGÃI XUỐNG ĐẤT)
+            else if (s.type === 'F_CHOP_TUTIEN') {
+                if (s.swordMesh) {
+                    s.swordMesh.rotateX(0.12); // Tốc độ đập gập xuống gắt
+                    s.ticks++;
+                    
+                    // Hiệu ứng xịt lửa lửa Magma khi tay đang đập xuống
                     let tayPos = new THREE.Vector3();
-                    s.mesh.children[0].getWorldPosition(tayPos);
-                    taoDuoiLuaAk(tayPos, new THREE.Vector3(0, 1, 0), 2.0); // Lửa bốc lên trời
-                }
+                    s.swordMesh.getWorldPosition(tayPos);
+                    taoDuoiLuaAk(tayPos, new THREE.Vector3(0, 1, 0), 1.5); 
 
-                if (s.ticks > 12) { // Rơi siêu tốc độ cái RẦM trong 12 khung hình
-                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
-                    taoHieuUngNoAk(s.targetPos, true); // Nổ chấn động
-                    s.life = 0;
+                    if (s.ticks > 25 || s.life <= 5) { // Canh đúng nhịp tay chạm đất cái rầm
+                        gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                        taoHieuUngNoAk(s.targetPos, true); // Nổ Bùng Magma
+                        s.life = 0;
+                    }
                 }
             }
-
-            // 🌟 TÍCH HỢP XỬ LÝ CHUNG CHO QUỸ ĐẠO BAY_THANG VÀ THIÊN THẠCH
-            if (s.type === 'BAY_THANG') {
+            // Xử lý rơi thiên thạch xéo (Chiêu R, F)
+            else if (s.type === 'BAY_THANG') {
                 let huongBay = null;
                 if (s.targetPos) {
                     huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
@@ -402,52 +400,14 @@
                     s.mesh.translateZ(s.speed);
                 }
 
-                // 🌟 GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH (R, F)
+                // GỌI HIỆU ỨNG ĐUÔI LỬA CHO THIÊN THẠCH
                 if (s.isMeteor && huongBay) {
-                    // 🌟 KHÔNG XOAY NẾU CÓ CỜ noRotate (CHIÊU F)
-                    if (!s.noRotate && s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2);
-
-                    let dirNguoc = huongBay.clone().negate();
-                    taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed);
-
-                    if (s.isUltimate) {
-                        s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0;
-                    } else {
-                        s.speed *= 1.08; if (s.speed > 15.0) s.speed = 15.0;
-                    }
-                }
-
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
-                    taoHieuUngNoAk(s.targetPos, s.isUltimate);
-                    s.life = 0;
-                }
-            }
-            // Xử lý chặt tay khổng lồ (Chiêu E của Katakuri F)
-            else if (s.type === 'F_CHOP') {
-                if (s.swordMesh) {
-                    s.swordMesh.rotateX(0.08); 
-                    s.ticks++;
-                    if (s.ticks > 35 || s.life <= 5) {
-                        gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
-                        taoHieuUngNoAk(s.targetPos, true); // Nổ to
-                        s.life = 0;
-                    }
-                }
-            }
-            // Xử lý rơi thiên thạch xéo (Chiêu R, F của Fujitora)
-            else if (s.type === 'ROI_THANG_XUONG') {
-                if (s.targetPos) {
-                    let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                    // KHÔNG XOAY NẾU CÓ CỜ noRotate (CHIÊU F)
+                    if (!s.noRotate && s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); 
                     
-                    if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); 
-                    
-                    // Xịt đuôi lửa ngùn ngụt
-                    let dirNguoc = huongBay.clone().negate();
+                    let dirNguoc = huongBay.clone().negate(); 
                     taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed);
-
-                    // Gia tốc trọng trường
+                    
                     if (s.isUltimate) {
                         s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0; 
                     } else {
@@ -462,7 +422,7 @@
                 }
             }
 
-            // 🛑 DỌN RÁC MODEL 3D TẬN GỐC
+            // 🛑 DỌN RÁC MODEL 3D TẬN GỐC (Bản bọc thép)
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') {
                     window.donRac3D(s.mesh);
@@ -474,7 +434,7 @@
             }
         }
 
-        // 2. VÒNG LẶP HẠT BỤI & ĐUÔI LỬA
+        // 🛑 VỌNG LẶP DỌN RÁC HẠT VFX (Bản bọc thép)
         for (let i = hieuUngAkainu.length - 1; i >= 0; i--) {
             let h = hieuUngAkainu[i]; h.life--;
 
@@ -497,7 +457,6 @@
                 h.system.material.opacity = h.life / 30;
             }
 
-            // 🛑 DỌN RÁC HẠT (CHỐNG TRÀN VRAM CARD MÀN HÌNH)
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
                 if (h.system.geometry) h.system.geometry.dispose(); 
@@ -506,15 +465,13 @@
             }
         }
 
-        // 3. VÒNG LẶP SỐ DAME TRÊN MÀN HÌNH
+        // Dọn rác Thẻ số nhảy dame
         for (let i = danhSachSoBayAk.length - 1; i >= 0; i--) {
             let it = danhSachSoBayAk[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else it.el.style.display = 'none';
-
-            // 🛑 DỌN RÁC THẺ DIV HTML
             if (it.life <= 0) {
                 it.el.remove(); 
                 danhSachSoBayAk.splice(i, 1);
