@@ -147,15 +147,14 @@
     // ==========================================
     // 🌟 ĐÚC VẬT THỂ LỬA BẰNG HÀM ENGINE GỐC ĐỂ KHÔNG BỊ LỖI
     // ==========================================
+    // ==========================================
+    // 🌟 ĐÚC VẬT THỂ LỬA (BẢN CHỐNG SẬP TRÌNH DUYỆT)
+    // ==========================================
     function taoLuaFile(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
-        // 🌟 BƠM ÁNH SÁNG: Gắn bóng đèn tỏa sáng Vàng Cam lan tỏa môi trường xung quanh
-        if (tenFile === 'fire1') {
-            const denLua = new THREE.PointLight(0xffaa00, 3.0, 30); // Màu vàng cam, cường độ 3.0, tầm hắt sáng 30m
-            group.add(denLua);
-        }
+        // 🛑 ĐÃ XÓA CÁI BÓNG ĐÈN POINTLIGHT GÂY TREO MÁY Ở ĐÂY
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
@@ -168,12 +167,12 @@
                             m.transparent = true; 
                             m.blending = THREE.AdditiveBlending; 
                             
-                            // 🌟 BƠM PHÁT QUANG TRỰC TIẾP VÀO MODEL CHIÊU Q
+                            // 🌟 VẪN GIỮ BÍ THUẬT PHÁT QUANG (RẤT NHẸ MÁY)
                             if (tenFile === 'fire1') {
-                                if (m.color) m.color.setHex(0xffaa00); // Nhuộm vỏ ngoài Vàng Cam
+                                if (m.color) m.color.setHex(0xffaa00); // Vàng Cam
                                 if (m.emissive) {
-                                    m.emissive.setHex(0xffdd00); // Lõi rực màu Vàng Chói
-                                    m.emissiveIntensity = 4.0; // Ép cường độ phát sáng lên x4 để kích hoạt Bloom chói mắt
+                                    m.emissive.setHex(0xffdd00); // Lõi rực Vàng Chói
+                                    m.emissiveIntensity = 4.0; // Ép sáng x4
                                 }
                             }
                         });
