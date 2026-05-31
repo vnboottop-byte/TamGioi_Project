@@ -257,7 +257,7 @@
                 const posNgoai = mucTieu.clone().add(huongRaNgoai.multiplyScalar(35)); 
                 posNgoai.add(upVector.clone().multiplyScalar(12)); 
                 
-                const tayAkainu = taoVatTheAk('tayakainu', 3.5, true); 
+                const tayAkainu = taoVatTheAk('tayakainu', 30.5, true); 
                 tayAkainu.position.copy(posNgoai); 
                 tayAkainu.up.copy(upVector);
                 tayAkainu.lookAt(mucTieu); scene.add(tayAkainu);
@@ -278,7 +278,7 @@
             pivotGroup.up.copy(upVector);
             pivotGroup.lookAt(mucTieu); // Trục hướng thẳng về phía quái
             
-            const tayGiga = taoVatTheAk('tayakainu', 18.0, true); // 🌟 Phóng to Đại Thủ size 18 khổng lồ y hệt Đại Kiếm
+            const tayGiga = taoVatTheAk('tayakainu', 50.0, true); // 🌟 Phóng to Đại Thủ size 18 khổng lồ y hệt Đại Kiếm
             tayGiga.rotateX(-Math.PI * 0.8); // 🌟 Bẻ ngửa cánh tay ra tít phía sau lưng y hệt Đại Kiếm
             
             pivotGroup.add(tayGiga); 
