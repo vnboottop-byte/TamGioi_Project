@@ -464,9 +464,16 @@
                 vfx.songXungKich.material.opacity = (vfx.life / maxLife) * 0.6;
             }
 
+            // 🛑 VÁ DỌN RÁC BỘ VFX KAMEHAMEHA (GOKU)
             if (vfx.life <= 0) {
-                if (typeof window.donRac3D === 'function') window.donRac3D(vfx.group); 
-                else scene.remove(vfx.group);
+                if (typeof scene !== 'undefined') scene.remove(vfx.group);
+                // Tiêu hủy Hạt lửa
+                if (vfx.pts && vfx.pts.geometry) vfx.pts.geometry.dispose();
+                if (vfx.pts && vfx.pts.material) vfx.pts.material.dispose();
+                // Tiêu hủy Sóng xung kích
+                if (vfx.songXungKich && vfx.songXungKich.geometry) vfx.songXungKich.geometry.dispose();
+                if (vfx.songXungKich && vfx.songXungKich.material) vfx.songXungKich.material.dispose();
+                
                 hieuUngGoku.splice(i, 1);
             }
         }
