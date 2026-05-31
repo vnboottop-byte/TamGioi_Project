@@ -403,9 +403,13 @@
                 }
             }
 
+            // 🛑 VÁ DỌN RÁC MODEL AOKIJI
             if (s.life <= 0) {
-                if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
-                scene.remove(s.mesh);
+                if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
+                else {
+                    if (s.mesh.parent) s.mesh.parent.remove(s.mesh);
+                    if (typeof scene !== 'undefined') scene.remove(s.mesh);
+                }
                 kyNangAokiji.splice(i, 1);
             }
         }
@@ -420,7 +424,13 @@
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 30;
-            if (h.life <= 0) { scene.remove(h.system); hieuUngAokiji.splice(i, 1); }
+            // 🛑 VÁ DỌN RÁC HẠT BỤI AOKIJI
+            if (h.life <= 0) {
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
+                hieuUngAokiji.splice(i, 1);
+            }
         }
 
         // Cập nhật Số dame
