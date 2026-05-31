@@ -399,7 +399,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI NAMI
     // ==========================================
-    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('nami')) {
         window.HePhaiHienTai = {
             tenPhai: "Hoa Tiêu Nami",
             khoiTao: function () {
