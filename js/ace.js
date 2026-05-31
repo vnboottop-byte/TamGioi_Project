@@ -172,7 +172,7 @@
                                 if (m.color) m.color.setHex(0xffaa00); // Vàng Cam
                                 if (m.emissive) {
                                     m.emissive.setHex(0xffdd00); // Lõi rực Vàng Chói
-                                    m.emissiveIntensity = 4.0; // Ép sáng x4
+                                    m.emissiveIntensity = 40.0; // Ép sáng x4
                                 }
                             }
                         });
