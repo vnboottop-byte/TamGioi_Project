@@ -278,7 +278,7 @@
             pivotGroup.up.copy(upVector);
             pivotGroup.lookAt(mucTieu); // Trục hướng thẳng về phía quái
             
-            const tayGiga = taoVatTheAk('tayakainu', 50.0, true); // 🌟 Phóng to Đại Thủ size 18 khổng lồ y hệt Đại Kiếm
+            const tayGiga = taoVatTheAk('tayakainu', 150.0, true); // 🌟 Phóng to Đại Thủ size 18 khổng lồ y hệt Đại Kiếm
             tayGiga.rotateX(-Math.PI * 0.8); // 🌟 Bẻ ngửa cánh tay ra tít phía sau lưng y hệt Đại Kiếm
             
             pivotGroup.add(tayGiga); 
