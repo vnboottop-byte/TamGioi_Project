@@ -518,7 +518,56 @@
             tenPhai: "Tứ Hoàng Râu Trắng",
             khoiTao: function () {
                 console.log("🧔 Sức mạnh hủy diệt thế giới! Khởi động Râu Trắng!");
-                // (Logic Init giữ nguyên gốc của Engine để lấy đủ Animations)
+
+                // 🌟 BẢN VÁ: NÃO BỘ NHẬN DIỆN HOẠT ẢNH CHUẨN ESPORTS
+                if (window.animationsMap) {
+                    window.KHO_ANIM_NHANROI = [];
+                    window.KHO_ANIM_TANCONG = [];
+                    let coBay = false; let coChay = false;
+                    let animBay = null; let animChay = null;
+
+                    for (let key in window.animationsMap) {
+                        let k = key.toUpperCase();
+                        let clip = window.animationsMap[key];
+
+                        // Lọc bỏ lỗi dịch chuyển rễ (Root motion) khi tung chiêu
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
+                            if (clip && clip.tracks) {
+                                clip.tracks = clip.tracks.filter(track => {
+                                    let tenTrack = track.name.toLowerCase();
+                                    if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) return false;
+                                    return true;
+                                });
+                            }
+                        }
+
+                        if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
+                        if (k.includes('ATTACK') || k.includes('SKILL')) window.KHO_ANIM_TANCONG.push(key);
+
+                        if (k.includes('BAY') || k.includes('FLY')) { coBay = true; animBay = window.animationsMap[key]; window.animationsMap['BAY'] = animBay; }
+                        if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) { coChay = true; animChay = window.animationsMap[key]; window.animationsMap['CHAYBO'] = animChay; }
+                    }
+                    if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
+                    if (coBay && !coChay) { window.animationsMap['CHAYBO'] = animBay; window.animationsMap['RUN'] = animBay; }
+
+                    if (window.KHO_ANIM_NHANROI.length === 0) window.KHO_ANIM_NHANROI.push('NHANROI1');
+                    let defaultIdle = window.KHO_ANIM_NHANROI[0];
+                    window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
+                    if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
+                }
+
+                // 🌟 BẢN VÁ: VÒNG LẶP CHỐNG GIẬT KINH PHONG (ĐỔI IDLE TỰ NHIÊN)
+                if (window.vongLapNhanRoiZR) clearInterval(window.vongLapNhanRoiZR);
+                window.vongLapNhanRoiZR = setInterval(() => {
+                    if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI.length > 0) {
+                        let randomIdle = window.KHO_ANIM_NHANROI[Math.floor(Math.random() * window.KHO_ANIM_NHANROI.length)];
+                        if (window.animationsMap && window.animationsMap[randomIdle]) {
+                            window.animationsMap['NHANROI'] = window.animationsMap[randomIdle];
+                            if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[randomIdle];
+                            if (typeof window.playAnim === 'function') window.playAnim(randomIdle);
+                        }
+                    }
+                }, 12000);
             },
             tungChieu: window.tungComboWhitebeard,
             capNhat: function () { }
