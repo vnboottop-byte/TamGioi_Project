@@ -145,34 +145,50 @@
 
    
     // ==========================================
-    // 🌟 ĐÚC VẬT THỂ LỬA BẰNG HÀM ENGINE GỐC ĐỂ KHÔNG BỊ LỖI
-    // ==========================================
-    // ==========================================
-    // 🌟 ĐÚC VẬT THỂ LỬA (BẢN CHỐNG SẬP TRÌNH DUYỆT)
+    // 🌟 ĐÚC VẬT THỂ LỬA (BẢN BƠM HÀO QUANG QUANG HỌC - FAKE BLOOM)
     // ==========================================
     function taoLuaFile(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
-        // 🛑 ĐÃ XÓA CÁI BÓNG ĐÈN POINTLIGHT GÂY TREO MÁY Ở ĐÂY
+        // 🌟 BÍ THUẬT: TẠO MỘT QUẦNG SÁNG ẢO GIÁC BỌC QUANH VIÊN ĐẠN
+        let quangSangGlow = null;
+        if (tenFile === 'fire1') {
+            if (!window.textureGlowAce) {
+                let canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+                let ctx = canvas.getContext('2d');
+                let gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 1.0)');     // Lõi trắng chói
+                gradient.addColorStop(0.2, 'rgba(255, 200, 0, 0.8)');    // Vàng rực
+                gradient.addColorStop(0.5, 'rgba(255, 100, 0, 0.3)');    // Cam nhạt lan tỏa
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');            // Tan vào không khí
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, 128, 128);
+                window.textureGlowAce = new THREE.CanvasTexture(canvas);
+            }
+            
+            let spriteMat = new THREE.SpriteMaterial({ 
+                map: window.textureGlowAce, 
+                color: 0xffdd00, 
+                transparent: true, 
+                blending: THREE.AdditiveBlending, // Cơ chế hòa trộn ánh sáng
+                depthWrite: false // Không che khuất các vật khác
+            });
+            quangSangGlow = new THREE.Sprite(spriteMat);
+        }
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
-                    // Đắp vật liệu cho nó phát sáng mạnh
                     if (c.isMesh && c.material) {
                         let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
-                        
                         danhSachMat.forEach(m => { 
                             m.transparent = true; 
                             m.blending = THREE.AdditiveBlending; 
-                            
-                            // 🌟 VẪN GIỮ BÍ THUẬT PHÁT QUANG (RẤT NHẸ MÁY)
                             if (tenFile === 'fire1') {
-                                if (m.color) m.color.setHex(0xffaa00); // Vàng Cam
+                                if (m.color) m.color.setHex(0xffaa00);
                                 if (m.emissive) {
-                                    m.emissive.setHex(0xffdd00); // Lõi rực Vàng Chói
-                                    m.emissiveIntensity = 40.0; // Ép sáng x4
+                                    m.emissive.setHex(0xffdd00);
+                                    m.emissiveIntensity = 2.0; // Chỉ cần sáng nhè nhẹ vì đã có Hào quang bọc ngoài
                                 }
                             }
                         });
@@ -187,11 +203,23 @@
 
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 v.rotation.set(0, 0, 0);
+
+                // 🌟 GẮN QUẦNG SÁNG VÀO CHÍNH GIỮA CỤC LỬA VÀ PHÓNG TO NÓ LÊN GẤP 3 LẦN
+                if (quangSangGlow) {
+                    quangSangGlow.scale.set(maxDim * 3.5, maxDim * 3.5, 1);
+                    v.add(quangSangGlow);
+                }
+
                 group.add(v);
             });
         }
         return group;
     }
+
+
+
+
+    
 
     window.thoiDiemChemCuoi_Ace = window.thoiDiemChemCuoi_Ace || 0;
 
