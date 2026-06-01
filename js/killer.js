@@ -1,6 +1,6 @@
 // ==========================================
 // 🪚 MÔN PHÁI CẬN CHIẾN: THỢ SĂN KILLER (KAMAZO)
-// 👑 CÔNG NGHỆ V4: DYNAMIC BONE TRACKING + AUTO-TIMING (KHÓA CAM & TỌA ĐỘ CHUẨN 100%)
+// 👑 CÔNG NGHỆ V5 TỐI THƯỢNG: ROOT MOTION BAKING (TRÍCH XUẤT ĐỘNG NĂNG AAA)
 // ==========================================
 
 (function () {
@@ -11,25 +11,19 @@
     window.KHO_ANIM_TANCONG = [];
     window.tongSoChuNoi_Killer = 0;
 
-    window.trangThaiKiller = { state: 'IDLE', skillKey: null };
+    // 🌟 BỘ NHỚ LƯU TRỮ ĐƯỜNG CONG LƯỚT CỦA ANIMATION
+    window.KillerRootMotion = {}; 
 
-    // 🌟 BÍ THUẬT V4: RADAR QUÉT XƯƠNG GỐC ẨN (TÌM XƯƠNG CAO NHẤT KHÔNG CẦN BIẾT TÊN)
-    function layXuongRoot(nvc) {
-        if (nvc.userData && nvc.userData.xuongGocCached) return nvc.userData.xuongGocCached;
-        let xuong = null;
-        nvc.traverse((c) => {
-            if (c.isSkinnedMesh && c.skeleton && c.skeleton.bones.length > 0 && !xuong) {
-                xuong = c.skeleton.bones[0]; // Bắt lấy xương đầu tiên
-                // Leo ngược lên cây gia phả để tìm cụ tổ (Root thật sự)
-                while (xuong.parent && xuong.parent.isBone) {
-                    xuong = xuong.parent;
-                }
-            }
-        });
-        if (!xuong) xuong = nvc; // Fallback an toàn
-        if (nvc.userData) nvc.userData.xuongGocCached = xuong;
-        return xuong;
-    }
+    window.trangThaiKiller = { 
+        state: 'IDLE', 
+        skillKey: null,
+        animName: null,
+        hasRootMotion: false,
+        lastLocalX: 0,
+        lastLocalZ: 0,
+        dashQuat: null,
+        lastTime: 0
+    };
 
     function taoSoSatThuongKiller(pos3D, satThuong, mauSac = '#00e5ff') {
         if (window.isMobile || satThuong <= 0) return;
@@ -138,8 +132,9 @@
         hieuUngKiller.push({ group: vfxGroup, ring: songXungKich, pts: pts, velocities: vels, life: 20, maxScale: isBig ? 1.5 : 1.0 });
     }
 
+
     // ==========================================
-    // ⚔️ TUNG CHIÊU: CHỐT TỌA ĐỘ BẰNG ĐỒNG HỒ AI
+    // ⚔️ HÀM TUNG CHIÊU: CHUẨN BỊ ĐỘNG NĂNG
     // ==========================================
     window.tungComboKiller = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -155,93 +150,134 @@
         if (bayGio - window.thoiDiemChemCuoi_Killer < 700) return;
         window.thoiDiemChemCuoi_Killer = bayGio;
 
+        let animName = phim === 'Q' ? 'ATTACK1' : phim === 'E' ? 'ATTACK2' : phim === 'R' ? 'ATTACK3' : 'ATTACK4';
+        
+        // CẬP NHẬT TRẠNG THÁI
         window.dangMuaChieu = true;
         window.trangThaiKiller.state = 'HITTING';
         window.trangThaiKiller.skillKey = phim;
-
-        let animName = phim === 'Q' ? 'ATTACK1' : phim === 'E' ? 'ATTACK2' : phim === 'R' ? 'ATTACK3' : 'ATTACK4';
-        if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animName);
-
-        // 🌟 BÍ THUẬT V4: TÍNH TOÁN THỜI GIAN HOẠT ẢNH CHÍNH XÁC 100%
-        let thoiGianAnim = 0.5; // Mặc định 500ms nếu lỗi
-        if (window.animationsMap && window.animationsMap[animName]) {
-            thoiGianAnim = window.animationsMap[animName].getClip().duration;
-        }
-        // Ép chốt hạ ở 90% thời lượng, TRƯỚC KHI anim kịp kết thúc và lặp lại
-        let thoiGianChotHa = (thoiGianAnim * 1000) * 0.90; 
-
-        // GỬI MẠNG
+        window.trangThaiKiller.animName = animName;
+        window.trangThaiKiller.lastTime = 0;
+        
+        // Xoay mặt về mục tiêu
         let viTriGocToTam = nvc.position.clone();
         let targetQuai = window.layMucTieuGanNhatKiller(viTriGocToTam);
-        let diemDichNet = targetQuai ? window.layHitbox(targetQuai.mesh).tamNguc.clone() : viTriGocToTam.clone().add(new THREE.Vector3(0,0,-20));
+        
+        if (targetQuai) {
+            let diemDichNet = window.layHitbox(targetQuai.mesh).tamNguc.clone();
+            diemDichNet.y = nvc.position.y;
+            let targetMat = new THREE.Matrix4().lookAt(nvc.position, diemDichNet, nvc.up);
+            nvc.quaternion.setFromRotationMatrix(targetMat);
+        }
 
+        // Lấy Sổ Nam Tào Trích Xuất Động Năng
+        if (window.KillerRootMotion && window.KillerRootMotion[animName]) {
+            window.trangThaiKiller.hasRootMotion = true;
+            let curve = window.KillerRootMotion[animName];
+            window.trangThaiKiller.lastLocalX = curve.values[0] || 0;
+            window.trangThaiKiller.lastLocalZ = curve.values[2] || 0;
+        } else {
+            window.trangThaiKiller.hasRootMotion = false;
+        }
+        
+        // Lưu hướng mặt chuẩn để bẻ Vector lướt
+        window.trangThaiKiller.dashQuat = nvc.quaternion.clone();
+
+        // GỬI MẠNG
         if (window.room && window.room.localParticipant) {
             let huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat);
+            let targetSend = targetQuai ? window.layHitbox(targetQuai.mesh).tamNguc : viTriGocToTam;
             window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                 type: 'TUNG_CHIEU', skillType: phim, className: 'Killer', 
-                origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: diemDichNet.x, y: diemDichNet.y, z: diemDichNet.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
+                origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: targetSend.x, y: targetSend.y, z: targetSend.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
             })), { reliable: true });
         }
 
-        setTimeout(() => {
-            if (window.trangThaiKiller.state === 'HITTING') {
-                
-                // 🌟 LẤY TỌA ĐỘ XƯƠNG GỐC ẨN DANH VÀ ĐÓNG ĐINH
-                let xuongGoc = layXuongRoot(nvc);
-                if (xuongGoc) {
-                    let viTriXuongWorld = new THREE.Vector3();
-                    xuongGoc.getWorldPosition(viTriXuongWorld);
-                    
-                    // Cập nhật ngay tọa độ Hitbox thật vào vị trí xương đang đứng
-                    nvc.position.x = viTriXuongWorld.x;
-                    nvc.position.z = viTriXuongWorld.z;
-                    nvc.position.y = window.matDatY || 0; 
-                }
-
-                // Gây dame tại vị trí mới
-                const dameChiTiet = { 'Q': 1.0, 'E': 1.5, 'R': 2.0, 'F': 3.5 };
-                let dameSátThương = (window.DAME_CUA_TOI || 100) * dameChiTiet[phim];
-                let isTuyetKieu = phim === 'F';
-
-                gaySatThuongKiller(nvc.position, dameSátThương, isTuyetKieu ? 25 : 15);
-                taoHieuUngChemKiller(nvc.position, nvc, isTuyetKieu);
-
-                if (window.currentActionChar) {
-                    window.currentActionChar.setEffectiveTimeScale(0.01);
-                    setTimeout(() => { if (window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
-                }
-                if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(isTuyetKieu ? 22 : 12, 250);
-
-                // 🌟 ÉP NGẮT HOẠT ẢNH TRƯỚC KHI NÓ KỊP GIẬT LÙI
-                window.trangThaiKiller.state = 'IDLE';
-                window.dangMuaChieu = false;
-                if (typeof window.playAnim === 'function') {
-                    window.playAnim('NHANROI'); // Gọi IDLE để ép xương về thẳng 0,0,0 mượt mà tại vị trí tọa độ mới!
-                }
-            }
-        }, thoiGianChotHa);
+        if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animName);
     };
 
     // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ: CAMERA BÁM SÁT XƯƠNG TỔ TIÊN
+    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU: TRUYỀN ĐỘNG NĂNG FRAME-BY-FRAME
     // ==========================================
     window.updateCombatKiller = function () {
         let nvc = window.nhanVatChinh || window.playerModel;
         
-        // 📸 BÁM CAMERA LIVE TỪNG FRAME
         if (nvc && window.dangMuaChieu && window.trangThaiKiller.state === 'HITTING') {
-            let xuongGoc = layXuongRoot(nvc);
-            if (xuongGoc) {
-                let viTriXuongWorld = new THREE.Vector3();
-                xuongGoc.getWorldPosition(viTriXuongWorld);
-                
-                // Khóa cổ Camera kéo theo xương
-                if (window.camera && window.controls && window.controls.target) {
-                    window.controls.target.copy(viTriXuongWorld);
+            let animName = window.trangThaiKiller.animName;
+            let act = window.animationsMap[animName];
+
+            if (act) {
+                let time = act.time;
+                let duration = act.getClip().duration;
+
+                // 🌟 BÍ THUẬT: ĐẨY NHÂN VẬT ĐÚNG GIA TỐC GỐC CỦA ARTIST
+                if (window.trangThaiKiller.hasRootMotion) {
+                    let curve = window.KillerRootMotion[animName];
+                    let idx = 0;
+                    
+                    // Tìm Frame hiện tại
+                    for (let i = 0; i < curve.times.length; i++) {
+                        if (curve.times[i] >= time) { idx = Math.max(0, i - 1); break; }
+                        if (i === curve.times.length - 1) { idx = i; }
+                    }
+
+                    // Tọa độ cục bộ hiện tại
+                    let curX = curve.values[idx * 3];
+                    let curZ = curve.values[idx * 3 + 2];
+
+                    // Độ lệch (Delta) so với Frame trước
+                    let dX = curX - window.trangThaiKiller.lastLocalX;
+                    let dZ = curZ - window.trangThaiKiller.lastLocalZ;
+
+                    window.trangThaiKiller.lastLocalX = curX;
+                    window.trangThaiKiller.lastLocalZ = curZ;
+
+                    // Chuyển Delta thành Vector và bẻ lái theo hướng nhân vật đang nhìn
+                    let deltaVec = new THREE.Vector3(dX, 0, dZ);
+                    
+                    // Bù tỷ lệ Scale (Quan trọng nếu model được thu phóng)
+                    deltaVec.multiply(nvc.scale);
+                    
+                    // Xoay chuẩn hướng
+                    deltaVec.applyQuaternion(window.trangThaiKiller.dashQuat);
+                    
+                    // Cập nhật lên Hitbox Gốc
+                    nvc.position.add(deltaVec);
+                    nvc.position.y = window.matDatY || 0; // Giữ chân chạm sàn
+
+                    // CAMERA BÁM SÁT GÓT MƯỢT MÀ
+                    if (window.camera && window.controls && window.controls.target) {
+                        window.controls.target.copy(nvc.position).add(new THREE.Vector3(0, 1.5, 0));
+                    }
                 }
+
+                // 🌟 CHỐT NGẮT CHIÊU (Đồng hồ AI 95% thời lượng hoặc Loop)
+                if (time >= duration - 0.05 || time < window.trangThaiKiller.lastTime) {
+                    
+                    // Giải phóng
+                    window.trangThaiKiller.state = 'IDLE';
+                    window.dangMuaChieu = false;
+                    if (typeof window.playAnim === 'function') window.playAnim('NHANROI');
+                    
+                    // Xả Đam Chém & Hiệu ứng
+                    let isTuyetKieu = window.trangThaiKiller.skillKey === 'F';
+                    let dameSátThương = (window.DAME_CUA_TOI || 100) * (isTuyetKieu ? 3.5 : 1.5);
+                    gaySatThuongKiller(nvc.position, dameSátThương, isTuyetKieu ? 25 : 15);
+                    taoHieuUngChemKiller(nvc.position, nvc, isTuyetKieu);
+
+                    // Khựng thịt Hit-stop
+                    if (window.currentActionChar) {
+                        window.currentActionChar.setEffectiveTimeScale(0.01);
+                        setTimeout(() => { if (window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
+                    }
+                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(isTuyetKieu ? 22 : 12, 250);
+                }
+                
+                window.trangThaiKiller.lastTime = time;
             }
         }
 
+        // RENDER VỆT CHÉM VÀ DỌN RÁC
         for (let i = hieuUngKiller.length - 1; i >= 0; i--) {
             let h = hieuUngKiller[i]; h.life--;
             if (h.ring) { h.ring.scale.set(1 + (20-h.life)*0.1 * h.maxScale, 1 + (20-h.life)*0.1 * h.maxScale, 1); h.ring.material.opacity = h.life / 20; }
@@ -266,21 +302,63 @@
     window.idVongLapCombatKiller = setInterval(window.updateCombatKiller, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO HỆ PHÁI
+    // 🌟 KHỞI TẠO HỆ PHÁI: RÚT HỒN ANIMATION
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('killer')) {
         window.HePhaiHienTai = {
             tenPhai: "Thợ Săn Killer",
             khoiTao: function () {
-                console.log("🪚 Động cơ V4: Bám xương vô cực!");
+                console.log("🪚 Động cơ V5: Root Motion Baked!");
+
                 if (window.animationsMap) {
-                    window.KHO_ANIM_NHANROI = []; window.KHO_ANIM_TANCONG = [];
+                    window.KHO_ANIM_NHANROI = []; 
+                    window.KHO_ANIM_TANCONG = [];
+                    window.KillerRootMotion = {}; // RESET NÃO BỘ
+
                     let coBay = false; let coChay = false; let animBay = null; let animChay = null;
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
+                        let act = window.animationsMap[key];
+                        let clip = act.getClip();
+
+                        // 🌟 BÍ THUẬT: QUÉT VÀ TRÍCH XUẤT QUÃNG ĐƯỜNG LƯỚT
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
+                            window.KHO_ANIM_TANCONG.push(key);
+                            
+                            let maxDist = 0;
+                            let rootTrackIdx = -1;
+
+                            // Tìm cái xương bị kéo đi xa nhất (> 1 mét)
+                            for(let i = 0; i < clip.tracks.length; i++) {
+                                let track = clip.tracks[i];
+                                if (track.name.toLowerCase().includes('.position')) {
+                                    let v = track.values;
+                                    if (v.length >= 6) {
+                                        // Đo khoảng cách XZ (Bỏ qua Y)
+                                        let dist = Math.sqrt(Math.pow(v[v.length-3] - v[0], 2) + Math.pow(v[v.length-1] - v[2], 2));
+                                        if (dist > maxDist && dist > 1.0) {
+                                            maxDist = dist;
+                                            rootTrackIdx = i;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Rút hồn lưu vào Não và Cắt đứt dây thần kinh
+                            if (rootTrackIdx !== -1) {
+                                let rootTrack = clip.tracks[rootTrackIdx];
+                                window.KillerRootMotion[key] = {
+                                    times: Array.from(rootTrack.times),
+                                    values: Array.from(rootTrack.values)
+                                };
+                                // 🛑 XÓA VĨNH VIỄN SỰ DỊCH CHUYỂN BÊN TRONG MODEL ĐỂ CHỐNG GIẬT LÙI
+                                clip.tracks.splice(rootTrackIdx, 1);
+                                console.log("🔥 Đã trích xuất thành công Động năng của chiêu: " + key);
+                            }
+                        }
+
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
-                        if (k.includes('ATTACK') || k.includes('SKILL')) window.KHO_ANIM_TANCONG.push(key);
                         if (k.includes('BAY') || k.includes('FLY')) { coBay = true; animBay = window.animationsMap[key]; window.animationsMap['BAY'] = animBay; }
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) { coChay = true; animChay = window.animationsMap[key]; window.animationsMap['CHAYBO'] = animChay; }
                     }
