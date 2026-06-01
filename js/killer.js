@@ -136,7 +136,7 @@
     }
 
     // ==========================================
-    // ⚔️ HÀM TUNG CHIÊU: THẢ XÍCH CHO ANIMATION TỰ LÔI ĐI
+    // ⚔️ HÀM TUNG CHIÊU: THẢ XÍCH VÀ ĐO BẰNG LƯỚI BAO BỌC (BOUNDING BOX)
     // ==========================================
     window.tungComboKiller = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -153,7 +153,7 @@
         if (bayGio - window.thoiDiemChemCuoi_Killer < 700) return;
         window.thoiDiemChemCuoi_Killer = bayGio;
 
-        // 🔥 KÍCH HOẠT THẢ XÍCH: Cho phép hệ thống múa hoạt ảnh tự do tịnh tiến xác
+        // BẮT ĐẦU MÚA
         window.dangMuaChieu = true;
         window.trangThaiKiller.state = 'HITTING';
         window.trangThaiKiller.skillKey = phim;
@@ -161,7 +161,7 @@
         let animName = phim === 'Q' ? 'ATTACK1' : phim === 'E' ? 'ATTACK2' : phim === 'R' ? 'ATTACK3' : 'ATTACK4';
         if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animName);
 
-        // Canh mục tiêu để đồng bộ Multiplayer
+        // GỬI MẠNG
         let viTriGocToTam = nvc.position.clone();
         let targetQuai = window.layMucTieuGanNhatKiller(viTriGocToTam);
         let diemDichNet = targetQuai ? window.layHitbox(targetQuai.mesh).tamNguc.clone() : viTriGocToTam.clone().add(new THREE.Vector3(0,0,-20));
@@ -174,22 +174,22 @@
             })), { reliable: true });
         }
 
-        // ⏱️ QUÉT ĐOẠN CUỐI HOẠT ẢNH: Chờ hoạt ảnh kéo đi hết cỡ (Ví dụ: 450ms) rồi ĐÓNG ĐINH tọa độ!
         let thoiGianChotHa = phim === 'F' ? 700 : 450;
         
         setTimeout(() => {
             if (window.trangThaiKiller.state === 'HITTING') {
-                let xuongGoc = timXuong(nvc, ['Hips', 'Root', 'pelvis', 'mixamorigHips', 'mixamorig:Hips']);
-                if (xuongGoc) {
-                    let viTriXuongWorld = new THREE.Vector3();
-                    xuongGoc.getWorldPosition(viTriXuongWorld);
-                    
-                    // 🌟 BÍ THUẬT CHỐT HẠ: Đóng đinh hộp Hitbox thật vào chính xác nơi xương nhảy tới!
-                    nvc.position.copy(viTriXuongWorld);
-                    nvc.position.y = window.matDatY || 0; // Đảm bảo chân chạm sàn
-                }
+                
+                // 💥 BÍ THUẬT TỐI HẬU: Lấy Tâm của toàn bộ Cục Thịt (Bounding Box Center)
+                const box = new THREE.Box3().setFromObject(nvc);
+                const tamCucThit = new THREE.Vector3();
+                box.getCenter(tamCucThit);
 
-                // Tính toán gây sát thương tại điểm chốt hạ mới
+                // Ép Hitbox gốc dịch chuyển đến đúng cái Tâm đó (Giữ nguyên chiều cao Y)
+                nvc.position.x = tamCucThit.x;
+                nvc.position.z = tamCucThit.z;
+                nvc.position.y = window.matDatY || 0; 
+
+                // Gây sát thương tại vị trí mới
                 const dameChiTiet = { 'Q': 1.0, 'E': 1.5, 'R': 2.0, 'F': 3.5 };
                 let dameSátThương = (window.DAME_CUA_TOI || 100) * dameChiTiet[phim];
                 let isTuyetKieu = phim === 'F';
@@ -197,7 +197,7 @@
                 gaySatThuongKiller(nvc.position, dameSátThương, isTuyetKieu ? 25 : 15);
                 taoHieuUngChemKiller(nvc.position, nvc, isTuyetKieu);
 
-                // GENSHIN IMPACT HIT-STOP
+                // Khựng hình
                 if (window.currentActionChar) {
                     window.currentActionChar.setEffectiveTimeScale(0.01);
                     setTimeout(() => { if (window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
@@ -206,7 +206,7 @@
                     window.kichHoatDongDat(isTuyetKieu ? 22 : 12, 250);
                 }
 
-                // Mở khóa cho nhân vật thu tay về dáng đứng yên mượt mà
+                // Kết thúc
                 window.trangThaiKiller.state = 'IDLE';
                 window.dangMuaChieu = false;
                 if (typeof window.playAnim === 'function') window.playAnim('NHANROI');
@@ -215,22 +215,22 @@
     };
 
     // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU: KHOÁ CAMERA LIVE VÀO XƯƠNG MÚA
+    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU: KHOÁ CAMERA VÀO TÂM CỤC THỊT
     // ==========================================
     window.updateCombatKiller = function () {
         let nvc = window.nhanVatChinh || window.playerModel;
         
-        // 📸 1. KHOÁ CAMERA THEO XƯƠNG LIVE (TỪNG FRAME MỘT)
+        // 📸 1. KHOÁ CAMERA THEO TÂM BOUNDING BOX LIVE (TỪNG FRAME MỘT)
         if (nvc && window.dangMuaChieu && window.trangThaiKiller.state === 'HITTING') {
-            let xuongGoc = timXuong(nvc, ['Hips', 'Root', 'pelvis', 'mixamorigHips', 'mixamorig:Hips']);
-            if (xuongGoc) {
-                let viTriXuongWorld = new THREE.Vector3();
-                xuongGoc.getWorldPosition(viTriXuongWorld);
-                
-                // Ép camera đuổi theo sát sạt cái xương đang lướt đi của Animation!
-                if (window.camera && window.controls && window.controls.target) {
-                    window.controls.target.copy(viTriXuongWorld);
-                }
+            
+            // Liên tục cập nhật Hộp Bao Bọc của cục thịt đang bay
+            const box = new THREE.Box3().setFromObject(nvc);
+            const tamCucThit = new THREE.Vector3();
+            box.getCenter(tamCucThit);
+            
+            // Ép camera đuổi theo cái Tâm đó
+            if (window.camera && window.controls && window.controls.target) {
+                window.controls.target.lerp(tamCucThit, 0.5); // Dùng lerp 0.5 để bám đuổi mượt mà tránh giật lag
             }
         }
 
