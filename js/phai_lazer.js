@@ -183,7 +183,7 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
 
 
     window.layMucTieuGanNhatLZ = function(viTriGoc, huongMat) {
-        let targetPos = null; let minD = 500; 
+        let targetPos = null; let minD = 80; 
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
