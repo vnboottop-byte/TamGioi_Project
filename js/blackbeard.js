@@ -93,7 +93,7 @@
         }
     }
 
-    // 🌟 2. BỤI LỬA ĐEN (DARK MATTER VFX)
+    // 🌟 2. BỤI LỬA ĐEN TẠI CHỖ (NỔ)
     function taoHieuUngNoDenBB(pos, isBig = false, isContinuous = false) {
         if (!isContinuous) {
             if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
@@ -106,30 +106,25 @@
         const vels = [];
 
         for (let i = 0; i < soLuong; i++) {
-            // Nếu nổ to thì rải hạt rộng ra
             let offset = isBig ? (Math.random() - 0.5) * 20 : (Math.random() - 0.5) * 5;
             posArr[i * 3] = pos.x + offset; 
             posArr[i * 3 + 1] = pos.y + (Math.random() * 2); 
             posArr[i * 3 + 2] = pos.z + offset;
-            
-            // Lửa đen bay bốc lên trên
             let speedY = Math.random() * 2.0 + 1.0;
-            let vec = new THREE.Vector3((Math.random() - 0.5) * 0.5, speedY, (Math.random() - 0.5) * 0.5);
-            vels.push(vec);
+            vels.push(new THREE.Vector3((Math.random() - 0.5) * 0.5, speedY, (Math.random() - 0.5) * 0.5));
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
         if (!window.textureBuiDenBB) {
             let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
             let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
-            gradient.addColorStop(0, 'rgba(50, 0, 80, 0.9)'); // Tím rất đậm ở lõi
-            gradient.addColorStop(0.4, 'rgba(10, 10, 10, 0.8)'); // Đen xịt lan ra
+            gradient.addColorStop(0, 'rgba(50, 0, 80, 0.9)'); 
+            gradient.addColorStop(0.4, 'rgba(10, 10, 10, 0.8)'); 
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
             window.textureBuiDenBB = new THREE.CanvasTexture(canvas);
         }
 
-        // 🌟 BÍ THUẬT: Dùng NormalBlending để màu đen có thể che khuất cảnh vật
         const mat = new THREE.PointsMaterial({
             color: 0x220033, size: window.isMobile ? 10.0 : 18.0, map: window.textureBuiDenBB,
             transparent: true, opacity: 0.8, blending: THREE.NormalBlending, depthWrite: false
@@ -139,8 +134,37 @@
         hieuUngBB.push({ system: pts, velocities: vels, life: 40 });
     }
 
-    // 🌟 3. ĐÚC MODEL BỌC THÉP TỐI ƯU (ÉP MÀU ĐEN CHO CÁC MODEL MƯỢN)
-    function taoVatTheBB(tenFile, scaleSize, forceDark = false) {
+    // 🌟 BÍ THUẬT MỚI: TẠO THẢM LỬA ĐEN LAN TOẢ KHẮP BÁN KÍNH CHIÊU F
+    function taoThamLuaDenBB(pos, banKinh) {
+        const soLuong = 100; // Số lượng hạt bụi bay lên
+        const geo = new THREE.BufferGeometry();
+        const posArr = new Float32Array(soLuong * 3);
+        const vels = [];
+
+        for (let i = 0; i < soLuong; i++) {
+            let angle = Math.random() * Math.PI * 2;
+            let r = Math.sqrt(Math.random()) * banKinh; // Rải đều hạt khắp mặt vòng tròn
+            
+            posArr[i * 3] = pos.x + Math.cos(angle) * r;
+            posArr[i * 3 + 1] = pos.y + 0.2 + (Math.random() * 1.5); // Lượn lờ sát mặt đất
+            posArr[i * 3 + 2] = pos.z + Math.sin(angle) * r;
+            
+            // Bốc lên từ từ, lờ đờ hắc ám
+            vels.push(new THREE.Vector3((Math.random() - 0.5) * 0.2, Math.random() * 0.4 + 0.1, (Math.random() - 0.5) * 0.2));
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+
+        const mat = new THREE.PointsMaterial({
+            color: 0x110022, size: 25.0, map: window.textureBuiDenBB, // Hạt to, tối mịt
+            transparent: true, opacity: 0.6, blending: THREE.NormalBlending, depthWrite: false
+        });
+
+        const pts = new THREE.Points(geo, mat); scene.add(pts);
+        hieuUngBB.push({ system: pts, velocities: vels, life: 45 });
+    }
+
+    // 🌟 3. ĐÚC MODEL (ĐÃ GỠ BỎ NHUỘM ĐEN ĐỂ GIỮ NGUYÊN BẢN GỐC)
+    function taoVatTheBB(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
@@ -150,15 +174,7 @@
                     if (c.isMesh && c.material) {
                         let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
                         danhSachMat.forEach(m => {
-                            m.transparent = true;
-                            if (forceDark) { // 🌟 Nhuộm Đen Tím cho fire4 và energy mượn của phái khác
-                                m.map = null; 
-                                if (m.color) m.color.setHex(0x050505); 
-                                if (m.emissive) {
-                                    m.emissive.setHex(0x1a0033); 
-                                    m.emissiveIntensity = 2.0; 
-                                }
-                            }
+                            m.transparent = true; // Chỉ làm trong suốt chứ không đè màu nữa
                         });
                     }
                 });
@@ -245,14 +261,14 @@
         let tayTraiQ = timXuong(nvc, ['LHand_Palm_042', 'LHand']); 
 
         // ===============================================
-        // 🕳️ CHIÊU Q (ATTACK4): BẮN QUẢ CẦU (Nhuộm đen energy.glb)
+        // 🕳️ CHIÊU Q (ATTACK4): BẮN QUẢ CẦU NĂNG LƯỢNG NGUYÊN BẢN
         // ===============================================
         if (animCanMua === 'ATTACK4') { 
             setTimeout(() => {
                 let diemBan = viTriGocToTam.clone();
                 if (tayTraiQ) tayTraiQ.getWorldPosition(diemBan);
 
-                const cauDen = taoVatTheBB('energy', 2, true); // Force Dark
+                const cauDen = taoVatTheBB('energy', 2); // 🌟 Bỏ forceDark
                 cauDen.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
                 cauDen.lookAt(mucTieu); scene.add(cauDen);
 
@@ -318,19 +334,34 @@
         }
 
         // ===============================================
-        // 🕳️ CHIÊU F (ATTACK2): TRẢI THẢM BỤI LỬA ĐEN TỒN TẠI 5 GIÂY
+        // 🕳️ CHIÊU F (ATTACK2): TRẢI VÙNG ĐẤT CHẾT (AOE BÓNG TỐI)
         // ===============================================
         else if (animCanMua === 'ATTACK2') { 
             setTimeout(() => {
                 let diemNo = diemChanMucTieu.clone();
 
-                // Tạo lõi model cho có hình khối
+                // 🌟 TẠO MỘT VÒNG TRÒN BÓNG TỐI ÁP XUỐNG MẶT ĐẤT
+                let geoPlane = new THREE.CircleGeometry(60, 32); // Bán kính 60m
+                let matPlane = new THREE.MeshBasicMaterial({ color: 0x050011, transparent: true, opacity: 0.8, depthWrite: false });
+                let darkAura = new THREE.Mesh(geoPlane, matPlane);
+                darkAura.rotation.x = -Math.PI / 2; // Đặt nằm ngang trên mặt đất
+                darkAura.position.copy(diemNo);
+                darkAura.position.y += 0.2; // Hơi nổi lên để không bị khuất dưới sàn
+                scene.add(darkAura);
+
+                // Gắn nòng cốt blackenergy1 vào tâm vòng tròn
                 const loiDen = taoVatTheBB('blackenergy1', 25);
                 loiDen.position.copy(diemNo); scene.add(loiDen);
 
+                // Gom chung vào 1 mảng để dọn rác 1 thể
+                const groupF = new THREE.Group();
+                groupF.add(darkAura);
+                groupF.add(loiDen);
+                scene.add(groupF);
+
                 kyNangBB.push({
-                    mesh: loiDen, type: 'AOE_LUA_DEN', life: 150, // 5 Giây (150 frames)
-                    targetPos: diemNo, damage: dameGoc * 0.1, noBanKinh: 60 // Gay dame liên tục
+                    mesh: groupF, type: 'AOE_LUA_DEN', life: 150, // Tồn tại 5s
+                    targetPos: diemNo, damage: dameGoc * 0.1, noBanKinh: 60 
                 });
             }, 800);
         }
