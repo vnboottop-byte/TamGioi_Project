@@ -4771,58 +4771,62 @@ window.taoHieuUngLootVang = function (viTriXac, bossId) {
 
 
 
-
-
-
 // ==========================================
-// 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V3 (CHUẨN HÓA R128 - CHỐNG CRASH HỘP RỖNG)
+// 🛠️ MÁY QUÉT CẢM BIẾN DA THỊT V4 (ĐỒNG BỘ 100% VỚI GAME)
+// Chuyên trị Model loạn Scale trong Túi đồ & Showroom
 // ==========================================
-window.canBangModelUI = function(model, kichThuocKhung = 4) {
+window.canBangModelUI = function (model, kichThuocKhung = 4) {
     if (!model) return;
-    
-    // 1. Reset về nguyên thủy
+
+    // 1. Reset về nguyên thủy trước khi đo
     model.position.set(0, 0, 0);
     model.scale.set(1, 1, 1);
     model.rotation.set(0, 0, 0);
     model.updateMatrixWorld(true);
 
-    // 2. TIA X-QUANG: CHỈ ĐO CÁC KHỐI THỊT (MESH), BỎ QUA XƯƠNG VÀ HÀO QUANG!
-    let box = new THREE.Box3();
-    box.min.set(Infinity, Infinity, Infinity);
-    box.max.set(-Infinity, -Infinity, -Infinity); // Khởi tạo hộp rỗng chuẩn r128
-    let coHinh = false;
-    
-    model.traverse(function(child) {
-        if (child.isMesh && !child.userData.isAura && !child.userData.isCloud && child.visible) {
-            if (child.geometry) {
-                child.geometry.computeBoundingBox();
-                if (child.geometry.boundingBox) {
-                    let b = child.geometry.boundingBox.clone();
-                    b.applyMatrix4(child.matrixWorld);
-                    box.union(b);
-                    coHinh = true;
-                }
-            }
+    // 2. DÙNG THƯỚC ĐO CỘT SỐNG NHƯ TRONG GAME (CHỐNG LỖI MIXAMO/BLENDER)
+    let chieuCaoThucTe = 0;
+    let maxYBone = -Infinity;
+    let minYBone = Infinity;
+    let coXuong = false;
+
+    // Quét xương để đo chiều cao thật của nhân vật/thú cưỡi
+    model.traverse((child) => {
+        if (child.isBone) {
+            coXuong = true;
+            let pos = new THREE.Vector3();
+            child.getWorldPosition(pos);
+            if (pos.y > maxYBone) maxYBone = pos.y;
+            if (pos.y < minYBone) minYBone = pos.y;
         }
     });
 
-    // 🌟 BẢN VÁ R128: Kiểm tra hộp rỗng bằng cách so sánh min/max thay vì gọi hàm .isEmpty() gây crash!
-    let laHopRong = (box.min.x > box.max.x || box.min.y > box.max.y || box.min.z > box.max.z);
-    if (!coHinh || laHopRong) {
-        box.setFromObject(model);
+    let box = new THREE.Box3().setFromObject(model);
+    let center = new THREE.Vector3();
+
+    if (coXuong && (maxYBone - minYBone) > 0.1) {
+        // 🧍 NẾU LÀ NHÂN VẬT / THÚ CƯỠI (Đo theo Xương)
+        chieuCaoThucTe = (maxYBone - minYBone) * 1.15; // Bù 15% cho chỏm tóc/đỉnh đầu
+
+        // Lấy tâm X, Z từ hộp, nhưng tâm Y lấy từ Xương để chân luôn chạm đất chuẩn
+        box.getCenter(center);
+        center.y = minYBone + (chieuCaoThucTe / 2);
+    } else {
+        // ⚔️ NẾU LÀ VŨ KHÍ / VẬT PHẨM (Đo theo Hộp BoundingBox mặc định)
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        box.getCenter(center);
+        chieuCaoThucTe = Math.max(size.x, size.y, size.z);
     }
 
-    const size = new THREE.Vector3(); box.getSize(size);
-    const center = new THREE.Vector3(); box.getCenter(center);
+    // Chống lỗi Model vô hình chia cho 0 làm sập màn hình
+    if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.001) chieuCaoThucTe = 1;
 
-    let maxDim = Math.max(size.x, size.y, size.z);
-    if (maxDim <= 0.001 || !isFinite(maxDim) || maxDim > 1000) maxDim = 1; 
-    
     // 3. Ép tỷ lệ thu nhỏ ôm khít ô UI
-    const tyLe = kichThuocKhung / maxDim;
+    const tyLe = kichThuocKhung / chieuCaoThucTe;
     model.scale.set(tyLe, tyLe, tyLe);
 
-    // 4. Khóa Trọng Tâm Về 0,0,0
+    // 4. Khóa Trọng Tâm Về Chính Giữa Máy Ảnh
     model.position.x = -center.x * tyLe;
     model.position.y = -center.y * tyLe;
     model.position.z = -center.z * tyLe;
