@@ -314,13 +314,31 @@
         }
 
         // ===============================================
-        // 🕳️ CHIÊU R (ATTACK1): TỤ LỰC 2S THU PHÓNG -> NÉM BAY CHẬM -> NỔ NHƯ WHITEBEARD
+        // 🕳️ CHIÊU R (ATTACK1): TỤ LỰC 2S (CÓ LÁ CHẮN CHỐNG BỊ CẮT ANIMATION)
         // ===============================================
         else if (animCanMua === 'ATTACK1') { 
             let diemBan = viTriGocToTam.clone();
             if (tayPhaiR) tayPhaiR.getWorldPosition(diemBan);
 
-            const blackHole = taoVatTheBB('blackenergy', 0.5); 
+            // 🌟 BÍ THUẬT: TẠO LÁ CHẮN BẢO VỆ HOẠT ẢNH (CHỐNG ENGINE GỐC ÉP VỀ IDLE SỚM)
+            window.dangGongChieuR_BB = true;
+            if (!window.playAnimGocBB) window.playAnimGocBB = window.playAnim || window.epNhanVatMua;
+            
+            // Hack trực tiếp vào hệ thần kinh: Cấm mọi lệnh bắt về IDLE trong lúc đang gồng!
+            window.playAnim = window.epNhanVatMua = function(name) {
+                if (window.dangGongChieuR_BB && (name.includes('NHANROI') || name.includes('IDLE'))) {
+                    return; // 🛑 Bị chặn lại: Từ chối về Nhàn rỗi!
+                }
+                if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB(name);
+            };
+
+            // Trả lại tốc độ gốc (Phòng trường hợp bị dính code tua nhanh của phiên bản trước)
+            if (window.animationsMap && window.animationsMap['ATTACK1']) {
+                window.animationsMap['ATTACK1'].setEffectiveTimeScale(1.0); 
+            }
+
+            // Gọi quả cầu khổng lồ
+            const blackHole = taoVatTheBB('blackenergy', 2.0, true); 
             blackHole.position.copy(diemBan);
             scene.add(blackHole);
 
@@ -332,18 +350,26 @@
             };
             kyNangBB.push(skillTuLuc);
 
-            // GIAI ĐOẠN 2: SAU 2 GIÂY -> NÉM BAY ĐI
+            // GIAI ĐOẠN 2: SAU ĐÚNG 2 GIÂY -> NÉM BAY ĐI
             setTimeout(() => {
-                skillTuLuc.type = 'BAY_CHAM_PHINH_TO_R'; // Đổi trạng thái logic
+                skillTuLuc.type = 'BAY_CHAM_PHINH_TO_R'; 
                 skillTuLuc.life = 200;
-                skillTuLuc.speed = 2.5; // Bay cực chậm để ngắm
+                skillTuLuc.speed = 2.5; 
                 skillTuLuc.currentScale = 5;
-                skillTuLuc.maxScale = 50; // Khổng lồ
+                skillTuLuc.maxScale = 50; 
                 skillTuLuc.growthRate = 0.5;
                 skillTuLuc.targetPos = mucTieu.clone();
                 skillTuLuc.damage = dameGoc * 1.0;
                 skillTuLuc.noBanKinh = 45;
                 blackHole.lookAt(mucTieu);
+
+                if (!isRemote) {
+                    window.dangMuaChieu = false;
+                    
+                    // 🌟 GỠ LÁ CHẮN VÀ CHO PHÉP NHÂN VẬT THU TAY VỀ IDLE
+                    window.dangGongChieuR_BB = false;
+                    if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB('NHANROI');
+                }
             }, 2000); 
         }
 
