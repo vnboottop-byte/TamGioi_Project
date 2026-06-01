@@ -368,16 +368,36 @@
     };
 
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU BLACKBEARD
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU BLACKBEARD (FULL TÍCH HỢP)
     // ==========================================
     window.updateCombatBB = function () {
-        
-        for (let i = kyNangBB.length - 1; i >= 0; i--) {
-            let s = kyNangBB[i]; 
 
-            // Cập nhật Animation bên trong model (nếu có)
+        // 🌟 BÍ THUẬT: TỰ ĐỘNG GẮN VŨ KHÍ VĨNH VIỄN VÀO HAI TAY RÂU ĐEN (CHỈ CHẠY 1 LẦN)
+        let nvc = window.nhanVatChinh;
+        if (nvc && !nvc.daGanVuKhiBB && window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Tứ Hoàng Râu Đen") {
+            let tayPhai = timXuong(nvc, ['RHand_Palm_049', 'RHand']);
+            let tayTrai = timXuong(nvc, ['LHand_Palm_042', 'LHand']);
+
+            if (tayPhai) {
+                let darkOrb = taoVatTheBB('blackenergy', 2.0); // Bằng nắm tay
+                tayPhai.add(darkOrb); // Dán cứng vào xương tay phải
+            }
+            if (tayTrai) {
+                let lightOrb = taoVatTheBB('energy', 2.0); // Bằng nắm tay
+                tayTrai.add(lightOrb); // Dán cứng vào xương tay trái
+            }
+            nvc.daGanVuKhiBB = true; // Khóa cờ không gắn lại nữa
+        }
+
+        // =======================================
+        // VÒNG LẶP VẬT LÝ CHIÊU THỨC (Q, E, R, F)
+        // =======================================
+        for (let i = kyNangBB.length - 1; i >= 0; i--) {
+            let s = kyNangBB[i];
+
+            // Cập nhật Animation bên trong model đạn
             if (s.mesh.userData && s.mesh.userData.mixer) {
-                s.mesh.userData.mixer.update(0.03); 
+                s.mesh.userData.mixer.update(0.03);
             }
 
             // 1. CHIÊU Q: ĐẠN BAY PHÌNH TO
@@ -398,34 +418,34 @@
                     s.life = 0;
                 }
             }
-            
-            // 2. CHIÊU E: HỎA TRỤ ĐEN (TẠI CHỖ)
+
+            // 2. CHIÊU E: HỎA TRỤ ĐEN TẠI CHỖ
             else if (s.type === 'HOA_TRU_DEN') {
                 s.life--;
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.3); 
+                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.3);
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
-                if (s.life % 10 === 0) { // Cứ 10 frame giật dame & nhả khói 1 lần
+                if (s.life % 10 === 0) { // Giật dame & nhả khói 1 lần/10 frame
                     gaySatThuongBB(s.targetPos, s.damage * 0.2, s.noBanKinh);
-                    taoHieuUngNoDenBB(s.targetPos, false, true); 
+                    taoHieuUngNoDenBB(s.targetPos, false, true);
                 }
             }
 
-            // 3. CHIÊU R (GIAI ĐOẠN 1): TỤ LỰC TRÊN TAY (BÓP MÉO 1cm -> TO NHỎ LÚC LẮC)
+            // 3. CHIÊU R (GIAI ĐOẠN 1): TỤ LỰC TRÊN TAY
             else if (s.type === 'DANG_TU_LUC') {
                 if (s.boneAttach) {
                     let pos = new THREE.Vector3(); s.boneAttach.getWorldPosition(pos);
                     s.mesh.position.copy(pos); // Dính chặt vào tay
                 }
-                // 🌟 BÍ THUẬT: SINE-WAVE bóp méo to nhỏ liên tục
+                // SINE-WAVE bóp méo to nhỏ liên tục
                 let thoiGianNen = Date.now() - s.startTime;
-                let scalePulse = 2.0 + Math.sin(thoiGianNen * 0.02) * 1.8; // Giao động từ 0.2 đến 3.8
+                let scalePulse = 2.0 + Math.sin(thoiGianNen * 0.02) * 1.8;
                 s.mesh.scale.set(scalePulse, scalePulse, scalePulse);
             }
 
-            // 4. CHIÊU R (GIAI ĐOẠN 2): BAY CHẬM VÀ NỔ NHƯ WHITEBEARD
+            // 4. CHIÊU R (GIAI ĐOẠN 2): NÉM RA BAY CHẬM VÀ NỔ
             else if (s.type === 'BAY_CHAM_PHINH_TO_R') {
                 s.life--;
                 if (s.currentScale < s.maxScale) {
@@ -439,31 +459,41 @@
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
-                    
-                    // 💥 GỌI VỤ NỔ CHẤN ĐỘNG VFX Nhuộm Đen
-                    const vfx = taoVatTheBB('vfxenergy', 30, true);
+
+                    const vfx = taoVatTheBB('vfxenergy', 30);
                     vfx.position.copy(s.targetPos); scene.add(vfx);
-                    kyNangBB.push({ 
-                        mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, 
+                    kyNangBB.push({
+                        mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100,
                         currentScale: 30, maxScale: 400, growthRate: 15.0
                     });
 
-                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500); 
-                    s.life = 0; 
+                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
+                    s.life = 0;
                 }
             }
 
-            // 5. CHIÊU F: TRẢI THẢM LỬA ĐEN DIỆN RỘNG (5 GIÂY)
+            // 5. CHIÊU F: VÙNG ĐẤT CHẾT (LAN TOẢ LỬA ĐEN KHẮP BÁN KÍNH 60M)
             else if (s.type === 'AOE_LUA_DEN') {
                 s.life--;
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(-0.1);
 
-                // 🌟 BÍ THUẬT: Cứ mỗi 3 frame, nhả ra một bãi khói đen cuồn cuộn bay lên
-                if (s.life % 3 === 0) {
-                    taoHieuUngNoDenBB(s.targetPos, true, true); 
+                // Trục xoay cái lỗi blackenergy1
+                if (s.mesh.children[1] && s.mesh.children[1].children.length > 0) {
+                    s.mesh.children[1].children[0].rotateY(-0.1);
                 }
-                if (s.life % 15 === 0) { // Mỗi nửa giây rỉa máu 1 lần
+
+                // Cứ mỗi 5 frame, đẻ ra một Bãi Lửa Đen lan toả lộn xộn trong vùng 60m
+                if (s.life % 5 === 0) {
+                    taoThamLuaDenBB(s.targetPos, s.noBanKinh);
+                }
+
+                // Cứ 15 frame (Nửa giây) gay sát thương 1 lần toàn vùng
+                if (s.life % 15 === 0) {
                     gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                }
+
+                // Hiệu ứng tàn phai (Vòng tròn mờ dần khi hết chiêu)
+                if (s.life < 20) {
+                    if (s.mesh.children[0]) s.mesh.children[0].material.opacity = (s.life / 20) * 0.8;
                 }
             }
 
@@ -488,15 +518,17 @@
             }
         }
 
-        // 🛑 VẬT LÝ HẠT BỤI LỬA ĐEN
+        // =======================================
+        // 🛑 VẬT LÝ HẠT BỤI LỬA ĐEN (DỌN RÁC)
+        // =======================================
         for (let i = hieuUngBB.length - 1; i >= 0; i--) {
             let h = hieuUngBB[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             for (let j = 0; j < posArr.length / 3; j++) {
-                posArr[j * 3] += h.velocities[j].x; 
+                posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y; // Lửa đen luôn bốc lên cao
                 posArr[j * 3 + 2] += h.velocities[j].z;
-                
+
                 h.velocities[j].x *= 0.95; h.velocities[j].z *= 0.95; // Cản gió
             }
             h.system.geometry.attributes.position.needsUpdate = true;
@@ -504,13 +536,15 @@
 
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
-                if (h.system.geometry) h.system.geometry.dispose(); 
-                if (h.system.material) h.system.material.dispose(); 
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
                 hieuUngBB.splice(i, 1);
             }
         }
 
-        // VẬT LÝ SỐ DAME
+        // =======================================
+        // 🛑 VẬT LÝ SỐ DAME (DỌN RÁC)
+        // =======================================
         for (let i = danhSachSoBayBB.length - 1; i >= 0; i--) {
             let it = danhSachSoBayBB[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
