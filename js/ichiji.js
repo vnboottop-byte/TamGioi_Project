@@ -263,7 +263,7 @@
                 mesh: cauDo, type: 'BAY_SAU_KHI_TU', speed: 8.0, life: 120,
                 delay: 10, objNeo: tayPhai, originOffset: viTriGocToTam,
                 currentScale: 1.0, maxScale: 8.0, growthRate: 0.3,
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20,
+                targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20,
                 isSpinning: true, spinSpeed: 0.1
             });
         }
@@ -305,7 +305,7 @@
             kyNangIchiji.push({
                 mesh: cauDoR, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
                 currentScale: 4.0, maxScale: 14.0, growthRate: 0.4,
-                targetPos: mucTieu.clone(), damage: dameGoc * 2.0, noBanKinh: 25,
+                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 25,
                 isSpinning: true, spinSpeed: 0.2
             });
 
@@ -338,7 +338,7 @@
                 kyNangIchiji.push({
                     mesh: luaChan, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 120,
                     currentScale: 7.0, maxScale: 20.0, growthRate: 0.5,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 3.5, noBanKinh: 35,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 35,
                     isSpinning: true, spinSpeed: 0.4 // Xoay như mũi khoan
                 });
             }, 500);
