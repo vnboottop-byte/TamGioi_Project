@@ -46,11 +46,11 @@
         // 🌟 ƯU TIÊN 1: Khóa mục tiêu thủ công
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
-            if (viTriGoc.distanceTo(hit.tamNguc) <= 300) return window.mucTieuHienTai;
+            if (viTriGoc.distanceTo(hit.tamNguc) <= 80) return window.mucTieuHienTai;
         }
 
         // 🌟 ƯU TIÊN 2: QUÉT NGƯỜI CHƠI (PVP) TRƯỚC
-        let targetNguoi = null; let minDNguoi = 300; 
+        let targetNguoi = null; let minDNguoi = 80; 
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
@@ -65,7 +65,7 @@
         if (targetNguoi) return targetNguoi;
 
         // 🌟 ƯU TIÊN 3: HẾT NGƯỜI MỚI TÌM QUÁI (PVE)
-        let targetQuai = null; let minDQuai = 300; 
+        let targetQuai = null; let minDQuai = 80; 
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
