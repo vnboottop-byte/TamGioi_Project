@@ -95,7 +95,7 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
                 playerModel.up.copy(huongLenTroiMoi);
                 window.mucTieuBanKinhDat = playerModel.position.distanceTo(tam);
 
-                window.mauBanThan = window.MAU_TOI_DA || 5000;
+                window.mauBanThan = window.MAU_TOI_DA || 1000;
                 window.isDead = false;
                 
                 // Trở lại trạng thái đứng im
