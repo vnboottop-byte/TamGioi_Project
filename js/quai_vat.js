@@ -1157,7 +1157,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
         // 🌟 KỊCH BẢN 2: SÁT THỦ (HUNTER) - RƯỢT ĐUỔI VÀ BẮN TỈA (GIỮ NGUYÊN V15)
         if (bot.soLanDaDanh >= 4 || ptHP <= 0.4 || bot.trangThaiHanhDong === 'FLEE') {
             bot.trangThaiHanhDong = 'FLEE';
-        } else if (distToPlayer > 180) {
+        } else if (distToPlayer > 80) {
             bot.trangThaiHanhDong = 'APPROACH';
         } else {
             bot.trangThaiHanhDong = 'ATTACK';
@@ -1268,7 +1268,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 let tamNo = pTarget.clone();
                 setTimeout(() => {
                     if (typeof window.gaySatThuongBossToPlayer === 'function' && !window.isDead) {
-                        let dmg = Math.max(5, (bot.level || 1) * 8);
+                        let dmg = 30 * (bot.level || 1);
                         window.gaySatThuongBossToPlayer(tamNo, dmg, 15.0);
                     }
                 }, thoiGianDanBay);
