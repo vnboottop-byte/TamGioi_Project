@@ -202,7 +202,7 @@
     window.thoiDiemChemCuoi_ICJ = window.thoiDiemChemCuoi_ICJ || 0;
 
     // ==========================================
-    // 🔥 TUNG CHIÊU ICHIJI (THEO ĐÚNG THỜI GIAN VÀ XƯƠNG CỦA SẾP)
+    // 🔥 TUNG CHIÊU ICHIJI (SIZE TĂNG DẦN & XOAY TRÒN)
     // ==========================================
     window.tungComboIchiji = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -211,7 +211,6 @@
         }
         if (!nvc) return;
 
-        // BẮT HOẠT ẢNH
         let animCanMua = '';
         if (phim === 'Q') animCanMua = 'ATTACK1';
         if (phim === 'E') animCanMua = 'ATTACK3';
@@ -249,93 +248,98 @@
         const dameGoc = window.DAME_CUA_TOI || 100;
 
         // ===============================================
-        // 🔥 CHIÊU Q (ATTACK1): TAY PHẢI TỤ LỰC 300MS DO.GLB RỒI BẮN PHÌNH TO
+        // 🔥 CHIÊU Q (ATTACK1): Quả cầu nhỏ (Size 1.0) tụ lực 300ms
         // ===============================================
-        if (animCanMua === 'ATTACK1') { 
+        if (animCanMua === 'ATTACK1') {
             let tayPhai = timBoPhan(nvc, ['Object_20', 'RHand_Palm_056', 'RHand']);
             let diemBan = viTriGocToTam.clone();
             if (tayPhai) tayPhai.getWorldPosition(diemBan);
 
-            const cauDo = taoVatTheICJ('DO', 1.0); 
+            const cauDo = taoVatTheICJ('DO', 1.0);
             cauDo.position.copy(diemBan);
             scene.add(cauDo);
 
-            kyNangIchiji.push({ 
-                mesh: cauDo, type: 'BAY_SAU_KHI_TU', speed: 8.0, life: 120, 
-                delay: 10, // 🌟 10 frames (~300ms) dính chặt vào tay phải
-                objNeo: tayPhai, originOffset: viTriGocToTam, 
-                currentScale: 1.0, maxScale: 8.0, growthRate: 0.3, // Bắn ra sẽ phình to dần
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20 
+            kyNangIchiji.push({
+                mesh: cauDo, type: 'BAY_SAU_KHI_TU', speed: 8.0, life: 120,
+                delay: 10, objNeo: tayPhai, originOffset: viTriGocToTam,
+                currentScale: 1.0, maxScale: 8.0, growthRate: 0.3,
+                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20,
+                isSpinning: true, spinSpeed: 0.1
             });
         }
 
         // ===============================================
-        // 🔥 CHIÊU E (ATTACK3): ĐỘ TRỄ 500MS - TAY PHẢI BẮN LAZER ĐỎ TO
+        // 🔥 CHIÊU E (ATTACK3): Quả cầu vừa (Size 2.5) to hơn Q
         // ===============================================
-        else if (animCanMua === 'ATTACK3') { 
+        else if (animCanMua === 'ATTACK3') {
             setTimeout(() => {
                 let tayPhai = timBoPhan(nvc, ['Object_20', 'RHand_Palm_056', 'RHand']);
                 let diemBan = viTriGocToTam.clone();
                 if (tayPhai) tayPhai.getWorldPosition(diemBan);
 
-                const lazerTo = taoTiaLazerDo(diemBan, mucTieu, 2.0); // Bắn tia to bự
-                scene.add(lazerTo);
-                
-                taoVuNoLUA_ICJ(mucTieu, isRemote, dameGoc * 1.5, 15);
-                kyNangIchiji.push({ mesh: lazerTo, type: 'TIA_CHOP', life: 15 });
+                const cauDoE = taoVatTheICJ('DO', 2.5); // SIZE TO HƠN Q
+                cauDoE.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
+                cauDoE.lookAt(mucTieu); scene.add(cauDoE);
+
+                kyNangIchiji.push({
+                    mesh: cauDoE, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100,
+                    currentScale: 2.5, maxScale: 10.0, growthRate: 0.3,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20,
+                    isSpinning: true, spinSpeed: 0.15
+                });
             }, 500);
         }
 
         // ===============================================
-        // 🔥 CHIÊU R (ATTACK5): KHÔNG TRỄ TAY PHẢI BẮN DO.GLB -> 200MS SAU TAY TRÁI BẮN LAZER
+        // 🔥 CHIÊU R (ATTACK5): Quả cầu lớn (Size 4.0) to hơn E + Lazer tay trái
         // ===============================================
-        else if (animCanMua === 'ATTACK5') { 
-            // 1. TAY PHẢI (0ms): Bắn quả cầu DO
+        else if (animCanMua === 'ATTACK5') {
             let tayPhai = timBoPhan(nvc, ['Object_20', 'RHand_Palm_056', 'RHand']);
             let diemBanPhai = viTriGocToTam.clone();
             if (tayPhai) tayPhai.getWorldPosition(diemBanPhai);
 
-            const cauDoNho = taoVatTheICJ('DO', 2.0); 
-            cauDoNho.position.copy(diemBanPhai).add(huongMat.clone().multiplyScalar(1.5));
-            cauDoNho.lookAt(mucTieu); scene.add(cauDoNho);
+            const cauDoR = taoVatTheICJ('DO', 4.0); // SIZE TO HƠN E
+            cauDoR.position.copy(diemBanPhai).add(huongMat.clone().multiplyScalar(1.5));
+            cauDoR.lookAt(mucTieu); scene.add(cauDoR);
 
-            kyNangIchiji.push({ 
-                mesh: cauDoNho, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100, 
-                currentScale: 2.0, maxScale: 5.0, growthRate: 0.1,
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 15 
+            kyNangIchiji.push({
+                mesh: cauDoR, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
+                currentScale: 4.0, maxScale: 14.0, growthRate: 0.4,
+                targetPos: mucTieu.clone(), damage: dameGoc * 2.0, noBanKinh: 25,
+                isSpinning: true, spinSpeed: 0.2
             });
 
-            // 2. TAY TRÁI (200ms sau): Bắn tia Lazer
             setTimeout(() => {
                 let tayTrai = timBoPhan(nvc, ['Object_16', 'LHand_Palm_051', 'LHand']);
                 let diemBanTrai = viTriGocToTam.clone();
                 if (tayTrai) tayTrai.getWorldPosition(diemBanTrai);
 
-                const lazerTrai = taoTiaLazerDo(diemBanTrai, mucTieu, 1.0); 
+                const lazerTrai = taoTiaLazerDo(diemBanTrai, mucTieu, 1.0);
                 scene.add(lazerTrai);
-                
+
                 taoVuNoLUA_ICJ(mucTieu, isRemote, dameGoc * 1.0, 15);
                 kyNangIchiji.push({ mesh: lazerTrai, type: 'TIA_CHOP', life: 15 });
             }, 200);
         }
 
         // ===============================================
-        // 🔥 CHIÊU F (ATTACK6): ĐỘ TRỄ 500MS - CHÂN TRÁI BẮN FIRE3.GLB PHÓNG TO
+        // 🔥 CHIÊU F (ATTACK6): Quả lửa khổng lồ (Size 7.0) xoay tròn tốc độ cao
         // ===============================================
-        else if (animCanMua === 'ATTACK6') { 
+        else if (animCanMua === 'ATTACK6') {
             setTimeout(() => {
                 let chanTrai = timBoPhan(nvc, ['LFoot_Toe_00', 'LFoot_Toe', 'LFoot']);
                 let diemBanChan = viTriGocToTam.clone();
                 if (chanTrai) chanTrai.getWorldPosition(diemBanChan);
 
-                const luaChan = taoVatTheICJ('fire3', 4.0); // Phóng to ngay từ đầu
+                const luaChan = taoVatTheICJ('fire3', 7.0); // SIZE TO NHẤT
                 luaChan.position.copy(diemBanChan).add(huongMat.clone().multiplyScalar(2));
                 luaChan.lookAt(mucTieu); scene.add(luaChan);
 
                 kyNangIchiji.push({
                     mesh: luaChan, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 120,
-                    currentScale: 4.0, maxScale: 12.0, growthRate: 0.4,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 30
+                    currentScale: 7.0, maxScale: 20.0, growthRate: 0.5,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 3.5, noBanKinh: 35,
+                    isSpinning: true, spinSpeed: 0.4 // Xoay như mũi khoan
                 });
             }, 500);
         }
@@ -345,12 +349,12 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ICHIJI
     // ==========================================
     window.updateCombatIchiji = function () {
-        
+
         for (let i = kyNangIchiji.length - 1; i >= 0; i--) {
-            let s = kyNangIchiji[i]; 
+            let s = kyNangIchiji[i];
 
             if (s.mesh.userData && s.mesh.userData.mixer) {
-                s.mesh.userData.mixer.update(0.03); 
+                s.mesh.userData.mixer.update(0.03);
             }
 
             // ⚡ Tia Lazer vụt tắt
@@ -359,9 +363,13 @@
                 s.mesh.traverse(c => { if (c.material) c.material.opacity *= 0.8; });
             }
 
-            // 🔥 Đạn bay bình thường
+            // 🔥 Đạn bay bình thường (E, R, F)
             else if (s.type === 'BAY_THANG_PHINH_TO') {
                 s.life--;
+
+                // BÍ THUẬT: ÉP ĐẠN XOAY TRÒN THEO TRỤC Z NHƯ MŨI KHOAN
+                if (s.isSpinning) s.mesh.rotateZ(s.spinSpeed || 0.2);
+
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
@@ -373,7 +381,7 @@
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     taoVuNoLUA_ICJ(s.targetPos, false, s.damage, s.noBanKinh);
-                    if (typeof window.kichHoatDongDat === 'function' && s.maxScale > 10) window.kichHoatDongDat(15, 500); // Rung màn hình với chiêu F to
+                    if (typeof window.kichHoatDongDat === 'function' && s.maxScale > 10) window.kichHoatDongDat(15, 500);
                     s.life = 0;
                 }
             }
@@ -388,10 +396,12 @@
                         s.objNeo.getWorldPosition(viTriTay);
                         s.mesh.position.copy(viTriTay);
                     }
-                    s.mesh.rotateZ(0.2); // Xoay quả cầu xoáy xoáy tụ lực
+                    if (s.isSpinning) s.mesh.rotateZ(s.spinSpeed || 0.2); // Tụ lực cũng xoay
                 } else {
-                    // Đã hết 300ms -> Biến thành đạn bay phình to
+                    // Đã hết 300ms -> Bay đi
                     s.life--;
+                    if (s.isSpinning) s.mesh.rotateZ(s.spinSpeed || 0.2); // Bay cũng xoay
+
                     if (s.currentScale < s.maxScale) {
                         s.currentScale += s.growthRate;
                         s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
@@ -407,6 +417,8 @@
                     }
                 }
             }
+
+            // 🛑 DỌN RÁC MODEL (Giữ nguyên như cũ)
 
             // 🛑 DỌN RÁC MODEL
             if (s.life <= 0) {
