@@ -379,11 +379,11 @@
             let tayTrai = timXuong(nvc, ['LHand_Palm_042', 'LHand']);
 
             if (tayPhai) {
-                let darkOrb = taoVatTheBB('blackenergy', 2.0); // Bằng nắm tay
+                let darkOrb = taoVatTheBB('blackenergy', 1.0); // Bằng nắm tay
                 tayPhai.add(darkOrb); // Dán cứng vào xương tay phải
             }
             if (tayTrai) {
-                let lightOrb = taoVatTheBB('energy', 2.0); // Bằng nắm tay
+                let lightOrb = taoVatTheBB('energy', 1.0); // Bằng nắm tay
                 tayTrai.add(lightOrb); // Dán cứng vào xương tay trái
             }
             nvc.daGanVuKhiBB = true; // Khóa cờ không gắn lại nữa
