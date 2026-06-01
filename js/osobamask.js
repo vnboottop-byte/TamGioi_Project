@@ -31,9 +31,9 @@
     window.layMucTieuGanNhatOSO = function (viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
-            if (viTriGoc.distanceTo(hit.tamNguc) <= 200) return window.mucTieuHienTai;
+            if (viTriGoc.distanceTo(hit.tamNguc) <= 80) return window.mucTieuHienTai;
         }
-        let targetNguoi = null; let minDNguoi = 200;
+        let targetNguoi = null; let minDNguoi = 80;
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
@@ -45,7 +45,7 @@
         }
         if (targetNguoi) return targetNguoi;
 
-        let targetQuai = null; let minDQuai = 200;
+        let targetQuai = null; let minDQuai = 80;
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh) {
