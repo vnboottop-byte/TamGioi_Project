@@ -94,10 +94,8 @@ window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
             }
 
             if (!window.IS_IN_SAFE_ZONE) {
-                let role = (window.ROLE || "").toLowerCase();
-                let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
-
-                if (role !== "admin" && name !== "admin") {
+                // 🛑 ĐÃ LỘT BỎ ÁO GIÁP ADMIN CHO BOSS LUYỆN THỂ
+                if (true) {
                     window.mauBanThan -= Math.round(dmgBoss);
                     if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(dmgBoss));
 
