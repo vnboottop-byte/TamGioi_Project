@@ -130,15 +130,6 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
 window.gaySatThuongBossToPlayer = function(tamNo, luongSatThuong, banKinh) {
     if (window.isDead || !window.playerModel) return;
 
-    // 1. BẢO KIẾM MIỄN DỊCH CHO ADMIN
-    let role = (window.ROLE || "").toLowerCase();
-    let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
-    if (role === "admin" || name === "admin") return;
-
-
-
-
-
     // 2. 🌟 MÁY QUÉT KHOẢNG CÁCH NỔ (ĐO VÀO LÕI THỊT NGƯỜI CHƠI BỎ QUA THÚ CƯỠI)
     let nvc = window.nhanVatChinh || window.playerModel;
     let tamNguoiChoi = nvc.userData.tamThucTeLocal ? nvc.userData.tamThucTeLocal.clone().applyMatrix4(nvc.matrixWorld) : nvc.position.clone();
@@ -1359,7 +1350,7 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
 }
 
 function hoanTatTaiModels() {
-    if (window.ADMIN_NAME === "Admin") { window.MAU_TOI_DA = 999999999; window.mauBanThan = 999999999; }
+     
     playerModel.traverse(function(child) { if (child.isMesh) child.frustumCulled = false; });
     
     // 1. Nắn trục xương sống
@@ -2180,7 +2171,7 @@ function animate() {
         }
     }
     try {
-        if (typeof playerModel !== 'undefined' && playerModel && window.ROLE === "admin") { window.mauBanThan = window.MAU_TOI_DA = 999999999; window.isDead = false; }
+      
         const delta = typeof clock !== 'undefined' ? clock.getDelta() : 0.016;
 
         if (typeof mixer !== 'undefined' && mixer) mixer.update(delta);
