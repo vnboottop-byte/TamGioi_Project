@@ -379,14 +379,15 @@
             let tayTrai = timXuong(nvc, ['LHand_Palm_042', 'LHand']);
 
             if (tayPhai) {
-                let darkOrb = taoVatTheBB('blackenergy', 0.5); // Bằng nắm tay
-                tayPhai.add(darkOrb); // Dán cứng vào xương tay phải
+                // 🌟 BÍ THUẬT VÁ LỖI: Gọi hàm với tham số TRUE để ÉP NHUỘM ĐEN cục năng lượng tay phải
+                let darkOrb = taoVatTheBB('blackenergy', 0.7, true);
+                tayPhai.add(darkOrb);
             }
             if (tayTrai) {
-                let lightOrb = taoVatTheBB('energy', 0.5); // Bằng nắm tay
-                tayTrai.add(lightOrb); // Dán cứng vào xương tay trái
+                let lightOrb = taoVatTheBB('energy', 0.7, false); // Quả cầu tay trái thì giữ nguyên bản
+                tayTrai.add(lightOrb);
             }
-            nvc.daGanVuKhiBB = true; // Khóa cờ không gắn lại nữa
+            nvc.daGanVuKhiBB = true;
         }
 
         // =======================================
