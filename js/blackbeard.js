@@ -163,7 +163,7 @@
         hieuUngBB.push({ system: pts, velocities: vels, life: 45 });
     }
 
-    // 🌟 3. ĐÚC MODEL BỌC THÉP TỐI ƯU (TỰ ĐỘNG NHẬN DIỆN TÊN ĐỂ NHUỘM ĐEN)
+    // 🌟 3. ĐÚC MODEL BỌC THÉP TỐI ƯU (TỰ ĐỘNG NHẬN DIỆN VÀ ÉP VẬT LIỆU ĐEN VĨNH VIỄN)
     function taoVatTheBB(tenFile, scaleSize, forceDark = false) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -172,21 +172,23 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        // 🌟 BÍ THUẬT 1: Tách vật liệu ra độc lập, chống lây màu chéo
-                        let m = c.material.clone();
-                        c.material = m;
-
-                        m.transparent = true;
-
-                        // 🌟 BÍ THUẬT 2: Tự động lột xác nếu tên file đúng là 'blackenergy'
+                        // 🌟 Nếu cần nhuộm hắc ám (Chiêu R, quả cầu tay phải)
                         if (forceDark || tenFile === 'blackenergy') {
-                            m.map = null; // Lột bỏ vân ảnh gây lỗi sáng của phần mềm
-                            m.blending = THREE.NormalBlending; // Hấp thụ ánh sáng
-                            if (m.color) m.color.setHex(0x050505); // Đen kịt
-                            if (m.emissive) {
-                                m.emissive.setHex(0x110022); // Sáng tím mờ ảo hắc ám
-                                m.emissiveIntensity = 2.0;
-                            }
+                            // BÍ THUẬT: Vứt luôn tờ vật liệu cũ, tạo tờ mới cứng MeshBasicMaterial
+                            // Loại vật liệu này KHÔNG bắt ánh sáng đèn, KHÔNG bị ảnh hưởng bởi Animation màu
+                            let hinhTronDen = new THREE.MeshBasicMaterial({
+                                color: 0x05001a, // Đen kịt ám tím
+                                transparent: true,
+                                opacity: 0.9,
+                                depthWrite: false,
+                                blending: THREE.NormalBlending
+                            });
+                            c.material = hinhTronDen; 
+                        } else {
+                            // Nếu là các chiêu bình thường (quả cầu tay trái) thì chỉ tách độc lập
+                            let m = c.material.clone();
+                            m.transparent = true;
+                            c.material = m;
                         }
                     }
                 });
