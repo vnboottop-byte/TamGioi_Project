@@ -1019,9 +1019,11 @@ setInterval(() => {
 
         if (hit || s.life <= 0) {
             if (hit && typeof playerModel !== 'undefined' && playerModel && !window.isDead && typeof window.mauBanThan !== 'undefined') {
+
                 if ((s.mesh ? s.mesh.position : s.target).distanceTo(playerModel.position) < 30) {
-                    if (window.ADMIN_NAME !== "Admin" && window.ROLE !== "admin" && window.myUsername !== "Admin") {
+                    if (true) { // 🛑 GỠ GIÁP ĐẠN BAY
                         window.mauBanThan -= Math.round(s.dmg);
+
                         if (typeof taoSoSatThuong === 'function') taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(s.dmg));
                         const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
                         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
