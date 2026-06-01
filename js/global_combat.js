@@ -116,14 +116,13 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 
     let tamNguc = window.playerModel.position.clone(); tamNguc.y += 5;
     if (tamNo.distanceTo(tamNguc) <= banKinh) {
-        if (window.ADMIN_NAME !== "Admin" && window.ROLE !== "admin") {
-            window.mauBanThan -= luongDame;
-            if (typeof taoSoSatThuong === 'function') taoSoSatThuong(tamNguc, luongDame, '#ff0000');
-            const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
-            if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-            if (uiSoMau) uiSoMau.innerText = Math.max(0, window.mauBanThan).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
-            if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Boss/Quái Vật");
-        }
+        // Đã xóa dòng IF cấm Admin ở đây. Giờ ai cũng bị trừ máu!
+        window.mauBanThan -= luongDame;
+        if (typeof taoSoSatThuong === 'function') taoSoSatThuong(tamNguc, luongDame, '#ff0000');
+        const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
+        if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+        if (uiSoMau) uiSoMau.innerText = Math.max(0, window.mauBanThan).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
+        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Boss/Quái Vật");
     }
 };
 
