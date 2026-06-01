@@ -132,10 +132,11 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
 
 
 
-function thucHienCaiChetCuaBoss(boss, isServerConfirmed = false) {
+    function thucHienCaiChetCuaBoss(boss, isServerConfirmed = false) {
     // 1. CHỈ CHẠY ANIMATION CHẾT 1 LẦN DỰA THEO CLIENT (Cho game mượt)
     if (!boss.isDeadVisual) {
         boss.isDeadVisual = true; 
+        boss.isDead = true; // 🌟 BẢN VÁ: Khóa mõm AI ngay lập tức, cấm gọi lệnh chạy nhảy!
         boss.hp = 0; 
         boss.state = 'DEAD';
         boss.mesh.userData.ignore = true; 
