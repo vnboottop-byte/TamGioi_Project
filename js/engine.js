@@ -2090,8 +2090,17 @@ function playAnim(animName) {
 
     if (currentAction) currentAction.fadeOut(0.2);
     currentAction = action;
+    
+    // 🌟 BẢN VÁ: NẾU LÀ ANIMATION CHẾT THÌ NGÃ XUỐNG VÀ NẰM IM TRÊN ĐẤT
+    if (finalAnimName.includes('DIE') || finalAnimName.includes('DEATH') || finalAnimName.includes('CHET')) {
+        currentAction.setLoop(THREE.LoopOnce);
+        currentAction.clampWhenFinished = true; // Đóng băng ở khung hình cuối cùng
+    } else {
+        currentAction.setLoop(THREE.LoopRepeat);
+    }
+    
     currentAction.reset().fadeIn(0.2).play();
-    currentAnimName = finalAnimName; 
+    currentAnimName = finalAnimName;
 
     if (laChieuTanCong) {
         kichHoatKhiencAnimation(currentAction.getClip().duration * 1000);
