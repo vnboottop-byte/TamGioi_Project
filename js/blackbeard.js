@@ -338,7 +338,7 @@
             }
 
             // Gọi quả cầu khổng lồ
-            const blackHole = taoVatTheBB('blackenergy', 2.0, true); 
+            const blackHole = taoVatTheBB('blackenergy', 3.0, true); 
             blackHole.position.copy(diemBan);
             scene.add(blackHole);
 
