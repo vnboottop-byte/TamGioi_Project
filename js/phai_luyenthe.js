@@ -343,6 +343,71 @@
             tenPhai: "Luyện Thể",
             khoiTao: function () {
                 console.log("🔥 Bá Vương Cận Chiến Luyện Thể Đã Sẵn Sàng!");
+
+                // =========================================================
+                // 🛑 BẢN VÁ V6: DIỆT ROOT MOTION CHỐNG GIẬT LÙI (CẬN CHIẾN)
+                // =========================================================
+                if (window.animationsMap) {
+                    for (let key in window.animationsMap) {
+                        let k = key.toUpperCase();
+                        let clip = window.animationsMap[key];
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('COMBO') || k.includes('PUNCH') || k.includes('KICK')) {
+                            if (clip && clip.tracks) {
+                                clip.tracks = clip.tracks.filter(track => {
+                                    let tenTrack = track.name.toLowerCase();
+                                    if (tenTrack.includes('.position')) {
+                                        const danhSachDen = ['armature', 'hip', 'pelvis', 'root', 'bip', 'center', 'spine', 'object', 'dummy', 'bone'];
+                                        for (let tuKhoa of danhSachDen) {
+                                            if (tenTrack.includes(tuKhoa)) return false; 
+                                        }
+                                    }
+                                    return true; 
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // =========================================================
+                // 🧠 BỘ NÃO AI NHẬN DIỆN MỌI ANIMATION (CHẠY, BAY, NHÀN RỖI)
+                // =========================================================
+                if (window.animationsMap) {
+                    window.KHO_ANIM_NHANROI = [];
+                    let coBay = false; let coChay = false;
+                    let animBay = null; let animChay = null;
+
+                    for (let key in window.animationsMap) {
+                        let ten = key.toLowerCase();
+                        let clip = window.animationsMap[key];
+
+                        // 🛑 Bỏ qua dáng bị đấm/chết
+                        const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                        if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) continue;
+
+                        // 🧍‍♂️ Nhận diện Nhàn rỗi
+                        const tuKhoaIdle = ['idle', 'wait', 'stand', 'pose', 'nhanroi', 'breath', 'stay', 'normal'];
+                        if (tuKhoaIdle.some(tu => ten.includes(tu))) { window.KHO_ANIM_NHANROI.push(key); }
+
+                        // 🏃‍♂️ Nhận diện Đi/Chạy
+                        const tuKhoaRun = ['run', 'walk', 'move', 'dash', 'sprint', 'chay', 'di', 'forward', 'step'];
+                        if (tuKhoaRun.some(tu => ten.includes(tu))) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = clip; window.animationsMap['RUN'] = clip; }
+
+                        // 🦅 Nhận diện Bay lơ lửng
+                        const tuKhoaFly = ['fly', 'hover', 'float', 'bay', 'glide', 'jump_loop'];
+                        if (tuKhoaFly.some(tu => ten.includes(tu))) { coBay = true; animBay = clip; window.animationsMap['BAY'] = clip; window.animationsMap['FLY'] = clip; }
+                    }
+
+                    // 🌟 Tự động bù trừ nếu thiếu dáng
+                    if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
+                    if (coBay && !coChay) { window.animationsMap['CHAYBO'] = animBay; window.animationsMap['RUN'] = animBay; }
+
+                    // 🌟 Chốt dáng Nhàn rỗi mặc định
+                    if (window.KHO_ANIM_NHANROI.length > 0) {
+                        let defaultIdle = window.KHO_ANIM_NHANROI[0];
+                        window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
+                        if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
+                    }
+                }
                 
                 // 🌟 BƠM THUỐC TĂNG TRƯỞNG BÙ TRỪ LỖI XƯƠNG CỦA MODEL
                 if (window.playerModel && (!window.MOUNT_URL || window.MOUNT_URL.trim() === "")) {
