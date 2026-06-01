@@ -320,7 +320,7 @@
             let diemBan = viTriGocToTam.clone();
             if (tayPhaiR) tayPhaiR.getWorldPosition(diemBan);
 
-            const blackHole = taoVatTheBB('blackenergy', 0.1); 
+            const blackHole = taoVatTheBB('blackenergy', 2.0); 
             blackHole.position.copy(diemBan);
             scene.add(blackHole);
 
