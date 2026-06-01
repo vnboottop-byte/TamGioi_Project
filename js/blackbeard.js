@@ -163,8 +163,8 @@
         hieuUngBB.push({ system: pts, velocities: vels, life: 45 });
     }
 
-    // 🌟 3. ĐÚC MODEL (ĐÃ GỠ BỎ NHUỘM ĐEN ĐỂ GIỮ NGUYÊN BẢN GỐC)
-    function taoVatTheBB(tenFile, scaleSize) {
+    // 🌟 3. ĐÚC MODEL BỌC THÉP TỐI ƯU (TỰ ĐỘNG NHẬN DIỆN TÊN ĐỂ NHUỘM ĐEN)
+    function taoVatTheBB(tenFile, scaleSize, forceDark = false) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
 
@@ -172,17 +172,29 @@
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
-                        let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
-                        danhSachMat.forEach(m => {
-                            m.transparent = true; // Chỉ làm trong suốt chứ không đè màu nữa
-                        });
+                        // 🌟 BÍ THUẬT 1: Tách vật liệu ra độc lập, chống lây màu chéo
+                        let m = c.material.clone();
+                        c.material = m;
+
+                        m.transparent = true;
+
+                        // 🌟 BÍ THUẬT 2: Tự động lột xác nếu tên file đúng là 'blackenergy'
+                        if (forceDark || tenFile === 'blackenergy') {
+                            m.map = null; // Lột bỏ vân ảnh gây lỗi sáng của phần mềm
+                            m.blending = THREE.NormalBlending; // Hấp thụ ánh sáng
+                            if (m.color) m.color.setHex(0x050505); // Đen kịt
+                            if (m.emissive) {
+                                m.emissive.setHex(0x110022); // Sáng tím mờ ảo hắc ám
+                                m.emissiveIntensity = 2.0;
+                            }
+                        }
                     }
                 });
 
                 if (v.animations && v.animations.length > 0) {
                     let mixer = new THREE.AnimationMixer(v);
                     mixer.clipAction(v.animations[0]).play();
-                    group.userData = group.userData || {}; group.userData.mixer = mixer; 
+                    group.userData = group.userData || {}; group.userData.mixer = mixer;
                 }
 
                 v.updateMatrixWorld(true);
