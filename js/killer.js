@@ -261,12 +261,17 @@
                 nvc.quaternion.slerp(dummy.quaternion, 0.3);
             }
 
-            // 💨 LƯỚT: Dùng Code Lerp để di chuyển, không phụ thuộc Animation
+            // 💨 LƯỚT: Dùng Code Lerp để di chuyển Hitbox
             if (khoangCach > 2.5) { 
-                nvc.position.lerp(diemDen, 0.25);
-                if (window.controls && window.controls.target) window.controls.target.lerp(tHit.tamNguc, 0.1);
+                nvc.position.lerp(diemDen, 0.25); // Kéo tọa độ gốc bay thẳng vào mặt mục tiêu
+                
+                // 📸 ÉP CAMERA LƯỚT THEO: Khóa tâm camera dính chặt vào nhân vật lúc lao đi
+                if (window.camera && window.controls && window.controls.target) {
+                    window.controls.target.copy(nvc.position);
+                }
             } 
             else {
+                // 💥 BÙM! CHẠM MẶT -> BẮT ĐẦU CHÉM
                 // 💥 BÙM! CHẠM MẶT -> BẮT ĐẦU CHÉM
                 window.trangThaiKiller.state = 'HITTING';
                 window.dangMuaChieu = true;
@@ -360,19 +365,14 @@
                         let clip = window.animationsMap[key];
 
                         // 🛑 LÁ CHẮN KHÓA CHÂN V2: QUÉT SẠCH MỌI LOẠI ROOT MOTION CHỐNG GIẬT LÙI!
+                       // 🛑 LÁ CHẮN V3: TẤT SÁT - DIỆT MỌI ROOT MOTION KHÔNG CẦN BIẾT TÊN XƯƠNG
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
                             if (clip && clip.tracks) {
                                 clip.tracks = clip.tracks.filter(track => {
-                                    let tenTrack = track.name.toLowerCase();
-                                    if (tenTrack.includes('.position')) {
-                                        const danhSachDen = [
-                                            'armature', 'hip', 'pelvis', 'root', 'bip', 
-                                            'center', 'spine', 'master', 'object', 
-                                            'character', 'chara', 'dummy', 'bone'
-                                        ];
-                                        for (let tuKhoa of danhSachDen) {
-                                            if (tenTrack.includes(tuKhoa)) return false; 
-                                        }
+                                    // BÍ THUẬT TỐI THƯỢNG: Nếu track này cố tình làm thay đổi Tọa độ (Position) -> CHÉM!
+                                    // Chỉ giữ lại các track thay đổi Góc xoay (Quaternion) để múa tay chân.
+                                    if (track.name.toLowerCase().includes('.position')) {
+                                        return false; // Cấm tuyệt đối việc tự ý dịch chuyển!
                                     }
                                     return true; 
                                 });
