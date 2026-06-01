@@ -394,7 +394,7 @@
 
             if (tayPhai) {
                 // 🌟 BÍ THUẬT VÁ LỖI: Gọi hàm với tham số TRUE để ÉP NHUỘM ĐEN cục năng lượng tay phải
-                let darkOrb = taoVatTheBB('blackenergy', 0.55, true);
+                let darkOrb = taoVatTheBB('blackenergy', 0.4, true);
                 tayPhai.add(darkOrb);
             }
             if (tayTrai) {
