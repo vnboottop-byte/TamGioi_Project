@@ -2117,12 +2117,12 @@ function kichHoatKhiencAnimation(thoiGianTheoAnim) {
 }
 // ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
 
-
-
 window.epNhanVatMua = playAnim; 
+
 function playIdle() {
+    if (window.isDead) return; // 🌟 BẢN VÁ: Chết rồi thì cấm gọi dậy thở!
     if (idleTimer) clearInterval(idleTimer); playAnim('NHANROI'); 
-    idleTimer = setInterval(() => { if (!window.isMoving && !window.isKeyboardMoving) playAnim('NHANROI'); }, 8000); 
+    idleTimer = setInterval(() => { if (!window.isDead && !window.isMoving && !window.isKeyboardMoving) playAnim('NHANROI'); }, 8000); 
 }
 
 const clock = new THREE.Clock(); let lastSendTime = 0; 
