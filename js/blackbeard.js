@@ -394,11 +394,11 @@
 
             if (tayPhai) {
                 // 🌟 BÍ THUẬT VÁ LỖI: Gọi hàm với tham số TRUE để ÉP NHUỘM ĐEN cục năng lượng tay phải
-                let darkOrb = taoVatTheBB('blackenergy', 0.4, true);
+                let darkOrb = taoVatTheBB('blackenergy', 0.58, true);
                 tayPhai.add(darkOrb);
             }
             if (tayTrai) {
-                let lightOrb = taoVatTheBB('energy', 0.55, false); // Quả cầu tay trái thì giữ nguyên bản
+                let lightOrb = taoVatTheBB('energy', 0.58, false); // Quả cầu tay trái thì giữ nguyên bản
                 tayTrai.add(lightOrb);
             }
             nvc.daGanVuKhiBB = true;
