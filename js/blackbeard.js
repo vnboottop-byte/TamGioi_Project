@@ -289,7 +289,7 @@
                 kyNangBB.push({ 
                     mesh: cauDen, type: 'BAY_THANG_PHINH_TO', speed: 6.0, life: 120, 
                     currentScale: 2, maxScale: 15, growthRate: 0.6,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 15 
+                    targetPos: mucTieu.clone(), damage: dameGoc * 2.0, noBanKinh: 25 // Nổ to hơn
                 });
             }, 300);
         }
@@ -359,8 +359,8 @@
                 skillTuLuc.maxScale = 50; 
                 skillTuLuc.growthRate = 0.5;
                 skillTuLuc.targetPos = mucTieu.clone();
-                skillTuLuc.damage = dameGoc * 1.0;
-                skillTuLuc.noBanKinh = 45;
+                skillTuLuc.damage = dameGoc * 3.2; // Gồng lâu nổ siêu đau
+                skillTuLuc.noBanKinh = 50;
                 blackHole.lookAt(mucTieu);
 
                 if (!isRemote) {
