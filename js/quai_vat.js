@@ -29,31 +29,18 @@ Object.assign(window.TU_DIEN_AI_QUAI['CHIM'], {
     choPhepLuiBinh: true
 });
 
-// CÁ xài chung não với CHIM
-Object.assign(window.TU_DIEN_AI_QUAI['CA'], window.TU_DIEN_AI_QUAI['CHIM']);
-
-Object.assign(window.TU_DIEN_AI_QUAI['RONG'], {
-    he: 'BAY',
-    getTamDanh: (scale) => Math.min(400, (scale * 30) + 150),
-    getTamNhin: (scale) => Math.min(400, (scale * 30) + 150) + 150,
-    getGioiHanLanhTho: (tamNhin, scale) => Math.max(100, Math.min(3000, (tamNhin * 1.5) + (scale * 80 * 2))),
-    khoangCachAnToan: 12.0, 
-    banKinhTuanTra: (scale) => Math.max(20, scale * 80),
-    doCaoBay: 60, 
-    lucNghieng: 0.03, 
-    getChieuCaoNgam: () => 35, 
-    getTocDoRuot: (scale) => Math.max(15.0, scale * 15.0),
-    choPhepLuiBinh: false 
+// CÁ xài chung não với CHIM NHƯNG BƠI ĐÙ ĐỜ VÀ CHẬM HƠN
+Object.assign(window.TU_DIEN_AI_QUAI['CA'], window.TU_DIEN_AI_QUAI['CHIM'], {
+    getTocDoRuot: (scale) => Math.max(5.0, scale * 5.0), // 🐌 Cá bơi tốc độ 5
+    lucNghieng: 0.05 // Cá lượn lờ ít nghiêng
 });
 
-window.TU_DIEN_AI_QUAI['CA'] = window.TU_DIEN_AI_QUAI['CHIM'];
-
-// 🐲 BỘ NÃO RỒNG (VIỄN CHIẾN KHỔNG LỒ)
+// 🐲 BỘ NÃO RỒNG (ĐÃ CẮT GÂN TẦM ĐÁNH TỪ 400m XUỐNG 80m)
 window.TU_DIEN_AI_QUAI['RONG'] = {
     he: 'BAY',
-    getTamDanh: (scale) => Math.min(400, (scale * 30) + 150),
-    getTamNhin: (scale) => Math.min(400, (scale * 30) + 150) + 150,
-    getGioiHanLanhTho: (tamNhin, scale) => Math.max(100, Math.min(3000, (tamNhin * 1.5) + (scale * 80 * 2))),
+    getTamDanh: (scale) => Math.min(80, (scale * 5) + 40),
+    getTamNhin: (scale) => Math.min(150, (scale * 10) + 80),
+    getGioiHanLanhTho: (tamNhin, scale) => Math.max(100, Math.min(1000, (tamNhin * 1.5))),
     khoangCachAnToan: 12.0,
     banKinhTuanTra: (scale) => Math.max(20, scale * 80),
     doCaoBay: 60,
@@ -62,7 +49,6 @@ window.TU_DIEN_AI_QUAI['RONG'] = {
     getTocDoRuot: (scale) => Math.max(15.0, scale * 15.0),
     choPhepLuiBinh: false
 };
-
 
 // 🐋 BỘ NÃO SINH VẬT CẢNH (BAY LƯỢN TỰ DO, KHÔNG ĐÁNH NHAU)
 window.TU_DIEN_AI_QUAI['TRANG_TRI'] = {
@@ -97,7 +83,7 @@ window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
                 quai.playAnim(chieuChon);
             }
 
-            let dmgBoss = (quai.maxHp || 4000) * 0.05; 
+            let dmgBoss = 30 * (quai.level || 1);
             let bOrigin = quai.mesh.position.clone();
             let pTarget = playerModel.position.clone();
             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
@@ -716,8 +702,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.5);
-
-                        let dmgBoss = (quai.maxHp || 4000) * 0.05;
+                        let dmgBoss = 30 * (quai.level || 1);
                         
                         // Lấy tọa độ từ lõi ngực Boss
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
@@ -1117,9 +1102,9 @@ window.taoTenNguoiChoiGia = function () {
 
 window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
     he: 'BAY',
-    getTamDanh: () => 20000,
-    getTamNhin: () => 20000,
-    getGioiHanLanhTho: () => 30000,
+    getTamDanh: () => 80,
+    getTamNhin: () => 150,
+    getGioiHanLanhTho: () => 300,
     khoangCachAnToan: 5,
     choPhepLuiBinh: false,
 
