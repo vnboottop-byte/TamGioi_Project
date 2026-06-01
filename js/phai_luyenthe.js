@@ -300,14 +300,33 @@
         } else {
             // 🌟 NẾU KHÔNG CÓ QUÁI: ĐẤM VÀO KHÔNG KHÍ
             window.trangThaiLT.state = 'IDLE'; 
+
+
+
             
-            // 🌟 BẢN VÁ: Tìm đúng rương chiêu thức (Cưỡi thú thì MapChar, đi bộ thì Map gốc)
+            // 🌟 TỪ ĐIỂN BÁCH KHOA ANIMATION: Quét sạch mọi loại tên trên Sketchfab / Mixamo
             let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
-            let pool = Object.keys(mapAnim || {}).filter(k => 
-                k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
-            );
+            let pool = Object.keys(mapAnim || {}).filter(k => {
+                let ten = k.toLowerCase();
+                
+                // 🛑 MÀNG LỌC ĐEN (BLACKLIST): Khóa mõm các dáng bị đấm, dáng chết hoặc phòng thủ
+                const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend', 'block', 'guard', 'take', 'receive'];
+                if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) return false; 
+                
+                // ⚔️ MÀNG LỌC TRẮNG (WHITELIST): Nhận diện Tiếng Anh, Tiếng Việt, Romaji Anime
+                const tuKhoaTanCong = [
+                    'attack', 'atk', 'punch', 'kick', 'combo', 'skill', 'smash', 'strike', 
+                    'slash', 'chop', 'swing', 'bash', 'jab', 'hook', 'uppercut', 'bite', 
+                    'claw', 'slam', 'cast', 'magic', 'ultimate', 'ulti', 'special', 'finisher',
+                    'chieu', 'danh', 'dam', 'da', 'chem', 'quat', 'tuyetchieu', 'kynang',
+                    'kougeki', 'panchi', 'keri', 'action'
+                ];
+                return tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa));
+            });
             let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
             if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
+
+
             
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
@@ -410,16 +429,28 @@
                        // 💥 CHẠM MẶT -> ĐẤM!
                         window.trangThaiLT.state = 'HITTING';
                         
-                        // 1. KHO ANIMATION NGẪU NHIÊN: Chỉ Lọc các chiêu Tấn công
+                        // 1. KHO ANIMATION NGẪU NHIÊN: Từ điển siêu việt
                         let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
-                        let pool = Object.keys(mapAnim || {}).filter(k => 
-                            k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO')
-                        );
+                        let pool = Object.keys(mapAnim || {}).filter(k => {
+                            let ten = k.toLowerCase();
+                            const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend', 'block', 'guard', 'take', 'receive'];
+                            if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) return false; 
+                            
+                            const tuKhoaTanCong = [
+                                'attack', 'atk', 'punch', 'kick', 'combo', 'skill', 'smash', 'strike', 
+                                'slash', 'chop', 'swing', 'bash', 'jab', 'hook', 'uppercut', 'bite', 
+                                'claw', 'slam', 'cast', 'magic', 'ultimate', 'ulti', 'special', 'finisher',
+                                'chieu', 'danh', 'dam', 'da', 'chem', 'quat', 'tuyetchieu', 'kynang',
+                                'kougeki', 'panchi', 'keri', 'action'
+                            ];
+                            return tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa));
+                        });
                         let randomAnim = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'BAY';
-                        
-                        // Kích hoạt múa ngay lập tức
                         if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
-                        
+
+
+
+                         
                         // 2. TẠO VÙNG SÁT THƯƠNG 2M (Bám theo tâm ngực địch)
                         let banKinhNo = (window.trangThaiLT.skillKey === 'F') ? 15 : 5;
                         taoVuNoLT(tHit.tamNguc, nvc.up.clone().normalize(), 0xffaa00, banKinhNo);
