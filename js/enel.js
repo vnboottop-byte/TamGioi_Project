@@ -413,7 +413,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI NAMI
     // ==========================================
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('nami')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('enel')) {
         window.HePhaiHienTai = {
             tenPhai: "Hoa Tiêu Nami",
             khoiTao: function () {
