@@ -76,9 +76,31 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
     }
 
 
-// 🌟 ĐÓNG DẤU BẢN QUYỀN MÔN PHÁI: Tự động gọi CHIEUQ_TUTIEN, CHIEUE_TUTIEN...
-    if (!isRemote && typeof playAnim === 'function') {
-        playAnim('CHIEU' + phim + '_TUTIEN');
+    if (!isRemote) {
+        window.dangMuaChieu = true;
+
+        // 🌟 BỘ NÃO BỐC THĂM CHIÊU THỨC THÔNG MINH
+        let tenAnimation = 'BAY'; // Fallback
+        if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
+            tenAnimation = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
+        } else {
+            let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
+            let pool = Object.keys(mapAnim || {}).filter(k => {
+                let ten = k.toLowerCase();
+                const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) return false; 
+                const tuKhoaTanCong = ['attack', 'atk', 'sword', 'blade', 'slash', 'strike', 'magic', 'cast', 'spell', 'skill', 'combo', 'chieu'];
+                return tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa));
+            });
+            if (pool.length > 0) tenAnimation = pool[Math.floor(Math.random() * pool.length)];
+        }
+
+        if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
+        else if (typeof window.playAnim === 'function') window.playAnim(tenAnimation);
+        
+        // Khóa đứng im múa kiếm trong 1.2s
+        if (window.henGioTatMuaTT) clearTimeout(window.henGioTatMuaTT);
+        window.henGioTatMuaTT = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
     }
 
 
@@ -580,7 +602,81 @@ window.gaySatThuong = function (tamNo, luongSatThuong, banKinh) {
 if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien')) {
     window.HePhaiHienTai = {
         tenPhai: "Tu Tiên",
+
         khoiTao: function () {
+            console.log("⚔️ Tu Tiên Giả: Kích Hoạt Bộ Não Nhận Diện Kiếm Pháp!");
+            window.KHO_ANIM_NHANROI = [];
+            window.KHO_ANIM_TANCONG = [];
+
+            if (window.animationsMap) {
+                // 🛑 BẢN VÁ V6: DIỆT ROOT MOTION (CHỐNG GIẬT LÙI LÚC VUNG KIẾM)
+                for (let key in window.animationsMap) {
+                    let k = key.toUpperCase();
+                    let clip = window.animationsMap[key];
+                    if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('COMBO') || k.includes('SWORD') || k.includes('BLADE') || k.includes('SLASH') || k.includes('MAGIC') || k.includes('CAST')) {
+                        if (clip && clip.tracks) {
+                            clip.tracks = clip.tracks.filter(track => {
+                                let tenTrack = track.name.toLowerCase();
+                                if (tenTrack.includes('.position')) {
+                                    const danhSachDen = ['armature', 'hip', 'pelvis', 'root', 'bip', 'center', 'spine', 'object', 'dummy', 'bone'];
+                                    for (let tuKhoa of danhSachDen) if (tenTrack.includes(tuKhoa)) return false; 
+                                }
+                                return true; 
+                            });
+                        }
+                    }
+                }
+
+                // 🧠 NHẬN DIỆN CHẠY, BAY, NHÀN RỖI, NIỆM PHÉP
+                let coBay = false; let coChay = false;
+                let animBay = null; let animChay = null;
+
+                for (let key in window.animationsMap) {
+                    let ten = key.toLowerCase();
+                    let clip = window.animationsMap[key];
+
+                    const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                    if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) continue;
+
+                    const tuKhoaIdle = ['idle', 'wait', 'stand', 'pose', 'nhanroi', 'breath', 'stay', 'normal'];
+                    if (tuKhoaIdle.some(tu => ten.includes(tu))) { window.KHO_ANIM_NHANROI.push(key); }
+
+                    const tuKhoaRun = ['run', 'walk', 'move', 'dash', 'sprint', 'chay', 'di', 'forward', 'step'];
+                    if (tuKhoaRun.some(tu => ten.includes(tu))) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = clip; window.animationsMap['RUN'] = clip; }
+
+                    const tuKhoaFly = ['fly', 'hover', 'float', 'bay', 'glide', 'jump_loop'];
+                    if (tuKhoaFly.some(tu => ten.includes(tu))) { coBay = true; animBay = clip; window.animationsMap['BAY'] = clip; window.animationsMap['FLY'] = clip; }
+
+                    // ⚔️ Nhận diện Tấn công (Từ khóa Kiếm hiệp / Pháp thuật)
+                    const tuKhoaTanCong = ['attack', 'atk', 'sword', 'blade', 'slash', 'strike', 'magic', 'cast', 'spell', 'skill', 'combo', 'chieu'];
+                    if (tuKhoaTanCong.some(tu => ten.includes(tu))) { window.KHO_ANIM_TANCONG.push(key); }
+                }
+
+                // 🌟 Tự động bù trừ chéo
+                if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
+                if (coBay && !coChay) { window.animationsMap['CHAYBO'] = animBay; window.animationsMap['RUN'] = animBay; }
+
+                // 🌟 Chốt dáng Nhàn rỗi mặc định
+                if (window.KHO_ANIM_NHANROI.length > 0) {
+                    let defaultIdle = window.KHO_ANIM_NHANROI[0];
+                    window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
+                    if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
+                }
+            }
+
+            // Vòng lặp đổi dáng Nhàn rỗi mỗi 12 giây
+            if (window.vongLapNhanRoiTT) clearInterval(window.vongLapNhanRoiTT);
+            window.vongLapNhanRoiTT = setInterval(() => {
+                if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI && window.KHO_ANIM_NHANROI.length > 0) {
+                    let randomIdle = window.KHO_ANIM_NHANROI[Math.floor(Math.random() * window.KHO_ANIM_NHANROI.length)];
+                    if (window.animationsMap && window.animationsMap[randomIdle]) {
+                        window.animationsMap['NHANROI'] = window.animationsMap[randomIdle];
+                        if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[randomIdle];
+                        if (typeof window.playAnim === 'function') window.playAnim(randomIdle);
+                    }
+                }
+            }, 12000);
+
             const vuKhiLoader = new THREE.GLTFLoader();
 
             const dracoLoaderVuKhi = new THREE.DRACOLoader();
