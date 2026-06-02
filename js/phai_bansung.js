@@ -270,10 +270,34 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            // 🌟 ĐÓNG DẤU BẢN QUYỀN XẠ THỦ CHO CÁC CHIÊU E, R, F
-            if (typeof window.playAnim === 'function' && phim !== 'Q') window.playAnim('CHIEU' + phim + '_XATHU');
-            // 🌟 ĐỒNG HỒ SÚNG
-            window.thoiGianTatSung = Date.now() + 1500;
+
+            window.dangMuaChieu = true;
+            window.thoiGianTatSung = Date.now() + 1500; // Hiện súng khi bắn
+
+            // 🌟 BỘ NÃO BỐC THĂM CHIÊU THỨC THÔNG MINH (Chỉ múa khi bấm E, R, F)
+            if (phim !== 'Q') {
+                let tenAnimation = 'BAY'; // Fallback
+                if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
+                    tenAnimation = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
+                } else {
+                    let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
+                    let pool = Object.keys(mapAnim || {}).filter(k => {
+                        let ten = k.toLowerCase();
+                        const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                        if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) return false; 
+                        const tuKhoaTanCong = ['attack', 'atk', 'shoot', 'fire', 'gun', 'skill', 'combo', 'chieu', 'ban'];
+                        return tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa));
+                    });
+                    if (pool.length > 0) tenAnimation = pool[Math.floor(Math.random() * pool.length)];
+                }
+
+                if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
+                else if (typeof window.playAnim === 'function') window.playAnim(tenAnimation);
+                
+                // Mở khóa đứng im sau 1.5s (hoặc tự tắt khi di chuyển)
+                if (window.henGioTatMuaBS) clearTimeout(window.henGioTatMuaBS);
+                window.henGioTatMuaBS = setTimeout(() => { window.dangMuaChieu = false; }, 1500);
+            }
         }
 
 
@@ -476,8 +500,12 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
                     if (typeof window.playAnimGocBS === 'function') {
                         if (!window.lastAnimTimeBS || Date.now() - window.lastAnimTimeBS > 1000) {
-                            // 🌟 ĐÓNG DẤU BẢN QUYỀN XẠ THỦ CHO CHIÊU Q AUTO
-                            window.playAnimGocBS('CHIEUQ_XATHU');
+                            // 🌟 BỐC THĂM CHIÊU BẮN CHO AUTO Q
+                            let tenAnimation = 'CHIEUQ_XATHU'; // Fallback nếu kho rỗng
+                            if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
+                                tenAnimation = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
+                            }
+                            window.playAnimGocBS(tenAnimation);
                             window.lastAnimTimeBS = Date.now();
                         }
                     }
@@ -754,7 +782,7 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
                         }
                     }
                 }, 12000);
-                
+
                 // 🌟 BẢN VÁ: Nhận diện Súng là Vũ Khí 2
                 let urlVuKhi = window.WEAPON2_URL; 
                 
