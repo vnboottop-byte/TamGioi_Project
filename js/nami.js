@@ -289,20 +289,42 @@
                     let tenModelSet = 'set' + indexSet;
 
                     let posDap = diemChanMucTieu.clone();
+
+                    // 🌟 BẢN VÁ: TÍNH TOÁN TRỤC "LÊN TRỜI" CHUẨN XÁC CHO MAP CẦU & PHẲNG
+                    let upV = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        upV = posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    }
+
                     if (i === 0) {
-                        // 🌟 Tia đầu tiên CHẮC CHẮN khóa mục tiêu ngắm trúng đích diện rộng
+                        // Tia đầu tiên cắm thẳng đầu mục tiêu
                         posDap.copy(diemChanMucTieu);
                     } else {
-                        // 🌟 Các tia còn lại giật ngẫu nhiên trong vùng giông bão rộng 50m
-                        posDap.x += (Math.random() - 0.5) * 50;
-                        posDap.z += (Math.random() - 0.5) * 50;
+                        // 🌟 Tán xạ tia sét ngẫu nhiên 50m men theo độ cong của Hành Tinh
+                        let randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+                        randomVec.projectOnPlane(upV).normalize(); // Ép chạy ngang trên mặt đất
+                        let randomRadius = Math.random() * 25; // Bán kính 25m (Đường kính 50m)
+                        posDap.add(randomVec.multiplyScalar(randomRadius));
                     }
-                    posDap.y = window.matDatY || 0; // Đắp đất chuẩn tránh chìm tia sét
 
-                    // Đúc model tia sétIndependent độc lập, cao tầm 45m
+                    // 🌟 NẮN LẠI ĐỘ CAO CHUẨN (Chống chìm vào lõi trái đất)
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+                        posDap = window.TAM_HANH_TINH_HIEN_TAI.clone().add(
+                            posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize().multiplyScalar(rHanhTinh)
+                        );
+                    } else {
+                        posDap.y = window.matDatY || 0;
+                    }
+
+                    // Đúc model tia sét độc lập, cao tầm 45m
                     const setMesh = taoVatTheNami(tenModelSet, 45);
                     setMesh.position.copy(posDap);
-                    setMesh.rotation.y = Math.random() * Math.PI * 2; // Xoay random cho tự nhiên
+
+                    // 🌟 ÉP TIA SÉT ĐỨNG THẲNG LÊN TRỜI (Bất chấp độ cong của Map)
+                    setMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upV);
+                    setMesh.rotateY(Math.random() * Math.PI * 2); // Xoay random trục thân cho tự nhiên
+
                     scene.add(setMesh);
 
                     // Sét đánh tức thời -> Gây sát thương lan và nổ hiệu ứng lập tức
