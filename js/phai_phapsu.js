@@ -231,8 +231,31 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             let bayGio = Date.now();
             if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
             choHoiChieu[phim] = bayGio;
-            // 🌟 ĐÓNG DẤU BẢN QUYỀN PHÁP SƯ
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('CHIEU' + phim + '_PHAPSU');
+
+            window.dangMuaChieu = true;
+
+            // 🌟 BỘ NÃO BỐC THĂM CHIÊU THỨC THÔNG MINH
+            let tenAnimation = 'BAY'; // Fallback
+            if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
+                tenAnimation = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
+            } else {
+                let mapAnim = (window.MOUNT_URL && window.MOUNT_URL.trim() !== "") ? window.animationsMapChar : window.animationsMap;
+                let pool = Object.keys(mapAnim || {}).filter(k => {
+                    let ten = k.toLowerCase();
+                    const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                    if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) return false;
+                    const tuKhoaTanCong = ['attack', 'atk', 'magic', 'cast', 'spell', 'summon', 'skill', 'combo', 'chieu', 'shoot'];
+                    return tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa));
+                });
+                if (pool.length > 0) tenAnimation = pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
+            else if (typeof window.playAnim === 'function') window.playAnim(tenAnimation);
+
+            // Khóa đứng im niệm phép trong 1.2s
+            if (window.henGioTatMuaPS) clearTimeout(window.henGioTatMuaPS);
+            window.henGioTatMuaPS = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
 
 
