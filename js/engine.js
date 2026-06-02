@@ -2372,8 +2372,8 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                     let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, playerModel.position);
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
-                        // 🌟 TÁCH BIỆT THEO LỆNH SẾP: CLICK CHUỘT LÀ ĐI BỘ
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'DIBO');
+                        // 🌟 CHUẨN HÓA ĐỒNG BỘ: CLICK CHUỘT CŨNG LÀ CHẠY BỘ
+                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
 
 
                         
@@ -2564,8 +2564,8 @@ if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { cu
                     let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, viTriHienTai);
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
-                        // 🌟 TÁCH BIỆT THEO LỆNH SẾP: CLICK CHUỘT LÀ ĐI BỘ
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'DIBO');    
+                        // 🌟 CHUẨN HÓA ĐỒNG BỘ: CLICK CHUỘT CŨNG LÀ CHẠY BỘ
+                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
 
 
                         let tocDoThucTe = currentSprint;
