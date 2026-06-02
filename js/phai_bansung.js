@@ -680,6 +680,81 @@ function taoVuNoBS(pos, isRemote = false, luongDame = 100, banKinh = 15, hieuUng
 
             khoiTao: function () {
                 console.log("🔫 Xạ Thủ: Khởi tạo súng chuẩn, độc lập với Engine!");
+                // =========================================================
+                // 🧠 BỘ NÃO AI ĐA HOẠT ẢNH THÔNG MINH DÀNH CHO XẠ THỦ
+                // =========================================================
+                window.KHO_ANIM_NHANROI = [];
+                window.KHO_ANIM_TANCONG = [];
+
+                if (window.animationsMap) {
+                    // 🛑 BẢN VÁ V6: DIỆT ROOT MOTION (CHỐNG GIẬT LÙI)
+                    for (let key in window.animationsMap) {
+                        let k = key.toUpperCase();
+                        let clip = window.animationsMap[key];
+                        if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('CHIEU') || k.includes('COMBO') || k.includes('SHOOT') || k.includes('FIRE') || k.includes('GUN')) {
+                            if (clip && clip.tracks) {
+                                clip.tracks = clip.tracks.filter(track => {
+                                    let tenTrack = track.name.toLowerCase();
+                                    if (tenTrack.includes('.position')) {
+                                        const danhSachDen = ['armature', 'hip', 'pelvis', 'root', 'bip', 'center', 'spine', 'object', 'dummy', 'bone'];
+                                        for (let tuKhoa of danhSachDen) if (tenTrack.includes(tuKhoa)) return false; 
+                                    }
+                                    return true; 
+                                });
+                            }
+                        }
+                    }
+
+                    // 🧠 NHẬN DIỆN CHẠY, BAY, NHÀN RỖI, BẮN SÚNG
+                    let coBay = false; let coChay = false;
+                    let animBay = null; let animChay = null;
+
+                    for (let key in window.animationsMap) {
+                        let ten = key.toLowerCase();
+                        let clip = window.animationsMap[key];
+
+                        const tuKhoaCam = ['hit', 'hurt', 'damage', 'die', 'death', 'dead', 'defend'];
+                        if (tuKhoaCam.some(tuCam => ten.includes(tuCam))) continue;
+
+                        const tuKhoaIdle = ['idle', 'wait', 'stand', 'pose', 'nhanroi', 'breath', 'stay', 'normal'];
+                        if (tuKhoaIdle.some(tu => ten.includes(tu))) { window.KHO_ANIM_NHANROI.push(key); }
+
+                        const tuKhoaRun = ['run', 'walk', 'move', 'dash', 'sprint', 'chay', 'di', 'forward', 'step'];
+                        if (tuKhoaRun.some(tu => ten.includes(tu))) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = clip; window.animationsMap['RUN'] = clip; }
+
+                        const tuKhoaFly = ['fly', 'hover', 'float', 'bay', 'glide', 'jump_loop'];
+                        if (tuKhoaFly.some(tu => ten.includes(tu))) { coBay = true; animBay = clip; window.animationsMap['BAY'] = clip; window.animationsMap['FLY'] = clip; }
+
+                        // 🔫 Nhận diện Tấn công (Bắn súng)
+                        const tuKhoaTanCong = ['attack', 'atk', 'shoot', 'fire', 'gun', 'skill', 'combo', 'chieu', 'ban'];
+                        if (tuKhoaTanCong.some(tu => ten.includes(tu))) { window.KHO_ANIM_TANCONG.push(key); }
+                    }
+
+                    // 🌟 Tự động bù trừ chéo
+                    if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
+                    if (coBay && !coChay) { window.animationsMap['CHAYBO'] = animBay; window.animationsMap['RUN'] = animBay; }
+
+                    // 🌟 Chốt dáng Nhàn rỗi mặc định
+                    if (window.KHO_ANIM_NHANROI.length > 0) {
+                        let defaultIdle = window.KHO_ANIM_NHANROI[0];
+                        window.animationsMap['NHANROI'] = window.animationsMap[defaultIdle];
+                        if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[defaultIdle];
+                    }
+                }
+
+                // Vòng lặp đổi dáng Nhàn rỗi
+                if (window.vongLapNhanRoiBS) clearInterval(window.vongLapNhanRoiBS);
+                window.vongLapNhanRoiBS = setInterval(() => {
+                    if (!window.dangMuaChieu && !window.isMoving && !window.isKeyboardMoving && window.KHO_ANIM_NHANROI && window.KHO_ANIM_NHANROI.length > 0) {
+                        let randomIdle = window.KHO_ANIM_NHANROI[Math.floor(Math.random() * window.KHO_ANIM_NHANROI.length)];
+                        if (window.animationsMap && window.animationsMap[randomIdle]) {
+                            window.animationsMap['NHANROI'] = window.animationsMap[randomIdle];
+                            if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = window.animationsMap[randomIdle];
+                            if (typeof window.playAnim === 'function') window.playAnim(randomIdle);
+                        }
+                    }
+                }, 12000);
+                
                 // 🌟 BẢN VÁ: Nhận diện Súng là Vũ Khí 2
                 let urlVuKhi = window.WEAPON2_URL; 
                 
