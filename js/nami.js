@@ -207,16 +207,8 @@
 
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // 🌟 BẢN VÁ: TÍNH ĐIỂM CHẠM ĐẤT CHUẨN XÁC CHO CẢ MAP CẦU LẪN MAP PHẲNG
+        // 🌟 LẤY TRỰC TIẾP TỌA ĐỘ MỤC TIÊU TRONG KHÔNG GIAN 3D (Không ép xuống đất nữa)
         let diemChanMucTieu = mucTieu.clone();
-        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-            // Đứng từ Lõi Trái Đất bắn tia xuyên qua mục tiêu để tìm chính xác tọa độ vỏ Hành Tinh
-            let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-            let huongTuTam = diemChanMucTieu.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-            diemChanMucTieu = window.TAM_HANH_TINH_HIEN_TAI.clone().add(huongTuTam.multiplyScalar(rHanhTinh));
-        } else {
-            diemChanMucTieu.y = window.matDatY || 0;
-        }
 
         // ===============================================
         // ⚡ CHIÊU Q: 3 QUẢ CẦU XANH BẮN THẲNG TO DẦN (DPS chuẩn: 3 hit x 0.133 = 0.4)
@@ -315,16 +307,6 @@
                         randomVec.projectOnPlane(upV).normalize(); // Ép chạy ngang trên mặt đất
                         let randomRadius = Math.random() * 25; // Bán kính 25m (Đường kính 50m)
                         posDap.add(randomVec.multiplyScalar(randomRadius));
-                    }
-
-                    // 🌟 NẮN LẠI ĐỘ CAO CHUẨN (Chống chìm vào lõi trái đất)
-                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                        let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-                        posDap = window.TAM_HANH_TINH_HIEN_TAI.clone().add(
-                            posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize().multiplyScalar(rHanhTinh)
-                        );
-                    } else {
-                        posDap.y = window.matDatY || 0;
                     }
 
                     // Đúc model tia sét độc lập, cao tầm 45m
