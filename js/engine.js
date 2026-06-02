@@ -1951,7 +1951,7 @@ function playAnim(animName) {
 
     // 🛡️ LÁ CHẮN MÚA CHIÊU: Bảo vệ 2 giây
     if (window.dangMuaChieu && !laHanhDongNguoi) {
-        if (upName === 'CHAYBO' || upName === 'DIBO' || upName === 'BAY') {
+        if (upName === 'CHAYBO' || upName === 'BAY') {
             let dangCuaDongTay = window.isKeyboardMoving || window.isMoving;
             if (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Luyện Thể" && !window.isAutoAFK && upName !== 'BAY' && dangCuaDongTay) {
                 window.dangMuaChieu = false;
