@@ -206,7 +206,9 @@
         }
 
         const dameGoc = window.DAME_CUA_TOI || 100;
-        let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
+
+        // 🌟 LẤY TRỰC TIẾP TỌA ĐỘ MỤC TIÊU TRONG KHÔNG GIAN 3D (Không ép xuống đất nữa)
+        let diemChanMucTieu = mucTieu.clone();
 
         // ===============================================
         // ⚡ CHIÊU Q: 3 QUẢ CẦU XANH BẮN THẲNG TO DẦN (DPS chuẩn: 3 hit x 0.133 = 0.4)
@@ -289,20 +291,32 @@
                     let tenModelSet = 'set' + indexSet;
 
                     let posDap = diemChanMucTieu.clone();
+
+                    // 🌟 BẢN VÁ: TÍNH TOÁN TRỤC "LÊN TRỜI" CHUẨN XÁC CHO MAP CẦU & PHẲNG
+                    let upV = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        upV = posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    }
+
                     if (i === 0) {
-                        // 🌟 Tia đầu tiên CHẮC CHẮN khóa mục tiêu ngắm trúng đích diện rộng
+                        // Tia đầu tiên cắm thẳng đầu mục tiêu
                         posDap.copy(diemChanMucTieu);
                     } else {
-                        // 🌟 Các tia còn lại giật ngẫu nhiên trong vùng giông bão rộng 50m
-                        posDap.x += (Math.random() - 0.5) * 50;
-                        posDap.z += (Math.random() - 0.5) * 50;
+                        // 🌟 Tán xạ tia sét ngẫu nhiên 50m men theo độ cong của Hành Tinh
+                        let randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+                        randomVec.projectOnPlane(upV).normalize(); // Ép chạy ngang trên mặt đất
+                        let randomRadius = Math.random() * 25; // Bán kính 25m (Đường kính 50m)
+                        posDap.add(randomVec.multiplyScalar(randomRadius));
                     }
-                    posDap.y = window.matDatY || 0; // Đắp đất chuẩn tránh chìm tia sét
 
-                    // Đúc model tia sétIndependent độc lập, cao tầm 45m
+                    // Đúc model tia sét độc lập, cao tầm 45m
                     const setMesh = taoVatTheNami(tenModelSet, 45);
                     setMesh.position.copy(posDap);
-                    setMesh.rotation.y = Math.random() * Math.PI * 2; // Xoay random cho tự nhiên
+
+                    // 🌟 ÉP TIA SÉT ĐỨNG THẲNG LÊN TRỜI (Bất chấp độ cong của Map)
+                    setMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), upV);
+                    setMesh.rotateY(Math.random() * Math.PI * 2); // Xoay random trục thân cho tự nhiên
+
                     scene.add(setMesh);
 
                     // Sét đánh tức thời -> Gây sát thương lan và nổ hiệu ứng lập tức
@@ -399,7 +413,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI NAMI
     // ==========================================
-    if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('nami')) {
         window.HePhaiHienTai = {
             tenPhai: "Hoa Tiêu Nami",
             khoiTao: function () {
