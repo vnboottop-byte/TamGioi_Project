@@ -206,7 +206,17 @@
         }
 
         const dameGoc = window.DAME_CUA_TOI || 100;
-        let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
+
+        // 🌟 BẢN VÁ: TÍNH ĐIỂM CHẠM ĐẤT CHUẨN XÁC CHO CẢ MAP CẦU LẪN MAP PHẲNG
+        let diemChanMucTieu = mucTieu.clone();
+        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+            // Đứng từ Lõi Trái Đất bắn tia xuyên qua mục tiêu để tìm chính xác tọa độ vỏ Hành Tinh
+            let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
+            let huongTuTam = diemChanMucTieu.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+            diemChanMucTieu = window.TAM_HANH_TINH_HIEN_TAI.clone().add(huongTuTam.multiplyScalar(rHanhTinh));
+        } else {
+            diemChanMucTieu.y = window.matDatY || 0;
+        }
 
         // ===============================================
         // ⚡ CHIÊU Q: 3 QUẢ CẦU XANH BẮN THẲNG TO DẦN (DPS chuẩn: 3 hit x 0.133 = 0.4)
