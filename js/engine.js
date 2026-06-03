@@ -1093,86 +1093,50 @@ window.taiHoacNhanBanAsset = function(url, callback) {
     });
 };
 
-
-
-
-
-
-
-
-
-
-
-
+// =========================================================
+// ⚙️ BẢN VÁ AAA: CHUẨN HÓA KÍCH THƯỚC TOÀN CỤC CHỐNG LOẠI SCALE
+// Trị dứt điểm bệnh phình to x10 của Model Mobile
+// =========================================================
 window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
 
-    // 🌟 LÁ CHẮN DIỆT MATRAN ẨN: Ép toàn bộ các node con bên trong về 1.000
-    mesh.traverse((child) => {
-        if (child.isMesh || child.isBone || child.isGroup) {
-            child.scale.set(1, 1, 1); // Khóa chết tỷ lệ, không cho phép nhân ngầm
-        }
-    });
-
+    // 1. Reset scale nút gốc về nguyên thủy để đo kích thước thật
     mesh.scale.set(1, 1, 1);
-    mesh.updateMatrixWorld(true); // Cập nhật lại toàn bộ thế giới 3D
 
-    let chieuCaoThucTe = 0;
-    let maxYBone = -Infinity;
-    let minYBone = Infinity;
-    let coXuong = false;
+    // Cưỡng chế cập nhật ma trận thế giới của toàn bộ cây phân cấp bọc ngoài scene
+    mesh.updateMatrix();
+    mesh.updateMatrixWorld(true);
 
-    // =========================================================
-    // 🌟 BỘ THƯỚC ĐO CỘT SỐNG (CHUYÊN TRỊ MIXAMO/BLENDER)
-    // Bỏ qua Box3. Đo trực tiếp từ gót chân đến đỉnh đầu của bộ xương!
-    // =========================================================
-    mesh.traverse((child) => {
-        if (child.isBone) {
-            coXuong = true;
-            let pos = new THREE.Vector3();
-            child.getWorldPosition(pos);
-            if (pos.y > maxYBone) maxYBone = pos.y;
-            if (pos.y < minYBone) minYBone = pos.y;
-        }
-    });
+    // 2. DÙNG HỘP BAO KHÔNG GIAN HÌNH HỌC (BOX3) ĐỂ ĐO CHUẨN X-QUANG
+    // Tuyệt đối không can thiệp phá vỡ cấu trúc tỷ lệ của các xương con bên trong
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
 
-    if (coXuong && (maxYBone - minYBone) > 0.1) {
-        // Chiều cao từ gót chân đến xương mắt/cổ + 15% bù cho đỉnh hộp sọ/tóc
-        chieuCaoThucTe = (maxYBone - minYBone) * 1.15;
-    } else {
-        // Dành cho vũ khí, đá, cây, đồ vật (Không có xương thì xài Box3 như cũ)
-        const box = new THREE.Box3().setFromObject(mesh);
-        const size = new THREE.Vector3();
-        box.getSize(size);
+    // Chiều cao thực tế chính là khoảng cách trục đứng Y nguyên bản của Model
+    let chieuCaoThucTe = size.y;
+
+    // Phòng hờ nếu là vũ khí nằm ngang hoặc model dị dạng không có trục đứng
+    if (chieuCaoThucTe <= 0.05) {
         chieuCaoThucTe = Math.max(size.x, size.y, size.z);
     }
 
-    // Chống lỗi chia 0 hoặc vi khuẩn
+    // Chống lỗi chia cho 0 nếu file 3D bị rỗng dữ liệu đỉnh
     if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.0001) {
         chieuCaoThucTe = 1;
     }
 
-    // Bơm tỷ lệ chuẩn 2.5m
-    const tyLe = sizeMongMuon / chieuCaoThucTe;
-    mesh.scale.setScalar(tyLe);
-    mesh.updateMatrixWorld(true);
+    // 3. TÍNH TOÁN TỶ LỆ VÀ ÉP DUY NHẤT LÊN NÚT GỐC CAO NHẤT
+    const tyLeChuan = sizeMongMuon / chieuCaoThucTe;
+    mesh.scale.setScalar(tyLeChuan);
+    mesh.updateMatrixWorld(true); // Khóa đuôi ma trận sau khi scale
 
-    // =========================================================
-    // 🌟 NẮN LẠI TÂM NGỰC ĐỂ QUÁI CẮN / BẮN LAZER CHO CHUẨN
-    // Tự động tính toán tâm ngực dựa trên tỷ lệ vừa bơm, không xài Box3 nữa!
-    // =========================================================
+    // 4. Đồng bộ dữ liệu định vị cho hệ thống Live-Radar và Hitbox ngực đọc
     mesh.userData.chieuCaoThuc = sizeMongMuon;
     mesh.userData.tamThucTeLocal = new THREE.Vector3(0, chieuCaoThucTe / 2, 0);
+
+    console.log(`🤖 [ENGINE] Đã đồng bộ kích thước chuẩn ${sizeMongMuon}m (Gốc: ${chieuCaoThucTe.toFixed(4)}m ➔ Scale Root: ${tyLeChuan.toFixed(4)})`);
 };
-
-
-
-
-
-
-
-
-
 
 function tienHanhTaiNhanVat() {
     let coThuCuoi = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
