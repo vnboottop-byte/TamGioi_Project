@@ -1094,65 +1094,44 @@ window.taiHoacNhanBanAsset = function(url, callback) {
 };
 
 // =========================================================
-// ⚙️ BẢN VÁ AAA: CHUẨN HÓA KÍCH THƯỚC (BẢN TỐI HẬU THUẬT)
-// Kết hợp X-Quang Xương & Box3: Trị 100% Model Mobile loạn Scale
+// ⚙️ BẢN VÁ AAA: CHUẨN HÓA KÍCH THƯỚC (VÔ CỰC TỐI THƯỢNG)
+// Quét bằng Box3 thuần túy - Cấm can thiệp tỷ lệ Node con
 // =========================================================
 window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
 
-    // 1. Reset scale nút gốc về nguyên thủy để đo kích thước thật
+    // 1. CHỈ RESET NÚT GỐC (ROOT)
+    // Tuyệt đối không được đụng vào scale của các xương hay mesh bên trong!
     mesh.scale.set(1, 1, 1);
-    mesh.updateMatrixWorld(true); // Ép Engine tính toán lại ma trận xương
+    mesh.updateMatrixWorld(true);
 
-    let chieuCaoThucTe = 0;
-    let maxYBone = -Infinity;
-    let minYBone = Infinity;
-    let coXuong = false;
+    // 2. DÙNG MÁY QUÉT KHÔNG GIAN (BOX3) ĐỂ ĐO TOÀN BỘ KHỐI THỊT
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = new THREE.Vector3();
+    box.getSize(size);
 
-    // 2. MÁY QUÉT CỘT SỐNG (Chuyên trị Model Mobile dùng Scale Xương)
-    // Đọc tọa độ thế giới của Xương để tìm ra chiều cao thật mắt người nhìn thấy
-    mesh.traverse((child) => {
-        if (child.isBone) {
-            coXuong = true;
-            let pos = new THREE.Vector3();
-            child.getWorldPosition(pos); // Tọa độ này ĐÃ BAO GỒM scale ngầm của Artist
-            if (pos.y > maxYBone) maxYBone = pos.y;
-            if (pos.y < minYBone) minYBone = pos.y;
-        }
-    });
-
-    // 3. TÍNH CHIỀU CAO
-    if (coXuong && (maxYBone - minYBone) > 0.05) {
-        // Có xương -> Lấy từ gót chân đến mắt/đỉnh sọ + 15% bù phần tóc
-        chieuCaoThucTe = (maxYBone - minYBone) * 1.15; 
-    } else {
-        // KHÔNG CÓ XƯƠNG (Vũ khí, Đất đá, Cây cối) -> Dùng Box3 đo khối thịt
-        const box = new THREE.Box3().setFromObject(mesh);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        chieuCaoThucTe = size.y;
-        
-        // Cứu cánh cho vũ khí nằm ngang
-        if (chieuCaoThucTe <= 0.05) {
-            chieuCaoThucTe = Math.max(size.x, size.y, size.z);
-        }
+    // Lấy chiều cao Y. Nếu quá lùn (Thú bò sát, vũ khí, cá bơi ngang), lấy cạnh dài nhất
+    let chieuCaoThucTe = size.y;
+    if (chieuCaoThucTe < 0.1) {
+        chieuCaoThucTe = Math.max(size.x, size.y, size.z);
     }
 
-    // Chống lỗi chia cho 0 làm vỡ đồ họa
-    if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.0001) {
-        chieuCaoThucTe = 1;
+    // Chống lỗi chia cho 0 làm nổ màn hình đen thui
+    if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.001) {
+        console.warn("⚠️ Model vô hình hoặc Box3 bị lỗi! Kích hoạt size dự phòng.");
+        chieuCaoThucTe = 1.0; 
     }
 
-    // 4. ÉP TỶ LỆ CHUẨN (Chỉ ép lên gốc, KHÔNG tàn phá xương con bên trong)
+    // 3. BƠM TỶ LỆ CHUẨN (Chỉ ép lên gốc)
     const tyLeChuan = sizeMongMuon / chieuCaoThucTe;
     mesh.scale.setScalar(tyLeChuan);
-    mesh.updateMatrixWorld(true); // Khóa đuôi
+    mesh.updateMatrixWorld(true);
 
-    // 5. Cập nhật dữ liệu Radar Hitbox
+    // 4. LƯU LẠI DỮ LIỆU HITBOX CHO SẾP PK
     mesh.userData.chieuCaoThuc = sizeMongMuon;
     mesh.userData.tamThucTeLocal = new THREE.Vector3(0, chieuCaoThucTe / 2, 0);
     
-    console.log(`🤖 [ENGINE] Cân bằng Model: ${sizeMongMuon}m (Đo được: ${chieuCaoThucTe.toFixed(3)}m ➔ Hệ số: ${tyLeChuan.toFixed(3)})`);
+    console.log(`🤖 [ENGINE] Đã nén Model về ${sizeMongMuon}m (Đo được: ${chieuCaoThucTe.toFixed(3)}m -> Lực nén: ${tyLeChuan.toFixed(3)})`);
 };
 
 function tienHanhTaiNhanVat() {
