@@ -60,7 +60,7 @@ const DOI_TEN = {
 };
 const DANH_SACH_XOA = [
 
-    2, 3,  
+    
 
 
 
