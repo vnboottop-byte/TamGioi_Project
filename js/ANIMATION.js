@@ -1,47 +1,75 @@
 import { dedup, prune } from '@gltf-transform/functions';
 const DOI_TEN = {
-    1: "ATTACK",
-    2: "ATTACK",
-    3: "ATTACK",
-    4: "ATTACK",
-    5: "ATTACK",
-    6: "ATTACK",
-    7: "ATTACK",
-    8: "ATTACK",
-    9: "ATTACK",
-    10: "ATTACK",
-    11: "ATTACK",
-    12: "ATTACK",
-    13: "ATTACK",
-    14: "ATTACK",
-    15: "ATTACK",
-    16: "ATTACK",
-    17: "ATTACK",
-    18: "ATTACK",
-    19: "ATTACK",
-    20: "ATTACK",
-    21: "ATTACK",
-    22: "ATTACK",
-    23: "ATTACK",
-    24: "ATTACK",
-    25: "ATTACK",
-    26: "ATTACK",
-    27: "ATTACK",
-    28: "ATTACK",
-    29: "ATTACK",
-    30: "ATTACK",
-    31: "ATTACK",
-    32: "ATTACK",
-    33: "ATTACK",
-    34: "ATTACK",
-    35: "ATTACK",
-    36: "IDLE",       
-    37: "DIE",        
-    38: "ATTACK",     
+    1: "ATTACK1",
+    2: "ATTACK2",
+    3: "ATTACK3",
+    4: "ATTACK4",
+    5: "ATTACK5",
+    6: "ATTACK6",
+    7: "ATTACK7",
+    8: "ATTACK8",
+    9: "ATTACK9",
+    10: "ATTACK10",
+    11: "ATTACK10",
+    12: "ATTACK10",
+    13: "ATTACK10",
+    14: "ATTACK10",
+    15: "ATTACK10",
+    16: "ATTACK10",
+    17: "ATTACK10",
+    18: "ATTACK10",
+    19: "ATTACK10",
+    20: "ATTACK10",
+    21: "ATTACK10",
+    22: "ATTACK10",
+    23: "ATTACK10",
+    24: "ATTACK10",
+    25: "ATTACK10",
+    26: "ATTACK10",
+    27: "ATTACK10",
+    28: "ATTACK10",
+    29: "ATTACK10",
+    30: "ATTACK10",
+    31: "ATTACK10",
+    32: "ATTACK10",
+    33: "ATTACK10",
+    34: "ATTACK10",
+    35: "ATTACK10",
+    36: "ATTACK10",       
+    37: "ATTACK10",        
+    38: "ATTACK10",
+    39: "ATTACK10",
+    40: "ATTACK10",
+    41: "ATTACK10",
+    42: "ATTACK10",
+    43: "ATTACK10",
+    44: "ATTACK10",
+    45: "ATTACK10",
+    46: "ATTACK10",
+    47: "ATTACK10",
+    48: "ATTACK10",
+    49: "ATTACK10",     
      
 };
 const DANH_SACH_XOA = [
+
+
+
+    
     2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20, 21, 22, 23
+
+
+
+
+
+
+
+
+
+
+
+
+
 ];
 
 
