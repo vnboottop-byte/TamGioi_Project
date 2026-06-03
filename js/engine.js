@@ -2340,7 +2340,7 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
                         // 🌟 CHUẨN HÓA ĐỒNG BỘ: CLICK CHUỘT CŨNG LÀ CHẠY BỘ
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
+                        if (typeof playAnim === 'function') playAnim(isFlying ? 'BAY' : 'CHAYBO');
 
 
                         
@@ -2491,7 +2491,10 @@ if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { cu
                     if (typeof playAnim === 'function') playAnim('BAY');
                 }
 
+                // 🌟 BẢN VÁ AAA: CẤT CÁNH LÀ BAY LUÔN, HẠ NGƯỠNG XUỐNG 1.5M
+                isFlying = (doCao > 1.5) || dangChuDongDoiDoCao;
                 var huongDiChuyen = new THREE.Vector3(0, 0, 0); window.isKeyboardMoving = window.keys && (window.keys.w || window.keys.a || window.keys.s || window.keys.d);
+
                 var tocDoHienTaiThucTe = 0;
 
                 if (window.isKeyboardMoving) {
@@ -2532,7 +2535,7 @@ if (window.ROLE === 'admin') { if (tangKhongGian === "🚀 VŨ TRỤ SÂU") { cu
                     if (vecToTarget.length() > 2.0) {
                         let huongBayThang = vecToTarget.clone().normalize();
                         // 🌟 CHUẨN HÓA ĐỒNG BỘ: CLICK CHUỘT CŨNG LÀ CHẠY BỘ
-                        if (typeof playAnim === 'function') playAnim(doCao > 5.0 ? 'BAY' : 'CHAYBO');
+                        if (typeof playAnim === 'function') playAnim(isFlying ? 'BAY' : 'CHAYBO');
 
 
                         let tocDoThucTe = currentSprint;
