@@ -35,8 +35,8 @@ const DOI_TEN = {
     33: "ATTACK10",
     34: "ATTACK10",
     35: "ATTACK10",
-    36: "ATTACK10",       
-    37: "ATTACK10",        
+    36: "ATTACK10",
+    37: "ATTACK10",
     38: "ATTACK10",
     39: "ATTACK10",
     40: "ATTACK10",
@@ -48,22 +48,19 @@ const DOI_TEN = {
     46: "ATTACK10",
     47: "ATTACK10",
     48: "ATTACK10",
-    49: "ATTACK10",     
+    49: "ATTACK10",
+
+
+
+
+
+
+
      
 };
 const DANH_SACH_XOA = [
 
-
-
-    
-    2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 18, 19, 20, 21, 22, 23
-
-
-
-
-
-
-
+    2, 3,  
 
 
 
