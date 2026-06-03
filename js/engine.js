@@ -1107,8 +1107,15 @@ window.taiHoacNhanBanAsset = function(url, callback) {
 window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
 
+    // 🌟 LÁ CHẮN DIỆT MATRAN ẨN: Ép toàn bộ các node con bên trong về 1.000
+    mesh.traverse((child) => {
+        if (child.isMesh || child.isBone || child.isGroup) {
+            child.scale.set(1, 1, 1); // Khóa chết tỷ lệ, không cho phép nhân ngầm
+        }
+    });
+
     mesh.scale.set(1, 1, 1);
-    mesh.updateMatrixWorld(true);
+    mesh.updateMatrixWorld(true); // Cập nhật lại toàn bộ thế giới 3D
 
     let chieuCaoThucTe = 0;
     let maxYBone = -Infinity;
