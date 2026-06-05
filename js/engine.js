@@ -2402,16 +2402,10 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
 
                         let currentScale = parseFloat(mapData.scale || 1);
 
-                        // 👑 Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
                         if (currentScale > maxScale) {
                             maxScale = currentScale;
+                            // 🌟 Chỉ lấy đúng tọa độ Gốc từ SQL làm Tâm, cấm đoán mò!
                             tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-
-                            // 🌟 BÍ THUẬT X-QUANG: Tìm Lõi Thực Sự Của Hành Tinh (Fix lệch gốc Blender)
-                            if (mapData.mesh3D) {
-                                let box = new THREE.Box3().setFromObject(mapData.mesh3D);
-                                box.getCenter(tamHanhTinh);
-                            }
                             hanhTinhGanNhat = mapData;
                         }
                     });
@@ -2791,7 +2785,6 @@ window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
 
 
 
-
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
     window.daNhanDanhSachMap = false;
@@ -2813,8 +2806,33 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
             // 🌟 LÁ CHẮN 3: CƯỠNG CHẾ VẬT LÝ TUYỆT ĐỐI (CẤM CÃI API)
             if (zoneId === 'TRUNG_CHAU') {
                 window.KIEU_TRONG_LUC = 'CAU'; // Bố láo bố lếu, Trung Châu là phải Cầu!
-            } else if (data.data.length > 0 && data.data[0].gravity_type) {
-                window.KIEU_TRONG_LUC = String(data.data[0].gravity_type).trim().toUpperCase();
+            } else if (data.data.length > 0) {
+
+                // ======================================================
+                // 🛑 BẢN VÁ TRỌNG LỰC: Đi tìm Hành tinh TO NHẤT để quyết định luật chơi!
+                // ======================================================
+                let maxScale = -1;
+                let kieuTrongLucChuan = 'PHANG'; // Mặc định nếu không thấy gì
+
+                data.data.forEach(m => {
+                    let url = (m.model_url || "").toLowerCase();
+                    // Bỏ qua mây trời
+                    if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
+
+                    let currentScale = parseFloat(m.scale || 1);
+                    if (currentScale > maxScale) {
+                        maxScale = currentScale;
+                        // Bắt trúng Map Chính -> Lấy Trọng Lực của nó làm Trọng Lực chung cho cả Bí Cảnh!
+                        if (m.gravity_type && String(m.gravity_type).trim() !== '') {
+                            kieuTrongLucChuan = String(m.gravity_type).trim().toUpperCase();
+                        }
+                    }
+                });
+
+                window.KIEU_TRONG_LUC = kieuTrongLucChuan;
+                window.toaDoMatDat = 0;
+                // ======================================================
+
             } else {
                 window.KIEU_TRONG_LUC = 'PHANG';
                 window.toaDoMatDat = 0;
@@ -2831,6 +2849,9 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
         window.daNhanDanhSachMap = true;
     });
 };
+
+
+
 
 // ==========================================
 // 🛡️ BÁC SĨ TỰ CHỮA LÀNH TRỌNG LỰC (AUTO-HEALER V1.0)
