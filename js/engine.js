@@ -2877,18 +2877,29 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
     window.loaderSieuToc.load(mapData.model_url, async function (gltf) {
+
+
+
+        // ======================================================
+        // 🛑 BẢN VÁ AAA: LÁ CHẮN CHỐNG RÁC XUYÊN KHÔNG GIAN
+        // Kiểm tra xem lúc model 3D tải xong, Sếp còn ở Bí Cảnh cũ không?
+        // Nếu Sếp đã truyền tống, mảng THONG_TIN_CAC_MAP đã reset -> Hủy ngay!
+        // ======================================================
+        let vanConHopLe = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.id === mapData.id);
+        if (!vanConHopLe) {
+            console.warn(`🛑 Cổng Xuyên Không: Đã chặn Map rác [${mapData.name || mapData.id}] do Sếp đã dịch chuyển sang nơi khác!`);
+            // Vứt ngay cái mô hình vừa tải vào Lò Đốt Rác VRAM để không gây nặng máy
+            if (typeof window.donRac3D === 'function') window.donRac3D(gltf.scene);
+            return; // Quay xe, từ chối xuất xưởng vào màn hình!
+        }
+        // ======================================================
+
+
+
         let mapMesh = gltf.scene;
         // 🌟 CẬP NHẬT BÁN KÍNH MỚI: 10.000m
         let rHanhTinh = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000.0;
         let tamHanhTinh = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
-
-
-
-
-
-
-
-
 
 
         // Đặt vị trí
