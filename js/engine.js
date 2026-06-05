@@ -196,8 +196,6 @@ window.donRac3D = function (obj) {
     if (typeof scene !== 'undefined') scene.remove(obj);
 };
 
-
-
 // ==========================================
 // ✨ BỘ LỌC HÀO QUANG VŨ KHÍ (VFX LỬA MỊN CHỐNG VÓN CỤC & GIỮ DÁNG KIẾM V4)
 // ==========================================
@@ -468,9 +466,6 @@ if (!window.loopBuiTienKhi) {
     console.log("🛡️ Hệ thống chống ngủ đông & Treo máy ẩn Tab đã kích hoạt!");
 })();
 
-
-
-
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.45);
 hemiLight.position.set(0, 50, 0);
 scene.add(hemiLight);
@@ -590,17 +585,7 @@ setInterval(() => {
         }
     }
 
-
-
-
 }, 1000);
-
-
-
-
-
-
-
 
 // 🌟 TỐI ƯU MOBILE VRAM: KHÔNG SỬ DỤNG COMPOSER VÀ BLOOM TRÊN DI ĐỘNG
 window.composer = null;
@@ -634,8 +619,6 @@ if (!window.isMobile) {
 }
 // Nếu là Mobile, window.composer sẽ = null. 
 // Động cơ ở cuối file sẽ tự động nhận biết và dùng "renderer.render(scene, camera);" trực tiếp, tiết kiệm ~400MB VRAM!
-
-
 let mixer, playerModel, currentAction;
 let currentAnimName = '';
 let animationsMap = {};
@@ -644,18 +627,13 @@ window.targetPosition = new THREE.Vector3();
 window.keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
 const keys = window.keys;
 window.isKeyboardMoving = false;
-
-
 // 🌟 Đã xóa bỏ các biến Cooldown toàn cục gây lỗi tịt ngòi cho các phái đánh xa
-
 document.addEventListener('keydown', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
     if (['w', 'a', 's', 'd', 'space', 'shift'].includes(k)) keys[k] = true;
 
     // 🌟 Lệnh xả Skill (Q, E, R, F) đã được chuyển giao 100% cho bộ não controller.js xử lý!
 });
-
-
 
 document.addEventListener('keyup', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
@@ -688,13 +666,6 @@ window.addEventListener('pointerdown', (event) => {
 
     window.mouseViTri.x = (event.clientX / window.innerWidth) * 2 - 1;
     window.mouseViTri.y = -(event.clientY / window.innerHeight) * 2 + 1;
-
-
-
-
-
-
-
     window.raycasterChuot.setFromCamera(window.mouseViTri, camera);
 
     // 🛑 THUỐC ĐẶC TRỊ LIỆT CHUỘT: KHÔNG quét toàn bộ Scene nữa!
@@ -709,11 +680,6 @@ window.addEventListener('pointerdown', (event) => {
 
     window.mucTieuHienTai = null;
     window.vongMucTieu.visible = false;
-
-
-
-
-
 
     for (let i = 0; i < intersects.length; i++) {
         let obj = intersects[i].object;
@@ -772,11 +738,6 @@ window.addEventListener('pointerdown', (event) => {
         }
     }
 
-
-
-
-
-
 });
 
 // 🌟 BẢN VÁ: Nhận diện chính xác số 0, tránh bị quăng lên 5000m oan uổng
@@ -788,10 +749,6 @@ const TOA_DO_SPAWN = {
 
 camera.far = 30000;
 camera.updateProjectionMatrix();
-
-
-
-
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
@@ -810,8 +767,6 @@ if (isAdmin) {
     controls.maxDistance = 5;   // Chỉ cho phép nhìn quanh quẩn nhân vật
     controls.minDistance = 2;     // Có thể nhìn sát mặt nhân vật
 }
-
-
 
 camera.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 1, TOA_DO_SPAWN.z + 85);
 controls.target.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 2, TOA_DO_SPAWN.z);
@@ -860,12 +815,6 @@ if (typeof MeshBVHLib !== 'undefined') {
 
     console.log("🛠️ Đã tự tay khởi động Nhân CPU ảo chuyên đúc Map (worker_bvh.js)!");
 }
-
-
-
-
-
-
 
 loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
     const mapHanhTinh = gltf.scene;
@@ -930,8 +879,6 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                 }
                 child.userData.isCloud = true;
 
-
-
             } else {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
                 // iOS: TẮT lệnh cấm tàng hình. Chỉ vẽ những ngọn núi/mặt đất đang nằm đúng trước mặt Camera, tiết kiệm 80% GPU!
@@ -985,10 +932,6 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 
     scene.add(mapHanhTinh);
 
-
-
-
-
     window.kiemSoatHanhTinhGoc = function () {
         if (!window.HANH_TINH_GOC) return;
 
@@ -1009,10 +952,6 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
         }
     };
 
-
-
-
-
     window.kiemSoatHanhTinhGoc();
 
     tienHanhTaiNhanVat();
@@ -1021,9 +960,6 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
 // 🌟 TỔNG KHO ASSET TOÀN CẦU (BẢN CHỐNG SẬP iPHONE)
 window.tongKhoAsset3D = {};
 window.hangDoiAsset3D = {}; // 🌟 Hàng đợi Promise chống tải 50 con Boss cùng lúc gây tràn RAM
-
-
-
 
 window.taiHoacNhanBanAsset = function (url, callback) {
     if (!url || url.trim() === "") return;
@@ -1043,9 +979,6 @@ window.taiHoacNhanBanAsset = function (url, callback) {
         });
         return;
     }
-
-
-
 
     // 3. Nếu chưa có ai tải -> Khởi tạo tiến trình tải và khóa Hàng đợi lại
     window.hangDoiAsset3D[url] = new Promise((resolve) => {
@@ -1137,8 +1070,6 @@ window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
 function tienHanhTaiNhanVat() {
     let coThuCuoi = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
     if (coThuCuoi) {
-
-
 
         loader.load(window.MOUNT_URL, function (gltfMount) {
             let thuCuoiGoc = THREE.SkeletonUtils ? THREE.SkeletonUtils.clone(gltfMount.scene) : gltfMount.scene.clone();
@@ -1426,14 +1357,6 @@ function cayMatAdmin(modelGoc) {
 }
 
 let idleTimer = null;
-
-
-
-
-
-
-
-
 
 // ==========================================
 // 👦 HỆ THỐNG KỸ NĂNG: KHUNG MẪU ĐA HOẠT ẢNH (MULTI-ANIMATION TEMPLATE)
@@ -1902,9 +1825,6 @@ let idleTimer = null;
     }
 })();
 
-
-
-
 // ==========================================
 // 🎭 BỘ NÃO ANIMATION TỐI THƯỢNG (V53 - BÙ TRỪ MODEL KHÔNG CHÂN)
 // ==========================================
@@ -2074,9 +1994,6 @@ function playAnim(animName) {
     }
 }
 
-
-
-
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
     window.dangMuaChieu = true;
@@ -2191,11 +2108,6 @@ function animate() {
 
         if (typeof window.capNhatAIQuaiVat === 'function') window.capNhatAIQuaiVat(delta);
 
-
-
-
-
-
         // ===============================================
         // 🌍 LÕI TRỌNG LỰC & VẬT LÝ DI CHUYỂN
         // ===============================================
@@ -2268,8 +2180,6 @@ function animate() {
                 playerModel.up.copy(huongLenTroi);
                 playerModel.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0).applyQuaternion(playerModel.quaternion), huongLenTroi));
 
-
-
                 var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
 
                 // 🌍 Dưới 5m: Chạy bộ tà tà (0.2 - Khớp nhịp chân nhất)
@@ -2282,8 +2192,6 @@ function animate() {
                 else { currentWalk = 0.5; currentSprint = 1.0; tangKhongGian = "🚀 VŨ TRỤ SÂU"; mauChu = "#ff00ff"; }
 
                 if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { currentWalk *= 15; currentSprint *= 15; }
-
-
                 // 🌟 BẢN VÁ AAA: BƠM TỐC ĐỘ THÚ CƯỠI (1.1 = Tăng 10%)
                 let heSoThuCuoi = window.TOC_DO_CHAY_CUA_TOI || 1.0;
                 currentWalk *= heSoThuCuoi;
@@ -2340,7 +2248,6 @@ function animate() {
                         tocDoHienTaiThucTe = currentSprint;
                     }
 
-
                 } else if (window.isMoving && typeof window.targetPosition !== 'undefined') {
                     let vecToTarget = new THREE.Vector3().subVectors(window.targetPosition, playerModel.position);
                     if (vecToTarget.length() > 2.0) {
@@ -2393,8 +2300,6 @@ function animate() {
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
                 window.radarTrongLuc.firstHitOnly = false;
 
-
-
                 var hanhTinhGanNhat = null;
                 var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Lõi cố định của Trung Châu
 
@@ -2412,13 +2317,7 @@ function animate() {
                     });
                 }
 
-
-
-
-
-
                 huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh);
-
 
                 if (huongLenTroiMoi.lengthSq() < 0.001) {
                     huongLenTroiMoi.set(0, 1, 0);
@@ -2685,9 +2584,6 @@ function animate() {
             }
         }
 
-
-
-
         // 🔄 CẬP NHẬT CHIÊU THỨC & VẬT LÝ HỆ PHÁI
         if (window.HePhaiHienTai) { if (typeof window.HePhaiHienTai.capNhat === 'function') window.HePhaiHienTai.capNhat(); if (typeof window.HePhaiHienTai.vongLapVatLy === 'function') window.HePhaiHienTai.vongLapVatLy(); }
         if (typeof updateCombatTuTien === 'function') updateCombatTuTien(); if (typeof window.updateCombatLuyenThe === 'function') window.updateCombatLuyenThe(); if (typeof updateCombatCungThu === 'function') updateCombatCungThu(); if (typeof updateCombatPhapSu === 'function') updateCombatPhapSu(); if (typeof updateCombatLazer === 'function') updateCombatLazer(); if (typeof updateCombatBanSung === 'function') updateCombatBanSung();
@@ -2698,9 +2594,6 @@ function animate() {
                 if (!window.oldPosLK) window.oldPosLK = new THREE.Vector3();
 
                 let isPosChanged = playerModel.position.distanceTo(window.oldPosLK) > 0.1;
-
-
-
                 // =====================================
                 // 🌟 BẢN VÁ ĐẠI TÔNG SƯ: GỬI ĐÍCH DANH TÊN GỐC CỦA HOẠT ẢNH (CHỐNG AI ĐOÁN MÒ)
                 // =====================================
@@ -2760,9 +2653,6 @@ function animate() {
 
 animate();
 
-
-
-
 setInterval(() => {
     if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
         let fd = new FormData();
@@ -2776,15 +2666,11 @@ setInterval(() => {
     }
 }, 5000);
 
-
-
 // ==========================================
 // 🌍 ĐỘNG CƠ STREAMING BẢN ĐỒ AAA (BÁN KÍNH 140.000M)
 // ==========================================
 window.MAP_MIXERS = [];
 window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
-
-
 
 // 1. CHỈ LẤY TỌA ĐỘ TỪ SQL VỀ (KHÔNG TẢI 3D LÚC NÀY)
 window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
@@ -2851,9 +2737,6 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
     });
 };
 
-
-
-
 // ==========================================
 // 🛡️ BÁC SĨ TỰ CHỮA LÀNH TRỌNG LỰC (AUTO-HEALER V1.0)
 // Ngay cả khi có thằng code nào khác (như lỗi Cổng Dịch Chuyển) cố tình bóp méo Map,
@@ -2869,8 +2752,6 @@ setInterval(() => {
     }
 }, 1000);
 
-
-
 // 2. HÀM TẢI MỘT CHUNK VÀO RAM (BẢN VÁ AAA: TẢI HIỀN HOÀ CHỐNG GIẬT LAG)
 window.xuLyLoadMapChunk = function (mapData) {
     if (mapData.isLoaded || mapData.isLoading || typeof window.loaderSieuToc === 'undefined') return;
@@ -2883,12 +2764,7 @@ window.xuLyLoadMapChunk = function (mapData) {
 
     mapData.isLoading = true;
 
-
-
-
     window.loaderSieuToc.load(mapData.model_url, async function (gltf) {
-
-
 
         // ======================================================
         // 🛑 BẢN VÁ AAA: LÁ CHẮN CHỐNG RÁC XUYÊN KHÔNG GIAN
