@@ -71,9 +71,6 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
             // 🌟 4. HẾT 10 GIÂY MỚI ĐƯỢC ĐẦU THAI (RESET)
             console.log("🔄 10 giây đã hết! Đang dịch chuyển về điểm hồi sinh...");
 
-
-
-
             if (typeof playerModel !== 'undefined' && playerModel) {
                 // Giờ mới bay về thành
                 playerModel.position.set(window.SPAWN_X || 0, window.SPAWN_Y || 0, window.SPAWN_Z || 0);
@@ -81,10 +78,6 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
                 // ==========================================
                 // 🌟 BẢN VÁ: NẮN LẠI XƯƠNG SAU KHI HỒI SINH Ở TÂN THỦ THÔN
                 // ==========================================
-
-
-
-
                 let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
                 let huongLenTroiMoi = playerModel.position.clone().sub(tam);
                 if (huongLenTroiMoi.lengthSq() < 0.001) huongLenTroiMoi.set(0, 1, 0); else huongLenTroiMoi.normalize();
@@ -117,13 +110,6 @@ window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
     }, 1000);
 };
 
-
-
-
-
-
-
-
 // ==========================================
 // 🩸 BỘ NÃO CHỊU SÁT THƯƠNG TỪ BOSS DÀNH CHO NGƯỜI CHƠI (PVE)
 // ==========================================
@@ -147,10 +133,6 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongSatThuong, banKinh) {
             window.taoSoSatThuong(tamNguoiChoi.clone().add(new THREE.Vector3(0, 1, 0)), st);
         }
 
-
-
-
-
         // Cập nhật thanh máu UI
         const uiThanhMau = document.getElementById('thanhMauHienTai');
         const uiSoMau = document.getElementById('soMauHienTai');
@@ -163,13 +145,6 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongSatThuong, banKinh) {
         }
     }
 };
-
-
-
-
-
-
-
 
 window.donRac3D = function (obj) {
     if (!obj) return;
