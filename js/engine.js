@@ -2393,16 +2393,25 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
 
 
                 // ✅ BẢN VÁ LÕI TRỌNG LỰC: Lấy Map có SCALE TO NHẤT làm tâm hành tinh!
-               // Chống lỗi nhận nhầm Map con (nhà cửa, cây cối) làm lõi Trái đất vì đứng gần nó.
-               if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
-                  let maxScale = -1;
-                   window.THONG_TIN_CAC_MAP.forEach(mapData => {
-                    let currentScale = parseFloat(mapData.scale || 1);
-                    // Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
-                     if (currentScale > maxScale) {
-                         maxScale = currentScale;
-                          tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-                           hanhTinhGanNhat = mapData;
+                if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
+                    let maxScale = -1;
+                    window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                        let currentScale = parseFloat(mapData.scale || 1);
+                        // Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
+                        if (currentScale > maxScale) {
+                            maxScale = currentScale;
+
+                            // 1. Lấy tọa độ gốc từ SQL (Thường bị lệch ở dưới đáy model)
+                            tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+
+                            // 2. 🌟 BÍ THUẬT X-QUANG: Tìm Lõi Thực Sự Của Hành Tinh
+                            // Quét hộp Box3 để ép tâm trọng lực vào chính xác giữa lõi quả cầu!
+                            if (mapData.mesh3D) {
+                                let box = new THREE.Box3().setFromObject(mapData.mesh3D);
+                                box.getCenter(tamHanhTinh);
+                            }
+
+                            hanhTinhGanNhat = mapData;
                         }
                     });
                 }
