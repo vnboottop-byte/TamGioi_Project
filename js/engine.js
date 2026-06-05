@@ -2388,21 +2388,30 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                 window.radarTrongLuc.firstHitOnly = false;
 
                 var hanhTinhGanNhat = null;
-                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Lõi Trái Đất mặc định
+                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // 🌍 Lõi Trái Đất Cố Định của Trung Châu
 
-
-
-                // ✅ BẢN VÁ LÕI TRỌNG LỰC: Lấy Map có SCALE TO NHẤT làm tâm hành tinh!
+                // ✅ BẢN VÁ LÕI TRỌNG LỰC TỐI THƯỢNG: TÁCH BIỆT TRUNG CHÂU VÀ BÍ CẢNH
+                // CHỈ quét tìm tâm khi ở Bí Cảnh (Khác Trung Châu)
                 if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
                     let maxScale = -1;
                     window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                        let url = (mapData.model_url || "").toLowerCase();
+
+                        // 🛑 BỘ LỌC CHỐNG NHIỄU: Bỏ qua Mây, Bầu trời, Ngân hà (Dù nó có To đến mấy cũng cấm làm Hành Tinh)
+                        if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
+
                         let currentScale = parseFloat(mapData.scale || 1);
-                        // Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
+
+                        // 👑 Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
                         if (currentScale > maxScale) {
                             maxScale = currentScale;
-
-                            // Lấy chính xác tọa độ gốc của file 3D làm Tâm Trái Đất
                             tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+
+                            // 🌟 BÍ THUẬT X-QUANG: Tìm Lõi Thực Sự Của Hành Tinh (Fix lệch gốc Blender)
+                            if (mapData.mesh3D) {
+                                let box = new THREE.Box3().setFromObject(mapData.mesh3D);
+                                box.getCenter(tamHanhTinh);
+                            }
                             hanhTinhGanNhat = mapData;
                         }
                     });
