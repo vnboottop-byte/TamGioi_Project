@@ -2882,14 +2882,23 @@ window.xuLyLoadMapChunk = function (mapData) {
         // Đặt vị trí
         mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
 
-        // 🌟 TÌM XEM MAP NÀY CÓ PHẢI LÀ HÀNH TINH CHÍNH KHÔNG
+        // 🌟 TÌM XEM MAP NÀY CÓ PHẢI LÀ HÀNH TINH CHÍNH CỦA BÍ CẢNH KHÔNG
         let laMapChinh = false;
-        let maxScaleToanMap = -1;
-        window.THONG_TIN_CAC_MAP.forEach(m => { if (parseFloat(m.scale || 1) > maxScaleToanMap) maxScaleToanMap = parseFloat(m.scale || 1); });
-        if (parseFloat(mapData.scale) === maxScaleToanMap) laMapChinh = true;
+        if (window.ZONE_ID !== 'TRUNG_CHAU') {
+            let maxScaleToanMap = -1;
+            window.THONG_TIN_CAC_MAP.forEach(m => {
+                let url = (m.model_url || "").toLowerCase();
+                if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
+                if (parseFloat(m.scale || 1) > maxScaleToanMap) maxScaleToanMap = parseFloat(m.scale || 1);
+            });
+            if (parseFloat(mapData.scale) === maxScaleToanMap) laMapChinh = true;
+        } else {
+            // Ở Trung Châu thì map_san_dinh.glb (bên ngoài) mới là Map Chính, mọi map rải thêm đều là Map Con!
+            laMapChinh = false;
+        }
 
-        // 🌟 BẢN VÁ LẬT NGƯỢC MAP: Chỉ những Map Con (Nhà cửa, cây cối) mới bị hút và bẻ cong theo Hành Tinh!
-        // Hành tinh chính thì phải giữ nguyên trục thẳng đứng của vũ trụ!
+        // 🌟 BẢN VÁ LẬT NGƯỢC MAP: Chỉ những Map Con mới bị hút chĩa thẳng theo lực hấp dẫn!
+        // Hành Tinh Chính thì đứng trang nghiêm, không bị bẻ cong đi đâu hết!
         if (window.KIEU_TRONG_LUC !== 'PHANG' && !laMapChinh) {
             let huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
             if (huongLenGoc.lengthSq() < 0.001) huongLenGoc.set(0, 1, 0); else huongLenGoc.normalize();
