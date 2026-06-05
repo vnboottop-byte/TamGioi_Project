@@ -2876,26 +2876,37 @@ window.xuLyLoadMapChunk = function (mapData) {
 
 
 
+
+
         // Đặt vị trí
-        mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));    
-        // 🌟 BẢN VÁ LẬT NGƯỢC MAP: Tách biệt hoàn toàn Tròn và Phẳng
-        let huongLenGoc = new THREE.Vector3(0, 1, 0); // Mặc định Bí Cảnh Phẳng luôn hướng lên trời +Y    
-        if (window.KIEU_TRONG_LUC !== 'PHANG') {
-            huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
+        mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+
+        // 🌟 TÌM XEM MAP NÀY CÓ PHẢI LÀ HÀNH TINH CHÍNH KHÔNG
+        let laMapChinh = false;
+        let maxScaleToanMap = -1;
+        window.THONG_TIN_CAC_MAP.forEach(m => { if (parseFloat(m.scale || 1) > maxScaleToanMap) maxScaleToanMap = parseFloat(m.scale || 1); });
+        if (parseFloat(mapData.scale) === maxScaleToanMap) laMapChinh = true;
+
+        // 🌟 BẢN VÁ LẬT NGƯỢC MAP: Chỉ những Map Con (Nhà cửa, cây cối) mới bị hút và bẻ cong theo Hành Tinh!
+        // Hành tinh chính thì phải giữ nguyên trục thẳng đứng của vũ trụ!
+        if (window.KIEU_TRONG_LUC !== 'PHANG' && !laMapChinh) {
+            let huongLenGoc = mapMesh.position.clone().sub(tamHanhTinh);
             if (huongLenGoc.lengthSq() < 0.001) huongLenGoc.set(0, 1, 0); else huongLenGoc.normalize();
-        }     
-        mapMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenGoc);
-
-
-
-
-
-
-
+            mapMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenGoc);
+        }
 
         if (parseFloat(mapData.rot_x) !== 0) mapMesh.rotateX(parseFloat(mapData.rot_x));
         if (parseFloat(mapData.rot_y) !== 0) mapMesh.rotateY(parseFloat(mapData.rot_y));
         if (parseFloat(mapData.rot_z) !== 0) mapMesh.rotateZ(parseFloat(mapData.rot_z));
+
+
+
+
+
+
+
+
+        
 
         mapMesh.scale.set(parseFloat(mapData.scale), parseFloat(mapData.scale), parseFloat(mapData.scale));
         mapMesh.updateMatrixWorld(true);
