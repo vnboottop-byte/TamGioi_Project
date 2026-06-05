@@ -1,6 +1,6 @@
 import { dedup, prune } from '@gltf-transform/functions';
 const DOI_TEN = {
-    1: "ZZZZZZ",
+    1: "ZZZZZZ", 
     2: "ZZZZZZ",
     3: "ZZZZZZ",
     4: "ZZZZZZ",
