@@ -2390,21 +2390,27 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                 var hanhTinhGanNhat = null;
                 var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Lõi Trái Đất mặc định
 
-                // 🛑 LỖI CHÍ MẠNG ĐÃ FIX: TRUNG CHÂU là 1 hành tinh khổng lồ duy nhất có lõi ở (0,0,0).
-                // Các map Sếp rải trên TRUNG CHÂU chỉ là nhà cửa, cây cối, KHÔNG PHẢI LÀ LÕI HÀNH TINH!
-                // Cấm tuyệt đối việc lấy tọa độ nhà cửa làm trọng tâm lực hút nếu đang ở TRUNG_CHAU!
-                if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
-                    let khoangCachMin = Infinity;
-                    window.THONG_TIN_CAC_MAP.forEach(mapData => {
-                        let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-                        let d = playerModel.position.distanceTo(mPos);
-                        if (d < khoangCachMin) {
-                            khoangCachMin = d;
-                            tamHanhTinh.copy(mPos);
-                            hanhTinhGanNhat = mapData;
+
+
+                // ✅ BẢN VÁ LÕI TRỌNG LỰC: Lấy Map có SCALE TO NHẤT làm tâm hành tinh!
+               // Chống lỗi nhận nhầm Map con (nhà cửa, cây cối) làm lõi Trái đất vì đứng gần nó.
+               if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
+                  let maxScale = -1;
+                   window.THONG_TIN_CAC_MAP.forEach(mapData => {
+                    let currentScale = parseFloat(mapData.scale || 1);
+                    // Kẻ nào To nhất (Scale lớn nhất) sẽ thống trị lực hấp dẫn!
+                     if (currentScale > maxScale) {
+                         maxScale = currentScale;
+                          tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+                           hanhTinhGanNhat = mapData;
                         }
                     });
                 }
+
+
+
+
+
 
                 huongLenTroiMoi.subVectors(playerModel.position, tamHanhTinh);
 
