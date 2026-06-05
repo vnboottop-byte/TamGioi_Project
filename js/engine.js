@@ -2387,24 +2387,19 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                 if (!window.radarTrongLuc) { window.radarTrongLuc = new THREE.Raycaster(); }
                 window.radarTrongLuc.firstHitOnly = false;
 
+
+
                 var hanhTinhGanNhat = null;
-                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // 🌍 Lõi Trái Đất Cố Định của Trung Châu
+                var tamHanhTinh = new THREE.Vector3(0, 0, 0); // Lõi cố định của Trung Châu
 
-                // ✅ BẢN VÁ LÕI TRỌNG LỰC TỐI THƯỢNG: TÁCH BIỆT TRUNG CHÂU VÀ BÍ CẢNH
-                // CHỈ quét tìm tâm khi ở Bí Cảnh (Khác Trung Châu)
+                // 👑 TƯ DUY CỦA SẾP: CHỈ ĐỊNH TÂM HÀNH TINH BẰNG ID NHỎ NHẤT
                 if (window.ZONE_ID !== 'TRUNG_CHAU' && window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0) {
-                    let maxScale = -1;
+                    let minId = Infinity;
                     window.THONG_TIN_CAC_MAP.forEach(mapData => {
-                        let url = (mapData.model_url || "").toLowerCase();
-
-                        // 🛑 BỘ LỌC CHỐNG NHIỄU: Bỏ qua Mây, Bầu trời, Ngân hà (Dù nó có To đến mấy cũng cấm làm Hành Tinh)
-                        if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
-
-                        let currentScale = parseFloat(mapData.scale || 1);
-
-                        if (currentScale > maxScale) {
-                            maxScale = currentScale;
-                            // 🌟 Chỉ lấy đúng tọa độ Gốc từ SQL làm Tâm, cấm đoán mò!
+                        let currentId = parseInt(mapData.id);
+                        if (currentId < minId) {
+                            minId = currentId;
+                            // Lấy chính xác tọa độ gốc của file tạo ra đầu tiên làm Tâm Trọng Lực
                             tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
                             hanhTinhGanNhat = mapData;
                         }
@@ -2805,24 +2800,20 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
 
             // 🌟 LÁ CHẮN 3: CƯỠNG CHẾ VẬT LÝ TUYỆT ĐỐI (CẤM CÃI API)
             if (zoneId === 'TRUNG_CHAU') {
-                window.KIEU_TRONG_LUC = 'CAU'; // Bố láo bố lếu, Trung Châu là phải Cầu!
+                window.KIEU_TRONG_LUC = 'CAU'; // TRUNG CHÂU ĐƯỢC BẢO VỆ TUYỆT ĐỐI!
             } else if (data.data.length > 0) {
 
                 // ======================================================
-                // 🛑 BẢN VÁ TRỌNG LỰC: Đi tìm Hành tinh TO NHẤT để quyết định luật chơi!
+                // 👑 TƯ DUY CỦA SẾP: TÌM THẰNG CÓ ID NHỎ NHẤT LÀM MAP CHÍNH (CHỈ DÙNG CHO BÍ CẢNH)
                 // ======================================================
-                let maxScale = -1;
-                let kieuTrongLucChuan = 'PHANG'; // Mặc định nếu không thấy gì
+                let minId = Infinity;
+                let kieuTrongLucChuan = 'PHANG';
 
                 data.data.forEach(m => {
-                    let url = (m.model_url || "").toLowerCase();
-                    // Bỏ qua mây trời
-                    if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
-
-                    let currentScale = parseFloat(m.scale || 1);
-                    if (currentScale > maxScale) {
-                        maxScale = currentScale;
-                        // Bắt trúng Map Chính -> Lấy Trọng Lực của nó làm Trọng Lực chung cho cả Bí Cảnh!
+                    let currentId = parseInt(m.id);
+                    // Kẻ nào sinh ra đầu tiên (ID nhỏ nhất) sẽ quyết định luật chơi của Bí Cảnh đó!
+                    if (currentId < minId) {
+                        minId = currentId;
                         if (m.gravity_type && String(m.gravity_type).trim() !== '') {
                             kieuTrongLucChuan = String(m.gravity_type).trim().toUpperCase();
                         }
@@ -2903,18 +2894,18 @@ window.xuLyLoadMapChunk = function (mapData) {
         // Đặt vị trí
         mapMesh.position.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
 
-        // 🌟 TÌM XEM MAP NÀY CÓ PHẢI LÀ HÀNH TINH CHÍNH CỦA BÍ CẢNH KHÔNG
+        // 👑 TƯ DUY CỦA SẾP: PHÂN BIỆT RẠCH RÒI MAP CHÍNH VÀ MAP CON BẰNG ID
         let laMapChinh = false;
         if (window.ZONE_ID !== 'TRUNG_CHAU') {
-            let maxScaleToanMap = -1;
+            let minIdToanMap = Infinity;
             window.THONG_TIN_CAC_MAP.forEach(m => {
-                let url = (m.model_url || "").toLowerCase();
-                if (url.includes('cloud') || url.includes('sky') || url.includes('sao') || url.includes('nganha') || url.includes('may')) return;
-                if (parseFloat(m.scale || 1) > maxScaleToanMap) maxScaleToanMap = parseFloat(m.scale || 1);
+                let currentId = parseInt(m.id);
+                if (currentId < minIdToanMap) minIdToanMap = currentId;
             });
-            if (parseFloat(mapData.scale) === maxScaleToanMap) laMapChinh = true;
+            // Nếu Map đang load có ID bằng ID nhỏ nhất toàn khu vực -> Nó là Vua!
+            if (parseInt(mapData.id) === minIdToanMap) laMapChinh = true;
         } else {
-            // Ở Trung Châu thì map_san_dinh.glb (bên ngoài) mới là Map Chính, mọi map rải thêm đều là Map Con!
+            // Ở Trung Châu thì mọi map rải thêm đều là Map Con (Bị bẻ cong theo Trái Đất gốc)!
             laMapChinh = false;
         }
 
