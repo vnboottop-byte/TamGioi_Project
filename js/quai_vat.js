@@ -525,8 +525,9 @@ window.capNhatAIQuaiVat = function (delta) {
             if (quai.heSoToLon < 0.5) quai.heSoToLon = 0.5;
         }
 
-        // Cập nhật Vector Trọng Lực hướng tâm
-        if (window.TAM_HANH_TINH_HIEN_TAI) {
+        // 🌟 BẢN VÁ AAA: BỌC THÉP TRỤC TRỌNG LỰC QUÁI VẬT
+        // Chỉ bẻ cong nếu đang ở Map Cầu. Map Phẳng thì 100% đứng thẳng!
+        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
             quai.upVector = quai.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
         } else {
             quai.upVector = new THREE.Vector3(0, 1, 0);
@@ -1069,7 +1070,9 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
         let distToPlayer = bot.mesh.position.distanceTo(playerModel.position);
         let ptHP = bot.hp / (bot.maxHp || 1);
-        let botUp = window.TAM_HANH_TINH_HIEN_TAI ? bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize() : new THREE.Vector3(0, 1, 0);
+        // 🌟 BẢN VÁ AAA: BỌC THÉP TRỤC PHANTOM
+        let botUp = (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) ? bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize() : new THREE.Vector3(0, 1, 0);
+
 
         if (bot.hp <= 0 && !bot.daBaoTu) {
             bot.daBaoTu = true;
@@ -1088,7 +1091,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             // Tốc độ lề mề thong dong (1.5)
             bot.mesh.position.add(huongBayNgang.clone().multiplyScalar(1.5 * (delta * 60)));
 
-            if (window.TAM_HANH_TINH_HIEN_TAI) {
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
                 // Giữ nguyên độ cao ổn định trên trời
@@ -1121,7 +1124,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             if (!bot.huongTauThoat) bot.huongTauThoat = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
             bot.mesh.position.add(bot.huongTauThoat.clone().multiplyScalar(1.0 * (delta * 60)));
 
-            if (window.TAM_HANH_TINH_HIEN_TAI) {
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
                 bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
@@ -1141,7 +1144,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             let huongToi = new THREE.Vector3().subVectors(playerModel.position, bot.mesh.position).projectOnPlane(botUp).normalize();
             bot.mesh.position.add(huongToi.multiplyScalar(1.5 * (delta * 60)));
 
-            if (window.TAM_HANH_TINH_HIEN_TAI) {
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
                 bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
@@ -1153,7 +1156,7 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
             if (typeof bot.playAnim === 'function') bot.playAnim('IDLE');
             let huongNhinSep = playerModel.position.clone().sub(bot.mesh.position).projectOnPlane(botUp).normalize();
 
-            if (window.TAM_HANH_TINH_HIEN_TAI) {
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 let newBotUp = bot.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                 let rSep = playerModel.position.distanceTo(window.TAM_HANH_TINH_HIEN_TAI);
                 bot.mesh.position.copy(window.TAM_HANH_TINH_HIEN_TAI.clone().add(newBotUp.multiplyScalar(rSep + bot.altOffset)));
