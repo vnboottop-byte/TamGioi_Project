@@ -2401,16 +2401,8 @@ if (window.ROLE === 'admin' && tangKhongGian === "🚀 VŨ TRỤ SÂU") { curren
                         if (currentScale > maxScale) {
                             maxScale = currentScale;
 
-                            // 1. Lấy tọa độ gốc từ SQL (Thường bị lệch ở dưới đáy model)
+                            // Lấy chính xác tọa độ gốc của file 3D làm Tâm Trái Đất
                             tamHanhTinh.set(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-
-                            // 2. 🌟 BÍ THUẬT X-QUANG: Tìm Lõi Thực Sự Của Hành Tinh
-                            // Quét hộp Box3 để ép tâm trọng lực vào chính xác giữa lõi quả cầu!
-                            if (mapData.mesh3D) {
-                                let box = new THREE.Box3().setFromObject(mapData.mesh3D);
-                                box.getCenter(tamHanhTinh);
-                            }
-
                             hanhTinhGanNhat = mapData;
                         }
                     });
