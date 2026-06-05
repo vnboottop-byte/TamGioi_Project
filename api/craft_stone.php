@@ -55,6 +55,16 @@ try {
     
     $cost = floor($diemChenhLech * 5);
     if ($cost <= 0) $cost = 100; // Tối thiểu 100 Vàng
+
+    // ========================================================
+    // 🛑 BẢN VÁ: CHỐT CHẶN KIỂM TRA TIỀN TRƯỚC KHI TRỪ!
+    // ========================================================
+    if ($current_gold < $cost) {
+        throw new Exception("Sếp không đủ Linh Thạch! Cần " . number_format($cost) . " Vàng để kích hoạt trận pháp.");
+    }
+    // ========================================================
+
+    // Sau khi qua ải kiểm tra mới được phép trừ tiền
     
     $new_gold = $current_gold - $cost;
     $conn->query("UPDATE game_characters SET game_gold = $new_gold WHERE username = '$user'");
