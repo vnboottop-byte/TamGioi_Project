@@ -25,11 +25,15 @@ try {
     // Lấy ra mã phái (VD: TU_TIEN, CUNG_TEN...). Nếu lỗi thì để rỗng.
     $phai_cua_toi = $res_phai ? $res_phai['faction_code'] : '';
 
-    // 🌟 2. QUÉT KHO HÀNG (Mở khóa toàn bộ Ngoại trang 'model' cho phép Đoạt Xá)
-    // Các đồ khác (weapon, mount) thì vẫn chỉ hiện ALL hoặc ĐÚNG PHÁI
-    $sql = "SELECT * FROM shop_items WHERE item_type = 'model' OR required_class = 'ALL' OR required_class = ? ORDER BY item_type DESC, price ASC";
+
+
+
+    // 🌟 2. QUÉT KHO HÀNG (MỞ KHÓA TẤT CẢ VŨ KHÍ, NGOẠI TRANG, THÚ CƯỠI CHO MỌI HỆ PHÁI)
+    $sql = "SELECT * FROM shop_items ORDER BY item_type DESC, price ASC";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $phai_cua_toi);
+
+
+
 
     $stmt->execute();
     $res = $stmt->get_result();
