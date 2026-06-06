@@ -32,37 +32,35 @@ try {
         $conn->query("UPDATE user_inventory SET is_equipped = 1 WHERE id = $inv_id");
         if ($col) $conn->query("UPDATE game_characters SET $col = '$url' WHERE username = '$username'");
 
-        // 🌟 KIẾM HIỆP ĐOẠT XÁ BẰNG SKIN 'ALL'
-        if ($type === 'model' && $item['required_class'] === 'ALL') {
-            // Tách tên file. Ví dụ: 'uploads/anims/1779413960_jimbei.glb' -> Lấy chữ 'jimbei'
-            $tenFileGoc = basename($url); 
-            $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
-            
-            // Xóa đoạn số đằng trước (nếu có)
-            $mangTen = explode('_', $tenKhongDuoi);
-            $tenNhanVat = end($mangTen); // Lấy chữ cuối cùng. VD: 'jimbei'
-
-            // Đường dẫn JS muốn ép vào
-            // Đường dẫn JS muốn ép vào
-            $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
-            
-            // Ép thẳng vào Cột script_file của người chơi bằng 1 cột mới (Ta sẽ vá vào db)
-            $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
-        } 
-        // 🌟 Nếu lột Skin 'ALL' ra mặc Skin phái gốc, thì xóa cái custom_script đi
-        else if ($type === 'model' && $item['required_class'] !== 'ALL') {
-            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
-        }
-    } else {
-        $conn->query("UPDATE user_inventory SET is_equipped = 0 WHERE id = $inv_id");
-        if ($col) $conn->query("UPDATE game_characters SET $col = '' WHERE username = '$username'");
-
-        // 🌟 BẢN VÁ: Nếu lột Ngoại trang (Skin) ra thì phải xóa sạch võ công Đoạt xá, trở về bản ngã!
+        // 🌟 KIẾM HIỆP ĐOẠT XÁ KÉP KHI MẶC ĐỒ
         if ($type === 'model') {
-            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
+            if ($item['required_class'] === 'ALL') {
+                $tenFileGoc = basename($url); 
+                $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
+                $mangTen = explode('_', $tenKhongDuoi);
+                $tenNhanVat = end($mangTen);
+                $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
+                $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+            } else {
+                // Đoạt xá chéo hệ phái
+                $map_js = [
+                    'TU_TIEN' => 'js/phai_tutien.js',
+                    'LUYEN_THE' => 'js/phai_luyenthe.js',
+                    'CUNG_THU' => 'js/phai_cungthu.js',
+                    'PHAP_SU' => 'js/phai_phapsu.js',
+                    'LAZER' => 'js/phai_lazer.js',
+                    'BAN_SUNG' => 'js/phai_bansung.js',
+                    'XA_THU' => 'js/phai_bansung.js'
+                ];
+                $js_doc_quyen = isset($map_js[$item['required_class']]) ? $map_js[$item['required_class']] : null;
+                if ($js_doc_quyen) {
+                    $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+                }
+            }
         }
-    }
-    
+     
+
+
     // ==========================================
     // 🌟 BẢN VÁ: TÍNH LẠI MÁU VÀ DAME NGAY KHI MẶC/THÁO ĐỒ
     // ==========================================
