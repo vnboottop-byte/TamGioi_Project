@@ -43,14 +43,14 @@ try {
                 $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
             } else {
                 // Đoạt xá chéo hệ phái
+                // Đoạt xá Chéo Phái: Load JS chuẩn theo mã Hệ Phái từ DB
                 $map_js = [
                     'TU_TIEN' => 'js/phai_tutien.js',
                     'LUYEN_THE' => 'js/phai_luyenthe.js',
-                    'CUNG_THU' => 'js/phai_cungthu.js',
+                    'CUNG_TEN' => 'js/phai_cungthu.js',
                     'PHAP_SU' => 'js/phai_phapsu.js',
-                    'LAZER' => 'js/phai_lazer.js',
-                    'BAN_SUNG' => 'js/phai_bansung.js',
-                    'XA_THU' => 'js/phai_bansung.js'
+                    'SIEUANHHUNG' => 'js/phai_lazer.js',
+                    'SUNG_DAN' => 'js/phai_bansung.js'
                 ];
                 $js_doc_quyen = isset($map_js[$item['required_class']]) ? $map_js[$item['required_class']] : null;
                 if ($js_doc_quyen) {
