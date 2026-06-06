@@ -58,6 +58,15 @@ try {
                 }
             }
         }
+        } else {
+        $conn->query("UPDATE user_inventory SET is_equipped = 0 WHERE id = $inv_id");
+        if ($col) $conn->query("UPDATE game_characters SET $col = '' WHERE username = '$username'");
+
+        // BẢN VÁ: Nếu lột Ngoại trang (Skin) ra thì phải xóa sạch võ công Đoạt xá, trở về bản ngã!
+        if ($type === 'model') {
+            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
+        }
+    }
      
 
 
