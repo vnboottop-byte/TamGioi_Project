@@ -1176,19 +1176,27 @@ function tienHanhTaiNhanVat() {
 };
 
 function loadVuKhiChoNhanVat(nhanVatDich) {
-     // 🛑 LÁ CHẮN THÉP: Kiểm tra toàn diện để chặn phái dùng vũ khí đặc thù hoặc Hộ Thể (Cả phái gốc lẫn đoạt xá)
+
+
+
+
+    // 🛑 LÁ CHẮN THÉP: Kiểm tra toàn diện để chặn phái dùng vũ khí đặc thù, Hộ Thể, hoặc Tay Không
     let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
     let codePhaiGoc = (window.FACTION_CODE || "").toLowerCase();
     let tenPhaiChay = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai || "").toLowerCase();
 
     if (
-        phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu') ||
-        codePhaiGoc.includes('tu_tien') || codePhaiGoc.includes('cung_ten') || codePhaiGoc.includes('phap_su') || codePhaiGoc.includes('sung_dan') ||
-        tenPhaiChay.includes('tu tiên') || tenPhaiChay.includes('cung thủ') || tenPhaiChay.includes('pháp sư')
+        phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu') || phaiHienTai.includes('luyenthe') ||
+        codePhaiGoc.includes('tu_tien') || codePhaiGoc.includes('cung_ten') || codePhaiGoc.includes('phap_su') || codePhaiGoc.includes('sung_dan') || codePhaiGoc.includes('luyen_the') ||
+        tenPhaiChay.includes('tu tiên') || tenPhaiChay.includes('cung thủ') || tenPhaiChay.includes('pháp sư') || tenPhaiChay.includes('luyện thể')
     ) {
-        console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay phải (Hệ phái dùng vũ khí đặc thù hoặc Hộ Thể)!");
+        console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay phải (Hệ phái dùng vũ khí đặc thù/Hộ thể/Tay Không)!");
         return;
     }
+
+
+
+
     // 🌟 QUY TẮC D: Chặn gắn vũ khí tay cầm nếu đang mặc Skin ALL (Anime)
     if (window.IS_SKIN_ANIME) {
         console.log("🛑 Engine: Đã chặn vũ khí (Đang mặc Skin ALL/Anime)!");
