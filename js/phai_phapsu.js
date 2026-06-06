@@ -265,9 +265,9 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
 
 
 
-        // 🌟 QUY TẮC A, B & D PHÁP SƯ: Ưu tiên bốc đạn từ cây Trượng phép đã được cảm biến lọc kỹ rác!
+        // 🌟 QUY TẮC A, B & D PHÁP SƯ: Vũ khí ném đi CHUẨN XÁC là Vũ Khí 1 (Vòng Phép)
         let vuKhiThucTe = weaponUrl;
-        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_PHAPSU || window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
+        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
         if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) vuKhiThucTe = ""; // Quăng khí công tàng hình nếu là Anime
 
 
@@ -401,7 +401,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
         if (typeof window.taiHoacNhanBanAsset !== 'function') return;
 
         // =======================================================
-        // 🌟 CẢM BIẾN VẬT LÝ PHÁP SƯ: THEO DÕI VŨ KHÍ 2 (TRƯỢNG PHÉP)
+        // 🌟 CẢM BIẾN VẬT LÝ PHÁP SƯ: THEO DÕI VŨ KHÍ 2 (TRƯỢNG PHÉP LÀM HỘ THỂ)
         // =======================================================
         let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
         if (phaiHienTai.includes('phapsu')) {
@@ -409,12 +409,10 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 window.oldWeapon2URL_PS = window.WEAPON2_URL;
                 
                 let linkTruong = window.WEAPON2_URL;
-                // Quy tắc A & B: Nếu rỗng thì nạp cây Trượng mặc định của Pháp Sư
+                // Quy tắc A & B: Nếu rỗng thì tự động nạp Trượng mặc định làm Hộ thể
                 if (!linkTruong || linkTruong.trim() === '') linkTruong = 'uploads/anims/truong_phep.glb';
                 // Quy tắc D: Nếu là Skin Anime (ALL) thì tàng hình tuyệt đối
                 if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) linkTruong = ""; 
-                
-                window.VUKHI_HIEN_TAI_CUA_PHAPSU = linkTruong;
 
                 // 🛑 LÒ ĐỐT RÁC: Tiêu hủy cây trượng hộ thể cũ
                 if (window.truongHoThe) {
@@ -424,7 +422,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 }
                 isTruongPhepSetup = false;
 
-                // 🪄 Nạp cây trượng mới vào vòng xoay hộ thể
+                // Tải cây trượng mới vào vòng xoay hộ thể
                 if (linkTruong !== "") {
                     window.taiHoacNhanBanAsset(linkTruong, (truongGoc) => {
                         if (window.truongHoThe) {
@@ -695,7 +693,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                         }
                     }
                 }, 12000);
-                // 🌟 KÍCH HOẠT CẢM BIẾN PHÁP SƯ: Ép vòng lặp vật lý quét trang bị thực tế từ SQL ra
+                // 🌟 KÍCH HOẠT CẢM BIẾN PHÁP SƯ: Ép vòng lặp vật lý quét trang bị Hộ Thể (Vũ Khí 2) từ SQL ra
                 window.oldWeapon2URL_PS = "KICH_HOAT_CAM_BIEN_LOAD_MOI";
             },
 
