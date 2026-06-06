@@ -588,8 +588,8 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
     }).then(res => res.json()).then(data => {
         if(data.status === 'success') {
             
-            // 🌟 ĐOẠT XÁ CHUYỂN PHÁI: Bắt buộc F5 khi Mặc hoặc Tháo Ngoại Trang hệ 'ALL'
-            if (item && item.item_type === 'model' && item.required_class === 'ALL') {
+            // 🌟 ĐOẠT XÁ CHUYỂN PHÁI: Bắt buộc F5 khi Mặc hoặc Tháo BẤT KỲ Skin/Ngoại trang nào (Cả Anime lẫn Phái Gốc)
+            if (item && item.item_type === 'model') {
                 let thongBao = (action === 'equip') 
                     ? "✨ Đang kích hoạt Bí Thuật Đoạt Xá! Xin chờ giây lát..." 
                     : "✨ Thu hồi Bí Thuật! Đang hoàn nguyên chân thể...";
