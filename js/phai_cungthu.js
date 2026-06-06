@@ -539,12 +539,21 @@
 
 
             khoiTao: function () {
-                // 1. TẢI CÁNH CUNG (VŨ KHÍ 2) - GẮN VÀO TAY TRÁI
+                // 🛑 LÒ ĐỐT RÁC: Dọn sạch Cung trên tay và Tên sau lưng cũ trước khi đổi vũ khí mới
+                if (window.cungTrenTay) {
+                    if (window.cungTrenTay.parent) window.cungTrenTay.parent.remove(window.cungTrenTay);
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.cungTrenTay);
+                    window.cungTrenTay = null;
+                }
+                if (window.cungHoThe) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.cungHoThe);
+                    else scene.remove(window.cungHoThe);
+                    window.cungHoThe = null;
+                }
+                isCuoiCungSetup = false; // Bắt buộc Reset cờ này để vòng lặp vẽ lại vũ khí hộ thể
 
-                // =========================================================
-                // 🧠 BỘ NÃO AI ĐA HOẠT ẢNH THÔNG MINH DÀNH CHO CUNG THỦ
-                // =========================================================
                 console.log("🏹 Cung Thủ Kích Hoạt Bộ Não Nhận Diện Animation!");
+                 
                 window.KHO_ANIM_NHANROI = [];
                 window.KHO_ANIM_TANCONG = [];
 
