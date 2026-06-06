@@ -43,7 +43,8 @@ try {
         
         if ($price <= 0) throw new Exception("Giá bán phải lớn hơn 0!");
 
-        $stmt = $conn->prepare("SELECT item_id, item_type, is_equipped, upgrade_level FROM user_inventory WHERE id = ? AND username = ?");
+        // Lấy đầy đủ Cấp độ và 3 Dòng Chỉ Số
+        $stmt = $conn->prepare("SELECT item_id, item_type, is_equipped, upgrade_level, bonus_damage, bonus_hp, bonus_speed FROM user_inventory WHERE id = ? AND username = ?");
         $stmt->bind_param("is", $inv_id, $user); $stmt->execute();
         $item = $stmt->get_result()->fetch_assoc();
 
@@ -51,11 +52,13 @@ try {
 
         $conn->query("UPDATE game_characters SET game_gold = game_gold - $phi_moi_gioi WHERE username = '$user'");
 
-        $in = $conn->prepare("INSERT INTO auction_house (seller_name, item_id, item_type, price_gold, upgrade_level) VALUES (?, ?, ?, ?, ?)");
-        $in->bind_param("sisii", $user, $item['item_id'], $item['item_type'], $price, $item['upgrade_level']);
+        // Mang đủ 3 dòng chỉ số lên sàn giao dịch
+        $in = $conn->prepare("INSERT INTO auction_house (seller_name, item_id, item_type, price_gold, upgrade_level, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $in->bind_param("sisiiiii", $user, $item['item_id'], $item['item_type'], $price, $item['upgrade_level'], $item['bonus_damage'], $item['bonus_hp'], $item['bonus_speed']);
         $in->execute();
 
         $conn->query("DELETE FROM user_inventory WHERE id = $inv_id");
+        
     }
 
     $conn->commit(); echo json_encode(['status' => 'success']);
