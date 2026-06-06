@@ -12,8 +12,9 @@
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
     // Biến cho Cung/Tên quay quanh người
     let isCuoiCungSetup = false;
-    // ==========================================
-    // ==========================================
+
+    window.oldWeaponURL_CT = "KICH_HOAT_CAM_BIEN_LOAD_MOI";
+     
     // ==========================================
      window.layMucTieuGanNhatCT = function(viTriGoc) {
         let targetPos = null; let minD = 80; 
@@ -630,73 +631,7 @@
                     }
                 }, 12000);
 
-                let linkCung = window.WEAPON2_URL;
-                // Nếu tháo Cung ra thì không load gì cả
-                if (!linkCung || linkCung.trim() === '' || linkCung.includes('KHIEN')) return;
-
-                if (typeof window.taiHoacNhanBanAsset === 'function') {
-
-                    window.taiHoacNhanBanAsset(linkCung, (cungModel) => {
-                        let xuongTayTrai = null;
-                        let modelNguoi = window.nhanVatChinh || window.playerModel;
-                        
-                        // 🌟 RADAR DÒ XƯƠNG ĐA NĂNG (BẮT CHƯỚC ENGINE)
-                        modelNguoi.traverse(c => {
-                            if (c.isBone) {
-                                let n = c.name.toUpperCase();
-                                if (n.includes('HAND_L') || n.includes('HAND.L') || n.includes('LEFTHAND')) {
-                                    xuongTayTrai = c;
-                                }
-                            }
-                        });
-
-                        if (xuongTayTrai) {
-                            xuongTayTrai.add(cungModel);
-                            cungModel.position.set(0, 0, 0);
-                            cungModel.rotation.set(0, 0, 0);
-
-                            // 🌟 ÉP CẬP NHẬT 3D TRƯỚC KHI ĐO (CHỮA BỆNH CUNG = HẠT BỤI)
-                            cungModel.updateMatrixWorld(true);
-                            const box = new THREE.Box3().setFromObject(cungModel);
-                            const size = new THREE.Vector3(); box.getSize(size);
-                            const maxDim = Math.max(size.x, size.y, size.z);
-                            
-                            if (maxDim > 0.05) {
-                                const tyLeCung = 1.8 / maxDim; // Cho cung to tầm 1.8m
-                                cungModel.scale.set(tyLeCung, tyLeCung, tyLeCung);
-                            } else {
-                                cungModel.scale.set(0.5, 0.5, 0.5); // Fallback an toàn
-                            }
-                            
-                            window.cungTrenTay = cungModel;
-                            window.cungTrenTay.visible = false; // 🌟 CHIỀU Ý SẾP: MẶC ĐỊNH LÀ TÀNG HÌNH!
-                            console.log("🏹 Đã gắn CUNG thành công vào tay trái:", xuongTayTrai.name);
-                        } else {
-                            console.log("❌ LỖI KHÔNG TÌM THẤY TAY TRÁI ĐỂ GẮN CUNG!");
-                        }
-                    });
-                }
-
-                // 2. TẢI MŨI TÊN & ĐO KÍCH THƯỚC CHUẨN MỘT LẦN DUY NHẤT
-                let linkMuiTen = window.WEAPON_URL;
-                if (!linkMuiTen || linkMuiTen.trim() === '') return;
-
-                if (typeof window.taiHoacNhanBanAsset === 'function') {
-                    window.taiHoacNhanBanAsset(linkMuiTen, (gltfTen) => {
-
-                        window.vuKhiModel = gltfTen;
-
-                        gltfTen.updateMatrixWorld(true);
-                        const box = new THREE.Box3().setFromObject(gltfTen);
-                        const size = new THREE.Vector3(); box.getSize(size);
-                        const maxDim = Math.max(size.x, size.y, size.z);
-                        if (maxDim > 0.05) {
-                            window.scaleChuanMuiTen = 1.2 / maxDim;
-                        } else {
-                            window.scaleChuanMuiTen = 0.33;
-                        }
-                    });
-                }
+              
             },
 
 
@@ -709,21 +644,11 @@
                 window.tungComboCungThu(phim, isRemote, origin, target, dir, casterId, weaponUrl);
             },
 
+
+
             vongLapVatLy: function () {
-                // 🌟 TẠO MŨI TÊN BAY VÒNG VÒNG SAU LƯNG (ĐÃ ÉP SCALE ĐÚNG CHUẨN)
-                if (!isCuoiCungSetup && typeof window.vuKhiModel !== 'undefined' && window.vuKhiModel) {
-                    window.cungHoThe = window.vuKhiModel.clone();
-                    window.cungHoThe.traverse(c => { if (c.isMesh) c.visible = true; });
-                    scene.add(window.cungHoThe);
-
-                    // Lấy Tỷ lệ đã đo ở hàm khoiTao bóp vào đây
-                    let tyLe = window.scaleChuanMuiTen || 0.33;
-                    window.cungHoThe.scale.set(tyLe, tyLe, tyLe);
-
-                    window.gocXoayCung = 0; window.gocTuXoayCung = 0; isCuoiCungSetup = true;
-                }
-
-                if (isCuoiCungSetup && window.cungHoThe && typeof playerModel !== 'undefined') {
+                // 🌟 ĐÃ XÓA SẠCH RÁC NHÂN BẢN. CHỈ CHỊU TRÁCH NHIỆM XOAY QUANH NGƯỜI
+                if (window.cungHoThe && typeof playerModel !== 'undefined') {
                     window.gocXoayCung += 0.04; window.gocTuXoayCung += 0.2;
 
                     const banKinh = 1.5;
@@ -749,6 +674,8 @@
                     window.cungHoThe.rotateZ(window.gocTuXoayCung);
                 }
             },
+
+
             capNhat: function () { }
         };
         window.HePhaiHienTai.khoiTao();
