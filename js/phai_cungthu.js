@@ -162,7 +162,7 @@
     function taoMuiTenXin(scaleSize, weaponUrl) {
         const group = new THREE.Group();
 
-        let urlCanTai = weaponUrl || window.WEAPON_URL; 
+        let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_CUNGTHU || window.WEAPON_URL;
         if (!urlCanTai || urlCanTai.trim() === '') return group;
 
         if (typeof window.taiHoacNhanBanAsset === 'function') {
@@ -287,7 +287,7 @@
 
         // 🌟 KHAI BÁO BIẾN CHỨA VŨ KHÍ THỰC TẾ Ở ĐÂY
         let vuKhiThucTe = weaponUrl;
-        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL;
+        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_CUNGTHU || window.WEAPON_URL || 'uploads/anims/VIENDAN.glb';
 
         // ... (Giữ nguyên đoạn if isRemote và xác định radar khóa mục tiêu) ...
         if (isRemote) {
