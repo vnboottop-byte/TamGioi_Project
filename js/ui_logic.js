@@ -1687,5 +1687,5 @@ window.capNhatTrangBi3DNgayLapTuc = function (itemType, url3D, capDoDap = 0) {
 // 📮 HỆ THỐNG HỘP THƯ CHỢ ĐEN (AUTO-REFUND)
 // ==========================================
 window.moHopThuChoDen = function() {
-    window.hienThongBaoGame("📮 CHUYỂN PHÁT NHANH: Toàn bộ pháp bảo và Linh thạch ế hạn đều đã được hệ thống tự động hoàn trả thẳng vào Túi Đồ và Ví của Sếp!", true);
+    window.hienThongBaoGame("📮 CHUYỂN PHÁT NHANH: Toàn bộ pháp bảo và Linh thạch hết hạn đều đã được hệ thống tự động hoàn trả thẳng vào Túi Đồ và Ví của Sếp!", true);
 };
