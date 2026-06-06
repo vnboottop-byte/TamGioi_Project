@@ -35,11 +35,10 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 
 
 function taoKiemChuan(scaleSize, weaponUrl) {
-    const stdSword = new THREE.Group(); 
-    let urlCanTai = weaponUrl || window.WEAPON_URL || window.WEAPON2_URL;
+    const stdSword = new THREE.Group();
+    // 🌟 BẢN VÁ: Ưu tiên lấy đạn từ Băng Đạn Nội Bộ của Tu Tiên (Đã lọc kỹ rác và đồ mặc định)
+    let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || window.WEAPON2_URL;
 
-
-    // 🌟 QUY TẮC A & B: Có vũ khí thì dùng, không có thì xài mặc định của Tu Tiên!
     if (!urlCanTai || urlCanTai.trim() === '') {
         urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
     }
@@ -115,7 +114,8 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
     const dameGoc = window.DAME_CUA_TOI || 100;
 
     let vuKhiThucTe = weaponUrl;
-    if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL;
+    // 🌟 BẢN VÁ: Lấy vũ khí đã được lọc từ Cảm biến Hộ Thể, tuyệt đối không lấy đồ rỗng!
+    if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || 'uploads/anims/PHIKIEM_sword.glb';
     
     // 🌟 KHỞI TẠO TRỤC ĐỨNG THEO HÀNH TINH
     let upVector = new THREE.Vector3(0, 1, 0);
@@ -267,6 +267,9 @@ window.updateCombatTuTien = function () {
         if (!linkKiem || linkKiem.trim() === '') {
             linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
         }
+
+        // Cập nhật ngược lại biến Toàn Cục để hàm tung chiêu ở trên có đạn mà bắn!
+        window.VUKHI_HIEN_TAI_CUA_TUTIEN = linkKiem;
        
 
 
