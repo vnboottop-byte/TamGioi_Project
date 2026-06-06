@@ -42,11 +42,7 @@ try {
     $res_phai = $stmt_phai->get_result()->fetch_assoc();
     $phai_cua_toi = $res_phai ? $res_phai['faction_code'] : '';
 
-    // Nếu món đồ KHÔNG PHẢI dành cho mọi người, VÀ CŨNG KHÔNG PHẢI của phái mình -> Đuổi!
-    if ($item['required_class'] !== 'ALL' && $item['required_class'] !== $phai_cua_toi) {
-        throw new Exception('Pháp bảo này không dành cho hệ phái của bạn. Cưỡng ép luyện hóa sẽ tẩu hỏa nhập ma!');
-    }
-    // =========================================================
+    
 
     // 4. KIỂM TRA SỐ DƯ BALANCE BẢNG USERS (Khóa dòng này lại để chống hack auto-click)
     $stmt_user = $conn->prepare("SELECT balance FROM users WHERE username = ? FOR UPDATE");
