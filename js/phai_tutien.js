@@ -37,7 +37,7 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 function taoKiemChuan(scaleSize, weaponUrl) {
     const stdSword = new THREE.Group();
     // 🌟 BẢN VÁ: Ưu tiên lấy đạn từ Băng Đạn Nội Bộ của Tu Tiên (Đã lọc kỹ rác và đồ mặc định)
-    let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || window.WEAPON2_URL;
+    let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL;
 
     if (!urlCanTai || urlCanTai.trim() === '') {
         urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
@@ -272,11 +272,11 @@ window.updateCombatTuTien = function () {
     // =======================================================
     // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
     // =======================================================
-    if (window.WEAPON_URL !== window.oldWeaponURL_TT || window.WEAPON2_URL !== window.oldWeapon2URL_TT) {
+    // 🌟 CHỈ THEO DÕI VŨ KHÍ 1, KHÔNG QUAN TÂM VŨ KHÍ 2
+    if (window.WEAPON_URL !== window.oldWeaponURL_TT) {
         window.oldWeaponURL_TT = window.WEAPON_URL;
-        window.oldWeapon2URL_TT = window.WEAPON2_URL;
         
-        let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
+        let linkKiem = window.WEAPON_URL;
 
         // 🌟 QUY TẮC A & B: Có link thì xài đồ Sếp mặc, rỗng thì xài đồ Mặc định của Phái!
         if (!linkKiem || linkKiem.trim() === '') {
