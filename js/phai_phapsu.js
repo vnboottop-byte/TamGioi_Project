@@ -389,6 +389,62 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
     // 🚀 VÒNG LẶP VẬT LÝ TOÀN CẦU (ĐÃ THOÁT KHỎI LỒNG)
     // ==========================================
     window.updateCombatPhapSu = function () {
+
+
+
+        if (typeof window.taiHoacNhanBanAsset !== 'function') return;
+
+        // =======================================================
+        // 🌟 CẢM BIẾN VẬT LÝ PHÁP SƯ: THEO DÕI VŨ KHÍ 2 (TRƯỢNG PHÉP)
+        // =======================================================
+        let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
+        if (phaiHienTai.includes('phapsu')) {
+            if (window.WEAPON2_URL !== window.oldWeapon2URL_PS) {
+                window.oldWeapon2URL_PS = window.WEAPON2_URL;
+                
+                let linkTruong = window.WEAPON2_URL;
+                // Quy tắc A & B: Nếu rỗng thì nạp cây Trượng mặc định của Pháp Sư
+                if (!linkTruong || linkTruong.trim() === '') linkTruong = 'uploads/anims/truong_phep.glb';
+                // Quy tắc D: Nếu là Skin Anime (ALL) thì tàng hình tuyệt đối
+                if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) linkTruong = ""; 
+                
+                window.VUKHI_HIEN_TAI_CUA_PHAPSU = linkTruong;
+
+                // 🛑 LÒ ĐỐT RÁC: Tiêu hủy cây trượng hộ thể cũ
+                if (window.truongHoThe) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.truongHoThe);
+                    else scene.remove(window.truongHoThe);
+                    window.truongHoThe = null;
+                }
+                isTruongPhepSetup = false;
+
+                // 🪄 Nạp cây trượng mới vào vòng xoay hộ thể
+                if (linkTruong !== "") {
+                    window.taiHoacNhanBanAsset(linkTruong, (truongGoc) => {
+                        if (window.truongHoThe) {
+                            if (typeof window.donRac3D === 'function') window.donRac3D(window.truongHoThe);
+                            window.truongHoThe = null;
+                        }
+                        window.truongHoThe = truongGoc;
+
+                        truongGoc.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(truongGoc);
+                        const size = box.getSize(new THREE.Vector3());
+                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                        let tiLeChuan = 1.8 / maxDim; // Ép chuẩn dài 1.8m
+                        truongGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+
+                        if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(truongGoc, window.WEAPON_LEVEL || 0);
+
+                        scene.add(truongGoc);
+                        window.gocXoayTruong = 0; window.gocTuXoayTruong = 0;
+                        isTruongPhepSetup = true;
+                    });
+                }
+            }
+        }
+
+        
      
 
         
@@ -633,61 +689,8 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                         }
                     }
                 }, 12000);
-
-                const l = new THREE.GLTFLoader(); if (window.loaderSieuToc) l.setDRACOLoader(window.loaderSieuToc);
-                
-
-                // 🔮 2. TẢI VŨ KHÍ CẦM TAY (Vòng phép nhỏ lơ lửng ở tay phải - WEAPON 1)
-                let urlVuKhi = window.WEAPON_URL; 
-                
-                // Nếu có vũ khí thì mới tải và gắn vào tay
-                if (urlVuKhi && urlVuKhi.trim() !== '' && typeof window.taiHoacNhanBanAsset === 'function') {
-                    window.taiHoacNhanBanAsset(urlVuKhi, (vuKhiGoc) => {
-
-                        window.vuKhiPhapSu = vuKhiGoc;
-                        
-                        // Thước đo chuẩn mực: Ép to đúng 0.3 mét
-                        vuKhiGoc.updateMatrixWorld(true);
-                        const box = new THREE.Box3().setFromObject(vuKhiGoc);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                        let tiLeChuan = 0.3 / maxDim; 
-                        vuKhiGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-
-                        scene.add(vuKhiGoc); // Thả lơ lửng, không làm con của nhân vật
-
-                        // Dò tìm xương tay phải
-                        window.xuongTayPhaiPS = null;
-                        if (window.playerModel) {
-                            window.playerModel.traverse(c => {
-                                if (c.isBone && (c.name.toUpperCase().includes('HAND_R') || c.name.toUpperCase().includes('HAND.R') || c.name.toUpperCase().includes('RIGHTHAND'))) {
-                                    window.xuongTayPhaiPS = c;
-                                }
-                            });
-                        }
-                    });
-                }
-
-                // 🪄 3. TẢI TRƯỢNG PHÉP BAY QUANH NGƯỜI (VŨ KHÍ 2)
-                let urlTruong = window.WEAPON2_URL;
-                if (urlTruong && urlTruong.trim() !== "" && typeof window.taiHoacNhanBanAsset === 'function') {
-                    window.taiHoacNhanBanAsset(urlTruong, (truongGoc) => {
-                        window.truongHoThe = truongGoc;
-
-                        truongGoc.updateMatrixWorld(true);
-                        const box = new THREE.Box3().setFromObject(truongGoc);
-                        const size = box.getSize(new THREE.Vector3());
-                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                        let tiLeChuan = 1.8 / maxDim; 
-                        truongGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-
-                        // 🌟 BƠM HÀO QUANG CHO TRƯỢNG SAU LƯNG
-                        if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(truongGoc, window.WEAPON_LEVEL || 0);
-
-                        scene.add(truongGoc);
-                        isTruongPhepSetup = true;
-                    });
-                }
+                // 🌟 KÍCH HOẠT CẢM BIẾN PHÁP SƯ: Ép vòng lặp vật lý quét trang bị thực tế từ SQL ra
+                window.oldWeapon2URL_PS = "KICH_HOAT_CAM_BIEN_LOAD_MOI";
             },
 
             tungChieu: function (phim, isRemote, origin, target, dir, casterId, weaponUrl) { 
@@ -696,32 +699,14 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             
             // 🌟 CẬP NHẬT CHUYỂN ĐỘNG ĐỘC LẬP CHO CẢ 2 MÓN VŨ KHÍ
             capNhat: function () {
-                if (!window.playerModel) return;
 
-                // --- A. NAM CHÂM HÚT VÒNG PHÉP (VŨ KHÍ 1) VÀO TAY ---
-                if (window.vuKhiPhapSu) {
-                    let diemDich = new THREE.Vector3();
-                    if (window.xuongTayPhaiPS) {
-                        window.xuongTayPhaiPS.getWorldPosition(diemDich);
-                        let upV = window.playerModel.up.clone();
-                        let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
-                        diemDich.add(fwd.multiplyScalar(0.1)).add(upV.multiplyScalar(0.1));
-                    } else {
-                        window.playerModel.getWorldPosition(diemDich);
-                        let upV = window.playerModel.up.clone();
-                        let fwd = new THREE.Vector3(); window.playerModel.getWorldDirection(fwd);
-                        let rightV = new THREE.Vector3().crossVectors(fwd, upV).normalize().negate();
-                        diemDich.add(upV.multiplyScalar(2.0)).add(rightV.multiplyScalar(1.0)).add(fwd.multiplyScalar(0.5));
-                    }
 
-                    window.vuKhiPhapSu.position.lerp(diemDich, 0.3);
-                    window.vuKhiPhapSu.rotation.x += 0.09       // Khóa cứng (Sửa số này bằng F9 nếu muốn nghiêng)
-                    window.vuKhiPhapSu.rotation.z = -1.57;       // Khóa cứng
-                    window.vuKhiPhapSu.rotation.y = 0;
-                }
 
-                // --- B. VỆ TINH TRƯỢNG PHÉP (VŨ KHÍ 2) BAY QUANH NGƯỜI ---
-                if (isTruongPhepSetup && window.truongHoThe) {
+                // 🌟 CHỈ GIỮ LOGIC BAY QUANH NGƯỜI CỦA CÂY TRƯỢNG CẢM BIẾN HỘ THỂ (ĐÃ DIỆT SẠCH RÁC VÒNG PHÉP TAY)
+                if (isTruongPhepSetup && window.truongHoThe && window.playerModel) {
+
+
+
                     window.gocXoayTruong += 0.04;   // Tốc độ bay quanh người
                     window.gocTuXoayTruong += 0.09; // Tốc độ trượng tự xoay tít
 
