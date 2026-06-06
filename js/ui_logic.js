@@ -954,7 +954,7 @@ window.capNhatGiaoDienLo = function() {
         let it = window.loRenData.item;
         let lvl = parseInt(it.upgrade_level) || 0;
         let imgId = 'thumb_lo_main';
-        let emoji = (it.item_type === 'mount') ? '🐲' : '⚔️';
+        let emoji = (it.item_type === 'mount') ? '🐲' : (it.item_type === 'model' ? '👕' : '⚔️');
         slotTrungTam.innerHTML = `
             <div style="position:absolute; top:5px; right:5px; background:rgba(0,0,0,0.8); color:gold; border:1px solid gold; font-size:12px; padding:2px 6px; border-radius:5px; font-weight:900; z-index:10; box-shadow:0 0 10px gold;">+${lvl}</div>
             <div style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:center;">
@@ -964,27 +964,26 @@ window.capNhatGiaoDienLo = function() {
         `;
         danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId, capDo: parseInt(it.upgrade_level)||0 });
 
-        // 🌟 BỘ MÁY ĐO ĐIỂM TIỀM NĂNG GẮN BÊN DƯỚI Ô VŨ KHÍ
+        // 🌟 BỘ NÃO THẦN NHÃN ĐÃ ĐỒNG BỘ 100% VỚI CHỢ ĐEN
         if (lvl > 0) {
-            // Tính toán ngược lại Điểm Tiềm Năng thực tế (Cộng dồn Dame, HP, Tốc)
-            let pts = Math.round(((it.bonus_damage || 0) / 2) + ((it.bonus_hp || 0) / 20) + ((it.bonus_speed || 0) * 5));
-            let xepLoai = ""; let mauSac = "";
-            
-            if (pts > 120) { xepLoai = "THẦN KHÍ (SHOP)"; mauSac = "#ff3333"; }
-            else if (pts >= 115) { xepLoai = "CỰC PHẨM"; mauSac = "#ff00ff"; }
-            else if (pts >= 100) { xepLoai = "VIP"; mauSac = "#f1c40f"; }
-            else if (pts >= 90) { xepLoai = "TRUNG BÌNH"; mauSac = "#3498db"; }
-            else { xepLoai = "RÁC"; mauSac = "#95a5a6"; }
+            // 1. Tính toán chỉ số thực tế sau cường hóa (Y chang Chợ Đen)
+            let heSoCong = 1.0 + (lvl * 0.05);
+            let dameThuc = Math.floor((it.bonus_damage || 0) * heSoCong);
+            let hpThuc = Math.floor((it.bonus_hp || 0) * heSoCong);
+            let spdThuc = Math.floor((it.bonus_speed || 0) * heSoCong);
+
+            // 2. Gửi sang Bộ Não chấm điểm tập trung
+            let danhGia = window.tinhDiemPhamChatTamGioi(dameThuc, hpThuc, spdThuc, lvl);
 
             boxRating.innerHTML = `
-                <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px solid ${mauSac}; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: #fff; box-shadow: 0 0 10px ${mauSac}; text-align: center; width: 100%; box-sizing: border-box;">
-                    <div style="color:#aaa; margin-bottom:2px;">Nhân Phẩm: <b style="color:${mauSac}; font-size:14px;">${pts}/120 ĐIỂM</b></div>
-                    Đánh giá: <b style="color:${mauSac}; text-transform:uppercase;">${xepLoai}</b>
+                <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px solid ${danhGia.color}; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: #fff; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 10px ${danhGia.color}; text-align: center; width: 100%; box-sizing: border-box;">
+                    <div style="color:#aaa; margin-bottom:2px;">Điểm Chiến Lực: <b style="color:#f1c40f; font-size:14px; text-shadow: ${danhGia.glow};">${danhGia.score.toLocaleString()} Pts</b></div>
+                    Đánh giá: <b style="color:${danhGia.color}; text-transform:uppercase; text-shadow: ${danhGia.glow};">${danhGia.rank}</b>
                 </div>`;
         } else {
             boxRating.innerHTML = `
                 <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px dashed #7f8c8d; padding: 5px; border-radius: 5px; font-size: 10px; color: #7f8c8d; text-align: center; width: 100%; box-sizing: border-box;">
-                    Chưa Giám định (Max 120 Điểm)<br>Đập +1 để mở khóa!
+                    Chưa Giám định Phẩm chất<br>Đập +1 để kích hoạt Thần Nhãn!
                 </div>`;
         }
 
