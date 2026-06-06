@@ -2,8 +2,8 @@
 session_start(); header('Content-Type: application/json'); require_once '../db.php';
 
 // 1. MÁY QUÉT 24H: Đẩy đồ treo quá 1 ngày vào Hộp Thư Rác
-$conn->query("UPDATE auction_house SET status = 'expired' WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 1 DAY)");
-
+// 1. MÁY QUÉT TEST GAME: Đẩy đồ treo quá 3 PHÚT vào Hộp Thư Rác
+$conn->query("UPDATE auction_house SET status = 'expired' WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 3 MINUTE)");
 
 
 
