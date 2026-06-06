@@ -547,7 +547,21 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             tenPhai: "Pháp Sư",
             
             khoiTao: function () {
+                // 🛑 LÒ ĐỐT RÁC: Dọn sạch Vòng phép và Trượng cũ trước khi đổi vũ khí mới
+                if (window.vuKhiPhapSu) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.vuKhiPhapSu);
+                    else scene.remove(window.vuKhiPhapSu);
+                    window.vuKhiPhapSu = null;
+                }
+                if (window.truongHoThe) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.truongHoThe);
+                    else scene.remove(window.truongHoThe);
+                    window.truongHoThe = null;
+                }
+                isTruongPhepSetup = false; // Bắt buộc Reset cờ này
+
                 console.log("🔮 Pháp Sư: Kích Hoạt Bộ Não Nhận Diện Phép Thuật!");
+               
                 window.KHO_ANIM_NHANROI = [];
                 window.KHO_ANIM_TANCONG = [];
 
