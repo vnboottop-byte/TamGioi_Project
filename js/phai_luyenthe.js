@@ -415,33 +415,7 @@
                     window.playerModel.scale.multiplyScalar(1.6); 
                 }
 
-                const vuKhiLoader = new THREE.GLTFLoader();
-                if (window.loaderSieuToc) vuKhiLoader.setDRACOLoader(window.loaderSieuToc);
-
-                // 🌟 BẢN VÁ: Dùng Vũ Khí 1. Nếu cởi găng thì đánh đấm bằng tay trần
-                let linkBaoTay = window.WEAPON_URL;
-                if (!linkBaoTay || linkBaoTay.trim() === '') return; 
-
-                vuKhiLoader.load(linkBaoTay, (gltf) => {
-                    window.vuKhiModel = gltf.scene;
-
-
-
-                    let xuongTayPhai = null;
-                    let modelNguoi = window.nhanVatChinh || window.playerModel; 
-                    modelNguoi.traverse(c => {
-                        if (c.isBone && (c.name.toLowerCase().includes('hand_r') || c.name.toLowerCase().includes('righthand') || c.name.toLowerCase().includes('hand.r'))) {
-                            xuongTayPhai = c;
-                        }
-                    });
-                    if (xuongTayPhai) {
-                        xuongTayPhai.add(window.vuKhiModel);
-                        window.vuKhiModel.position.set(0, 0, 0); 
-                        window.vuKhiModel.scale.set(3, 3, 3); 
-                    } else {
-                        modelNguoi.add(window.vuKhiModel); window.vuKhiModel.position.set(-1, 5, 1);
-                    }
-                });
+                
             },
             tungChieu: function (phim, isRemote = false) { 
                 window.tungComboLuyenThe(phim, isRemote); 
