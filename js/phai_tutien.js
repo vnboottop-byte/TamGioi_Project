@@ -39,9 +39,9 @@ function taoKiemChuan(scaleSize, weaponUrl) {
     let urlCanTai = weaponUrl || window.WEAPON_URL || window.WEAPON2_URL;
 
 
-    // 🌟 SỬA TẠI ĐÂY: Tuyệt kỹ tung ra cũng phải dùng vũ khí xịn trong bộ nhớ sếp đang mặc
+    // 🌟 QUY TẮC A & B: Có vũ khí thì dùng, không có thì xài mặc định của Tu Tiên!
     if (!urlCanTai || urlCanTai.trim() === '') {
-        urlCanTai = window.LAST_VALID_WEAPON_TT || 'uploads/anims/PHIKIEM_sword.glb';
+        urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
     }
    
     
@@ -250,10 +250,8 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 window.updateCombatTuTien = function () {
 
 
-    // 🧠 BỘ NHỚ THÔNG MINH: Liên tục ghi nhớ link vũ khí xịn sếp đang mặc trước khi bị Skin làm rỗng link
-    if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
-        window.LAST_VALID_WEAPON_TT = window.WEAPON_URL;
-    }
+
+
 
 
     // =======================================================
@@ -265,12 +263,15 @@ window.updateCombatTuTien = function () {
         
         let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
 
-
-        // 🌟 SỬA TẠI ĐÂY: Nếu link bị rỗng do mặc skin, ưu tiên chộp ngay cây vũ khí xịn trong bộ nhớ ra dùng!
+        // 🌟 QUY TẮC A & B: Có link thì xài đồ Sếp mặc, rỗng thì xài đồ Mặc định của Phái!
         if (!linkKiem || linkKiem.trim() === '') {
-            linkKiem = window.LAST_VALID_WEAPON_TT || 'uploads/anims/PHIKIEM_sword.glb';
+            linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
         }
        
+
+
+
+
         
         // 🛑 LÒ ĐỐT RÁC KHẨN CẤP: Gỡ vứt ngay cây kiếm cũ trước khi đẻ kiếm mới!
         if (window.kiemHoThe) { 
