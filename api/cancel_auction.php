@@ -18,9 +18,9 @@ try {
         $lt_remaining = intval($auction['item_id']);
         $conn->query("UPDATE users SET balance = balance + $lt_remaining WHERE username = '$user'");
     } else {
-        // Trả Pháp bảo về túi
-        $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level) VALUES (?, ?, ?, 0, ?)");
-        $in->bind_param("sisi", $user, $auction['item_id'], $auction['item_type'], $auction['upgrade_level']);
+        // Trả Pháp bảo về túi y nguyên chỉ số
+        $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, 0, ?, ?, ?, ?)");
+        $in->bind_param("sisiiii", $user, $auction['item_id'], $auction['item_type'], $auction['upgrade_level'], $auction['bonus_damage'], $auction['bonus_hp'], $auction['bonus_speed']);
         $in->execute();
     }
 
