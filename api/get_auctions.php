@@ -3,10 +3,14 @@ session_start();
 header('Content-Type: application/json'); 
 require_once '../db.php';
 
+// 🌟 Khởi tạo biến đếm báo cáo cho Sếp
+$refunded_items = 0;
+$refunded_lt = 0;
+
 // ==========================================
-// 1. MÁY QUÉT AUTO-REFUND (BẢN VÁ: TRẢ THẲNG ĐỒ VỀ TÚI/VÍ SAU 3 PHÚT)
+// 1. MÁY QUÉT AUTO-REFUND 
 // ==========================================
-// Lấy danh sách các món đồ đang ế quá 3 phút (Sếp test xong thì đổi số 3 MINUTE thành 1 DAY nhé)
+// Đang đặt 3 MINUTE để test, Sếp nhớ đổi thành 1 DAY sau khi test xong nhé
 $sql_expired = "SELECT id, seller_name, item_id, item_type, upgrade_level FROM auction_house WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 3 MINUTE)";
 $res_expired = $conn->query($sql_expired);
 
@@ -18,17 +22,21 @@ if ($res_expired && $res_expired->num_rows > 0) {
             $seller = $row['seller_name'];
             
             if ($row['item_type'] === 'currency') {
-                // 💰 NẾU LÀ TIỀN: Trả Linh Thạch dội ngược về Ví của người bán
                 $lt_amount = intval($row['item_id']);
                 $conn->query("UPDATE users SET balance = balance + $lt_amount WHERE username = '$seller'");
+                
+                // Ghi nhận nếu là đồ của chính người đang mở chợ
+                if (isset($_SESSION['user']) && $seller === $_SESSION['user']) $refunded_lt += $lt_amount;
+                
             } else {
-                // ⚔️ NẾU LÀ ĐỒ: Trả Pháp bảo / Thú cưỡi / Ngoại trang về Túi Càn Khôn
                 $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level) VALUES (?, ?, ?, 0, ?)");
                 $in->bind_param("sisi", $seller, $row['item_id'], $row['item_type'], $row['upgrade_level']);
                 $in->execute();
+                
+                // Ghi nhận nếu là đồ của chính người đang mở chợ
+                if (isset($_SESSION['user']) && $seller === $_SESSION['user']) $refunded_items++;
             }
             
-            // Đánh dấu là đã thu hồi (returned) để lần sau không quét lại nữa
             $conn->query("UPDATE auction_house SET status = 'returned' WHERE id = $auc_id");
         }
         $conn->commit();
@@ -56,7 +64,7 @@ if ($res) {
 }
 
 // ==========================================
-// 3. LẤY SỐ DƯ VÍ CỦA NGƯỜI CHƠI ĐỂ HIỂN THỊ TRÊN GIAO DIỆN CHỢ
+// 3. LẤY SỐ DƯ VÍ
 // ==========================================
 $gold = 0; $linh_thach = 0;
 if (isset($_SESSION['user'])) {
@@ -68,5 +76,14 @@ if (isset($_SESSION['user'])) {
     if ($u) $linh_thach = $u['balance'];
 }
 
-echo json_encode(['status' => 'success', 'data' => $data, 'my_gold' => $gold, 'my_linh_thach' => $linh_thach, 'my_name' => $_SESSION['user'] ?? '']);
+// 🌟 Xuất thêm báo cáo refund ra cho Javascript đọc
+echo json_encode([
+    'status' => 'success', 
+    'data' => $data, 
+    'my_gold' => $gold, 
+    'my_linh_thach' => $linh_thach, 
+    'my_name' => $_SESSION['user'] ?? '',
+    'refunded_items' => $refunded_items,
+    'refunded_lt' => $refunded_lt
+]);
 ?>
