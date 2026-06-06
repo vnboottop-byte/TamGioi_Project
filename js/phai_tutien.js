@@ -38,25 +38,28 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 // TÁC DỤNG: Bốc vũ khí từ kho Asset thay vì xài chung window.phiKiemModel
 function taoKiemChuan(scaleSize, weaponUrl) {
     const stdSword = new THREE.Group(); 
-    let urlCanTai = weaponUrl || window.WEAPON_URL;
-    if (!urlCanTai || urlCanTai.trim() === '') return stdSword;
+    let urlCanTai = weaponUrl || window.WEAPON_URL || window.WEAPON2_URL;
+    // 🌟 BẢN VÁ: Có gì xài nấy, tay không thì lôi Kiếm gốc ra
+    if (!urlCanTai || urlCanTai.trim() === '') urlCanTai = 'uploads/anims/PHIKIEM_sword.glb'; 
     
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
+            // 🌟 THƯỚC ĐO CHUẨN HÓA: Bóp mọi vũ khí chéo phái về chung size 3 Mét của Kiếm
+            vuKhi.updateMatrixWorld(true);
+            const box = new THREE.Box3().setFromObject(vuKhi);
+            const maxDim = Math.max(...box.getSize(new THREE.Vector3()).toArray()) || 1;
+            let tyLeChuan = (3.0 / maxDim);
+            vuKhi.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
+            
             vuKhi.position.set(0, 0, 0); 
             vuKhi.rotation.set(0, 0, 0); 
-            vuKhi.scale.set(1, 1, 1);
             vuKhi.traverse(c => { 
                 if (c.isMesh) { c.visible = true; c.castShadow = false; c.receiveShadow = false; } 
             });
-            
-            // 🌟 BƠM HÀO QUANG CHO KIẾM BAY TUNG CHIÊU
             if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL || 0);
-
             stdSword.add(vuKhi);
         });
     }
-
     stdSword.scale.set(scaleSize, scaleSize, scaleSize);
     return stdSword;
 }
@@ -681,20 +684,23 @@ if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_tuti
 
             const dracoLoaderVuKhi = new THREE.DRACOLoader();
             dracoLoaderVuKhi.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/'); vuKhiLoader.setDRACOLoader(dracoLoaderVuKhi);
+
+
             
-            const linkKiem = window.WEAPON_URL;
-            if (!linkKiem || linkKiem.trim() === "") {
-                window.phiKiemModel = new THREE.Group(); // Không có kiếm thì gán Group rỗng để tránh lỗi
-                window.TUTIEN_WEAPON_LOADED = true;
-                return;
-            }
+            let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
+            if (!linkKiem || linkKiem.trim() === "") linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
             
             vuKhiLoader.load(linkKiem, (gltf) => { 
                 window.phiKiemModel = gltf.scene; 
                 
-                // 🌟 BƠM HÀO QUANG CHO KIẾM QUAY QUANH NGƯỜI
+                // 🌟 CHUẨN HÓA SIZE KIẾM HỘ THỂ
+                window.phiKiemModel.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(window.phiKiemModel);
+                const maxDim = Math.max(...box.getSize(new THREE.Vector3()).toArray()) || 1;
+                let tyLeChuan = (3.0 / maxDim);
+                window.phiKiemModel.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
+                
                 if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
-
                 window.TUTIEN_WEAPON_LOADED = true; 
             });
             
