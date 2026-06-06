@@ -242,8 +242,10 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
+
+
     // =======================================================
-    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ KHI MẶC ĐỒ MỚI (CHỐNG TÀNG HÌNH)
+    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
     // =======================================================
     if (window.WEAPON_URL !== window.oldWeaponURL_TT || window.WEAPON2_URL !== window.oldWeapon2URL_TT) {
         window.oldWeaponURL_TT = window.WEAPON_URL;
@@ -252,23 +254,37 @@ window.updateCombatTuTien = function () {
         let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
         if (!linkKiem || linkKiem.trim() === '') linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
         
+        // 🛑 LÒ ĐỐT RÁC KHẨN CẤP: Gỡ vứt ngay cây kiếm cũ trước khi đẻ kiếm mới!
+        if (window.kiemHoThe) { 
+            if (typeof window.donRac3D === 'function') window.donRac3D(window.kiemHoThe);
+            else scene.remove(window.kiemHoThe); 
+            window.kiemHoThe = null; 
+        }
+        isCuoiKiemSetup = false; 
+
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(linkKiem, (vuKhiGoc) => {
-                if (window.kiemHoThe) { scene.remove(window.kiemHoThe); window.kiemHoThe = null; }
+                // Đề phòng lag mạng đẻ trùng 2 cây, trảm thêm nhát nữa
+                if (window.kiemHoThe) { 
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.kiemHoThe);
+                    window.kiemHoThe = null; 
+                }
+
                 window.phiKiemModel = vuKhiGoc;
                 
                 window.phiKiemModel.updateMatrixWorld(true);
                 const box = new THREE.Box3().setFromObject(window.phiKiemModel);
                 const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                let tyLeChuan = 3.0 / maxDim; // Ép chuẩn vũ khí dài 3 mét
+                let tyLeChuan = 3.0 / maxDim; 
                 window.phiKiemModel.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
                 
                 if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
-                isCuoiKiemSetup = false; // Mở khóa để cập nhật 3D
+                isCuoiKiemSetup = false; 
             });
         }
     }
+   
 
     try {
         if (!isCuoiKiemSetup && typeof window.phiKiemModel !== 'undefined' && window.phiKiemModel) {
@@ -710,29 +726,8 @@ if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_tuti
                 }
             }, 12000);
 
-            const vuKhiLoader = new THREE.GLTFLoader();
-
-            const dracoLoaderVuKhi = new THREE.DRACOLoader();
-            dracoLoaderVuKhi.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/'); vuKhiLoader.setDRACOLoader(dracoLoaderVuKhi);
-
-
-            
-            let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
-            if (!linkKiem || linkKiem.trim() === "") linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
-            
-            vuKhiLoader.load(linkKiem, (gltf) => { 
-                window.phiKiemModel = gltf.scene; 
-                
-                // 🌟 CHUẨN HÓA SIZE KIẾM HỘ THỂ
-                window.phiKiemModel.updateMatrixWorld(true);
-                const box = new THREE.Box3().setFromObject(window.phiKiemModel);
-                const maxDim = Math.max(...box.getSize(new THREE.Vector3()).toArray()) || 1;
-                let tyLeChuan = (3.0 / maxDim);
-                window.phiKiemModel.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
-                
-                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
-                window.TUTIEN_WEAPON_LOADED = true; 
-            });
+          // 🌟 CHỐNG "ĐOẠT XÁ" MẤT LINK KIẾM: Ép kích hoạt cảm biến quét lại đồ thực tế trên người
+            window.oldWeaponURL_TT = "KICH_HOAT_CAM_BIEN_LOAD_MOI";
             
         },
 
