@@ -1611,14 +1611,14 @@ window.capNhatTrangBi3DNgayLapTuc = function (itemType, url3D, capDoDap = 0) {
 
 
 
-        // 🛑 LÁ CHẮN TÚI ĐỒ: Nếu là phái đặc thù, Hộ Thể, hoặc Đánh Tay Không, cấm nạp mẫu 3D này lên xương tay phải!
+        // 🛑 LÁ CHẮN TÚI ĐỒ: Cấm nạp mẫu 3D này lên xương tay phải nếu là phái đặc thù, Hộ Thể, Đánh Tay Không hoặc Lazer!
         let checkScript = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
         let checkCodePhai = (window.FACTION_CODE || "").toLowerCase();
         let checkTenChay = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai || "").toLowerCase();
         if (
-            checkScript.includes('tutien') || checkScript.includes('cungthu') || checkScript.includes('phapsu') || checkScript.includes('bansung') || checkScript.includes('luyenthe') ||
-            checkCodePhai.includes('tu_tien') || checkCodePhai.includes('cung_ten') || checkCodePhai.includes('phap_su') || checkCodePhai.includes('sung_dan') || checkCodePhai.includes('luyen_the') ||
-            checkTenChay.includes('tu tiên') || checkTenChay.includes('cung thủ') || checkTenChay.includes('pháp sư') || checkTenChay.includes('luyện thể')
+            checkScript.includes('tutien') || checkScript.includes('cungthu') || checkScript.includes('phapsu') || checkScript.includes('bansung') || checkScript.includes('luyenthe') || checkScript.includes('lazer') ||
+            checkCodePhai.includes('tu_tien') || checkCodePhai.includes('cung_ten') || checkCodePhai.includes('phap_su') || checkCodePhai.includes('sung_dan') || checkCodePhai.includes('luyen_the') || checkCodePhai.includes('sieuanhhung') || checkCodePhai.includes('lazer') ||
+            checkTenChay.includes('tu tiên') || checkTenChay.includes('cung thủ') || checkTenChay.includes('pháp sư') || checkTenChay.includes('luyện thể') || checkTenChay.includes('lazer')
         ) {
             console.log("🛑 ui_logic: Đã chặn hiển thị vũ khí lên xương tay (Hệ phái dùng vũ khí đặc thù/Hộ thể/Tay Không)!");
             return;
