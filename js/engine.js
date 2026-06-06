@@ -1180,15 +1180,15 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
 
 
 
-    // 🛑 LÁ CHẮN THÉP: Kiểm tra toàn diện để chặn phái dùng vũ khí đặc thù, Hộ Thể, hoặc Tay Không
+    // 🛑 LÁ CHẮN THÉP: Kiểm tra toàn diện để chặn phái dùng vũ khí đặc thù, Hộ Thể, Luyện Thể, Lazer (Tay Không)
     let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
     let codePhaiGoc = (window.FACTION_CODE || "").toLowerCase();
     let tenPhaiChay = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai || "").toLowerCase();
 
     if (
-        phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu') || phaiHienTai.includes('luyenthe') ||
-        codePhaiGoc.includes('tu_tien') || codePhaiGoc.includes('cung_ten') || codePhaiGoc.includes('phap_su') || codePhaiGoc.includes('sung_dan') || codePhaiGoc.includes('luyen_the') ||
-        tenPhaiChay.includes('tu tiên') || tenPhaiChay.includes('cung thủ') || tenPhaiChay.includes('pháp sư') || tenPhaiChay.includes('luyện thể')
+        phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu') || phaiHienTai.includes('luyenthe') || phaiHienTai.includes('lazer') ||
+        codePhaiGoc.includes('tu_tien') || codePhaiGoc.includes('cung_ten') || codePhaiGoc.includes('phap_su') || codePhaiGoc.includes('sung_dan') || codePhaiGoc.includes('luyen_the') || codePhaiGoc.includes('sieuanhhung') || codePhaiGoc.includes('lazer') ||
+        tenPhaiChay.includes('tu tiên') || tenPhaiChay.includes('cung thủ') || tenPhaiChay.includes('pháp sư') || tenPhaiChay.includes('luyện thể') || tenPhaiChay.includes('lazer')
     ) {
         console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay phải (Hệ phái dùng vũ khí đặc thù/Hộ thể/Tay Không)!");
         return;
