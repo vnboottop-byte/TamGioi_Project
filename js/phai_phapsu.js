@@ -262,11 +262,17 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
         let viTriGoc, huongMat, mucTieu, upVector;
         const dameGoc = window.DAME_CUA_TOI || 100;
 
-        // 🌟 LẤY ĐÚNG VŨ KHÍ ĐANG TRANG BỊ ĐỂ NÉM ĐI
+
+
+
+        // 🌟 QUY TẮC A, B & D PHÁP SƯ: Ưu tiên bốc đạn từ cây Trượng phép đã được cảm biến lọc kỹ rác!
         let vuKhiThucTe = weaponUrl;
-        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
+        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_PHAPSU || window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
+        if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) vuKhiThucTe = ""; // Quăng khí công tàng hình nếu là Anime
 
 
+
+ 
 
 
         if (isRemote) {
@@ -444,7 +450,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             }
         }
 
-        
+
      
 
         
