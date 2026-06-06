@@ -11,7 +11,7 @@ $refunded_lt = 0;
 // 1. MÁY QUÉT AUTO-REFUND 
 // ==========================================
 // Đang đặt 3 MINUTE để test, Sếp nhớ đổi thành 1 DAY sau khi test xong nhé
-$sql_expired = "SELECT id, seller_name, item_id, item_type, upgrade_level FROM auction_house WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 3 MINUTE)";
+$sql_expired = "SELECT id, seller_name, item_id, item_type, upgrade_level, bonus_damage, bonus_hp, bonus_speed FROM auction_house WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 3 MINUTE)";
 $res_expired = $conn->query($sql_expired);
 
 if ($res_expired && $res_expired->num_rows > 0) {
@@ -29,8 +29,9 @@ if ($res_expired && $res_expired->num_rows > 0) {
                 if (isset($_SESSION['user']) && $seller === $_SESSION['user']) $refunded_lt += $lt_amount;
                 
             } else {
-                $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level) VALUES (?, ?, ?, 0, ?)");
-                $in->bind_param("sisi", $seller, $row['item_id'], $row['item_type'], $row['upgrade_level']);
+                // Đóng gói đồ trả về kèm đầy đủ 3 Dòng Chỉ Số
+                $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, 0, ?, ?, ?, ?)");
+                $in->bind_param("sisiiii", $seller, $row['item_id'], $row['item_type'], $row['upgrade_level'], $row['bonus_damage'], $row['bonus_hp'], $row['bonus_speed']);
                 $in->execute();
                 
                 // Ghi nhận nếu là đồ của chính người đang mở chợ
@@ -49,7 +50,8 @@ if ($res_expired && $res_expired->num_rows > 0) {
 // 2. LẤY DANH SÁCH HÀNG ĐANG BÁN TRÊN SÀN
 // ==========================================
 $sql = "SELECT a.id as auction_id, a.seller_name, a.item_id, a.price_gold, a.created_at, a.upgrade_level, a.item_type as auction_type,
-               s.name, s.model_url, s.item_type, s.required_class, s.bonus_damage, s.bonus_hp, s.bonus_speed 
+               a.bonus_damage, a.bonus_hp, a.bonus_speed, 
+               s.name, s.model_url, s.required_class
         FROM auction_house a 
         LEFT JOIN shop_items s ON a.item_id = s.id 
         WHERE a.status = 'selling' 
