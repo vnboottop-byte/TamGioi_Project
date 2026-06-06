@@ -241,32 +241,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 
 
 
-
-
-
 // ==========================================
-// 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
-// ==========================================
-window.updateCombatTuTien = function () {
-
-
-
-
-
-
-    // ==========================================
-// 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
-// ==========================================
-    window.updateCombatTuTien = function () {
-
-
-
-
-
-
-
-
-    // ==========================================
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
@@ -289,9 +264,6 @@ window.updateCombatTuTien = function () {
     // =======================================================
     // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
     // =======================================================
-
-    
-
 
 
 
