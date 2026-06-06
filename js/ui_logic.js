@@ -621,8 +621,8 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
                         if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
                             let url3D = action === 'equip' ? itemMoi.model_url : '';
                             
-                            // 🌟 ÉP TÀNG HÌNH KHỎI MÀN HÌNH NẾU ĐANG ĐOẠT XÁ MÀ ĐÒI THAY VŨ KHÍ
-                            if (window.IS_DOAT_XA && ['weapon', 'weapon2', 'mount', 'shield'].includes(itemMoi.item_type)) {
+                            // 🌟 ÉP TÀNG HÌNH KHỎI MÀN HÌNH CHỈ KHI SẾP ĐANG DÙNG SKIN ANIME (HỆ THỐNG 1)
+                            if (window.LA_SKIN_ANIME && ['weapon', 'weapon2', 'mount', 'shield'].includes(itemMoi.item_type)) {
                                 url3D = ''; 
                             }
                             
