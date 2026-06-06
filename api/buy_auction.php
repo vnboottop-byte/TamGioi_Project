@@ -64,9 +64,14 @@ try {
         $final_gold_to_seller = $price - $tax;
         $conn->query("UPDATE game_characters SET game_gold = game_gold + $final_gold_to_seller WHERE username = '$seller'");
 
-        $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level) VALUES (?, ?, ?, 0, ?)");
-        $in->bind_param("sisi", $buyer, $auction['item_id'], $auction['item_type'], $auction['upgrade_level']);
+
+
+        // Giao hàng cho người mua, nhớ xách theo 3 dòng chỉ số!
+        $in = $conn->prepare("INSERT INTO user_inventory (username, item_id, item_type, is_equipped, upgrade_level, bonus_damage, bonus_hp, bonus_speed) VALUES (?, ?, ?, 0, ?, ?, ?, ?)");
+        $in->bind_param("sisiiii", $user, $auction['item_id'], $auction['item_type'], $auction['upgrade_level'], $auction['bonus_damage'], $auction['bonus_hp'], $auction['bonus_speed']);
         $in->execute();
+
+
 
         $conn->query("UPDATE auction_house SET status = 'sold' WHERE id = $auction_id");
     }
