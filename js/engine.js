@@ -1176,10 +1176,17 @@ function tienHanhTaiNhanVat() {
 };
 
 function loadVuKhiChoNhanVat(nhanVatDich) {
-    // 🛑 LÁ CHẮN THÉP: Bóp chữ về viết thường để chống lỗi. TUYỆT ĐỐI KHÔNG GẮN LÊN TAY!
+     // 🛑 LÁ CHẮN THÉP: Kiểm tra toàn diện để chặn phái dùng vũ khí đặc thù hoặc Hộ Thể (Cả phái gốc lẫn đoạt xá)
     let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
-    if (phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu')) {
-        console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay (Phái này dùng vũ khí đặc thù)!");
+    let codePhaiGoc = (window.FACTION_CODE || "").toLowerCase();
+    let tenPhaiChay = (window.HePhaiHienTai && window.HePhaiHienTai.tenPhai || "").toLowerCase();
+
+    if (
+        phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu') ||
+        codePhaiGoc.includes('tu_tien') || codePhaiGoc.includes('cung_ten') || codePhaiGoc.includes('phap_su') || codePhaiGoc.includes('sung_dan') ||
+        tenPhaiChay.includes('tu tiên') || tenPhaiChay.includes('cung thủ') || tenPhaiChay.includes('pháp sư')
+    ) {
+        console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay phải (Hệ phái dùng vũ khí đặc thù hoặc Hộ Thể)!");
         return;
     }
     // 🌟 QUY TẮC D: Chặn gắn vũ khí tay cầm nếu đang mặc Skin ALL (Anime)
