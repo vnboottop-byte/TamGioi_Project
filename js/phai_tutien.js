@@ -242,19 +242,18 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
-
     // =======================================================
-    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỘNG ĐỔI VŨ KHÍ KHI MẶC ĐỒ MỚI!
+    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ KHI MẶC ĐỒ MỚI (CHỐNG TÀNG HÌNH)
     // =======================================================
     if (window.WEAPON_URL !== window.oldWeaponURL_TT || window.WEAPON2_URL !== window.oldWeapon2URL_TT) {
         window.oldWeaponURL_TT = window.WEAPON_URL;
         window.oldWeapon2URL_TT = window.WEAPON2_URL;
         
-        let linkKiem = window.WEAPON_URL || window.WEAPON2_URL || 'uploads/anims/PHIKIEM_sword.glb';
+        let linkKiem = window.WEAPON_URL || window.WEAPON2_URL;
+        if (!linkKiem || linkKiem.trim() === '') linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
         
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(linkKiem, (vuKhiGoc) => {
-                // Xóa kiếm cũ bay sau lưng đi
                 if (window.kiemHoThe) { scene.remove(window.kiemHoThe); window.kiemHoThe = null; }
                 window.phiKiemModel = vuKhiGoc;
                 
@@ -262,26 +261,29 @@ window.updateCombatTuTien = function () {
                 const box = new THREE.Box3().setFromObject(window.phiKiemModel);
                 const size = new THREE.Vector3(); box.getSize(size);
                 const maxDim = Math.max(size.x, size.y, size.z) || 1;
-                let tyLeChuan = 3.0 / maxDim; // Ép chuẩn 3 mét
+                let tyLeChuan = 3.0 / maxDim; // Ép chuẩn vũ khí dài 3 mét
                 window.phiKiemModel.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
                 
                 if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
-                
-                // Mở khóa để vòng lặp tự động gắn lại kiếm mới!
-                isCuoiKiemSetup = false; 
+                isCuoiKiemSetup = false; // Mở khóa để cập nhật 3D
             });
         }
     }
-    
 
     try {
         if (!isCuoiKiemSetup && typeof window.phiKiemModel !== 'undefined' && window.phiKiemModel) {
-            window.kiemHoThe = window.phiKiemModel.clone(); window.kiemHoThe.traverse(c => { if (c.isMesh) c.visible = true; });
-            scene.add(window.kiemHoThe); window.kiemHoThe.scale.set(0.04, 0.04, 0.04);
+            window.kiemHoThe = window.phiKiemModel.clone(); 
+            window.kiemHoThe.traverse(c => { if (c.isMesh) c.visible = true; });
+            scene.add(window.kiemHoThe); 
+            
+            // 🛑 LỖ HỔNG Ở ĐÂY: ĐÃ XÓA DÒNG ÉP CỨNG 0.04 VÀ THAY BẰNG:
+            window.kiemHoThe.scale.copy(window.phiKiemModel.scale);
+            
             window.gocXoayKiem = 0; window.gocTuXoay = 0; isCuoiKiemSetup = true;
         }
 
         if (isCuoiKiemSetup && window.kiemHoThe && typeof playerModel !== 'undefined') {
+            // ... (Đoạn tính toán xoay quỹ đạo bên dưới Sếp giữ nguyên)
             window.gocXoayKiem += 0.04; window.gocTuXoay += 0.2;
 
             const banKinh = 1.5;
