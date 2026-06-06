@@ -621,9 +621,9 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
                         if (typeof window.capNhatTrangBi3DNgayLapTuc === 'function') {
                             let url3D = action === 'equip' ? itemMoi.model_url : '';
                             
-                            // 🌟 ÉP TÀNG HÌNH KHỎI MÀN HÌNH CHỈ KHI SẾP ĐANG DÙNG SKIN ANIME (HỆ THỐNG 1)
-                            if (window.LA_SKIN_ANIME && ['weapon', 'weapon2', 'mount', 'shield'].includes(itemMoi.item_type)) {
-                                url3D = ''; 
+                            // 🌟 QUY TẮC D: ÉP TÀNG HÌNH NẾU ĐANG MẶC SKIN "ALL" MÀ BẤM THAY VŨ KHÍ (Skin phái gốc vẫn load bình thường)
+                            if (window.IS_SKIN_ANIME && ['weapon', 'weapon2', 'shield'].includes(itemMoi.item_type)) {
+                                url3D = '';
                             }
                             
                             let capDoĐập = action === 'equip' ? (parseInt(itemMoi.upgrade_level) || 0) : 0;
