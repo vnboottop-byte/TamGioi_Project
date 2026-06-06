@@ -257,6 +257,18 @@ window.updateCombatTuTien = function () {
     // ==========================================
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
+    window.updateCombatTuTien = function () {
+
+
+
+
+
+
+
+
+    // ==========================================
+// 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
+// ==========================================
 window.updateCombatTuTien = function () {
 
     // 🛑 KHÓA BẢO MẬT: CHỈ CÓ TU TIÊN MỚI ĐƯỢC CHẠY CẢM BIẾN NÀY! CẤM ĂN TRỘM ĐẠN CỦA XẠ THỦ!
@@ -277,6 +289,8 @@ window.updateCombatTuTien = function () {
     // =======================================================
     // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
     // =======================================================
+
+    
 
 
 
