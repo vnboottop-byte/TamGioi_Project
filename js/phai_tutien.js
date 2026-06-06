@@ -34,21 +34,20 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 }
 
 
-
-// TÁC DỤNG: Bốc vũ khí từ kho Asset thay vì xài chung window.phiKiemModel
 function taoKiemChuan(scaleSize, weaponUrl) {
     const stdSword = new THREE.Group(); 
     let urlCanTai = weaponUrl || window.WEAPON_URL || window.WEAPON2_URL;
-    // 🌟 BẢN VÁ: Có gì xài nấy, tay không thì lôi Kiếm gốc ra
     if (!urlCanTai || urlCanTai.trim() === '') urlCanTai = 'uploads/anims/PHIKIEM_sword.glb'; 
     
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
-            // 🌟 THƯỚC ĐO CHUẨN HÓA: Bóp mọi vũ khí chéo phái về chung size 3 Mét của Kiếm
             vuKhi.updateMatrixWorld(true);
             const box = new THREE.Box3().setFromObject(vuKhi);
-            const maxDim = Math.max(...box.getSize(new THREE.Vector3()).toArray()) || 1;
-            let tyLeChuan = (3.0 / maxDim);
+            const size = new THREE.Vector3(); box.getSize(size);
+            
+            // 🌟 THƯỚC ĐO CHUẨN AAA: Mọi thứ bóp về đúng 3 Mét!
+            const maxDim = Math.max(size.x, size.y, size.z) || 1;
+            let tyLeChuan = 3.0 / maxDim; 
             vuKhi.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
             
             vuKhi.position.set(0, 0, 0); 
@@ -63,7 +62,6 @@ function taoKiemChuan(scaleSize, weaponUrl) {
     stdSword.scale.set(scaleSize, scaleSize, scaleSize);
     return stdSword;
 }
-
 
 // TẠI FILE: phai_tutien.js
 // TÁC DỤNG: Tung chiêu có đính kèm weaponUrl, khóa Radar chuẩn xác
@@ -244,6 +242,36 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 // 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
 // ==========================================
 window.updateCombatTuTien = function () {
+
+    // =======================================================
+    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỘNG ĐỔI VŨ KHÍ KHI MẶC ĐỒ MỚI!
+    // =======================================================
+    if (window.WEAPON_URL !== window.oldWeaponURL_TT || window.WEAPON2_URL !== window.oldWeapon2URL_TT) {
+        window.oldWeaponURL_TT = window.WEAPON_URL;
+        window.oldWeapon2URL_TT = window.WEAPON2_URL;
+        
+        let linkKiem = window.WEAPON_URL || window.WEAPON2_URL || 'uploads/anims/PHIKIEM_sword.glb';
+        
+        if (typeof window.taiHoacNhanBanAsset === 'function') {
+            window.taiHoacNhanBanAsset(linkKiem, (vuKhiGoc) => {
+                // Xóa kiếm cũ bay sau lưng đi
+                if (window.kiemHoThe) { scene.remove(window.kiemHoThe); window.kiemHoThe = null; }
+                window.phiKiemModel = vuKhiGoc;
+                
+                window.phiKiemModel.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(window.phiKiemModel);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                let tyLeChuan = 3.0 / maxDim; // Ép chuẩn 3 mét
+                window.phiKiemModel.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
+                
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.phiKiemModel, window.WEAPON_LEVEL || 0);
+                
+                // Mở khóa để vòng lặp tự động gắn lại kiếm mới!
+                isCuoiKiemSetup = false; 
+            });
+        }
+    }
     
 
     try {
