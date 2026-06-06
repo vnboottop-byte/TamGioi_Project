@@ -401,9 +401,55 @@
     // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU
     // ==========================================
     window.updateCombatCungThu = function () {
-    
+        if (typeof window.taiHoacNhanBanAsset !== 'function') return;
 
-        // ... (Code cũ giữ nguyên) ...
+        // =======================================================
+        // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI MŨI TÊN HỘ THỂ & DỌN RÁC SẠCH SẼ
+        // =======================================================
+        let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
+        if (phaiHienTai.includes('cungthu')) {
+            if (window.WEAPON_URL !== window.oldWeaponURL_CT) {
+                window.oldWeaponURL_CT = window.WEAPON_URL;
+                
+                let linkMuiTen = window.WEAPON_URL;
+                if (!linkMuiTen || linkMuiTen.trim() === '') linkMuiTen = 'uploads/anims/VIENDAN.glb';
+                if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) linkMuiTen = ""; // Tàng hình nếu là Anime
+                
+                window.VUKHI_HIEN_TAI_CUA_CUNGTHU = linkMuiTen;
+
+                // 🛑 Gỡ bỏ mũi tên cũ
+                if (window.cungHoThe) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(window.cungHoThe);
+                    else scene.remove(window.cungHoThe);
+                    window.cungHoThe = null;
+                }
+
+                // 🌟 Tải mũi tên mới
+                if (linkMuiTen !== "") {
+                    window.taiHoacNhanBanAsset(linkMuiTen, (gltfTen) => {
+                        // Chống lag mạng đẻ 2 tên
+                        if (window.cungHoThe) {
+                            if (typeof window.donRac3D === 'function') window.donRac3D(window.cungHoThe);
+                            window.cungHoThe = null;
+                        }
+                        window.cungHoThe = gltfTen;
+                        window.cungHoThe.updateMatrixWorld(true);
+                        const box = new THREE.Box3().setFromObject(window.cungHoThe);
+                        const size = new THREE.Vector3(); box.getSize(size);
+                        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                        window.scaleChuanMuiTen = 1.2 / maxDim; // Ép chuẩn mũi tên dài 1.2m
+                        window.cungHoThe.scale.set(window.scaleChuanMuiTen, window.scaleChuanMuiTen, window.scaleChuanMuiTen);
+                        
+                        if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(window.cungHoThe, window.WEAPON_LEVEL || 0);
+                        
+                        window.gocXoayCung = 0; window.gocTuXoayCung = 0;
+                    });
+                }
+            }
+        }
+
+
+         
         for (let i = kyNangCungThu.length - 1; i >= 0; i--) {
             let skill = kyNangCungThu[i]; skill.life--;
 
