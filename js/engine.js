@@ -1175,11 +1175,7 @@ function tienHanhTaiNhanVat() {
     }
 };
 function loadVuKhiChoNhanVat(nhanVatDich) {
-    if (window.SCRIPT_PHAI_CUA_TOI) {
-        if (window.SCRIPT_PHAI_CUA_TOI.includes('phai_cungthu') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_bansung') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_tutien') || window.SCRIPT_PHAI_CUA_TOI.includes('phai_phapsu')) {
-            return;
-        }
-    }
+   
 
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
         // 🌟 BẢN VÁ: Thêm callback bắt lỗi 404 để cứu luồng JS không bị crash
