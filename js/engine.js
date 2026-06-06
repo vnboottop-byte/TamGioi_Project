@@ -1174,11 +1174,16 @@ function tienHanhTaiNhanVat() {
         );
     }
 };
+
 function loadVuKhiChoNhanVat(nhanVatDich) {
-   
+    // 🛑 LÁ CHẮN THÉP: Bóp chữ về viết thường để chống lỗi. TUYỆT ĐỐI KHÔNG GẮN LÊN TAY!
+    let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
+    if (phaiHienTai.includes('cungthu') || phaiHienTai.includes('bansung') || phaiHienTai.includes('tutien') || phaiHienTai.includes('phapsu')) {
+        console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay (Phái này dùng vũ khí đặc thù)!");
+        return;
+    }
 
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
-        // 🌟 BẢN VÁ: Thêm callback bắt lỗi 404 để cứu luồng JS không bị crash
         loader.load(
             window.WEAPON_URL,
             function (gltfW) {
@@ -1209,10 +1214,9 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
                     window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL);
                 }
             },
-            undefined, // Bỏ qua onProgress
+            undefined,
             function (error) {
-                // 🛡️ LÁ CHẮN TỐI CAO: File lỗi hoặc 404 thì bỏ qua vũ khí, cho Đại hiệp tay không vào game chạy tiếp!
-                console.error("⚠️ [CẢNH BÁO ENGINE]: Không tìm thấy file vũ khí 3D tại: " + window.WEAPON_URL + ". Đã kích hoạt chế độ Tay Không Bắt Giặc chống treo máy.");
+                console.error("⚠️ [CẢNH BÁO ENGINE]: Không tìm thấy file vũ khí 3D tại: " + window.WEAPON_URL + ". Đã kích hoạt chế độ Tay Không.");
             }
         );
     }
