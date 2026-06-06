@@ -1182,6 +1182,11 @@ function loadVuKhiChoNhanVat(nhanVatDich) {
         console.log("🛑 Engine: Đã chặn gắn vũ khí lên tay (Phái này dùng vũ khí đặc thù)!");
         return;
     }
+    // 🌟 QUY TẮC D: Chặn gắn vũ khí tay cầm nếu đang mặc Skin ALL (Anime)
+    if (window.IS_SKIN_ANIME) {
+        console.log("🛑 Engine: Đã chặn vũ khí (Đang mặc Skin ALL/Anime)!");
+        return;
+    }
 
     if (window.WEAPON_URL && window.WEAPON_URL.trim() !== "") {
         loader.load(
