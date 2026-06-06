@@ -254,6 +254,35 @@ window.updateCombatTuTien = function () {
 
 
 
+    // ==========================================
+// 🚀 VÒNG LẶP VẬT LÝ (ĐÃ NÂNG CẤP CHẠY TOÀN CẦU QUÉT RÁC & TẦM NHIỆT)
+// ==========================================
+window.updateCombatTuTien = function () {
+
+    // 🛑 KHÓA BẢO MẬT: CHỈ CÓ TU TIÊN MỚI ĐƯỢC CHẠY CẢM BIẾN NÀY! CẤM ĂN TRỘM ĐẠN CỦA XẠ THỦ!
+    let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
+    if (!phaiHienTai.includes('tutien')) {
+        // Nếu lỡ ăn trộm nhầm vũ khí thì tiêu hủy tang vật ngay lập tức!
+        if (window.kiemHoThe) {
+            if (typeof window.donRac3D === 'function') window.donRac3D(window.kiemHoThe);
+            else scene.remove(window.kiemHoThe);
+            window.kiemHoThe = null;
+        }
+        return; // Cắt đứt vòng lặp tại đây, không cho chạy tiếp!
+    }
+
+    // 🌟 LÁ CHẮN TỐI THƯỢNG: Trì hoãn Cảm Biến cho đến khi Engine 3D đã sẵn sàng! Chống mất Hộ Thể vĩnh viễn!
+    if (typeof window.taiHoacNhanBanAsset !== 'function') return;
+
+    // =======================================================
+    // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
+    // =======================================================
+
+
+
+
+
+
     // =======================================================
     // 🌟 CẢM BIẾN VẬT LÝ: TỰ ĐỔI KIẾM HỘ THỂ & QUÉT SẠCH RÁC CŨ
     // =======================================================
