@@ -93,16 +93,32 @@ try {
         $stmt_on->bind_param("i", $new_inv_id);
         $stmt_on->execute();
 
-        // 🌟 BẢN VÁ 1: NẾU LÀ SKIN ĐOẠT XÁ (ALL) THÌ ÉP CUSTOM_SCRIPT VÀO NGƯỜI
-        if ($item['item_type'] === 'model' && $item['required_class'] === 'ALL') {
-            $tenFileGoc = basename($item['model_url']); 
-            $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
-            $mangTen = explode('_', $tenKhongDuoi);
-            $tenNhanVat = end($mangTen);
-            $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
-            $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
-        } else if ($item['item_type'] === 'model' && $item['required_class'] !== 'ALL') {
-            $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
+        // 🌟 BẢN VÁ 1: HỆ THỐNG ĐOẠT XÁ KÉP (ALL & CHÉO PHÁI)
+        if ($item['item_type'] === 'model') {
+            if ($item['required_class'] === 'ALL') {
+                // Đoạt xá Anime: Load JS theo Tên file GLB
+                $tenFileGoc = basename($item['model_url']); 
+                $tenKhongDuoi = pathinfo($tenFileGoc, PATHINFO_FILENAME);
+                $mangTen = explode('_', $tenKhongDuoi);
+                $tenNhanVat = end($mangTen);
+                $js_doc_quyen = "js/" . strtolower($tenNhanVat) . ".js";
+                $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+            } else {
+                // Đoạt xá Chéo Phái: Load JS chuẩn theo mã Hệ Phái
+                $map_js = [
+                    'TU_TIEN' => 'js/phai_tutien.js',
+                    'LUYEN_THE' => 'js/phai_luyenthe.js',
+                    'CUNG_THU' => 'js/phai_cungthu.js',
+                    'PHAP_SU' => 'js/phai_phapsu.js',
+                    'LAZER' => 'js/phai_lazer.js',
+                    'BAN_SUNG' => 'js/phai_bansung.js',
+                    'SUNG_DAN' => 'js/phai_bansung.js'
+                ];
+                $js_doc_quyen = isset($map_js[$item['required_class']]) ? $map_js[$item['required_class']] : null;
+                if ($js_doc_quyen) {
+                    $conn->query("UPDATE game_characters SET custom_script = '$js_doc_quyen' WHERE username = '$username'");
+                }
+            }
         }
 
         // 🌟 BẢN VÁ 2: CẬP NHẬT LẠI MÁU VÀ DAME NGAY TỨC KHẮC
