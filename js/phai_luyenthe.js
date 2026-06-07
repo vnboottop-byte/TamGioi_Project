@@ -237,7 +237,7 @@
             // QUYỀN 2: LÀ BOSS ĐÁNH -> Sếp mất máu chân thực (Dame gốc nhân với tỷ lệ đấm của chiêu)
             if (typeof isRemote === 'number' && isRemote > 0) {
                 if (typeof window.gaySatThuongBossToPlayer === 'function') {
-                    window.gaySatThuongBossToPlayer(posNo, dameGoc * 1.25, banKinhNo);
+                    window.gaySatThuongBossToPlayer(posNo, dameGoc * 1.0, banKinhNo); // 🌟 GỌT DAME BOSS LUYỆN THỂ
                 }
             }
             // QUYỀN 3: NGƯỜI CHƠI KHÁC PVP -> Bỏ qua, để Server trừ máu, chống Double-Dame!
@@ -326,10 +326,8 @@
         }
 
         if (targetQuai) {
-            // 💥 CHIA ĐỀU SÁT THƯƠNG: 8 nhịp đấm x 1.25 = 10.0 (Gây 1000 Dame nếu Dame Gốc là 100)
-            const dameChiTiet = { 'Q': 1.25, 'E': 1.25, 'R': 1.25, 'F': 1.25 };
-            
-            // Chuyển trạng thái sang Lướt
+            // 🌟 ĐỒNG BỘ ESPORTS 800%: 8 nhịp đấm x 1.0 = 8.0 (Gây 800 Dame chuẩn chỉ)
+            const dameChiTiet = { 'Q': 1.0, 'E': 1.0, 'R': 1.0, 'F': 1.0 };
             
             // Chuyển trạng thái sang Lướt
             window.trangThaiLT.state = 'DASHING';
