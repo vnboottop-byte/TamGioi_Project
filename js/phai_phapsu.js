@@ -33,10 +33,17 @@
     window.thoiDiemNoCuoiCungPS = window.thoiDiemNoCuoiCungPS || 0;
 
 function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
-    // 1. TÍNH SÁT THƯƠNG NGẦM (KHÔNG BỎ SÓT DAME NÀO)
-    if (isRemote === false) gaySatThuongPS(pos, luongDame, banKinh);
+    // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+    if (isRemote === false) {
+        // QUYỀN 1: Sếp đánh Quái & Báo PVP lên Server
+        gaySatThuongPS(pos, luongDame, banKinh);
+    }
     else if (typeof isRemote === 'number' && isRemote > 0) {
-        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+        // QUYỀN 2: Boss đánh (Lấy đúng luongDame đã chia tỷ lệ từng vòng phép)
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+    }
+    else if (isRemote === true) {
+        // QUYỀN 3: Đạn của người chơi khác PVP với Sếp (Bỏ qua để tránh x2 Dame)
     }
 
     // 2. VAN XẢ ĐỒ HỌA CHỐNG LAG MOBILE (0.3s NỔ 1 LẦN)
@@ -102,9 +109,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
     });
 }
 
-
-
-    function taoVuKhiBayPS(weaponUrl, mauSac, scaleSize, isUpright = false) {
+    function taoVuKhiBayPS(weaponUrl, mauSac, scaleSize, isUpright = false, auraLevel = 0) {
         const group = new THREE.Group();
         let urlCanTai = weaponUrl || window.WEAPON_URL;
         if (!urlCanTai || urlCanTai.trim() === '') return group;
@@ -131,8 +136,8 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 v.rotation.y = 0;
                 v.rotation.z = 0;
 
-                // 🌟 BƠM HÀO QUANG CHO VÒNG PHÉP KHI NÉM RA
-                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(v, window.WEAPON_LEVEL || 0);
+                // 🌟 BẢN VÁ: DÙNG HÀO QUANG ĐƯỢC TRUYỀN VÀO TỪ BÊN NGOÀI
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(v, auraLevel);
 
                 group.add(v);
             });
@@ -143,12 +148,6 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
 
         return group;
     }
-
-
-
-
-    
-
 
 
     window.layMucTieuGanNhatPS = function(viTriGoc) {
@@ -258,14 +257,22 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             window.henGioTatMuaPS = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
 
-
         let viTriGoc, huongMat, mucTieu, upVector;
-        const dameGoc = window.DAME_CUA_TOI || 100;
-
-
-
+        
+        // 🌟 BẢN VÁ: TRẢ LẠI LỰC CHIẾN VÀ HÀO QUANG CHÍNH CHỦ
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        let auraLevel = window.WEAPON_LEVEL || 0;
+        
+        if (isRemote !== false) {
+            auraLevel = 0; // Boss và Địch không có hào quang của Sếp
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 🌟 QUY TẮC A, B & D PHÁP SƯ: Vũ khí ném đi CHUẨN XÁC là Vũ Khí 1 (Vòng Phép)
+
         let vuKhiThucTe = weaponUrl;
         if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.WEAPON_URL || 'uploads/anims/vong_phep.glb';
         if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) vuKhiThucTe = ""; // Quăng khí công tàng hình nếu là Anime
