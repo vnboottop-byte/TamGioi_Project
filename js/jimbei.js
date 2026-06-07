@@ -90,9 +90,18 @@
 
     // 💥 HIỆU ỨNG NỔ NƯỚC (Bắn văng các bọt nước li ti)
     function taoVuNoNuocJB(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (isRemote === false) gaySatThuongJB(pos, luongDame, banKinh);
+        
+        // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+        if (isRemote === false) {
+            // QUYỀN 1: Sếp đánh (Tính dame Quái + Báo Server PVP)
+            gaySatThuongJB(pos, luongDame, banKinh);
+        } 
         else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+            // QUYỀN 2: Boss đánh (Trừ máu Sếp theo luongDame đã chia tỷ lệ)
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        } 
+        else if (isRemote === true) {
+            // QUYỀN 3: Địch PVP (Để Server lo, Local chỉ nổ nước thôi)
         }
 
         let bayGio = Date.now();
@@ -231,7 +240,14 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 2: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // =====================================
         // 🌟 2. HẸN GIỜ 0.5 GIÂY SAU MỚI PHÓNG KỸ NĂNG TỪ TAY
