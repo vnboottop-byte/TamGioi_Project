@@ -97,9 +97,17 @@
 
     // 🌟 3. HIỆU ỨNG VỤ NỔ LỬA ĐỎ TUNG TÓE
     function taoVuNoLUA_ICJ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (isRemote === false && luongDame > 0) gaySatThuongICJ(pos, luongDame, banKinh);
         
-        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
+        // 🌟 QUY TẮC 3 QUYỀN LỰC
+        if (isRemote === false && luongDame > 0) {
+            gaySatThuongICJ(pos, luongDame, banKinh);
+        } else if (typeof isRemote === 'number' && isRemote > 0) {
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        } else if (isRemote === true) {
+            // PvP Người chơi khác nổ (Để Server trừ máu)
+        }
+        
+        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos);
         else if (typeof window.playSound === 'function') window.playSound('no');
 
         const soLuong = window.isMobile ? 20 : 60;
@@ -349,7 +357,7 @@
                     targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 35,
                     isSpinning: true, spinSpeed: 0.4, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
-                
+
             }, 500);
         }
     };
@@ -389,7 +397,8 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    taoVuNoLUA_ICJ(s.targetPos, false, s.damage, s.noBanKinh);
+                    // 🌟 BẢN VÁ: Trả lại bộ nhớ cho đạn, không fix cứng chữ 'false' nữa
+                    taoVuNoLUA_ICJ(s.targetPos, s.isRemote, s.damage, s.noBanKinh);
                     if (typeof window.kichHoatDongDat === 'function' && s.maxScale > 10) window.kichHoatDongDat(15, 500);
                     s.life = 0;
                 }
@@ -421,13 +430,12 @@
                     } else s.mesh.translateZ(s.speed);
 
                     if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                        taoVuNoLUA_ICJ(s.targetPos, false, s.damage, s.noBanKinh);
+                        // 🌟 BẢN VÁ: Trả lại bộ nhớ cho đạn
+                        taoVuNoLUA_ICJ(s.targetPos, s.isRemote, s.damage, s.noBanKinh);
                         s.life = 0;
                     }
                 }
             }
-
-            // 🛑 DỌN RÁC MODEL (Giữ nguyên như cũ)
 
             // 🛑 DỌN RÁC MODEL
             if (s.life <= 0) {
