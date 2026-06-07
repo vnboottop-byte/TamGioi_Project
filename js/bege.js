@@ -272,7 +272,14 @@
         if (tayPhaiPos.distanceTo(viTriGoc) < 0.1) tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
         if (ngucPos.distanceTo(viTriGoc) < 0.1) ngucPos.sub(upVector.clone().multiplyScalar(0.5));
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 💣 ĐỘNG CƠ 1: BẮN ĐẠN PARABOL (COPY TỪ USOPP)
         function banDanParabolBege(nongSung, tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
@@ -362,7 +369,14 @@
                 s.mesh.lookAt(curPos.clone().add(huongBay)); 
 
                 if (s.progress >= 1 || s.life <= 0) {
-                    gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG (ĐẠN PARABOL Q, E)
+                    if (s.isRemote === false) gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    } else if (s.isRemote === true) {
+                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
+                    }
+
                     taoVuNoBege(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
@@ -378,7 +392,14 @@
                 taoDuoiLuaMiniBege(s.mesh.position, dirNguoc, s.speed);
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG (TÊN LỬA R, F)
+                    if (s.isRemote === false) gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    } else if (s.isRemote === true) {
+                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
+                    }
+
                     taoVuNoBege(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
