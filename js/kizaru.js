@@ -90,9 +90,18 @@
 
     // 💥 HIỆU ỨNG NỔ ÁNH SÁNG (BỤI VÀNG TUNG TÓE CỰC MỊN)
     function taoVuNoAnhSangKZR(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (isRemote === false && luongDame > 0) gaySatThuongKZR(pos, luongDame, banKinh);
+        
+        // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+        if (isRemote === false && luongDame > 0) {
+            // QUYỀN 1: Sếp đánh (Tính dame Quái + Gửi mạng PVP)
+            gaySatThuongKZR(pos, luongDame, banKinh);
+        }
         else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+            // QUYỀN 2: Boss đánh (Trừ máu Sếp theo luongDame đã chia tỷ lệ)
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        }
+        else if (isRemote === true) {
+            // QUYỀN 3: Địch PVP (Để Server lo, Local chỉ nổ hạt bụi vàng thôi)
         }
 
         let bayGio = Date.now();
@@ -251,7 +260,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100; // ĐỒNG BỘ DAME 100
+    // 🌟 BẢN VÁ: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+    let dameGoc = window.DAME_CUA_TOI || 100;
+    if (isRemote !== false) {
+        if (typeof isRemote === 'number' && isRemote > 0) {
+            dameGoc = isRemote; // Lấy lực chiến của Boss Kizaru
+        } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+            dameGoc = window.remotePlayers[casterId].damage || 100; // Lấy dame của địch PVP
+        }
+    }
 
         // =====================================
         // 2. ĐỘ TRỄ 500MS VÀ KÍCH HOẠT SÁT THƯƠNG
