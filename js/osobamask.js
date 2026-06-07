@@ -97,8 +97,17 @@
 
     // 🌟 3. HIỆU ỨNG VỤ NỔ OSOBAMASK (TIA LỬA VÀNG CHÓE)
     function taoVuNoOSO(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-        if (isRemote === false && luongDame > 0) gaySatThuongOSO(pos, luongDame, banKinh);
-        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
+        
+        // 🌟 QUY TẮC 3 QUYỀN LỰC
+        if (isRemote === false && luongDame > 0) {
+            gaySatThuongOSO(pos, luongDame, banKinh);
+        } else if (typeof isRemote === 'number' && isRemote > 0) {
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        } else if (isRemote === true) {
+            // PvP Kẻ địch bắn (Để Server trừ máu)
+        }
+
+        if (typeof window.playSound3D === 'function') window.playSound3D('no', pos);
 
         const soLuong = window.isMobile ? 25 : 60;
         const geo = new THREE.BufferGeometry();
@@ -218,7 +227,14 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // ===============================================
         // 🥷 CHIÊU Q (ATTACK3): DELAY 500ms - TAY TRÁI BẮN FIRE2
@@ -237,8 +253,9 @@
                     mesh: qOrb, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100, 
                     currentScale: 1.5, maxScale: 4.0, growthRate: 0.2, // Phình to mức 1
                     targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 15,
-                    isSpinning: true, spinSpeed: 0.1
+                    isSpinning: true, spinSpeed: 0.1, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+
             }, 500);
         }
 
@@ -259,8 +276,9 @@
                     mesh: eOrb, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
                     currentScale: 3.0, maxScale: 8.0, growthRate: 0.3, // Phình to gấp đôi Q
                     targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 22,
-                    isSpinning: true, spinSpeed: 0.2
+                    isSpinning: true, spinSpeed: 0.2, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+
             }, 1000); // Trễ 1 giây chuẩn đét
         }
 
@@ -281,8 +299,9 @@
                     mesh: rOrb, type: 'BAY_THANG_PHINH_TO', speed: 11.0, life: 100, 
                     currentScale: 5.0, maxScale: 12.0, growthRate: 0.4, 
                     targetPos: mucTieu.clone(), damage: dameGoc * 2.5, noBanKinh: 30,
-                    isSpinning: true, spinSpeed: 0.3
+                    isSpinning: true, spinSpeed: 0.3, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+
             }, 400); // Thường chiêu cước đá sẽ vung nhanh hơn (400ms)
         }
 
@@ -303,8 +322,9 @@
                     mesh: fOrb, type: 'BAY_THANG_PHINH_TO', speed: 12.0, life: 120,
                     currentScale: 7.0, maxScale: 18.0, growthRate: 0.5, 
                     targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 40,
-                    isSpinning: true, spinSpeed: 0.4
+                    isSpinning: true, spinSpeed: 0.4, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+
             }, 500); 
         }
     };
@@ -337,7 +357,8 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    taoVuNoOSO(s.targetPos, false, s.damage, s.noBanKinh);
+                    // 🌟 BẢN VÁ: Trả lại bộ nhớ cho đạn, không code cứng chữ 'false'
+                    taoVuNoOSO(s.targetPos, s.isRemote, s.damage, s.noBanKinh);
                     if (typeof window.kichHoatDongDat === 'function' && s.maxScale > 10) window.kichHoatDongDat(15, 500);
                     s.life = 0;
                 }
