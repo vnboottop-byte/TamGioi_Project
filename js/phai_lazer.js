@@ -111,11 +111,18 @@
 
     window.thoiDiemNoCuoiCungLZ = window.thoiDiemNoCuoiCungLZ || 0;
 
-function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-    // 1. TÍNH DAME (LUÔN CHẠY)
-    if (isRemote === false) gaySatThuongLZ(pos, luongDame, banKinh);
+    function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
+    // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+    if (isRemote === false) {
+        // QUYỀN 1: Sếp đánh Quái
+        gaySatThuongLZ(pos, luongDame, banKinh);
+    }
     else if (typeof isRemote === 'number' && isRemote > 0) {
-        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+        // QUYỀN 2: Boss đánh (Lấy đúng luongDame đã chia tỷ lệ, chứ ko lấy cục isRemote bự)
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+    }
+    else if (isRemote === true) {
+        // QUYỀN 3: PVP Người chơi khác (Bỏ qua để Server trừ máu)
     }
 
     // 2. VAN CHỐNG LAG ĐỒ HỌA
@@ -139,12 +146,6 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
     const pts = new THREE.Points(geo, mat); scene.add(pts);
     hieuUngLazer.push({ system: pts, velocities: vels, life: 20, type: 'explosion' }); 
 }
-    
-
-
-
-
-
 
     // ==========================================
     // 🛠️ RADAR & MÔ HÌNH
@@ -255,13 +256,17 @@ function taoVuNoLZ(pos, isRemote = false, luongDame = 100, banKinh = 15) {
             window.henGioTatMuaLZ = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
 
-
-
-
         let viTriGoc, huongMat, mucTieu, upVector;
-        const dameGoc = window.DAME_CUA_TOI || 100;
         
-         
+        // 🌟 BẢN VÁ: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) {
+                dameGoc = isRemote; 
+            } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100; 
+            }
+        }
 
         if (isRemote) {
             viTriGoc = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
