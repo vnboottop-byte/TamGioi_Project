@@ -729,14 +729,17 @@ window.capNhatAIQuaiVat = function (delta) {
                             let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                             funcName = 'tungCombo' + camelCase;
                         }
+
                         let thiTrienVoCong = function() {
-                            if (typeof window[funcName] === 'function') {
-                                // Gửi Biến dmgBoss = Mức sát thương thật sự vào vị trí isRemote của hàm tung chiêu!
-                                window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                            // 🌟 BẢN VÁ: CHỈ CHO PHÉP PHÁI "TU TIÊN" DÙNG SCRIPT RIÊNG VÌ ĐÃ CÓ CODE ISREMOTE
+                            // Các phái cũ (Pháp Sư, Cung Thủ...) bị cấm dùng Script cũ để chống tự tử, ép dùng Tuyệt Kỹ Boss!
+                            if (phaiCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') {
+                                window.tungComboTuTien(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                             } else {
-                                if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, 'TU_TIEN', chieu);
+                                if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
                         };
+
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); // Đã học rồi thì múa luôn
                         } else {
@@ -1232,10 +1235,11 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
 
                 // Tự động gọi chiêu thức nếu có Script
-                if (typeof window[tenHamBot] === 'function') {
-                    window[tenHamBot](nextChieu, true, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') {
+                    // 🌟 BẢN VÁ: Chỉ Tu Tiên mới được xài Script xịn
+                    window.tungComboTuTien(nextChieu, dmgBot, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
                 } else if (typeof window.bossTungTuyetKieu === 'function') {
-                    window.bossTungTuyetKieu(bot, pTarget, 'TU_TIEN', nextChieu);
+                    window.bossTungTuyetKieu(bot, pTarget, phaiDung, nextChieu);
                 }
 
 
