@@ -574,8 +574,6 @@ function hienThi3DTrongTui(url, loaiDo, capDo = 0) {
 window.thucHienHanhDongTrangBi = function(invId, action) {
     let item = window.khoDoData.find(i => i.inv_id == invId);
 
-    
-
     fetch('api/toggle_equip.php', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -597,8 +595,11 @@ window.thucHienHanhDongTrangBi = function(invId, action) {
             if (data.new_damage) window.DAME_CUA_TOI = data.new_damage;
             if (data.new_hp) {
                 window.MAU_TOI_DA = data.new_hp;
-                window.mauBanThan = data.new_hp; 
+                window.mauBanThan = data.new_hp;
             }
+            // 🌟 BẢN VÁ: NHẬN TỐC ĐỘ CHẠY VÀ TỐC ĐÁNH NGAY LẬP TỨC (KHÔNG CẦN F5)
+            if (data.new_speed !== undefined) window.TOC_DO_CHAY_CUA_TOI = data.new_speed;
+            if (data.new_cdr !== undefined) window.GIAM_HOI_CHIEU = data.new_cdr;
 
             fetch('api/get_inventory.php')
             .then(res2 => res2.json())
