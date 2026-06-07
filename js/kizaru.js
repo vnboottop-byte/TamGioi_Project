@@ -320,7 +320,7 @@
                     scene.add(tiaNho);
                     
                     // Tính Dame R: 8 tia x 0.075 = 0.6 tổng
-                    taoVuNoAnhSangKZR(targetLech, isRemote, dameGoc * 0.075, 8);
+                    taoVuNoAnhSangKZR(targetLech, isRemote, dameGoc * 0.0625, 8);
                     kyNangKizaru.push({ mesh: tiaNho, type: 'TIA_CHOP', life: 15 });
                 }
             }
@@ -329,7 +329,7 @@
                 const tiaBu = taoTiaLazerLienTuc(viTriXuatChieu, mucTieu, 5.0, 0xff5500); 
                 scene.add(tiaBu);
                 
-                taoVuNoAnhSangKZR(mucTieu, isRemote, dameGoc * 0.9, 35); // Tính Dame F: 0.9
+                taoVuNoAnhSangKZR(mucTieu, isRemote, dameGoc * 1.0, 35);
                 kyNangKizaru.push({ mesh: tiaBu, type: 'TIA_CHOP', life: 25 });
             }
         }, 500); // ⏳ Độ trễ 500 mili-giây
