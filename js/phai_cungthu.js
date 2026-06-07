@@ -158,8 +158,7 @@
         return null;
     }
 
-    
-    function taoMuiTenXin(scaleSize, weaponUrl) {
+    function taoMuiTenXin(scaleSize, weaponUrl, auraLevel = 0) { 
         const group = new THREE.Group();
 
         let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_CUNGTHU || window.WEAPON_URL;
@@ -173,8 +172,8 @@
                 let tyLeGoc = window.scaleChuanMuiTen || 0.33;
                 vuKhi.scale.set(tyLeGoc * scaleSize, tyLeGoc * scaleSize, tyLeGoc * scaleSize);
 
-                // 🌟 BƠM HÀO QUANG CHO MŨI TÊN KHI BẮN ĐI
-                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL || 0);
+                // 🌟 BẢN VÁ: Dùng Hào Quang được truyền vào, chặn ăn cắp WEAPON_LEVEL của Sếp
+                if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, auraLevel);
 
                 group.add(vuKhi);
             });
@@ -185,21 +184,28 @@
     window.thoiDiemNoCuoiCungCT = window.thoiDiemNoCuoiCungCT || 0;
 
     function taoVuNoCT(pos, isRemote = false, luongDame = 100, banKinh = 15) {
-    // 1. TÍNH DAME VẬT LÝ (LUÔN CHẠY)
-    if (isRemote === false) gaySatThuongCT(pos, luongDame, banKinh);
-    else if (typeof isRemote === 'number' && isRemote > 0) {
-        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
-    }
+        // 🌟 BẢN VÁ: TÍNH DAME VẬT LÝ THEO ĐÚNG 3 QUYỀN LỰC SẾP CHỈ ĐỊNH
+        if (isRemote === false) {
+            // QUYỀN 1 (SẾP BẮN): Đánh quái và gửi Server tính PVP
+            gaySatThuongCT(pos, luongDame, banKinh);
+        }
+        else if (typeof isRemote === 'number' && isRemote > 0) {
+            // QUYỀN 2 (BOSS BẮN): Trừ máu trực tiếp của Sếp
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+        }
+        else if (isRemote === true) {
+            // QUYỀN 3 (NGƯỜI CHƠI KHÁC PVP): Bỏ qua! Không tự trừ máu trên máy Sếp để tránh x2 Dame.
+        }
 
-    // 2. VAN XẢ ĐỒ HỌA (MOBILE MỖI 0.3S CHỈ VẼ 1 LẦN NỔ)
-    let bayGio = Date.now();
-    if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungCT < 300) {
-        return; 
-    }
-    window.thoiDiemNoCuoiCungCT = bayGio;
+        // 2. VAN XẢ ĐỒ HỌA (MOBILE MỖI 0.3S CHỈ VẼ 1 LẦN NỔ)
+        let bayGio = Date.now();
+        if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungCT < 300) {
+            return; 
+        }
+        window.thoiDiemNoCuoiCungCT = bayGio;
 
-    // 3. GỌI HIỆU ỨNG
-    if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(pos, banKinh * 0.5, 0xffaa00);
+        // 3. GỌI HIỆU ỨNG
+        if (typeof window.taoHieuUngNo === 'function') window.taoHieuUngNo(pos, banKinh * 0.5, 0xffaa00);
     }
 
     function taoSaoBangCT(pos, dir) {
@@ -282,8 +288,17 @@
         // ==========================================
         // 🌟 2. XÁC ĐỊNH TỌA ĐỘ BẮN 
         // ==========================================
-        let viTriGoc, huongMat, mucTieu;
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ: TRẢ LẠI LỰC CHIẾN VÀ HÀO QUANG CHÍNH CHỦ
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        let auraLevel = window.WEAPON_LEVEL || 0;
+        
+        if (isRemote !== false) {
+            auraLevel = 0; // Kẻ địch không có hào quang của Sếp
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 🌟 KHAI BÁO BIẾN CHỨA VŨ KHÍ THỰC TẾ Ở ĐÂY
         let vuKhiThucTe = weaponUrl;
@@ -328,7 +343,7 @@
             const qGroup = new THREE.Group(); qGroup.position.copy(tamTranPhap); qGroup.lookAt(mucTieu); scene.add(qGroup);
 
             for (let i = 0; i < soLuong; i++) {
-                const ten = taoMuiTenXin(5.0, vuKhiThucTe);
+                const ten = taoMuiTenXin(5.0, vuKhiThucTe, auraLevel);
                 const goc = (i / soLuong) * Math.PI * 2;
                 ten.position.set(Math.cos(goc) * 3, Math.sin(goc) * 3, 0); qGroup.add(ten);
                 kyNangCungThu.push({
@@ -343,7 +358,7 @@
             const soLuong = 15;
             const spawnCenter = viTriGoc.clone().add(upVector.clone().multiplyScalar(25)).sub(huongMat.clone().multiplyScalar(10));
             for (let i = 0; i < soLuong; i++) {
-                const ten = taoMuiTenXin(10.0, vuKhiThucTe);
+                const ten = taoMuiTenXin(10.0, vuKhiThucTe, auraLevel);
                 let rX = (Math.random() - 0.5) * 20;
                 let rZ = (Math.random() - 0.5) * 20;
                 let rUp = Math.random() * 10;
@@ -367,7 +382,7 @@
             const tamTranPhap = viTriGoc.clone().add(upVector.clone().multiplyScalar(6)).sub(huongMat.clone().multiplyScalar(5));
             rGroup.position.copy(tamTranPhap); rGroup.lookAt(mucTieu); scene.add(rGroup);
             for (let i = 0; i < 5; i++) {
-                const ten = taoMuiTenXin(20.0, vuKhiThucTe);
+                const ten = taoMuiTenXin(20.0, vuKhiThucTe, auraLevel);
                 const goc = (i / 5) * Math.PI * 2;
                 ten.position.set(Math.cos(goc) * 4, Math.sin(goc) * 4, 0); rGroup.add(ten);
                 kyNangCungThu.push({
@@ -378,7 +393,7 @@
         }
         // F: ĐẠI THIÊN TIỄN (ICBM)
         else if (phim === 'F') {
-            const fTen = taoMuiTenXin(30.5, vuKhiThucTe);
+            const fTen = taoMuiTenXin(30.5, vuKhiThucTe, auraLevel);
             const startPos = viTriGoc.clone().add(upVector.clone().multiplyScalar(8)).sub(huongMat.clone().multiplyScalar(5));
             fTen.position.copy(startPos); fTen.lookAt(startPos.clone().add(upVector)); scene.add(fTen);
 
