@@ -67,17 +67,17 @@ try {
             $conn->query("UPDATE game_characters SET custom_script = NULL WHERE username = '$username'");
         }
     }
-     
 
 
     // ==========================================
-    // 🌟 BẢN VÁ: TÍNH LẠI MÁU VÀ DAME NGAY KHI MẶC/THÁO ĐỒ
+    // 🌟 BẢN VÁ AAA: TÍNH LẠI MÁU, DAME, TỐC ĐÁNH, TỐC CHẠY CHUẨN KIẾM THẾ
     // ==========================================
-    $stmt_wp = $conn->prepare("SELECT s.bonus_hp, s.bonus_damage, i.upgrade_level FROM user_inventory i JOIN shop_items s ON i.item_id = s.id WHERE i.username = ? AND i.is_equipped = 1");
+    // Cần Select thêm item_type và bonus_speed
+    $stmt_wp = $conn->prepare("SELECT s.item_type, s.bonus_hp, s.bonus_damage, s.bonus_speed, i.upgrade_level FROM user_inventory i JOIN shop_items s ON i.item_id = s.id WHERE i.username = ? AND i.is_equipped = 1");
     $stmt_wp->bind_param("s", $username); $stmt_wp->execute();
     $res_wp = $stmt_wp->get_result();
     
-    $buff_hp = 0; $buff_dmg = 0;
+    $buff_hp = 0; $buff_dmg = 0; $buff_spd = 0; $buff_cdr = 0;
     $heSoKiemThe = [1.0, 1.05, 1.12, 1.22, 1.35, 1.50, 1.70, 1.95, 2.25, 2.60, 3.10, 3.70, 4.50, 5.50, 6.80, 8.50];
     
     while($wp = $res_wp->fetch_assoc()) {
@@ -86,27 +86,41 @@ try {
         
         $buff_hp += (int)$wp['bonus_hp'] * $heSoCong;
         $buff_dmg += (int)$wp['bonus_damage'] * $heSoCong;
+        
+        // Tính Tốc độ (Tách riêng Vũ Khí = Hồi chiêu | Thú cưỡi = Chạy)
+        $tocDo = (float)$wp['bonus_speed'] * $heSoCong;
+        if ($wp['item_type'] === 'mount') {
+            $buff_spd += $tocDo;
+        } else if ($wp['item_type'] === 'weapon' || $wp['item_type'] === 'weapon2') {
+            $buff_cdr += $tocDo;
+        }
     }
 
     $stmt_user = $conn->prepare("SELECT level FROM game_characters WHERE username = ?");
-
-
-
     $stmt_user->bind_param("s", $username); $stmt_user->execute();
     $uData = $stmt_user->get_result()->fetch_assoc();
     $lvl = (int)$uData['level'];
 
-    // 🌟 Ráp tổng lực (Gốc + Đồ đã nhân hệ số)
+    // Ráp tổng lực
     $hp_max_moi = 1000 + (($lvl - 1) * 30) + $buff_hp;
     $damage_moi = 100 + (($lvl - 1) * 3) + $buff_dmg;
+    
+    // Ráp Tốc độ (Chuẩn 1 Điểm = 1%)
+    $speed_moi = 1.0 + ($buff_spd * 0.01);
+    $cdr_moi = $buff_cdr * 0.01;
+    if ($cdr_moi > 0.4) $cdr_moi = 0.4; // Khóa trần 40% giảm hồi chiêu
 
     $conn->query("UPDATE game_characters SET hp_max = $hp_max_moi, damage = $damage_moi WHERE username = '$username'");
 
     $conn->commit();
     
-    // Ném lại cục Dame và Máu mới này về cho Trình duyệt
-    echo json_encode(['status' => 'success', 'new_damage' => $damage_moi, 'new_hp' => $hp_max_moi]);
+    // Gói toàn bộ 4 chỉ số trả về cho game
+    echo json_encode(['status' => 'success', 'new_damage' => $damage_moi, 'new_hp' => $hp_max_moi, 'new_speed' => $speed_moi, 'new_cdr' => $cdr_moi]);
 } catch (Exception $e) {
     $conn->rollback(); echo json_encode(['status' => 'error']);
 }
 ?>
+     
+
+
+    
