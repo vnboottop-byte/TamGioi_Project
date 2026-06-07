@@ -237,7 +237,15 @@
         }
 
         let right = new THREE.Vector3().crossVectors(nvc.up, fwd).normalize();
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 🚀 BƯỚC 2: HÀM BẮN GATLING BOOMERANG TỐC ĐỘ CAO
         function banGatling(soLuong, heSoDame, tocDoBay, scaleTay, loaiDam) {
@@ -311,10 +319,21 @@
                     s.mesh.translateZ(s.speed); 
                     
                     let daTrung = false;
-                    // 🛑 CHỮA MÙ 3: Xóa bỏ lệnh ngủ gật %2. Ép mở mắt check va chạm LIÊN TỤC TỪNG KHUNG HÌNH!
-                    // 🛑 CHỮA MÙ 4: Phóng to cục Hitbox của nắm đấm từ 6 mét lên 12 mét. Quái né đằng trời!
-                    if (!s.isRemote) { 
+                    
+                    // 🌟 2. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG (BOOMERANG)
+                    if (s.isRemote === false) {
+                        // QUYỀN 1: Sếp đấm Quái
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12); 
+                    } 
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        // QUYỀN 2: Boss đấm Sếp (Trừ máu trực tiếp theo dame đã chia)
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 12);
+                            daTrung = true; // Báo đấm trúng Sếp để thu tay về!
+                        }
+                    }
+                    else if (s.isRemote === true) {
+                        // QUYỀN 3: Người chơi khác PVP (Bỏ qua để tránh X2 Dame)
                     }
 
                     // Nếu đấm TRÚNG mặt kẻ địch, hoặc bay hết TẦM ĐÁNH -> GIẬT NGƯỢC LẠI
