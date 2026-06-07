@@ -686,16 +686,27 @@ window.capNhatAIQuaiVat = function (delta) {
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.5);
+
+
                         let dmgBoss = 30 * (quai.level || 1);        
                         // Lấy tọa độ từ lõi ngực Boss
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
                         if (!quai.tamThucTeLocal) bOrigin.y += 5; 
                         const pTarget = playerModel.position.clone(); pTarget.y += 5;
                         const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-                        let tempId = "BOSS_" + quai.id;
-                        if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh };
-                        // 🌟 2. VÁ LỖI TỊT NGÒI: Giữ xác ảo lên 2000ms để đợi các chiêu delay (như Jimbei) chạy xong mới xóa
+                        
+                        // 🌟 BẢN VÁ 1: KÉO NÒNG SÚNG RA KHỎI BỤNG BOSS CHỐNG KẸT ĐẠN
+                        let khoangCach = bOrigin.distanceTo(pTarget);
+                        let doDayBung = (quai.heSoToLon || 1) * 6;
+                        let dayRaNgoai = Math.min(doDayBung, khoangCach * 0.8);
+                        bOrigin.add(bDir.clone().multiplyScalar(dayRaNgoai));
+
+                        // 🌟 BẢN VÁ 2: TRẢ LẠI ĐÚNG ID VÀ BƠM THẲNG DAME VÀO LƯỚI MẠNG
+                        let tempId = String(quai.id); 
+                        if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh, damage: dmgBoss };
+                        
                         setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
+
                         // ==========================================
                         // 🌟 3. TRANG BỊ VŨ KHÍ MẶC ĐỊNH CHO BOSS (CHỐNG ĂN CẮP ĐỒ CỦA SẾP)
                         // ==========================================
