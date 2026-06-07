@@ -283,8 +283,9 @@
 
                 kyNangKaya.push({
                     mesh: vkBig, type: 'BAY_THANG_XOAY_NGANG', speed: 9.0, life: 120,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.8, noBanKinh: 20, isRemote: isRemote
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.7, noBanKinh: 20 // 🌟 ĐỒNG BỘ 780%
                 });
+
             }, 500);
         }
 
@@ -314,8 +315,9 @@
 
                     kyNangKaya.push({
                         mesh: muaVk, type: 'MUA_VU_KHI', speed: 4.5, life: 150,
-                        targetPos: posDap, damage: dameGoc * 0.066, noBanKinh: 25, isRemote: isRemote
+                        targetPos: posDap, damage: dameGoc * 0.06, noBanKinh: 25 // 🌟 ĐỒNG BỘ 780%
                     });
+                    
                 }, 500 + i * delayPerVukhi);
             }
         }
