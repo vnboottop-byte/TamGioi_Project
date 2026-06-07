@@ -1044,7 +1044,8 @@ setInterval(() => {
                     if (true) { // 🛑 GỠ GIÁP ĐẠN BAY
                         window.mauBanThan -= Math.round(s.dmg);
 
-                        if (typeof taoSoSatThuong === 'function') taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(s.dmg));
+                        // 🌟 BẢN VÁ: ĐÃ THÊM WINDOW. ĐỂ NẢY SỐ DAME KHI ĐẠN NỔ TRÚNG NGƯỜI
+                        if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(s.dmg), '#ff0000');
                         const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
                         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
                         if (uiSoMau) uiSoMau.innerText = Math.max(0, window.mauBanThan).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
