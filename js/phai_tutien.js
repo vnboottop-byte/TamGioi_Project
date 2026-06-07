@@ -182,10 +182,12 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
             sword.up.copy(upVector); // 🌟 Giữ cho kiếm không bị lật nghiêng
             sword.lookAt(mucTieu); scene.add(sword);
             
-            if(typeof window.dangKyChieuThuc === 'function') window.dangKyChieuThuc(sword, 5000);
+            if (typeof window.dangKyChieuThuc === 'function') window.dangKyChieuThuc(sword, 5000);
+
+            // 🌟 ĐỒNG BỘ DAME ESPORTS (7.8): 5 kiếm x 0.08 = 0.4 Dame/lần (Khớp chuẩn cấu rỉa toàn Server)
+            kyNangTuTien.push({ mesh: sword, speed: 4.0, life: 100, type: 'kiem_q', delay: 40 + i, targetPos: mucTieu.clone(), damage: dameGoc * 0.08, isRemote: isRemote });
             
-            // 🌟 CÂN BẰNG DAME: 30 x 0.013 = 0.39 -> 5 x 0.078 = 0.39
-            kyNangTuTien.push({ mesh: sword, speed: 4.0, life: 100, type: 'kiem_q', delay: 40 + i, targetPos: mucTieu.clone(), damage: dameGoc * 0.078, isRemote: isRemote });
+          
         }
     }
 
