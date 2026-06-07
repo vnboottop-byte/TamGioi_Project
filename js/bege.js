@@ -342,7 +342,7 @@
         else if (phim === 'E') banDanParabolBege(ngucPos, 'VIENDAN', 3, 3.5, 12, 8.0, 0.2, 12);
         
         // 🚀 CHIÊU R: 3 Tên lửa bắn từ TAY PHẢI
-        else if (phim === 'R') banTenLuaBege(tayPhaiPos, 3, 200, 0.3);
+        else if (phim === 'R') banTenLuaBege(tayPhaiPos, 3, 200, 0.166);
         
         // 🔥 CHIÊU F: 10 Tên lửa liên thanh bắn từ TAY PHẢI (Kéo dài 1.5s -> Mỗi viên cách nhau 150ms)
         else if (phim === 'F') banTenLuaBege(tayPhaiPos, 10, 150, 0.1);
