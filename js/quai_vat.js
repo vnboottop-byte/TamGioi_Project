@@ -1242,17 +1242,10 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
 
 
-                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 100);
-                let khoangCachDenSep = bOrigin.distanceTo(playerModel.position);
-                let thoiGianDanBay = (khoangCachDenSep / 60) * 1000;
-                if (thoiGianDanBay < 200) thoiGianDanBay = 200;
-                let tamNo = pTarget.clone();
-                setTimeout(() => {
-                    if (typeof window.gaySatThuongBossToPlayer === 'function' && !window.isDead) {
-                        let dmg = 30 * (bot.level || 1);
-                        window.gaySatThuongBossToPlayer(tamNo, dmg, 15.0);
-                    }
-                }, thoiGianDanBay);
+                // Giữ kết nối sát thương 2 giây để đạn bay tới nơi (Thay vì 100ms như cũ)
+                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 2000);
+                // 🛑 ĐÃ QUÉT SẠCH CỤC MÌN GÂY SÁT THƯƠNG ẢO LÀM CHẾT OAN NGƯỜI CHƠI TẠI ĐÂY!
+
                 if (window.room && window.room.state === 'connected') {
                     window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                         type: 'BOSS_SKILL', bossId: bot.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'FAKE_PLAYER', classCode: phaiDung, chieu: nextChieu
