@@ -215,7 +215,7 @@
 
                 kyNangNL.push({
                     mesh: tayTo, type: 'BAY_THANG', speed: 10.0, life: 80,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20, isRemote: isRemote // <--- THÊM VÀO ĐÂY
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 20, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
             }, 200);
         }
@@ -241,7 +241,7 @@
                 
                 kyNangNL.push({ 
                     mesh: tayR, type: 'BAY_THANG_GOM', speed: 4.5, life: 150, delay: i * 5, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 12, isRemote: isRemote // <--- THÊM VÀO ĐÂY
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.075, noBanKinh: 12, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
             }
         }
@@ -271,7 +271,7 @@
 
                     kyNangNL.push({
                         mesh: kq, type: 'BAY_THANG', speed: 9.0, life: 100,
-                        targetPos: diemDichSongSong, damage: dameGoc * 0.8, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
+                        targetPos: diemDichSongSong, damage: dameGoc * 0.166, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
                 }
             }, 300);
@@ -294,7 +294,7 @@
 
                     kyNangNL.push({
                         mesh: kq, type: 'BAY_THANG', speed: 8.0, life: 100,
-                        targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 22, isRemote: isRemote // <--- THÊM VÀO ĐÂY
+                        targetPos: mucTieu.clone(), damage: dameGoc * 0.333, noBanKinh: 22, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
                 }
             }, 300);
