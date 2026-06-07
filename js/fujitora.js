@@ -255,7 +255,20 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+
+
+
+        }
+
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // 🔮 CHIÊU Q
@@ -382,7 +395,22 @@
                 }
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh, s.isKiem);
+                    
+                    // 🌟 2. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+                    if (s.isRemote === false) {
+                        // QUYỀN 1: Sếp tung chiêu (Gây dame Quái + Gửi mạng PVP)
+                        gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh, s.isKiem);
+                    } 
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        // QUYỀN 2: Boss đánh (Trừ máu Sếp trực tiếp theo sát thương chia nhỏ của Thiên Thạch)
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+                    } 
+                    else if (s.isRemote === true) {
+                        // QUYỀN 3: Người chơi khác PVP (Chỉ nổ hiệu ứng, bỏ qua để Server trừ máu chống X2 Dame)
+                    }
+
                     taoHieuUngNoFuji(s.targetPos, s.isUltimate, s.isKiem);
                     s.life = 0;
                 }
