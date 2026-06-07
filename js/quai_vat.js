@@ -733,7 +733,8 @@ window.capNhatAIQuaiVat = function (delta) {
                         let thiTrienVoCong = function() {
                             // 🌟 BẢN VÁ: PHỤC HỒI DYNAMIC SCRIPT CHO MỌI HỆ PHÁI
                             if (typeof window[funcName] === 'function') {
-                                window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                           // Truyền TRUE để báo đây là đòn đánh từ Mạng/Boss
+                            window[funcName](chieu, true, bOrigin, pTarget, bDir, tempId, bossWeapon);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
