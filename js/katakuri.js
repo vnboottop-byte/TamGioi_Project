@@ -185,7 +185,15 @@
 
         let viTriGoc, huongMat, mucTieuGoc;
         let upVector = new THREE.Vector3(0, 1, 0);
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 🌟 FILE ĐÚC ĐẠI LÝ MỚI CỦA SẾP CHỈ ĐỊNH
         const FILE_TAY = 'uploads/anims/1779946771_BANTAYKATAKURI.glb';
@@ -341,7 +349,13 @@
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
                     taoVuNoKatakuri(s.mesh.position, 0xff0044, 12);
-                    if (!s.isRemote) gaySatThuongKTK(s.mesh.position, s.damage, 12); 
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC
+                    if (s.isRemote === false) gaySatThuongKTK(s.mesh.position, s.damage, 12);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 12);
+                    }
+                    
                     s.life = 0;
                 }
             }
@@ -362,7 +376,13 @@
 
                     if (s.progress >= 1) {
                         taoVuNoKatakuri(s.targetPos, 0xaa0000, 15);
-                        if (!s.isRemote) gaySatThuongKTK(s.targetPos, s.damage, 15);
+                        
+                        // 🌟 QUY TẮC 3 QUYỀN LỰC
+                        if (s.isRemote === false) gaySatThuongKTK(s.targetPos, s.damage, 15);
+                        else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, 15);
+                        }
+
                         s.life = 0;
                     }
                 }
@@ -371,9 +391,16 @@
                 if (s.swordMesh) {
                     s.swordMesh.rotateX(0.08); 
                     s.ticks++;
+                    
                     if (s.ticks > 35 || s.life <= 5) {
                         taoVuNoKatakuri(s.targetPos, 0xff0000, 25); 
-                        if (!s.isRemote) gaySatThuongKTK(s.targetPos, s.damage, 25);
+                        
+                        // 🌟 QUY TẮC 3 QUYỀN LỰC
+                        if (s.isRemote === false) gaySatThuongKTK(s.targetPos, s.damage, 25);
+                        else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, 25);
+                        }
+
                         s.life = 0;
                     }
                 }
