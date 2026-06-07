@@ -115,15 +115,19 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     if (window.IS_IN_SAFE_ZONE) return;
 
     let tamNguc = window.playerModel.position.clone(); tamNguc.y += 5;
+    
+    // Nếu chạm vụ nổ thì trừ máu sằng phẳng (Không nể nang Admin nữa!)
     if (tamNo.distanceTo(tamNguc) <= banKinh) {
-        // Đã xóa dòng IF cấm Admin ở đây. Giờ ai cũng bị trừ máu!
         window.mauBanThan -= luongDame;
-        // 🌟 BẢN VÁ: GỌI ĐÚNG HÀM TOÀN CỤC ĐỂ HIỂN THỊ SỐ DAME ĐỎ LÊN ĐẦU
-        if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(tamNguc, luongDame, '#ff0000');
-        const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
+        if (typeof taoSoSatThuong === 'function') taoSoSatThuong(tamNguc, luongDame, '#ff0000');
+        
+        const uiThanhMau = document.getElementById('thanhMauHienTai'); 
+        const uiSoMau = document.getElementById('soMauHienTai');
+        
         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-        if (uiSoMau) uiSoMau.innerText = Math.max(0, window.mauBanThan).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
-        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Boss/Quái Vật");
+        if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
+        
+        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Hạ Gục");
     }
 };
 
