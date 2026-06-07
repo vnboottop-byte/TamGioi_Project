@@ -213,12 +213,42 @@
         });
     }
 
+    window.tungComboLuyenThe = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
+        
+        // ========================================================
+        // 🌟 1. QUY TẮC "3 QUYỀN LỰC" (CHỐNG LỖI X2 DAME & 1-HIT-KILL)
+        // ========================================================
+        let dameGoc = window.DAME_CUA_TOI || 200;
+        
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 200;
+            }
+            
+            // Tìm điểm nổ (Ưu tiên nổ tại ngực mục tiêu, nếu không có thì nổ tại người vung tay)
+            let posNo = remoteDich ? new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z) : (remoteGoc ? new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z) : new THREE.Vector3());
+            let upV = new THREE.Vector3(0, 1, 0); 
+            let banKinhNo = (phim === 'F') ? 15 : 5;
+            
+            // Vẽ vụ nổ chấn động khi Boss hoặc Kẻ địch xuất chiêu
+            if (typeof taoVuNoLT === 'function') taoVuNoLT(posNo, upV, 0xffaa00, banKinhNo);
+            
+            // QUYỀN 2: LÀ BOSS ĐÁNH -> Sếp mất máu chân thực (Dame gốc nhân với tỷ lệ đấm của chiêu)
+            if (typeof isRemote === 'number' && isRemote > 0) {
+                if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                    window.gaySatThuongBossToPlayer(posNo, dameGoc * 1.25, banKinhNo);
+                }
+            }
+            // QUYỀN 3: NGƯỜI CHƠI KHÁC PVP -> Bỏ qua, để Server trừ máu, chống Double-Dame!
+            return; 
+        }
 
-
-
-    window.tungComboLuyenThe = function (phim, isRemote = false) {
+        // ========================================================
+        // 🌟 2. QUYỀN 1: SẾP ĐÁNH (LOCAL PLAYER CHẠY VẬT LÝ)
+        // ========================================================
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-        if (!nvc || isRemote) return;
+        if (!nvc) return;
 
         let bayGio = Date.now();
         if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
@@ -282,6 +312,18 @@
         
         // ✂️ ANIMATION CANCELING: Phá khóa để lướt ngay lập tức
         window.dangMuaChieu = false; 
+
+        // 🌟 BẢN VÁ: GỬI TÍN HIỆU ĐÁNH NHAU CHO MỌI NGƯỜI TRÊN SERVER THẤY (CHỮA BỆNH TÀNG HÌNH PVP)
+        if (window.room && window.room.localParticipant) {
+            let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
+            let dichDen = targetQuai ? window.layHitbox(targetQuai.mesh || targetQuai).tamNguc : viTriGoc.clone().add(fwd.clone().multiplyScalar(5));
+            const data = new TextEncoder().encode(JSON.stringify({ 
+                type: 'TUNG_CHIEU', skillType: phim, className: 'LuyenThe', 
+                origin: { x: viTriGoc.x, y: viTriGoc.y, z: viTriGoc.z }, target: { x: dichDen.x, y: dichDen.y, z: dichDen.z }, dir: { x: fwd.x, y: fwd.y, z: fwd.z },
+                weaponUrl: null 
+            }));
+            window.room.localParticipant.publishData(data, { reliable: true });
+        }
 
         if (targetQuai) {
             // 💥 CHIA ĐỀU SÁT THƯƠNG: 8 nhịp đấm x 1.25 = 10.0 (Gây 1000 Dame nếu Dame Gốc là 100)
