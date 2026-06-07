@@ -268,7 +268,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
         
         let tayPhaiR = timXuong(nvc, ['RHand_Palm_049', 'RHand']); 
@@ -454,7 +462,12 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU Q)
+                    if (s.isRemote === false) gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
+
                     taoHieuUngNoDenBB(s.targetPos, false);
                     s.life = 0;
                 }
@@ -469,7 +482,12 @@
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
                 if (s.life % 10 === 0) { // Giật dame & nhả khói 1 lần/10 frame
-                    gaySatThuongBB(s.targetPos, s.damage * 0.2, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU E - GIẬT DAME TỪ TỪ)
+                    if (s.isRemote === false) gaySatThuongBB(s.targetPos, s.damage * 0.2, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage * 0.2, s.noBanKinh);
+                    }
+
                     taoHieuUngNoDenBB(s.targetPos, false, true);
                 }
             }
@@ -499,7 +517,11 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU R)
+                    if (s.isRemote === false) gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
 
                     const vfx = taoVatTheBB('vfxenergy', 30);
                     vfx.position.copy(s.targetPos); scene.add(vfx);
@@ -529,7 +551,11 @@
 
                 // Cứ 15 frame (Nửa giây) gay sát thương 1 lần toàn vùng
                 if (s.life % 15 === 0) {
-                    gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU F - AOE BÓNG TỐI)
+                    if (s.isRemote === false) gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
                 }
 
                 // Hiệu ứng tàn phai (Vòng tròn mờ dần khi hết chiêu)
