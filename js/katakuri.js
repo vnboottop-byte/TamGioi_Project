@@ -245,7 +245,7 @@
                 
                 kyNangKatakuri.push({
                     mesh: tay, type: 'BAY_THANG', speed: 8.0, life: 100, delay: i * 15, 
-                    targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.4, isRemote: isRemote 
+                    targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.2, isRemote: isRemote 
                 });
             }
         }
@@ -269,7 +269,7 @@
                 kyNangKatakuri.push({
                     mesh: dinhBa, type: 'BAY_PARABOL', state: 'CHO_DEN_LUOT',
                     speed: 0.015 + (Math.random() * 0.005), life: 300, startPos: startPos, targetPos: dichRoi,
-                    damage: dameGoc * 0.3, arcHeight: 25 + Math.random() * 15, fireDelay: i * 5, progress: 0, isRemote: isRemote,
+                    damage: dameGoc * 0.06, arcHeight: 25 + Math.random() * 15, fireDelay: i * 5, progress: 0, isRemote: isRemote,
                     upVector: upVector.clone()
                 });
             }
@@ -295,7 +295,7 @@
                 
                 kyNangKatakuri.push({ 
                     mesh: tayR, type: 'BAY_THANG_GOM', speed: 4.0, life: 150, delay: i * 5, 
-                    targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.3, isRemote: isRemote 
+                    targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.0625, isRemote: isRemote 
                 });
             }
         }
@@ -316,7 +316,7 @@
 
             kyNangKatakuri.push({ 
                 mesh: pivotGroup, swordMesh: tayGiga, speed: 0, life: 200, ticks: 0, 
-                type: 'F_CHOP', delay: 0, targetPos: mucTieuGoc.clone(), damage: dameGoc * 1.5, isRemote: isRemote 
+                type: 'F_CHOP', delay: 0, targetPos: mucTieuGoc.clone(), damage: dameGoc * 1.0, isRemote: isRemote 
             });
         }
     };
