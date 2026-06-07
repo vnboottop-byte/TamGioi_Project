@@ -267,9 +267,17 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         let xuongTayPhai = null; let xuongTayTrai = null;
+
         nvc.traverse(c => {
             if (c.name === 'RHand_Palm_015' || (c.name === 'Object_20' && !xuongTayPhai)) xuongTayPhai = c;
             if (c.name === 'LHand_Palm_011' || (c.name === 'Object_16' && !xuongTayTrai)) xuongTayTrai = c;
@@ -377,10 +385,17 @@
                     targetPos: diemNo, damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 40
                 });
 
-                gaySatThuongAce(diemNo, dameGoc * 1.0, 40);
+                // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU F - HỎA TRỤ NỔ TỨC THÌ)
+                if (isRemote === false) {
+                    gaySatThuongAce(diemNo, dameGoc * 1.0, 40);
+                } else if (typeof isRemote === 'number' && isRemote > 0) {
+                    if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(diemNo, dameGoc * 1.0, 40);
+                } else if (isRemote === true) {
+                    // Người chơi khác PVP (Bỏ qua để tránh x2 Dame)
+                }
                 
                 // 🌟 BÙM! TẠO BỤI LỬA NỔ KHỔNG LỒ TẠI CHỖ
-                taoHieuUngNoAce(diemNo, true); 
+                taoHieuUngNoAce(diemNo, true);
 
             }, 500);
         }
@@ -416,7 +431,17 @@
 
                 // 🛑 BÙM! KHI ĐẠN CHẠM ĐÍCH
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU Q, E, R)
+                    if (s.isRemote === false) {
+                        gaySatThuongAce(s.targetPos, s.damage, s.noBanKinh);
+                    } else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+                    } else if (s.isRemote === true) {
+                        // PvP Người chơi khác bắn -> Bỏ qua để chống X2 Dame
+                    }
                     
                     // 🌟 KÍCH HOẠT HIỆU ỨNG NỔ (R nổ to, Q E nổ nhỏ)
                     taoHieuUngNoAce(s.targetPos, s.skillId === 'R');
