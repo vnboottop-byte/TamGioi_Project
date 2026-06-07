@@ -941,9 +941,7 @@ window.capNhatGiaoDienLo = function() {
 
 
 
-
-
-    // --- VẼ Ô VŨ KHÍ & SOI NHÂN PHẨM ---
+// --- VẼ Ô VŨ KHÍ & SOI NHÂN PHẨM ---
     let boxRating = document.getElementById('forgeItemRating');
     if (!boxRating) {
         boxRating = document.createElement('div'); boxRating.id = 'forgeItemRating';
@@ -964,22 +962,27 @@ window.capNhatGiaoDienLo = function() {
         `;
         danhSachCanChup.push({ url: it.model_url, type: it.item_type, id: imgId, capDo: parseInt(it.upgrade_level)||0 });
 
-        // 🌟 BỘ NÃO THẦN NHÃN ĐÃ ĐỒNG BỘ 100% VỚI CHỢ ĐEN
+        // 🌟 BỘ NÃO THẦN NHÃN ĐÃ ĐỒNG BỘ 100% VỚI CHỢ ĐEN (CHUẨN HỆ SỐ KIẾM THẾ)
         if (lvl > 0) {
-            // 1. Tính toán chỉ số thực tế sau cường hóa (Y chang Chợ Đen)
-            let heSoCong = 1.0 + (lvl * 0.05);
+            // 1. Áp dụng chuẩn Bảng Hệ Số Kiếm Thế của Server
+            // Lên +15 nhân hệ số x8.5 lần toàn bộ sức mạnh!
+            const heSoKiemThe = [1.0, 1.05, 1.12, 1.22, 1.35, 1.50, 1.70, 1.95, 2.25, 2.60, 3.10, 3.70, 4.50, 5.50, 6.80, 8.50];
+            let heSoCong = heSoKiemThe[lvl] || 1.0;
+
             let dameThuc = Math.floor((it.bonus_damage || 0) * heSoCong);
             let hpThuc = Math.floor((it.bonus_hp || 0) * heSoCong);
             let spdThuc = Math.floor((it.bonus_speed || 0) * heSoCong);
 
-            // 2. Gửi sang Bộ Não chấm điểm tập trung
-            let danhGia = window.tinhDiemPhamChatTamGioi(dameThuc, hpThuc, spdThuc, lvl);
+            // 2. Gửi sang Bộ Não chấm điểm tập trung (Đã tắt tính năng cộng khống điểm ảo)
+            if (typeof window.tinhDiemPhamChatTamGioi === 'function') {
+                let danhGia = window.tinhDiemPhamChatTamGioi(dameThuc, hpThuc, spdThuc, lvl);
 
-            boxRating.innerHTML = `
-                <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px solid ${danhGia.color}; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: #fff; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 10px ${danhGia.color}; text-align: center; width: 100%; box-sizing: border-box;">
-                    <div style="color:#aaa; margin-bottom:2px;">Điểm Chiến Lực: <b style="color:#f1c40f; font-size:14px; text-shadow: ${danhGia.glow};">${danhGia.score.toLocaleString()} Pts</b></div>
-                    Đánh giá: <b style="color:${danhGia.color}; text-transform:uppercase; text-shadow: ${danhGia.glow};">${danhGia.rank}</b>
-                </div>`;
+                boxRating.innerHTML = `
+                    <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px solid ${danhGia.color}; padding: 5px 10px; border-radius: 5px; font-size: 11px; color: #fff; box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 0 10px ${danhGia.color}; text-align: center; width: 100%; box-sizing: border-box;">
+                        <div style="color:#aaa; margin-bottom:2px;">Điểm Chiến Lực: <b style="color:#f1c40f; font-size:14px; text-shadow: ${danhGia.glow};">${danhGia.score.toLocaleString()} Pts</b></div>
+                        Đánh giá: <b style="color:${danhGia.color}; text-transform:uppercase; text-shadow: ${danhGia.glow};">${danhGia.rank}</b>
+                    </div>`;
+            }
         } else {
             boxRating.innerHTML = `
                 <div style="margin-top: 8px; background: rgba(0,0,0,0.8); border: 1px dashed #7f8c8d; padding: 5px; border-radius: 5px; font-size: 10px; color: #7f8c8d; text-align: center; width: 100%; box-sizing: border-box;">
