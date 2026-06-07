@@ -734,7 +734,7 @@ window.capNhatAIQuaiVat = function (delta) {
                             // 🌟 BẢN VÁ: PHỤC HỒI DYNAMIC SCRIPT CHO MỌI HỆ PHÁI
                             if (typeof window[funcName] === 'function') {
                            // Truyền TRUE để báo đây là đòn đánh từ Mạng/Boss
-                            window[funcName](chieu, true, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                            window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon, true);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
