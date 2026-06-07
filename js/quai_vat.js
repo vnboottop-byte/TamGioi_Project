@@ -83,7 +83,7 @@ window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
                 quai.playAnim(chieuChon);
             }
 
-            let dmgBoss = 30 * (quai.level || 1);
+            let dmgBoss = 20 * (quai.level || 1);
             let bOrigin = quai.mesh.position.clone();
             let pTarget = playerModel.position.clone();
             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
