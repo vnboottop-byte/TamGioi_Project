@@ -330,14 +330,11 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             }
         }
 
-
-
-
         let qNamNgangMatDat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), upVector);
 
         if (phim === 'Q') {
-            // Ném 1 Vòng Phép dựng đứng như Bánh xe chạy tới (Aura Xanh)
-            const vongQ = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 5, true); 
+            // Ném 1 Vòng Phép dựng đứng (Aura Xanh)
+            const vongQ = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 5, true, auraLevel); 
             vongQ.position.copy(viTriGoc); 
             vongQ.up.copy(upVector); 
             vongQ.lookAt(mucTieu); 
@@ -345,8 +342,8 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
             kyNangPhapSu.push({ mesh: vongQ, type: 'Q', life: 150, targetPos: mucTieu, damage: dameGoc * 0.4, speed: 2.0, isRemote: isRemote, upV: upVector });
         }
         else if (phim === 'E') {
-            // Giáng 1 Vòng Phép khổng lồ nằm ngang từ trên trời xuống (Aura Tím)
-            const vongE = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 15, false); 
+            // Giáng 1 Vòng Phép khổng lồ nằm ngang (Aura Tím)
+            const vongE = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 15, false, auraLevel); 
             vongE.position.copy(mucTieu).add(upVector.clone().multiplyScalar(15));
             vongE.quaternion.copy(qNamNgangMatDat); 
             scene.add(vongE);
@@ -354,8 +351,8 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
         }
         else if (phim === 'R') {
             // Xoắn ốc 2 Vòng Phép Khổng Lồ
-            const vongTren = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 20, false);
-            const vongDuoi = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 20, false);
+            const vongTren = taoVuKhiBayPS(vuKhiThucTe, 0xff00ff, 20, false, auraLevel);
+            const vongDuoi = taoVuKhiBayPS(vuKhiThucTe, 0x00ffff, 20, false, auraLevel);
 
             vongTren.position.copy(mucTieu).add(upVector.clone().multiplyScalar(15));
             vongDuoi.position.copy(mucTieu).sub(upVector.clone().multiplyScalar(5)); 
@@ -381,13 +378,14 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex) {
                 { pos: [0, -s / 2, 0], rot: [Math.PI / 2, 0, 0] }
             ];
             mat.forEach(m => { 
-                let v = taoVuKhiBayPS(vuKhiThucTe, 0xff0000, s, true); // Aura Đỏ
+                let v = taoVuKhiBayPS(vuKhiThucTe, 0xff0000, s, true, auraLevel); 
                 v.position.set(...m.pos); v.rotation.set(...m.rot); 
                 box.add(v); 
             });
             scene.add(box);
             kyNangPhapSu.push({ mesh: box, type: 'F', ticks: 0, life: 300, targetPos: mucTieu, damage: dameGoc * 1.0, isRemote: isRemote, upV: upVector });
         }
+      
     };
 
 
