@@ -252,7 +252,7 @@
                 kyNangOsobamask.push({ 
                     mesh: qOrb, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100, 
                     currentScale: 1.5, maxScale: 4.0, growthRate: 0.2, // Phình to mức 1
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 15,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 15,
                     isSpinning: true, spinSpeed: 0.1, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
@@ -275,7 +275,7 @@
                 kyNangOsobamask.push({
                     mesh: eOrb, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
                     currentScale: 3.0, maxScale: 8.0, growthRate: 0.3, // Phình to gấp đôi Q
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 22,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 22,
                     isSpinning: true, spinSpeed: 0.2, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
@@ -298,7 +298,7 @@
                 kyNangOsobamask.push({ 
                     mesh: rOrb, type: 'BAY_THANG_PHINH_TO', speed: 11.0, life: 100, 
                     currentScale: 5.0, maxScale: 12.0, growthRate: 0.4, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 2.5, noBanKinh: 30,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 30,
                     isSpinning: true, spinSpeed: 0.3, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
@@ -321,7 +321,7 @@
                 kyNangOsobamask.push({
                     mesh: fOrb, type: 'BAY_THANG_PHINH_TO', speed: 12.0, life: 120,
                     currentScale: 7.0, maxScale: 18.0, growthRate: 0.5, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 40,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 40,
                     isSpinning: true, spinSpeed: 0.4, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
