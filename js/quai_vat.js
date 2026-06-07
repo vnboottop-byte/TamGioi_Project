@@ -731,10 +731,9 @@ window.capNhatAIQuaiVat = function (delta) {
                         }
 
                         let thiTrienVoCong = function() {
-                            // 🌟 BẢN VÁ: CHỈ CHO PHÉP PHÁI "TU TIÊN" DÙNG SCRIPT RIÊNG VÌ ĐÃ CÓ CODE ISREMOTE
-                            // Các phái cũ (Pháp Sư, Cung Thủ...) bị cấm dùng Script cũ để chống tự tử, ép dùng Tuyệt Kỹ Boss!
-                            if (phaiCode === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') {
-                                window.tungComboTuTien(chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
+                            // 🌟 BẢN VÁ: PHỤC HỒI DYNAMIC SCRIPT CHO MỌI HỆ PHÁI
+                            if (typeof window[funcName] === 'function') {
+                                window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
@@ -1235,9 +1234,8 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
 
 
                 // Tự động gọi chiêu thức nếu có Script
-                if (phaiDung === 'TU_TIEN' && typeof window.tungComboTuTien === 'function') {
-                    // 🌟 BẢN VÁ: Chỉ Tu Tiên mới được xài Script xịn
-                    window.tungComboTuTien(nextChieu, dmgBot, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
+                if (typeof window[tenHamBot] === 'function') {
+                    window[tenHamBot](nextChieu, dmgBot, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
                 } else if (typeof window.bossTungTuyetKieu === 'function') {
                     window.bossTungTuyetKieu(bot, pTarget, phaiDung, nextChieu);
                 }
