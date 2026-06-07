@@ -262,7 +262,16 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 120;
+        // 🌟 BẢN VÁ: Boss tự dùng Dame của Boss, Sếp dùng Dame của Sếp!
+        let dameGoc = window.DAME_CUA_TOI || 120;
+        
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) {
+                dameGoc = isRemote; // Lấy đúng Sát thương do Boss ném vào
+            } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 120;
+            }
+        }
 
         // 🌟 QUY TẮC A, B, D: CHỌN ĐẠN THEO CHIÊU THỨC
         // Chiêu Q, E dùng Weapon 1. Chiêu R, F dùng Weapon 2.
@@ -347,7 +356,18 @@
 
                 // Nổ khi chạm đích
                 if (s.progress >= 1 || s.life <= 0) {
-                    gaySatThuongBS(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // NẾU LÀ SẾP BẮN -> ĐÁNH QUÁI (Giữ nguyên)
+                    if (s.isRemote === false) {
+                        gaySatThuongBS(s.targetPos, s.damage, s.noBanKinh);
+                    } 
+                    // NẾU LÀ BOSS BẮN -> ĐÁNH SẾP (Gây sát thương đỏ máu)
+                    else if (s.isRemote === true || (typeof s.isRemote === 'number' && s.isRemote > 0)) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+                    }
+
                     taoVuNoBS(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
