@@ -234,7 +234,15 @@
         let huongMat = new THREE.Vector3(); 
         let mucTieuGoc = new THREE.Vector3();
         let targetQuaiGlobal = null; 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         if (isRemote) {
             viTriGoc.set(remoteGoc.x, remoteGoc.y, remoteGoc.z); 
@@ -349,9 +357,16 @@
 
             if (s.type === 'CAU_THUONG') {
                 s.mesh.translateZ(s.speed);
+
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
                     taoVuNoKame(s.mesh.position, 0xffcc00, 10);
-                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 10); 
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU Q)
+                    if (s.isRemote === false) gaySatThuongGK(s.mesh.position, s.damage, 10);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 10);
+                    }
+                    
                     s.life = 0;
                 }
             }
@@ -384,7 +399,13 @@
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 15) {
                     taoVuNoKame(s.mesh.position, 0x00aaff, 40);
-                    if (!s.isRemote) gaySatThuongGK(s.mesh.position, s.damage, 40); 
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU F - GENKI DAMA)
+                    if (s.isRemote === false) gaySatThuongGK(s.mesh.position, s.damage, 40);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 40);
+                    }
+                    
                     s.life = 0;
                 }
             }
@@ -416,7 +437,14 @@
 
                     if (s.life % 5 === 0) {
                         taoVuNoKame(endPos, s.color, 8);
-                        if (!s.isRemote) gaySatThuongGK(endPos, s.damage, 8, (s.color === 0xff0000 ? '#ff0000' : '#00ffff'));
+                        
+                        // 🌟 QUY TẮC 3 QUYỀN LỰC (TIA KAMEHAMEHA)
+                        if (s.isRemote === false) {
+                            gaySatThuongGK(endPos, s.damage, 8, (s.color === 0xff0000 ? '#ff0000' : '#00ffff'));
+                        } else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                            // Kamehameha quét 5 frame 1 lần, tụt máu từ từ chân thực!
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(endPos, s.damage, 8);
+                        }
                     }
                 } else {
                     s.life = 0; 
