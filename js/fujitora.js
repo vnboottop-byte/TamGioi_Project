@@ -321,7 +321,7 @@
 
                 kyNangFuji.push({
                     mesh: thienThach, type: 'BAY_THANG', speed: 1.0, life: 250, isMeteor: true, isUltimate: true,
-                    targetPos: posDap, damage: dameGoc * 0.6, isRemote: isRemote, noBanKinh: 40
+                    targetPos: posDap, damage: dameGoc * 0.5, isRemote: isRemote, noBanKinh: 40
                 });
             }, 1000);
         }
