@@ -1187,17 +1187,21 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 bot.lastAttackTime = Date.now();
                 let nextChieu = ['Q', 'E', 'R', 'F'][bot.soLanDaDanh % 4];
                 bot.soLanDaDanh++;
+
                 if (typeof bot.playAnim === 'function') bot.playAnim('ATTACK');
                 let bOrigin = bot.mesh.position.clone();
                 let pTarget = playerModel.position.clone(); pTarget.y += 3;
                 let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-                // 🌟 BẢN VÁ: ĐẨY NÒNG SÚNG RA KHỎI BỤNG PHANTOM
-                let kcDenSep = bOrigin.distanceTo(pTarget);
-                let pushDist = Math.min(8, kcDenSep * 0.8);
-                bOrigin.add(bDir.clone().multiplyScalar(pushDist));
-                let botFakeId = "PLAYER_" + bot.id;
+                
+                // 🌟 BẢN VÁ 3: ĐẨY NÒNG SÚNG VÀ CẤP ID CHUẨN CHO PHANTOM
+                let khoangCach = bOrigin.distanceTo(pTarget);
+                bOrigin.add(bDir.clone().multiplyScalar(Math.min(5, khoangCach * 0.8)));
+                
+                let botFakeId = String(bot.id);
+                let dmgBot = 30 * (bot.level || 1);
+
                 if (typeof window.remotePlayers !== 'undefined') {
-                    window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: 0, classCode: bot.fakePhai };
+                    window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: dmgBot, classCode: bot.fakePhai };
                 }
 
 
