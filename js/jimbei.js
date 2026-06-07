@@ -323,7 +323,7 @@
                 waveGroup.add(waveMesh);
                 waveGroup.add(loiSong);
                 
-                kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 0.6, isRemote: isRemote, upVector: upVector.clone() });
+                kyNangJimbei.push({ mesh: waveGroup, type: 'R', life: 100, speed: 9.0, targetPos: mucTieu, damage: dameGoc * 0.5, isRemote: isRemote, upVector: upVector.clone() });
             }
             else if (phim === 'F') {
                 const buraikan = taoCauNuoc(6.0, 0x00ffff);
@@ -333,7 +333,7 @@
                 buraikan.lookAt(mucTieu);
                 scene.add(buraikan);
                 
-                kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 0.9, isRemote: isRemote, upVector: upVector.clone() });
+                kyNangJimbei.push({ mesh: buraikan, type: 'F', life: 100, speed: 15.0, targetPos: mucTieu, damage: dameGoc * 1.0, isRemote: isRemote, upVector: upVector.clone() });
             }
         }, 500); // ⏳ Độ trễ 500 mili-giây (0.5s)
     };
