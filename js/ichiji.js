@@ -278,7 +278,7 @@
                 mesh: cauDo, type: 'BAY_SAU_KHI_TU', speed: 8.0, life: 120,
                 delay: 10, objNeo: tayPhai, originOffset: viTriGocToTam,
                 currentScale: 1.0, maxScale: 8.0, growthRate: 0.3,
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20,
+                targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 20,
                 isSpinning: true, spinSpeed: 0.1, isRemote: isRemote // <--- THÊM VÀO ĐÂY
             });
         }
@@ -299,7 +299,7 @@
                 kyNangIchiji.push({
                     mesh: cauDoE, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100,
                     currentScale: 2.5, maxScale: 10.0, growthRate: 0.3,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 20,
                     isSpinning: true, spinSpeed: 0.15, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
@@ -321,7 +321,7 @@
             kyNangIchiji.push({
                 mesh: cauDoR, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
                 currentScale: 4.0, maxScale: 14.0, growthRate: 0.4,
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 25,
+                targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 25,
                 isSpinning: true, spinSpeed: 0.2, isRemote: isRemote // <--- THÊM VÀO ĐÂY
             });
 
@@ -333,7 +333,7 @@
                 const lazerTrai = taoTiaLazerDo(diemBanTrai, mucTieu, 1.0);
                 scene.add(lazerTrai);
 
-                taoVuNoLUA_ICJ(mucTieu, isRemote, dameGoc * 1.0, 15);
+                taoVuNoLUA_ICJ(mucTieu, isRemote, dameGoc * 0.15, 15);
                 kyNangIchiji.push({ mesh: lazerTrai, type: 'TIA_CHOP', life: 15 });
             }, 200);
         }
@@ -354,7 +354,7 @@
                 kyNangIchiji.push({
                     mesh: luaChan, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 120,
                     currentScale: 7.0, maxScale: 20.0, growthRate: 0.5,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 35,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 35,
                     isSpinning: true, spinSpeed: 0.4, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
 
