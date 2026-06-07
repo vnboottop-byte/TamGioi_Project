@@ -246,7 +246,14 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         function banDanParabol(tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
             for (let i = 0; i < soLuong; i++) {
@@ -324,7 +331,14 @@
 
                 // Nổ khi chạm đích
                 if (s.progress >= 1 || s.life <= 0) {
-                    gaySatThuongUsopp(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+                    if (s.isRemote === false) gaySatThuongUsopp(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    } else if (s.isRemote === true) {
+                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
+                    }
+
                     taoVuNoUsopp(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
