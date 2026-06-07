@@ -96,12 +96,22 @@
     window.thoiDiemNoCuoiCungZR = window.thoiDiemNoCuoiCungZR || 0;
 
     function taoVuNoKiemQuangZR(pos, isRemote = false, luongDame = 100, banKinh = 12) {
-        if (isRemote === false && luongDame > 0) gaySatThuongZR(pos, luongDame, banKinh);
+        // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG & CHỐNG 1-HIT-KILL
+        if (isRemote === false && luongDame > 0) {
+            // QUYỀN 1: Sếp chém Quái & PVP
+            gaySatThuongZR(pos, luongDame, banKinh);
+        }
         else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+            // QUYỀN 2: Boss chém (Lấy luongDame đã chia tỷ lệ % của từng chiêu)
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        }
+        else if (isRemote === true) {
+            // QUYỀN 3: Người chơi khác PVP (Nhường Server trừ máu)
         }
 
+        // 2. VAN CHỐNG LAG ĐỒ HỌA
         let bayGio = Date.now();
+
         if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungZR < 200) return;
         window.thoiDiemNoCuoiCungZR = bayGio;
 
@@ -231,7 +241,16 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) {
+                dameGoc = isRemote; // Lấy dame của Boss
+            } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100; // Lấy dame của Kẻ thù PVP
+            }
+        }
 
         setTimeout(() => {
             let tayPhaiPos = viTriGocToTam.clone();
@@ -290,7 +309,7 @@
                     }, i * 150);
                 }
             }
-
+           
             // 🌟 THÔNG SỐ VÀNG CỦA SẾP (ĐÃ CÂN BẰNG CHUẨN 7.8 DPS)
             // Q = 1 Chém (1 hit x 0.4 = 0.4 Dame)
             if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
@@ -311,7 +330,7 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO (ĐÃ FIX TRÀN RAM)
     // ==========================================
     window.updateCombatZoro = function () {
-
+        
         // 1. VÒNG LẶP KIẾM QUANG BAY
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i]; s.life--;
@@ -340,7 +359,7 @@
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
-
+            
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
@@ -354,8 +373,8 @@
             // 🛑 VÁ DỌN RÁC HẠT (CHỐNG TRÀN VRAM TẬN GỐC)
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
-                if (h.system.geometry) h.system.geometry.dispose();
-                if (h.system.material) h.system.material.dispose();
+                if (h.system.geometry) h.system.geometry.dispose(); 
+                if (h.system.material) h.system.material.dispose(); 
                 hieuUngZoro.splice(i, 1);
             }
         }
@@ -367,11 +386,11 @@
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { it.el.style.display = 'none'; }
-
-            if (it.life <= 0) {
-                it.el.remove();
-                danhSachSoBayZR.splice(i, 1);
-                window.tongSoChuNoi_ZR--;
+            
+            if (it.life <= 0) { 
+                it.el.remove(); 
+                danhSachSoBayZR.splice(i, 1); 
+                window.tongSoChuNoi_ZR--; 
             }
         }
     };
@@ -382,7 +401,7 @@
     // 🌟 AUTO NHẬN DIỆN MỌI TÊN FILE (.JS) ĐƯỢC NẠP VÀO GAME
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
-
+        
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
@@ -391,7 +410,7 @@
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
-
+                    
                     // 🌟 BIẾN CẢM BIẾN NHẬN DIỆN HOẠT ẢNH ĐỘC LẬP
                     let coBay = false;
                     let coChay = false;
@@ -401,7 +420,7 @@
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
-
+                        
                         // 🛑 LÁ CHẮN KHÓA CHÂN (XÓA ROOT MOTION) - BẢN VÁ CHỐNG LỖI UNDEFINED
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
                             // Phải kiểm tra xem clip và tracks có tồn tại không mới được lọc (Chống sập game)
@@ -409,9 +428,9 @@
                                 clip.tracks = clip.tracks.filter(track => {
                                     let tenTrack = track.name.toLowerCase();
                                     if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
-                                        return false;
+                                        return false; 
                                     }
-                                    return true;
+                                    return true; 
                                 });
                             }
                         }
@@ -420,7 +439,7 @@
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-
+                        
                         // 🌟 TÁCH BIỆT QUÉT ĐỘNG TÁC BAY VÀ CHẠY
                         if (k.includes('BAY') || k.includes('FLY')) {
                             coBay = true;
