@@ -96,12 +96,22 @@
     window.thoiDiemNoCuoiCungZR = window.thoiDiemNoCuoiCungZR || 0;
 
     function taoVuNoKiemQuangZR(pos, isRemote = false, luongDame = 100, banKinh = 12) {
-        if (isRemote === false && luongDame > 0) gaySatThuongZR(pos, luongDame, banKinh);
+        // 🌟 1. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG & CHỐNG 1-HIT-KILL
+        if (isRemote === false && luongDame > 0) {
+            // QUYỀN 1: Sếp chém Quái & PVP
+            gaySatThuongZR(pos, luongDame, banKinh);
+        }
         else if (typeof isRemote === 'number' && isRemote > 0) {
-            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, banKinh);
+            // QUYỀN 2: Boss chém (Lấy luongDame đã chia tỷ lệ % của từng chiêu)
+            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
+        }
+        else if (isRemote === true) {
+            // QUYỀN 3: Người chơi khác PVP (Nhường Server trừ máu)
         }
 
+        // 2. VAN CHỐNG LAG ĐỒ HỌA
         let bayGio = Date.now();
+
         if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungZR < 200) return;
         window.thoiDiemNoCuoiCungZR = bayGio;
 
@@ -231,7 +241,16 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) {
+                dameGoc = isRemote; // Lấy dame của Boss
+            } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100; // Lấy dame của Kẻ thù PVP
+            }
+        }
 
         setTimeout(() => {
             let tayPhaiPos = viTriGocToTam.clone();
