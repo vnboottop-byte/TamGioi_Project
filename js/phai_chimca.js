@@ -117,22 +117,18 @@ if (window.TU_DIEN_AI_QUAI['CHIM']) {
             }
 
             if (!window.IS_IN_SAFE_ZONE) {
-                let role = (window.ROLE || "").toLowerCase();
-                let name = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+                // Đã xóa lá chắn miễn tử của Admin. Giờ Boss cắn ai cũng mất máu!
+                window.mauBanThan -= Math.round(dmgBoss);
+                if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(dmgBoss));
 
-                if (role !== "admin" && name !== "admin") {
-                    window.mauBanThan -= Math.round(dmgBoss);
-                    if (typeof window.taoSoSatThuong === 'function') window.taoSoSatThuong(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), Math.round(dmgBoss));
+                const uiThanhMau = document.getElementById('thanhMauHienTai');
+                const uiSoMau = document.getElementById('soMauHienTai');
+                if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+                if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
 
-                    const uiThanhMau = document.getElementById('thanhMauHienTai');
-                    const uiSoMau = document.getElementById('soMauHienTai');
-                    if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-                    if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
-
-                    if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Xé Xác");
-                }
+                if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Xé Xác");
             }
-
+            
             if (window.room && window.room.state === 'connected') {
                 try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: 'CAN_CHIEN' })), { reliable: true }); } catch (e) { }
             }
