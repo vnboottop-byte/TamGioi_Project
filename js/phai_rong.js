@@ -202,7 +202,7 @@ window.TU_DIEN_AI_QUAI['RONG'].thucHienTanCong = function (quai, playerModel, de
         const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); bOrigin.add(bDir.clone().multiplyScalar(sizeChuan * 0.5));
         let dmgBoss = quai.maxHp * 0.05;
 
-        if (typeof window.tungComboRong === 'function') window.tungComboRong('F', dmgBoss, bOrigin, pTarget, bDir, "BOSS_" + quai.id, null);
+        if (typeof window.tungComboRong === 'function') window.tungComboRong('F', dmgBoss, bOrigin, pTarget, bDir, "BOSS_" + quai.id, null, true);
         if (window.room && window.room.state === 'connected') {
             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: 'F' })), { reliable: true }); } catch (e) { }
         }
