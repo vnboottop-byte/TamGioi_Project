@@ -357,15 +357,19 @@
                 // Nổ khi chạm đích
                 if (s.progress >= 1 || s.life <= 0) {
                     
-                    // NẾU LÀ SẾP BẮN -> ĐÁNH QUÁI (Giữ nguyên)
                     if (s.isRemote === false) {
+                        // QUYỀN 1 (LÀ SẾP BẮN): Quét sát thương Quái & Báo cáo PVP lên Server
                         gaySatThuongBS(s.targetPos, s.damage, s.noBanKinh);
                     } 
-                    // NẾU LÀ BOSS BẮN -> ĐÁNH SẾP (Gây sát thương đỏ máu)
-                    else if (s.isRemote === true || (typeof s.isRemote === 'number' && s.isRemote > 0)) {
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        // QUYỀN 2 (LÀ BOSS BẮN): Trừ máu trực tiếp của Sếp
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
+                    }
+                    else if (s.isRemote === true) {
+                        // QUYỀN 3 (LÀ NGƯỜI CHƠI KHÁC BẮN SẾP): KHÔNG LÀM GÌ CẢ! 
+                        // Chỉ vẽ hiệu ứng nổ thôi, máu của Sếp sẽ do Server trừ qua mạng để tránh bị x2 Dame!
                     }
 
                     taoVuNoBS(s.targetPos, s.noBanKinh);
