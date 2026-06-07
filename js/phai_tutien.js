@@ -513,14 +513,20 @@ window.phatAmThanhNo = function () {
 window.thoiDiemNoCuoiCungTT = window.thoiDiemNoCuoiCungTT || 0;
 
 window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
-    // 1. TÍNH SÁT THƯƠNG NGẦM (Lấy luongDame đã tính toán chia nhỏ ra, chứ không lấy isRemote gây one-hit-kill)
+    // TÍNH SÁT THƯƠNG NGẦM (Phân tách 3 Quyền Lực)
     if (isRemote === false) {
+        // Sếp đánh -> Băm Quái & Gửi Server tính PVP
         if (typeof window.gaySatThuong === 'function') window.gaySatThuong(pos, luongDame, 15);
     }
-    else if (isRemote === true || (typeof isRemote === 'number' && isRemote > 0)) {
-        // Dùng luongDame (đã chia đều) để Sếp mất máu từ từ chân thực nhất!
+    else if (typeof isRemote === 'number' && isRemote > 0) {
+        // Boss đánh -> Sếp mất máu thực tế
         if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, 15);
     }
+    else if (isRemote === true) {
+        // Người chơi khác PVP với Sếp -> Bỏ qua logic trừ máu ở đây, nhường cho Server lo!
+    }
+
+    // ... (Đoạn vẽ đồ họa nổ bên dưới giữ nguyên) ...
 
     // 2. VAN XẢ ĐỒ HỌA (MOBILE CHỈ ĐƯỢC VẼ 1 VỤ NỔ MỖI 0.3 GIÂY)
     let bayGio = Date.now();
