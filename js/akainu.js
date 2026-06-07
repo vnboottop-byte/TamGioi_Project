@@ -347,7 +347,7 @@
                 kyNangAkainu.push({
                     mesh: thienThach, type: 'BAY_THANG', speed: 1.0, life: 250, isMeteor: true, isUltimate: true,
                     noRotate: true, // Cờ cấm xoay
-                    targetPos: posDap, damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 45
+                    targetPos: posDap, damage: dameGoc * 0.8, isRemote: isRemote, noBanKinh: 45
                 });
             }, 1000);
         }

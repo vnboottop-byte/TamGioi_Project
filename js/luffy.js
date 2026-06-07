@@ -288,21 +288,11 @@
             }
         }
 
-        // =====================================
-        // 🌟 BẢN VÁ CÂN BẰNG AAA (HỒI 4 GIÂY): Bơm nhẹ lại dame để giữ DPS chuẩn
-        // CHÚ THÍCH: banGatling(Số_Lượng, HỆ_SỐ_DAME, Tốc_Độ_Bay, Kích_Thước, Loại)
 
-        // Q: 10 hit * 0.05 = 0.5 
-        if (phim === 'Q') banGatling(10, 0.05, 8.0, 5.0, 'NHO');
-
-        // E: 6 hit * 0.08 = 0.48
-        else if (phim === 'E') banGatling(6, 0.08, 8.0, 3.5, 'LON');
-
-        // R: 4 hit * 0.12 = 0.48
-        else if (phim === 'R') banGatling(4, 0.12, 8.0, 3.5, 'LON');
-
-        // F: 4 hit * 0.15 = 0.6
-        else if (phim === 'F') banGatling(4, 0.15, 8.0, 3.5, 'LON');
+        if (phim === 'Q') banGatling(10, 0.04, 8.0, 5.0, 'NHO');   // 10 hit x 0.04 = 0.4
+        else if (phim === 'E') banGatling(6, 0.1, 8.0, 3.5, 'LON');  // 6 hit x 0.1 = 0.6
+        else if (phim === 'R') banGatling(4, 0.125, 8.0, 3.5, 'LON');// 4 hit x 0.125 = 0.5
+        else if (phim === 'F') banGatling(4, 0.25, 8.0, 3.5, 'LON'); // 4 hit x 0.25 = 1.0
     };
 
     // ==========================================
