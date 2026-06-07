@@ -193,7 +193,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+        
         let rightVector = new THREE.Vector3().crossVectors(huongMat, upVector).normalize().negate();
 
         // ===============================================
@@ -207,7 +215,7 @@
 
                 kyNangNL.push({
                     mesh: tayTo, type: 'BAY_THANG', speed: 10.0, life: 80,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20
+                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
             }, 200);
         }
@@ -233,7 +241,7 @@
                 
                 kyNangNL.push({ 
                     mesh: tayR, type: 'BAY_THANG_GOM', speed: 4.5, life: 150, delay: i * 5, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 12
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 12, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
             }
         }
@@ -263,7 +271,7 @@
 
                     kyNangNL.push({
                         mesh: kq, type: 'BAY_THANG', speed: 9.0, life: 100,
-                        targetPos: diemDichSongSong, damage: dameGoc * 0.8, noBanKinh: 18
+                        targetPos: diemDichSongSong, damage: dameGoc * 0.8, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
                 }
             }, 300);
@@ -286,7 +294,7 @@
 
                     kyNangNL.push({
                         mesh: kq, type: 'BAY_THANG', speed: 8.0, life: 100,
-                        targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 22
+                        targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 22, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
                 }
             }, 300);
@@ -311,7 +319,12 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongNL(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (BAY THẲNG)
+                    if (s.isRemote === false) gaySatThuongNL(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
+
                     hieuUngNoNL(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
@@ -325,7 +338,12 @@
                 s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongNL(s.mesh.position, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (ĐẤM VÒNG CUNG)
+                    if (s.isRemote === false) gaySatThuongNL(s.mesh.position, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, s.noBanKinh);
+                    }
+
                     hieuUngNoNL(s.mesh.position, s.noBanKinh);
                     s.life = 0;
                 }
