@@ -310,7 +310,7 @@
             scene.add(tiaR);
             
             // ⚖️ CÂN BẰNG: 12 hit x 0.1 = Tổng 1.2
-            kyNangGoku.push({ mesh: tiaR, type: 'TIA_KAME', life: 60, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.1, isRemote: isRemote, color: 0xff0000 });
+            kyNangGoku.push({ mesh: tiaR, type: 'TIA_KAME', life: 60, owner: nvc, targetPos: mucTieuGoc.clone(), damage: dameGoc * 0.042, isRemote: isRemote, color: 0xff0000 });
         }
 
         // F: QUẢ CẦU KÊNH KHI TẦM NHIỆT (Hồi 15s - Bom Hạt Nhân)
@@ -338,7 +338,7 @@
                     life: 200, 
                     targetPos: mucTieuGoc.clone(), 
                     targetObj: targetQuaiGlobal, 
-                    damage: dameGoc * 2.0, 
+                    damage: dameGoc * 1.0, 
                     isRemote: isRemote 
                 });
             }, 1000); 
