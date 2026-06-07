@@ -239,7 +239,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
@@ -376,7 +384,18 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongAK(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+                    if (s.isRemote === false) {
+                        gaySatThuongAK(s.targetPos, s.damage, s.noBanKinh);
+                    } else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+                    } else if (s.isRemote === true) {
+                        // PvP Người chơi khác bắn -> Bỏ qua để chống X2 Dame
+                    }
+
                     taoHieuUngNoAK(s.targetPos, false);
                     s.life = 0;
                 }
@@ -392,13 +411,19 @@
                 // Quét kiểm tra gây sát thương liên tục mỗi 10 frame (~0.3 giây/lần)
                 s.ticksDame++;
                 if (s.ticksDame % 10 === 0) {
-                    gaySatThuongAK(s.mesh.position, s.damage, 15);
+                    if (s.isRemote === false) gaySatThuongAK(s.mesh.position, s.damage, 15);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 15);
+                    }
                     taoHieuUngNoAK(s.mesh.position, false); // Nổ băng nhỏ rào rào
                 }
 
                 // Khi hết chu kỳ 3 giây -> Phát nổ khổng lồ cú chót
                 if (s.life <= 1) {
-                    gaySatThuongAK(s.tamQuay, s.damage * 2, s.noBanKinh);
+                    if (s.isRemote === false) gaySatThuongAK(s.tamQuay, s.damage * 2, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.tamQuay, s.damage * 2, s.noBanKinh);
+                    }
                     taoHieuUngNoAK(s.tamQuay, true);
                 }
             }
