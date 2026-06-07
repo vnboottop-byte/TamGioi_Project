@@ -245,7 +245,14 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // ===============================================
         // 🔥 CHIÊU Q (ATTACK1): Quả cầu nhỏ (Size 1.0) tụ lực 300ms
@@ -264,7 +271,7 @@
                 delay: 10, objNeo: tayPhai, originOffset: viTriGocToTam,
                 currentScale: 1.0, maxScale: 8.0, growthRate: 0.3,
                 targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 20,
-                isSpinning: true, spinSpeed: 0.1
+                isSpinning: true, spinSpeed: 0.1, isRemote: isRemote // <--- THÊM VÀO ĐÂY
             });
         }
 
@@ -285,8 +292,9 @@
                     mesh: cauDoE, type: 'BAY_THANG_PHINH_TO', speed: 9.0, life: 100,
                     currentScale: 2.5, maxScale: 10.0, growthRate: 0.3,
                     targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 20,
-                    isSpinning: true, spinSpeed: 0.15
+                    isSpinning: true, spinSpeed: 0.15, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+
             }, 500);
         }
 
@@ -306,7 +314,7 @@
                 mesh: cauDoR, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 100,
                 currentScale: 4.0, maxScale: 14.0, growthRate: 0.4,
                 targetPos: mucTieu.clone(), damage: dameGoc * 1.5, noBanKinh: 25,
-                isSpinning: true, spinSpeed: 0.2
+                isSpinning: true, spinSpeed: 0.2, isRemote: isRemote // <--- THÊM VÀO ĐÂY
             });
 
             setTimeout(() => {
@@ -339,8 +347,9 @@
                     mesh: luaChan, type: 'BAY_THANG_PHINH_TO', speed: 10.0, life: 120,
                     currentScale: 7.0, maxScale: 20.0, growthRate: 0.5,
                     targetPos: mucTieu.clone(), damage: dameGoc * 3.0, noBanKinh: 35,
-                    isSpinning: true, spinSpeed: 0.4 // Xoay như mũi khoan
+                    isSpinning: true, spinSpeed: 0.4, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                 });
+                
             }, 500);
         }
     };
