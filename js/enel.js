@@ -281,7 +281,7 @@
                     kyNangNami.push({
                         mesh: cauHaki, type: 'BAY_THANG_TO_DAN', speed: 6.5, life: 100,
                         currentScale: 2, maxScale: 12, 
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
+                        targetPos: mucTieu.clone(), damage: dameGoc * 0.166, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
 
 
