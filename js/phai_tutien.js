@@ -382,19 +382,29 @@ window.updateCombatTuTien = function () {
                 // 🌟 Xoay cả lúc đang lao đi cho thêm phần uy lực
                 if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
 
+
+
+
                 // 🌟 TẦM NHIỆT (HOMING) CHO Q VÀ R
                 if (skill.targetPos) {
-
-
 
                     if (!skill.isRemote) {
                         const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
                         const mucTieuMoi = window.layMucTieuGanNhatTT(skill.mesh.position, fwd);
                         if (mucTieuMoi) skill.targetPos = mucTieuMoi;
+                    } 
+                    // 🌟 BẢN VÁ: NẾU ĐẠN LÀ CỦA BOSS THÌ BẬT RADAR DÍ THEO MẶT SẾP
+                    else if (typeof skill.isRemote === 'number' && typeof playerModel !== 'undefined' && playerModel) {
+                        skill.targetPos = playerModel.position.clone();
+                        skill.targetPos.y += 5; 
                     }
+
                     const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                     skill.mesh.quaternion.slerp(dummy.quaternion, 0.15); // Bẻ lái 15% mỗi frame
                 }
+
+
+                
 
                 skill.mesh.translateZ(skill.speed);
                 const realDir = new THREE.Vector3(); skill.mesh.getWorldDirection(realDir);
