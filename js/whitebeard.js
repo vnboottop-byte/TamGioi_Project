@@ -341,7 +341,7 @@
                 kyNangWB.push({
                     mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 3.5, life: 250, // Bay chậm ngắm nghía
                     currentScale: 1, maxScale: 40, growthRate: 0.6, // To dần
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 30
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 30
                 });
             }, 1000);
         }
@@ -355,7 +355,7 @@
                 kyNangWB.push({
                     mesh: cauEnergy, type: 'ROI_THANG_PHINH_TO', speed: 2.0, life: 250, // Rơi chậm
                     currentScale: 1, maxScale: 60, growthRate: 0.8, // Phình to trong lúc rơi
-                    targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.6, noBanKinh: 40
+                    targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 40
                 });
             }, 500);
         }
