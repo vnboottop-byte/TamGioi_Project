@@ -226,7 +226,15 @@
         });
         if (tayPhaiPos.distanceTo(viTriGoc) < 0.1) tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
@@ -241,7 +249,7 @@
 
                 kyNangKaya.push({
                     mesh: vk, type: 'BAY_THANG_XOAY_DUNG', speed: 10.0, life: 100,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 12
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 12, isRemote: isRemote
                 });
             }, 300);
         }
@@ -257,8 +265,8 @@
                 scene.add(vk);
 
                 kyNangKaya.push({
-                    mesh: vk, type: 'BAY_THANG_BE_GOC_90', speed: 8.0, life: 120, // Bay chậm hơn xíu
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 12, initialized: false
+                    mesh: vk, type: 'BAY_THANG_BE_GOC_90', speed: 8.0, life: 120, 
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 12, initialized: false, isRemote: isRemote
                 });
             }, 400);
         }
@@ -268,14 +276,14 @@
         // ===============================================
         else if (phim === 'R') {
             setTimeout(() => {
-                const vkBig = taoVatTheKaya('vukhikaya', 10); // Gấp đôi size
+                const vkBig = taoVatTheKaya('vukhikaya', 10); 
                 vkBig.position.copy(tayPhaiPos).add(huongMat.clone().multiplyScalar(2.0));
                 vkBig.lookAt(mucTieu);
                 scene.add(vkBig);
 
                 kyNangKaya.push({
                     mesh: vkBig, type: 'BAY_THANG_XOAY_NGANG', speed: 9.0, life: 120,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.8, noBanKinh: 20
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.8, noBanKinh: 20, isRemote: isRemote
                 });
             }, 500);
         }
@@ -297,8 +305,8 @@
                     posDap.z += (Math.random() - 0.5) * 45;
 
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.y += 160 + Math.random() * 40; // Rất cao trên trời
-                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); // Góc xéo rào rào giống Fujitora
+                    posXuatPhat.y += 160 + Math.random() * 40; 
+                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); 
 
                     muaVk.position.copy(posXuatPhat);
                     muaVk.lookAt(posDap);
@@ -306,11 +314,12 @@
 
                     kyNangKaya.push({
                         mesh: muaVk, type: 'MUA_VU_KHI', speed: 4.5, life: 150,
-                        targetPos: posDap, damage: dameGoc * 0.066, noBanKinh: 25
+                        targetPos: posDap, damage: dameGoc * 0.066, noBanKinh: 25, isRemote: isRemote
                     });
                 }, 500 + i * delayPerVukhi);
             }
         }
+
     };
 
     // ==========================================
@@ -349,7 +358,22 @@
                 }
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    gaySatThuongKaya(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🌟 2. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
+                    if (s.isRemote === false) {
+                        // QUYỀN 1: Sếp đánh (Gây dame Quái + Gọi mạng)
+                        gaySatThuongKaya(s.targetPos, s.damage, s.noBanKinh);
+                    } 
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        // QUYỀN 2: Boss đánh (Trừ máu Sếp trực tiếp)
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+                    } 
+                    else if (s.isRemote === true) {
+                        // QUYỀN 3: Người chơi khác PVP (Bỏ qua để Server trừ máu)
+                    }
+
                     taoHieuUngNoKaya(s.targetPos, s.type === 'MUA_VU_KHI');
                     s.life = 0;
                 }
