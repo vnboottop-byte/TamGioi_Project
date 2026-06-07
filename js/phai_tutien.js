@@ -34,23 +34,20 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
 }
 
 
-function taoKiemChuan(scaleSize, weaponUrl) {
+function taoKiemChuan(scaleSize, weaponUrl, auraLevel = 0) { // Thêm tham số auraLevel
     const stdSword = new THREE.Group();
-    // 🌟 BẢN VÁ: Ưu tiên lấy đạn từ Băng Đạn Nội Bộ của Tu Tiên (Đã lọc kỹ rác và đồ mặc định)
     let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL;
 
     if (!urlCanTai || urlCanTai.trim() === '') {
         urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
     }
    
-    
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
             vuKhi.updateMatrixWorld(true);
             const box = new THREE.Box3().setFromObject(vuKhi);
             const size = new THREE.Vector3(); box.getSize(size);
             
-            // 🌟 THƯỚC ĐO CHUẨN AAA: Mọi thứ bóp về đúng 3 Mét!
             const maxDim = Math.max(size.x, size.y, size.z) || 1;
             let tyLeChuan = 3.0 / maxDim; 
             vuKhi.scale.set(tyLeChuan, tyLeChuan, tyLeChuan);
@@ -60,7 +57,8 @@ function taoKiemChuan(scaleSize, weaponUrl) {
             vuKhi.traverse(c => { 
                 if (c.isMesh) { c.visible = true; c.castShadow = false; c.receiveShadow = false; } 
             });
-            if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, window.WEAPON_LEVEL || 0);
+            // Dùng auraLevel được truyền vào thay vì ăn cắp của Sếp
+            if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(vuKhi, auraLevel);
             stdSword.add(vuKhi);
         });
     }
@@ -68,7 +66,6 @@ function taoKiemChuan(scaleSize, weaponUrl) {
     return stdSword;
 }
 
-// TẠI FILE: phai_tutien.js
 // TÁC DỤNG: Tung chiêu có đính kèm weaponUrl, khóa Radar chuẩn xác
 window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
     if (!playerModel && !isRemote) return;
@@ -111,9 +108,22 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
 
 
     let viTriGoc, huongMat, mucTieu, nguoiTungChieu;
-    const dameGoc = window.DAME_CUA_TOI || 100;
+    
+    // 🌟 BẢN VÁ AAA: KHÔNG CHO BOSS ĂN CẮP LỰC CHIẾN VÀ HÀO QUANG CỦA SẾP
+    let dameGoc = window.DAME_CUA_TOI || 100;
+    let auraLevel = window.WEAPON_LEVEL || 0; 
+    
+    if (isRemote !== false) {
+        auraLevel = 0; // Boss / Kẻ địch không có hào quang của Sếp
+        if (typeof isRemote === 'number' && isRemote > 0) {
+            dameGoc = isRemote; // Lấy đúng lượng sát thương Boss ném vào
+        } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+            dameGoc = window.remotePlayers[casterId].damage || 100; // Lấy dame của người chơi khác
+        }
+    }
 
     let vuKhiThucTe = weaponUrl;
+    
     // 🌟 BẢN VÁ: Lấy vũ khí đã được lọc từ Cảm biến Hộ Thể, tuyệt đối không lấy đồ rỗng!
     if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || 'uploads/anims/PHIKIEM_sword.glb';
     
