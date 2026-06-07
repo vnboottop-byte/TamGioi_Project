@@ -404,7 +404,7 @@ window.updateCombatTuTien = function () {
                 }
 
 
-                
+
 
                 skill.mesh.translateZ(skill.speed);
                 const realDir = new THREE.Vector3(); skill.mesh.getWorldDirection(realDir);
@@ -429,7 +429,13 @@ window.updateCombatTuTien = function () {
                             const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
                             const mucTieuMoi = window.layMucTieuGanNhatTT(skill.mesh.position, fwd);
                             if (mucTieuMoi) skill.targetPos = mucTieuMoi;
+                        } 
+                        // 🌟 BẢN VÁ: BẬT RADAR DÍ SẾP CHO CHIÊU E
+                        else if (typeof skill.isRemote === 'number' && typeof playerModel !== 'undefined' && playerModel) {
+                            skill.targetPos = playerModel.position.clone();
+                            skill.targetPos.y += 5; 
                         }
+                        
                         const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                         skill.mesh.quaternion.slerp(dummy.quaternion, 0.2);
                     }
