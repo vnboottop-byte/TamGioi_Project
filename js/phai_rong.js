@@ -154,12 +154,17 @@ if (!window.loopRongRunning) {
                 if (h.life < 50) h.system.material.color.setHex(0xff3300); // Cam rực
                 if (h.life < 20) h.system.material.color.setHex(0x550000); // Khói đỏ đen
 
-                // Quét sát thương (Tầm ảnh hưởng tăng theo độ bự của lửa)
-                if (h.life % 5 === 0 && window.playerModel) {
+                // 🌟 BẢN VÁ: QUÉT SÁT THƯƠNG LIÊN TỤC MỖI FRAME (CHỐNG LỖI XUYÊN TÁO)
+                if (window.playerModel) {
                     let pPos = new THREE.Vector3(posArr[0], posArr[1], posArr[2]);
-                    let tamSatThuong = h.system.material.size * 0.8; // Càng bay xa, vùng chết chóc càng lớn
+                    let tamSatThuong = h.system.material.size * 0.8; 
+                    
                     if (pPos.distanceTo(window.playerModel.position) < tamSatThuong) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pPos, h.damage, tamSatThuong);
+                        // Lửa chạm liên tục 30 lần/giây, nên ta chia nhỏ dame ra để Sếp bị đốt từ từ cực kỳ chân thực!
+                        let dameThiHanh = Math.max(1, Math.round(h.damage / 5));
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(pPos, dameThiHanh, tamSatThuong);
+                        }
                     }
                 }
 
