@@ -567,8 +567,6 @@ window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
         if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, 15);
     }
 
-
-
     // 2. VAN XẢ ĐỒ HỌA (MOBILE CHỈ ĐƯỢC VẼ 1 VỤ NỔ MỖI 0.3 GIÂY)
     let bayGio = Date.now();
     if (window.isMobile && bayGio - window.thoiDiemNoCuoiCungTT < 300) {
