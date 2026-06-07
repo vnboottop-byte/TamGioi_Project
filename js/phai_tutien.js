@@ -168,7 +168,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
         // 🌟 TỐI ƯU MOBILE: Giảm từ 30 kiếm xuống 5 kiếm
         const soLuong = 5; const khoangCach = 4.0;
         for (let i = 0; i < soLuong; i++) {
-            const sword = taoKiemChuan(0.5, vuKhiThucTe);
+            const sword = taoKiemChuan(0.5, vuKhiThucTe, auraLevel);
             // 🌟 Dùng upVector thay vì (0, 1, 0)
             const offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
             const offsetUp = upVector.clone();
@@ -555,14 +555,19 @@ window.phatAmThanhNo = function () {
 // Thêm 1 biến toàn cục ở ngoài để làm đồng hồ
 window.thoiDiemNoCuoiCungTT = window.thoiDiemNoCuoiCungTT || 0;
 
+
+
 window.taoVuNoTuTien = function (pos, isRemote = false, luongDame = 100) {
-    // 1. TÍNH SÁT THƯƠNG NGẦM (Luôn luôn tính để không bị hụt dame của 30 thanh kiếm)
+    // 1. TÍNH SÁT THƯƠNG NGẦM (Lấy luongDame đã tính toán chia nhỏ ra, chứ không lấy isRemote gây one-hit-kill)
     if (isRemote === false) {
         if (typeof window.gaySatThuong === 'function') window.gaySatThuong(pos, luongDame, 15);
     }
     else if (typeof isRemote === 'number' && isRemote > 0) {
-        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, isRemote, 15);
+        // Dùng luongDame (đã chia đều) để Sếp mất máu từ từ chân thực nhất!
+        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, 15);
     }
+
+
 
     // 2. VAN XẢ ĐỒ HỌA (MOBILE CHỈ ĐƯỢC VẼ 1 VỤ NỔ MỖI 0.3 GIÂY)
     let bayGio = Date.now();
