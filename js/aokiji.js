@@ -283,8 +283,8 @@
 
                 kyNangAokiji.push({
                     mesh: baoTuyet, type: 'BAO_ORBIT', speed: 0.15, life: 90,
-                    tamQuay: tamBaoNo, gocXoay: 0, banKinh: 6, ticksDame: 0, // 🌟 Tham số quét dame khu vực
-                    damage: dameGoc * 0.06, // Chia nhỏ dame (0.06 * 10 hit liên tục = 0.6 tổng)
+                    tamQuay: tamBaoNo, gocXoay: 0, banKinh: 6, ticksDame: 0, 
+                    damage: dameGoc * 0.055, // 🌟 ĐỒNG BỘ 780%: 11 hit x 0.055 = 0.605/lần (15s đóng góp ~1.8)
                     isRemote: isRemote, noBanKinh: 20
                 });
             }, 500);
