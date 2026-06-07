@@ -223,7 +223,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
@@ -357,7 +365,10 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongBoa(s.targetPos, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) gaySatThuongBoa(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
                     taoHieuUngNoBoa(s.targetPos, false);
                     s.life = 0;
                 }
@@ -369,7 +380,10 @@
                 s.mesh.position.y -= s.speed;
 
                 if (s.mesh.position.y <= s.targetPos.y + 2) {
-                    gaySatThuongBoa(s.targetPos, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) gaySatThuongBoa(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
                     taoHieuUngNoBoa(s.targetPos, true); // Nổ to!
                     s.life = 0;
                 }
@@ -396,7 +410,10 @@
                 taoSaoBangBoa(s.mesh.position, dir.negate());
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5) {
-                    gaySatThuongBoa(s.targetPos, s.damage, 15);
+                    if (s.isRemote === false) gaySatThuongBoa(s.targetPos, s.damage, 15);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, 15);
+                    }
                     taoHieuUngNoBoa(s.targetPos, false);
                     s.life = 0;
                 }
@@ -421,7 +438,10 @@
                 s.mesh.position.copy(curPos); s.mesh.lookAt(nextPos);
 
                 if (s.progress >= 1) {
-                    gaySatThuongBoa(s.targetPos, s.damage, 15);
+                    if (s.isRemote === false) gaySatThuongBoa(s.targetPos, s.damage, 15);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, 15);
+                    }
                     taoHieuUngNoBoa(s.targetPos, false);
                     s.life = 0;
                 }
