@@ -314,17 +314,17 @@
             }
         }
 
-        // 🎯 CHIÊU Q: 1 Viên đạn Weapon 1
-        if (phim === 'Q') banDanParabol(w1, 1, 1.5, 5, 10.0, 0.5, 10);
+        // 🎯 CHIÊU Q: 1 Viên đạn (Dame 0.4 - Thay vì 0.5)
+        if (phim === 'Q') banDanParabol(w1, 1, 1.5, 5, 10.0, 0.4, 10);
         
-        // 🎯 CHIÊU E: 3 Viên đạn Weapon 1
-        else if (phim === 'E') banDanParabol(w1, 3, 1.5, 8, 10.0, 0.3, 12);
+        // 🎯 CHIÊU E: 3 Viên đạn (Dame 0.2/viên = Tổng 0.6 - Thay vì 0.9)
+        else if (phim === 'E') banDanParabol(w1, 3, 1.5, 8, 10.0, 0.2, 12);
         
-        // 💣 CHIÊU R: 1 Viên đạn lớn Weapon 2
-        else if (phim === 'R') banDanParabol(w2, 1, 3.0, 25, 7.0, 1.0, 25);
+        // 💣 CHIÊU R: 1 Viên đạn lớn (Dame 0.8 - Thay vì 1.0)
+        else if (phim === 'R') banDanParabol(w2, 1, 3.0, 25, 7.0, 0.8, 25);
         
-        // 💣 CHIÊU F: 5 Viên đạn lớn Weapon 2
-        else if (phim === 'F') banDanParabol(w2, 5, 3.0, 20, 8.0, 0.5, 25);
+        // 💣 CHIÊU F: 5 Viên đạn lớn (Dame 0.2/viên = Tổng 1.0 - Thay vì 2.5!!!)
+        else if (phim === 'F') banDanParabol(w2, 5, 3.0, 20, 8.0, 0.2, 25);
     };
 
     // ==========================================
