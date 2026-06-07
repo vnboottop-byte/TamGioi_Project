@@ -205,7 +205,14 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
 
         // 🌟 LẤY TRỰC TIẾP TỌA ĐỘ MỤC TIÊU TRONG KHÔNG GIAN 3D (Không ép xuống đất nữa)
         let diemChanMucTieu = mucTieu.clone();
@@ -226,8 +233,10 @@
                     kyNangNami.push({
                         mesh: cauXanh, type: 'BAY_THANG_TO_DAN', speed: 6.0, life: 100,
                         currentScale: 2, maxScale: 8, // Tốc độ phình to dynamic
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.133, noBanKinh: 12
+                        targetPos: mucTieu.clone(), damage: dameGoc * 0.133, noBanKinh: 12, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
+
+
                 }, i * 200);
             }
         }
@@ -248,8 +257,10 @@
                     kyNangNami.push({
                         mesh: cauTim, type: 'BAY_THANG_TO_DAN', speed: 6.0, life: 100,
                         currentScale: 2, maxScale: 10, // Max scale to hơn chiêu Q xíu
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 15
+                        targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 15, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
+
+
                 }, i * 200);
             }
         }
@@ -270,8 +281,10 @@
                     kyNangNami.push({
                         mesh: cauHaki, type: 'BAY_THANG_TO_DAN', speed: 6.5, life: 100,
                         currentScale: 2, maxScale: 12, 
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 18
+                        targetPos: mucTieu.clone(), damage: dameGoc * 0.2, noBanKinh: 18, isRemote: isRemote // <--- THÊM VÀO ĐÂY
                     });
+
+
                 }, i * 200);
             }
         }
@@ -319,8 +332,14 @@
 
                     scene.add(setMesh);
 
-                    // Sét đánh tức thời -> Gây sát thương lan và nổ hiệu ứng lập tức
-                    gaySatThuongNami(posDap, dameGoc * 0.066, 22);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU F - THIÊN LÔI NỔ TỨC THỜI)
+                    if (isRemote === false) gaySatThuongNami(posDap, dameGoc * 0.066, 22);
+                    else if (typeof isRemote === 'number' && isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(posDap, dameGoc * 0.066, 22);
+                    } else if (isRemote === true) {
+                        // Kẻ địch PVP đánh (Để Server trừ máu)
+                    }
+
                     taoHieuUngNoNami(posDap, true);
 
                     // Gài cờ 'CHOP_TAT' cho tồn tại 5 frame (khoảng 0.15s) tạo hiệu ứng chớp lòa điện ảnh rồi xóa sạch
@@ -357,7 +376,12 @@
                 } else s.mesh.translateZ(s.speed);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongNami(s.targetPos, s.damage, s.noBanKinh);
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (ĐẠN Q, E, R)
+                    if (s.isRemote === false) gaySatThuongNami(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
+
                     taoHieuUngNoNami(s.targetPos, false);
                     s.life = 0;
                 }
