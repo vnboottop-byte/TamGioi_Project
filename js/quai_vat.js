@@ -87,6 +87,12 @@ window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
             let bOrigin = quai.mesh.position.clone();
             let pTarget = playerModel.position.clone();
             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+            // 🌟 BẢN VÁ: ĐẨY NÒNG SÚNG RA KHỎI BỤNG BOSS (CHỐNG TỰ SÁT)
+                        let kcDenSep = bOrigin.distanceTo(pTarget);
+                        let sizeBoss = quai.heSoToLon || 1;
+                        // Đẩy nòng súng ra ngoài 10m (hoặc tùy size Boss), nhưng không đẩy lố qua mặt Sếp
+                        let pushDist = Math.min(Math.max(10, sizeBoss * 8), kcDenSep * 0.8); 
+                        bOrigin.add(bDir.clone().multiplyScalar(pushDist));
 
             // Mượn hiệu ứng vạt cào tóe máu đỏ của hệ Chim/Cá để diễn hoạt chấn lực đấm
             if (typeof window.tungComboChimCa === 'function') {
@@ -1174,6 +1180,10 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 let bOrigin = bot.mesh.position.clone();
                 let pTarget = playerModel.position.clone(); pTarget.y += 3;
                 let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+                // 🌟 BẢN VÁ: ĐẨY NÒNG SÚNG RA KHỎI BỤNG PHANTOM
+                let kcDenSep = bOrigin.distanceTo(pTarget);
+                let pushDist = Math.min(8, kcDenSep * 0.8);
+                bOrigin.add(bDir.clone().multiplyScalar(pushDist));
                 let botFakeId = "PLAYER_" + bot.id;
                 if (typeof window.remotePlayers !== 'undefined') {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: 0, classCode: bot.fakePhai };
