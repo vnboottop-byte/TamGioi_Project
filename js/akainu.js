@@ -240,7 +240,15 @@
             }
         }
 
-        const dameGoc = window.DAME_CUA_TOI || 100;
+        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
+        let dameGoc = window.DAME_CUA_TOI || 100;
+        if (isRemote !== false) {
+            if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
+            else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                dameGoc = window.remotePlayers[casterId].damage || 100;
+            }
+        }
+
         let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
 
         // ===============================================
@@ -367,7 +375,13 @@
                 taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed * 0.5);
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 3) {
-                    gaySatThuongAk(s.mesh.position, s.damage, s.noBanKinh);
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU Q)
+                    if (s.isRemote === false) gaySatThuongAk(s.mesh.position, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, s.noBanKinh);
+                    }
+                    
                     taoHieuUngNoAk(s.mesh.position, false);
                     s.life = 0;
                 }
@@ -384,7 +398,13 @@
                     taoDuoiLuaAk(tayPos, new THREE.Vector3(0, 1, 0), 1.5); 
 
                     if (s.ticks > 25 || s.life <= 5) { // Canh đúng nhịp tay chạm đất cái rầm
-                        gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                        
+                        // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU E - TAY KHỔNG LỒ)
+                        if (s.isRemote === false) gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                        else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
+
                         taoHieuUngNoAk(s.targetPos, true); // Nổ Bùng Magma
                         s.life = 0;
                     }
@@ -416,7 +436,13 @@
                 }
 
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                    
+                    // 🌟 QUY TẮC 3 QUYỀN LỰC (CHIÊU R, F - THIÊN THẠCH DUNG NHAM)
+                    if (s.isRemote === false) gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
+                    
                     taoHieuUngNoAk(s.targetPos, s.isUltimate);
                     s.life = 0;
                 }
