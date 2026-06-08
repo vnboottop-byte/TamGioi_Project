@@ -272,18 +272,37 @@
         }
 
         // ===============================================
-        // 🗡️ CHIÊU R: Model to hơn, xoay ngang
+        // 🗡️ CHIÊU R: Model to hơn, xoay ngang (ĐÃ CẬP NHẬT RADAR TẦM NHIỆT LIVE)
         // ===============================================
         else if (phim === 'R') {
+            // Khóa mục tiêu ngay lúc bấm nút để làm mục tiêu bám đuổi
+            let targetLock = window.layMucTieuGanNhatKaya(viTriGoc);
+
             setTimeout(() => {
-                const vkBig = taoVatTheKaya('vukhikaya', 10); 
-                vkBig.position.copy(tayPhaiPos).add(huongMat.clone().multiplyScalar(2.0));
-                vkBig.lookAt(mucTieu);
+                // 🌟 BẢN VÁ: Tính toán lại vị trí tay phải LIVE sau 500ms để không lệch tâm xuất phát
+                let tayPhaiLive = viTriGoc.clone();
+                nvc.traverse(c => {
+                    if (c.isBone && c.name === 'RHand_Weapon_042') {
+                        c.getWorldPosition(tayPhaiLive);
+                    }
+                });
+                if (tayPhaiLive.distanceTo(viTriGoc) < 0.1) tayPhaiLive.add(huongMat.clone().multiplyScalar(1.5));
+
+                // 🌟 BẢN VÁ: Lấy vị trí LIVE của mục tiêu ngay lúc viên đạn xuất phát
+                let mucTieuLive = (targetLock && targetLock.mesh && !targetLock.isDead)
+                    ? window.layHitbox(targetLock.mesh).tamNguc.clone()
+                    : viTriGoc.clone().add(huongMat.clone().multiplyScalar(150));
+
+                const vkBig = taoVatTheKaya('vukhikaya', 10);
+                vkBig.position.copy(tayPhaiLive).add(huongMat.clone().multiplyScalar(2.0));
+                vkBig.lookAt(mucTieuLive);
                 scene.add(vkBig);
 
                 kyNangKaya.push({
                     mesh: vkBig, type: 'BAY_THANG_XOAY_NGANG', speed: 9.0, life: 120,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.7, noBanKinh: 20 // 🌟 ĐỒNG BỘ 780%
+                    targetPos: mucTieuLive,
+                    targetObj: targetLock, isHoming: true, // 🌟 BƠM MÁY QUÉT TẦM NHIỆT THEO BOSS DI ĐỘNG
+                    damage: dameGoc * 0.7, noBanKinh: 20
                 });
 
             }, 500);
