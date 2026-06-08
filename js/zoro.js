@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH (MASTER FILE V2 - FIX NUỐT CHIÊU TẬN GỐC)
-// 👑 CÔNG NGHỆ: CHỐNG CRASH MẠNG + RADAR CAMERA + CACHE TU TIÊN
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH (MASTER FILE - BẢN FINAL 1000%)
+// 👑 CÔNG NGHỆ: CACHE TU TIÊN + CHỐNG NUỐT CHIÊU + KHÔNG SETTIMEOUT + RANDOM 6 KIẾM
 // ==========================================
 
 (function () {
@@ -132,12 +132,17 @@
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 });
-
+        
+        // Âm thanh 3D eSports nếu Sếp có cấy Howler.js
         if (typeof window.phatAmThanh3D === 'function') window.phatAmThanh3D('CHEM_KIEM', pos);
     }
 
+    // ==========================================
+    // 🌟 ĐÚC 6 LOẠI KIẾM QUANG: TỐI ƯU CÔNG NGHỆ CACHE NHƯ TU TIÊN
+    // ==========================================
     function taoKiemQuangFile(scaleSize, urlCanTai) {
         const group = new THREE.Group();
+
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
@@ -166,7 +171,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO (BẢN CHUẨN: SEQUENCE SETTIMEOUT + SINGLE CACHE)
+    // 🏹 HÀM XẢ COMBO (KHÔNG DÙNG SETTIMEOUT, KHÔNG BLOCK 800MS)
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -175,26 +180,28 @@
         }
         if (!nvc) return;
 
-        // 🌟 KHÔNG DÙNG dangMuaChieu NỮA! Cứ bấm là múa, nhồi Combo thoải mái!
         if (isRemote === false) {
+            window.dangMuaChieu = true;
+            window.currentAnimName = ''; 
+
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
+
+            // Múa cực nhanh, tự nhả khóa chân sau 500ms để spam cho mượt
+            if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
+            window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 500); 
         }
 
-        // Lấy tọa độ sơ khởi (Dành cho việc khóa Radar mục tiêu)
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-        let huongMat = new THREE.Vector3();
-
-        if (typeof camera !== 'undefined' && !isRemote) {
-            camera.getWorldDirection(huongMat);
-            huongMat.projectOnPlane(upVector).normalize();
-            if (huongMat.lengthSq() < 0.001) { nvc.getWorldDirection(huongMat); huongMat.projectOnPlane(upVector).normalize(); }
-        } else {
-            nvc.getWorldDirection(huongMat);
-            huongMat.projectOnPlane(upVector).normalize();
+        
+        let huongMat = new THREE.Vector3(); 
+        nvc.getWorldDirection(huongMat); 
+        // 🌟 BẢN VÁ: Ép phẳng vector hướng nhìn, chống đâm xuống đất khi lộn nhào
+        huongMat.projectOnPlane(upVector).normalize();
+        if (huongMat.lengthSq() < 0.001) { 
+            huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
         }
-        if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
 
         let mucTieu = null;
 
@@ -213,14 +220,12 @@
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
 
-            try {
-                if (window.room && window.room.localParticipant) {
-                    window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                        type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro',
-                        origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
-                    })), { reliable: false });
-                }
-            } catch (err) { }
+            if (window.room && window.room.localParticipant) {
+                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                    type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro',
+                    origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
+                })), { reliable: true });
+            }
         }
 
         let dameGoc = window.DAME_CUA_TOI || 100;
@@ -230,57 +235,49 @@
         }
 
         // ========================================================
-        // 🚀 ĐÚC KIẾM QUANG: SỰ TRỞ LẠI CỦA SETTIMEOUT COMBO 
+        // 🚀 ĐÚC KIẾM QUANG (DÀN TRẬN TỪ CACHE RAM, CHỐNG NUỐT CHIÊU)
         // ========================================================
-        function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
-            // 🌟 CHÂN LÝ TU TIÊN: Dùng 1 file duy nhất để mượt 100%, không bị Engine ngầm nuốt!
-            let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
+        let offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
 
+        function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
             for (let i = 0; i < soNhatChem; i++) {
                 
-                // 🌟 TÁCH RỜI NHÁT CHÉM BẰNG SETTIMEOUT (Cách nhau 120ms) -> Tránh chồng hình
-                setTimeout(() => {
-                    // TÍNH TOÁN LẠI TỌA ĐỘ ĐỘNG: Đảm bảo vừa chạy vừa xả chiêu không bị rớt kiếm lại phía sau
-                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-                    if (!curNvc) return;
+                // 🌟 Lấy Random 1 trong 6 file cho TỪNG NHÁT CHÉM (Siêu đẹp)
+                let soNgauNhien = Math.floor(Math.random() * 6) + 1;
+                let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb';
+                
+                const kq = taoKiemQuangFile(kichCo, urlCanTai);
 
-                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir);
-                    curDir.projectOnPlane(curUp).normalize();
-                    if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+                // Dàn trận ngang tản ra 2 bên chống chồng hình
+                let offset = (i - (soNhatChem - 1) / 2) * 1.5; 
+                let posNongGoc = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
 
-                    let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
-                    let offsetRight = new THREE.Vector3().crossVectors(curDir, curUp).normalize();
+                kq.position.copy(posNongGoc);
+                kq.up.copy(upVector);
 
-                    // Đúc kiếm
-                    const kq = taoKiemQuangFile(kichCo, urlCanTai);
+                let doLan = (soNhatChem > 1) ? 3.0 : 0;
+                let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * doLan, (Math.random() - 0.5) * doLan, 0));
+                kq.lookAt(targetBay);
 
-                    // Dàn trận tản ngang
-                    let offset = (i - (soNhatChem - 1) / 2) * 1.5;
-                    let spawnPos = curPos.clone().add(curDir.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
+                if (kieuChem === 'E') kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
+                else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
+                else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
 
-                    kq.position.copy(spawnPos);
-                    kq.up.copy(curUp);
+                kq.visible = false; 
+                scene.add(kq);
 
-                    let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
-                    kq.lookAt(targetBay);
+                // Độ trễ delay chuẩn Tu Tiên
+                let delayBase = (kieuChem === 'Q') ? 5 : ((kieuChem === 'E') ? 10 : ((kieuChem === 'R') ? 15 : 20));
+                let delayFrames = delayBase + (i * 4); 
 
-                    // Xoay kiếm vát chéo
-                    if (kieuChem === 'E') kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
-                    else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
-                    else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
-
-                    // Phi ra không gian
-                    scene.add(kq);
-
-                    kyNangZoro.push({
-                        mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
-                        targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
-                    });
-                }, i * 120); // 🌟 BÍ THUẬT: Delay 120ms mỗi nhát chém để tạo chuỗi Combo uy lực
+                kyNangZoro.push({
+                    mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
+                    delay: delayFrames, targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
+                });
             }
         }
-
+       
+        // Thông số vàng eSports
         if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
         else if (phim === 'E') phongKiemQuang(2, 0.3, 40, 'E');
         else if (phim === 'R') phongKiemQuang(4, 0.125, 50, 'R');
@@ -291,12 +288,17 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO
     // ==========================================
     window.updateCombatZoro = function () {
-
+        
+        // 1. VÒNG LẶP KIẾM QUANG BAY
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
-            let s = kyNangZoro[i];
+            let s = kyNangZoro[i]; 
 
-            // 🌟 QUYẾT ĐỊNH SỐ 2: ĐÃ XÓA SẠCH VÒNG LẶP KIẾM XOAY TÀNG HÌNH CHỜ ĐỢI
-            // Đạn nằm trong nòng là lao thẳng vào mặt kẻ thù luôn!
+            // Logic đếm lùi Delay
+            if (typeof s.delay === 'number' && s.delay > 0) {
+                s.delay--;
+                if (s.delay <= 0 && s.mesh) s.mesh.visible = true;
+                continue; 
+            }
 
             s.life--;
 
@@ -318,42 +320,42 @@
                 kyNangZoro.splice(i, 1);
             }
         }
-
-        // ... (Vòng lặp hạt xanh lá và số bay giữ nguyên ở bên dưới như cũ)
-
+         
+        // 2. VÒNG LẶP HẠT VỤ NỔ XANH LÁ
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
-
+            
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4;
+                h.velocities[j].y -= 0.4; 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
 
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
-                if (h.system.geometry) h.system.geometry.dispose();
-                if (h.system.material) h.system.material.dispose();
+                if (h.system.geometry) h.system.geometry.dispose(); 
+                if (h.system.material) h.system.material.dispose(); 
                 hieuUngZoro.splice(i, 1);
             }
         }
 
+        // 3. VÒNG LẶP SỐ DAME TRÊN MÀN HÌNH
         for (let i = danhSachSoBayZR.length - 1; i >= 0; i--) {
             let it = danhSachSoBayZR[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { it.el.style.display = 'none'; }
-
-            if (it.life <= 0) {
-                it.el.remove();
-                danhSachSoBayZR.splice(i, 1);
-                window.tongSoChuNoi_ZR--;
+            
+            if (it.life <= 0) { 
+                it.el.remove(); 
+                danhSachSoBayZR.splice(i, 1); 
+                window.tongSoChuNoi_ZR--; 
             }
         }
     };
@@ -361,39 +363,41 @@
     setInterval(window.updateCombatZoro, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO MÔN PHÁI & TẢI TRƯỚC VRAM
+    // 🌟 KHỞI TẠO MÔN PHÁI & TẢI TRƯỚC VRAM (PRELOAD)
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
-
+        
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã cấy mạng lưới chống Nuốt chiêu!");
+                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Cache Tu Tiên!");
 
-                // 🌟 BÍ QUYẾT TỐI THƯỢNG: TẢI TRƯỚC 1 FILE DUY NHẤT VÀO RAM 
+                // 🌟 BÍ QUYẾT TỐI THƯỢNG: TẢI TRƯỚC VÀO RAM 6 KIẾM QUANG
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
-                     window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG.glb', () => { });
+                    for (let i = 1; i <= 6; i++) {
+                        window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG' + i + '.glb', () => {});
+                    }
                 }
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
-
+                    
                     let coBay = false; let coChay = false;
                     let animBay = null; let animChay = null;
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
-
+                        
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
                             if (clip && clip.tracks) {
                                 clip.tracks = clip.tracks.filter(track => {
                                     let tenTrack = track.name.toLowerCase();
                                     if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
-                                        return false;
+                                        return false; 
                                     }
-                                    return true;
+                                    return true; 
                                 });
                             }
                         }
@@ -402,7 +406,7 @@
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-
+                        
                         if (k.includes('BAY') || k.includes('FLY')) {
                             coBay = true; animBay = window.animationsMap[key]; window.animationsMap['BAY'] = animBay;
                         }
