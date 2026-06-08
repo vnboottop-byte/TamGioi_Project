@@ -204,8 +204,9 @@
 
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
-            
-            // Khóa chân đứng im múa kiếm trong 1.2s (Y hệt Tu Tiên)
+
+            // 🌟 CÔNG NGHỆ TU TIÊN: Bỏ chặn return! Cứ bấm là xả skill, Cooldown để Controller lo!
+            // Đặt đồng hồ 1.2s sau tự động nhả khóa đứng im
             if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
             window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
