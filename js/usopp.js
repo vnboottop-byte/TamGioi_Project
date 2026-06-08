@@ -1,6 +1,6 @@
 // ==========================================
-// 🎯 MÔN PHÁI ĐOẠT XÁ: VUA BẮN TỈA USOPP (BẢN FINAL)
-// 👑 CÔNG NGHỆ: PARABOLIC TRAJECTORY (MAP CẦU + PHẲNG) + MINI FIRE TRAIL 
+// 🎯 MÔN PHÁI ĐOẠT XÁ: VUA BẮN TỈA USOPP (MASTER FILE V2)
+// 👑 CÔNG NGHỆ: PRELOAD RAM + ĐẠN PARABOL CHUẨN TRỤC CẦU + TỌA ĐỘ ĐỘNG + INSTANT CAST
 // ==========================================
 
 (function () {
@@ -135,14 +135,13 @@
 
     // 🌟 5. ĐUÔI LỬA MINI (BỌC NHẸ VIÊN ĐẠN)
     function taoDuoiLuaMiniUsopp(pos, direction, speed) {
-        if (window.isMobile && Math.random() > 0.5) return; // Cứu rỗi CPU Mobile
-        const soLuong = 3; // Ít hạt hơn Fujitora
+        if (window.isMobile && Math.random() > 0.5) return; 
+        const soLuong = 3; 
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
 
         for (let i = 0; i < soLuong; i++) {
-            // Offset siêu nhỏ để bọc sát viên đạn
             let offset = new THREE.Vector3((Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5);
             posArr[i * 3] = pos.x + offset.x; posArr[i * 3 + 1] = pos.y + offset.y; posArr[i * 3 + 2] = pos.z + offset.z;
 
@@ -155,13 +154,12 @@
         const bangMau = [0xffaa00, 0xff5500, 0xffff00]; 
         const mauChon = bangMau[Math.floor(Math.random() * bangMau.length)];
 
-        // Hạt nhỏ hơn Fujitora nhiều (size 2-4)
         const mat = new THREE.PointsMaterial({ color: mauChon, size: 2.0 + Math.random() * 2.0, transparent: true, opacity: 0.7, map: window.textureBuiUsopp, blending: THREE.AdditiveBlending, depthWrite: false });
         const pts = new THREE.Points(geo, mat); scene.add(pts);
         hieuUngUsopp.push({ system: pts, velocities: vels, life: 15, type: 'trail' });
     }
 
-    // 🌟 6. ĐÚC MODEL (HỖ TRỢ VIENDAN & VIENDANGAI)
+    // 🌟 6. ĐÚC MODEL DÙNG CHUNG (TỪ CACHE)
     function taoVatTheUsopp(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -187,10 +185,8 @@
         return group;
     }
 
-    window.thoiDiemBanCuoi_Usopp = window.thoiDiemBanCuoi_Usopp || 0;
-
     // ==========================================
-    // 🏹 TUNG CHIÊU USOPP
+    // 🏹 TUNG CHIÊU USOPP (BẢN V2 CHỐNG NUỐT CHIÊU, ĐẠN BAY MƯỢT)
     // ==========================================
     window.tungComboUsopp = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -199,20 +195,18 @@
         }
         if (!nvc) return;
 
-        // Bốc thăm animation bắn
         let animCanMua = 'ATTACK1';
         if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
             animCanMua = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
         }
 
+        // 🌟 VÁ LỖI 3: Tháo gông 800ms, xóa biến dangMuaChieu. Spam kỹ năng mượt mà!
         if (isRemote === false) {
-            let bayGio = Date.now();
-            if (bayGio - window.thoiDiemBanCuoi_Usopp < 600) return;
-            window.thoiDiemBanCuoi_Usopp = bayGio;
-            window.dangMuaChieu = true;
+            window.currentAnimName = '';
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
         }
 
+        // Khởi tạo radar ban đầu
         let viTriGoc = new THREE.Vector3();
         let upVector = new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3();
@@ -224,15 +218,18 @@
             huongMat = new THREE.Vector3(remoteHuong.x, remoteHuong.y, remoteHuong.z);
             mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
         } else {
-            // Tính toán Up Vector đồng bộ cho cả Map Phẳng và Map Cầu
             if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                 upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
             } else if (nvc.up) {
                 upVector = nvc.up.clone().normalize();
             }
 
-            nvc.getWorldDirection(huongMat); huongMat.normalize();
-            viTriGoc = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5)); // Nòng súng cao 3.5m
+            // 🌟 VÁ LỖI 1: Ép phẳng Vector hướng mặt
+            nvc.getWorldDirection(huongMat); 
+            huongMat.projectOnPlane(upVector).normalize();
+            if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
+            
+            viTriGoc = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
 
             let targetRadar = window.layMucTieuGanNhatUsopp(viTriGoc);
             if (targetRadar && targetRadar.mesh) mucTieu = window.layHitbox(targetRadar.mesh).tamNguc.clone();
@@ -242,11 +239,10 @@
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'TUNG_CHIEU', skillType: phim, className: 'Usopp',
                     origin: { x: viTriGoc.x, y: viTriGoc.y, z: viTriGoc.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
-                })), { reliable: true });
+                })), { reliable: false });
             }
         }
 
-        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
         let dameGoc = window.DAME_CUA_TOI || 100;
         if (isRemote !== false) {
             if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
@@ -255,48 +251,60 @@
             }
         }
 
+        // ========================================================
+        // 🚀 CÔNG NGHỆ NẠP ĐẠN THÔNG MINH (TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT)
+        // ========================================================
         function banDanParabol(tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
+                    // 🌟 VÁ LỖI 4: Lấy lại Tọa độ và Vector Động của nhân vật, tránh rớt đạn lại phía sau!
+                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    if (!curNvc) return;
+
+                    let curUp = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        curUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    } else if (curNvc.up) curUp = curNvc.up.clone().normalize();
+
+                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir);
+                    curDir.projectOnPlane(curUp).normalize();
+                    if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+
+                    let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5)); // Nòng súng cao 3.5m
+
                     const vienDan = taoVatTheUsopp(tenModel, kichCo);
-                    vienDan.position.copy(viTriGoc).add(huongMat.clone().multiplyScalar(1.5));
+                    vienDan.position.copy(curPos).add(curDir.clone().multiplyScalar(1.5));
                     
-                    // Mục tiêu lệch ngẫu nhiên nếu bắn nhiều viên (AOE)
+                    // 🌟 VÁ LỖI 7: Gán Trục Đứng cho viên đạn trước khi bay
+                    vienDan.up.copy(curUp); 
+
                     let doLech = soLuong > 1 ? 5 : 0;
                     let targetLecH = mucTieu.clone();
                     if (doLech > 0) {
                         let vecLech = new THREE.Vector3((Math.random() - 0.5) * doLech, 0, (Math.random() - 0.5) * doLech);
-                        // Đảm bảo lệnh bám sát mặt đất map cầu
-                        vecLech.projectOnPlane(upVector); 
+                        vecLech.projectOnPlane(curUp); 
                         targetLecH.add(vecLech);
                     }
 
                     scene.add(vienDan);
                     
-                    let khoangCachToiDich = viTriGoc.distanceTo(targetLecH);
-                    let thoiGianBay = khoangCachToiDich / tocDo; // Bước bay
+                    let khoangCachToiDich = curPos.distanceTo(targetLecH);
+                    let thoiGianBay = khoangCachToiDich / tocDo; 
 
                     kyNangUsopp.push({
                         mesh: vienDan, type: 'BAY_VONG_CUNG',
                         startPos: vienDan.position.clone(), targetPos: targetLecH, 
-                        progress: 0, speedProgress: 1.0 / (thoiGianBay || 1), // Tốc độ nội suy 0 -> 1
-                        arcHeight: chieuCaoVongCung, upVector: upVector.clone(),
+                        progress: 0, speedProgress: 1.0 / (thoiGianBay || 1), 
+                        arcHeight: chieuCaoVongCung, upVector: curUp.clone(), // Nạp trục vào mảng vật lý
                         life: 200, damage: dameGoc * heSoDame, isRemote: isRemote, noBanKinh: banKinhNo
                     });
-                }, i * 200);
+                }, i * 150); // Delay đạn bắn hỏa tốc, nối đuôi nhau cực đẹp
             }
         }
 
-        // 🎯 CHIÊU Q: 1 Viên đạn thường, bay vòng cung nhẹ
         if (phim === 'Q') banDanParabol('VIENDAN', 1, 3.5, 10, 8.0, 0.4, 10);
-        
-        // 🎯 CHIÊU E: 3 Viên đạn thường bắn liên tiếp
         else if (phim === 'E') banDanParabol('VIENDAN', 3, 3.5, 12, 8.0, 0.2, 12);
-        
-        // 💣 CHIÊU R: 1 Viên đạn gai khổng lồ, bổng cực cao
         else if (phim === 'R') banDanParabol('VIENDANGAI', 1, 6.0, 35, 6.0, 0.5, 30);
-        
-        // 💣 CHIÊU F: 5 Viên đạn gai càn quét diện rộng
         else if (phim === 'F') banDanParabol('VIENDANGAI', 5, 5.0, 25, 7.0, 0.2, 25);
     };
 
@@ -312,39 +320,35 @@
                 s.progress += s.speedProgress;
                 if (s.progress > 1) s.progress = 1;
 
-                // Thuật toán nội suy Parabol bám trục trọng lực (Hỗ trợ Map Cầu)
+                // Nội suy Parabol bám trục không gian
                 let curPos = new THREE.Vector3().lerpVectors(s.startPos, s.targetPos, s.progress);
                 curPos.add(s.upVector.clone().multiplyScalar(Math.sin(s.progress * Math.PI) * s.arcHeight));
 
-                // Lấy direction cho Đuôi lửa và Xoay viên đạn
                 let huongBay = new THREE.Vector3().subVectors(curPos, s.mesh.position).normalize();
                 
                 s.mesh.position.copy(curPos);
-                s.mesh.lookAt(curPos.clone().add(huongBay)); // Chỉa mũi đạn theo hướng rơi
+                
+                // 🌟 VÁ LỖI 7: ÉP TRỤC TRƯỚC KHI ĐẠN BẺ LÁI! Chống vặn xoắn!
+                s.mesh.up.copy(s.upVector);
+                s.mesh.lookAt(curPos.clone().add(huongBay)); 
 
-                // 🌟 BỌC LỬA CHO VIÊN ĐẠN
                 let dirNguoc = huongBay.clone().negate();
                 taoDuoiLuaMiniUsopp(s.mesh.position, dirNguoc, 10.0);
 
-                // Xoay trục Z của Model đạn (Đạn gai xoay tít)
                 if (s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.3);
 
-                // Nổ khi chạm đích
+                // Chạm đích -> Nổ
                 if (s.progress >= 1 || s.life <= 0) {
-                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
                     if (s.isRemote === false) gaySatThuongUsopp(s.targetPos, s.damage, s.noBanKinh);
                     else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
                         if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
-                    } else if (s.isRemote === true) {
-                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
-                    }
-
+                    } 
                     taoVuNoUsopp(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
             }
 
-            // 🛑 DỌN RÁC MODEL
+            // 🛑 DỌN RÁC
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
                 else {
@@ -355,7 +359,7 @@
             }
         }
 
-        // Dọn rác Hạt Bụi + Đuôi lửa
+        // Vòng lặp Hạt Bụi + Đuôi lửa
         for (let i = hieuUngUsopp.length - 1; i >= 0; i--) {
             let h = hieuUngUsopp[i]; h.life--;
 
@@ -365,12 +369,12 @@
                 posArr[j * 3 + 1] += h.velocities[j].y; 
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 
-                h.velocities[j].multiplyScalar(0.9); // Giảm tốc
-                if (h.type !== 'trail') h.velocities[j].y += 0.02; // Hạt nổ bay lên nhẹ
+                h.velocities[j].multiplyScalar(0.9); 
+                if (h.type !== 'trail') h.velocities[j].y += 0.02; 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / (h.type === 'trail' ? 15 : 25);
-            if (h.type === 'trail') h.system.material.size *= 0.95; // Đuôi lửa teo dần
+            if (h.type === 'trail') h.system.material.size *= 0.95; 
 
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
@@ -380,7 +384,6 @@
             }
         }
 
-        // Dọn rác Số Máu
         for (let i = danhSachSoBayUsopp.length - 1; i >= 0; i--) {
             let it = danhSachSoBayUsopp[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -399,13 +402,19 @@
     setInterval(window.updateCombatUsopp, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO HỆ PHÁI
+    // 🌟 KHỞI TẠO HỆ PHÁI & PRELOAD
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('usopp')) {
         window.HePhaiHienTai = {
             tenPhai: "Vua Bắn Tỉa Usopp",
             khoiTao: function () {
-                console.log("🎯 Cảm biến Gió! Khởi động Vua Bắn Tỉa Usopp!");
+                console.log("🎯 Cảm biến Gió! Khởi động Vua Bắn Tỉa Usopp V2!");
+
+                // 🌟 VÁ LỖI 2: KÍCH HOẠT PRELOAD RAM TẢI TRƯỚC VŨ KHÍ
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset('uploads/anims/VIENDAN.glb', () => { });
+                    window.taiHoacNhanBanAsset('uploads/anims/VIENDANGAI.glb', () => { });
+                }
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
