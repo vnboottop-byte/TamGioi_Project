@@ -257,32 +257,19 @@
         }
 
         // ========================================================
-        // 🚀 ĐÚC KIẾM QUANG: ĐẨY NGAY VÀO MẢNG, KHÔNG CHỜ SETTIMEOUT
+        // 🚀 ĐÚC KIẾM QUANG (CÔNG NGHỆ TU TIÊN: BỎ XƯƠNG TAY, DÀN TRẬN ĐỘC LẬP)
         // ========================================================
-        let tayPhaiPos = viTriGocToTam.clone();
-        let tayTraiPos = viTriGocToTam.clone();
-        let xuongTayPhai = null; let xuongTayTrai = null;
-
-        nvc.traverse(c => {
-            if (c.isBone) {
-                if (c.name === 'weapon_03_joint_050') xuongTayPhai = c;
-                if (c.name === 'weapon_02_joint_040') xuongTayTrai = c;
-            }
-        });
-
-        if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
-        else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
-
-        if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
-        else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
+        let offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
 
         function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
             for (let i = 0; i < soNhatChem; i++) {
-                let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
-
                 const kq = taoKiemQuangFile(kichCo);
-                kq.position.copy(nòngGoc);
-                kq.position.add(huongMat.clone().multiplyScalar(2.5));
+
+                // 🌟 BÍ THUẬT TU TIÊN: Dàn trận kiếm tản ra 2 bên, chống xếp chồng thành 1 cục
+                let offset = (i - (soNhatChem - 1) / 2) * 1.5; 
+                let posNongGoc = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
+
+                kq.position.copy(posNongGoc);
                 kq.up.copy(upVector);
 
                 let doLan = (soNhatChem > 1) ? 3.0 : 0;
@@ -296,14 +283,14 @@
                 kq.visible = false; 
                 scene.add(kq);
 
-                // Delay theo frames vật lý: 300ms base + 150ms mỗi nhịp
-                let delayFrames = 10 + (i * 5); 
+                // 🌟 TRỄ NHỊP ĐỘC LẬP: Chống spam 4 phím dính thành 1
+                let delayBase = (kieuChem === 'Q') ? 5 : ((kieuChem === 'E') ? 10 : ((kieuChem === 'R') ? 15 : 20));
+                let delayFrames = delayBase + (i * 4); 
 
                 kyNangZoro.push({
                     mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
-                    delay: delayFrames, // Tham số delay ma thuật
-                    targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote,
-                    huongMat: huongMat.clone(), xuongTay: (i % 2 === 0) ? xuongTayPhai : xuongTayTrai
+                    delay: delayFrames, // Đếm lùi chuẩn Tu Tiên
+                    targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
                 });
             }
         }
@@ -324,15 +311,9 @@
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i]; 
 
-            // 🌟 VẬT LÝ TU TIÊN: Xử lý đếm lùi delay xuất chiêu
+            // 🌟 CHÂN LÝ TU TIÊN: Bỏ hoàn toàn việc ghim vào Xương Tay! Chỉ đếm lùi và bay!
             if (typeof s.delay === 'number' && s.delay > 0) {
                 s.delay--;
-                // Trong lúc nén chiêu, ghim model 3D vào đúng thanh kiếm trên tay
-                if (s.xuongTay && s.mesh) {
-                    let tayHienTai = new THREE.Vector3();
-                    s.xuongTay.getWorldPosition(tayHienTai);
-                    s.mesh.position.copy(tayHienTai).add(s.huongMat.clone().multiplyScalar(2.5));
-                }
                 if (s.delay <= 0 && s.mesh) s.mesh.visible = true; // Hết giờ thì hiện hình bay đi
                 continue; 
             }
@@ -348,7 +329,7 @@
                 }
             }
 
-            // 🛑 VÁ DỌN RÁC MODEL KIẾM QUANG
+            // 🛑 DỌN RÁC
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
                 else {
@@ -358,7 +339,7 @@
                 kyNangZoro.splice(i, 1);
             }
         }
-
+         
         // 2. VÒNG LẶP HẠT VỤ NỔ XANH LÁ
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
