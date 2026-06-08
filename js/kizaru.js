@@ -1,6 +1,6 @@
 // ==========================================
-// ⚡ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC KIZARU (HỆ ÁNH SÁNG - MASTER FILE V2)
-// 👑 CÔNG NGHỆ: DYNAMIC MESH TRACKER + INSTANT CAST + TRỌNG LỰC CẦU HẠT ÁNH SÁNG
+// ⚡ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC KIZARU (HỆ ÁNH SÁNG - MASTER FILE V3)
+// 👑 CÔNG NGHỆ: DYNAMIC MESH TRACKER + KIẾM QUANG ÁNH SÁNG CHỮ X + INSTANT CAST
 // ==========================================
 
 (function () {
@@ -8,7 +8,6 @@
     const hieuUngKizaru = [];
     const danhSachSoBayKZR = [];
 
-    // 🌟 ĐÃ TRIỆT TIÊU BỘ ĐẾM COOLDOWN CỤC BỘ SAI LẦM ĐỂ GIẢI PHÓNG PHÍM SPAM!
     window.tongSoChuNoi_KZR = 0;
     
     function taoSoSatThuongKZR(pos3D, satThuong, mauSac = '#ffcc00') {
@@ -87,7 +86,6 @@
 
     window.thoiDiemNoCuoiCungKZR = window.thoiDiemNoCuoiCungKZR || 0;
 
-    // 💥 HIỆU ỨNG NỔ ÁNH SÁNG (VÁ LỖI TRỌNG LỰC CẦU)
     function taoVuNoAnhSangKZR(pos, isRemote = false, luongDame = 100, banKinh = 15, upVector = new THREE.Vector3(0, 1, 0)) {
         if (isRemote === false && luongDame > 0) {
             gaySatThuongKZR(pos, luongDame, banKinh);
@@ -126,34 +124,38 @@
         });
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        // Cấy upVector vào hạt nổ để rơi chuẩn trục địa cầu
         hieuUngKizaru.push({ system: pts, velocities: vels, life: 35, type: 'explosion', upVector: upVector.clone() }); 
     }
 
-    function taoHinhBanNguyet(banKinh, colorHex) {
+    // 🌟 1. VÁ LỖI: ĐÚC LƯỠI KIẾM ÁNH SÁNG TỪ KIEMQUANG2.GLB CỦA ZORO
+    function taoKiemQuangVang(scaleSize) {
         const group = new THREE.Group();
-        const geoVo = new THREE.CylinderGeometry(banKinh, banKinh, 1.5, 32, 1, true, 0, Math.PI); 
-        const matVo = new THREE.MeshBasicMaterial({ 
-            color: colorHex, transparent: true, opacity: 0.6, 
-            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
-        });
-        const meshVo = new THREE.Mesh(geoVo, matVo);
-        
-        const geoLoi = new THREE.CylinderGeometry(banKinh * 0.8, banKinh * 0.8, 0.8, 32, 1, true, 0, Math.PI);
-        const matLoi = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff, transparent: true, opacity: 1.0, 
-            blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false 
-        });
-        const meshLoi = new THREE.Mesh(geoLoi, matLoi);
+        let urlCanTai = 'uploads/anims/KIEMQUANG2.glb'; // Lấy thẳng KIEMQUANG số 2 siêu đẹp
 
-        const luoiDaoGroup = new THREE.Group();
-        luoiDaoGroup.add(meshVo);
-        luoiDaoGroup.add(meshLoi);
+        if (typeof window.taiHoacNhanBanAsset === 'function') {
+            window.taiHoacNhanBanAsset(urlCanTai, (v) => {
+                v.traverse(c => {
+                    if (c.isMesh && c.material) {
+                        let danhSachMat = Array.isArray(c.material) ? c.material : [c.material];
+                        danhSachMat.forEach(m => {
+                            m.transparent = true;
+                            // Nhuộm Vàng Ánh Sáng để khớp với Kizaru
+                            if (m.color) m.color.setHex(0xffff00); 
+                            if (m.emissive) { m.emissive.setHex(0xffaa00); m.emissiveIntensity = 2.0; }
+                        });
+                    }
+                });
+                v.updateMatrixWorld(true);
+                const box = new THREE.Box3().setFromObject(v);
+                const size = new THREE.Vector3(); box.getSize(size);
+                const maxDim = Math.max(size.x, size.y, size.z) || 1;
+                let tiLeChuan = scaleSize / maxDim;
 
-        luoiDaoGroup.rotation.y = -Math.PI / 2; 
-        luoiDaoGroup.scale.set(2.0, 2.0, 3.0);  
-
-        group.add(luoiDaoGroup);
+                v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
+                v.rotation.set(0, 0, 0);
+                group.add(v);
+            });
+        }
         return group;
     }
 
@@ -182,7 +184,7 @@
     }
 
     // ==========================================
-    // ✨ TUNG CHIÊU KIZARU V2 (TỌA ĐỘ ĐỘNG HOÀN TOÀN)
+    // ✨ TUNG CHIÊU KIZARU V2
     // ==========================================
     window.tungComboKizaru = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -197,7 +199,6 @@
         else if (phim === 'F') tenAnimMua = 'ATTACK3'; 
         else if (phim === 'R') tenAnimMua = 'ATTACK4'; 
 
-        // 🌟 VÁ LỖI 3: Khóa van gáy bẩn 600ms tạm thời để giữ dáng múa, nhưng nhả cực nhanh để spam hỏa tốc
         if (isRemote === false) {
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimMua);
@@ -243,9 +244,6 @@
             }
         }
 
-        // =====================================
-        // 🚀 VÁ LỖI 4: LẤY TỌA ĐỘ ĐỘNG KHÔNG GIAN BÊN TRONG SETTIMEOUT
-        // =====================================
         setTimeout(() => {
             let tenMeshCanTim = 'Object_28'; 
             if (phim === 'E') tenMeshCanTim = 'Object_19';
@@ -260,7 +258,9 @@
             let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
             let viTriXuatChieu = curNvc.position.clone().add(curUp.clone().multiplyScalar(4.0));
 
-            // Quét xương tìm họng súng Blender động
+            let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+            if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+            
             let timThayThit = null;
             curNvc.traverse(c => {
                 if (c.isMesh && c.name === tenMeshCanTim) timThayThit = c;
@@ -273,14 +273,35 @@
                 taoVuNoAnhSangKZR(mucTieu, isRemote, dameGoc * 0.4, 5, curUp); 
                 kyNangKizaru.push({ mesh: tiaSang, type: 'TIA_CHOP', life: 15 });
             }
+            // =====================================
+            // 🌟 2. VÁ LỖI: CHIÊU E SAO CHÉP HOÀN HẢO KIẾM KHÍ CHÉO CỦA ZORO
+            // =====================================
             else if (phim === 'E') {
-                const luoiDao = taoHinhBanNguyet(5.0, 0xffcc00);
-                luoiDao.position.copy(viTriXuatChieu); 
-                // 🌟 VÁ LỖI 7: Ép trục Quaternion chống vẹo lưỡi đao quang
-                luoiDao.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp); 
-                luoiDao.lookAt(mucTieu); 
-                scene.add(luoiDao);
-                kyNangKizaru.push({ mesh: luoiDao, type: 'E_BLADE', life: 80, speed: 12.0, targetPos: mucTieu, damage: dameGoc * 0.6, isRemote: isRemote, upVector: curUp.clone() });
+                let offsetRight = new THREE.Vector3().crossVectors(curDir, curUp).normalize();
+                
+                // Phóng 2 nhát chém tản ngang ra một chút tạo thành chữ X cực lớn
+                for (let i = 0; i < 2; i++) {
+                    const kq = taoKiemQuangVang(50); // Scale to 50 cho lực Ánh sáng
+                    
+                    let offset = (i - 0.5) * 2.0; 
+                    let diemBan = viTriXuatChieu.clone().add(offsetRight.clone().multiplyScalar(offset));
+                    
+                    kq.position.copy(diemBan); 
+                    kq.up.copy(curUp); // ÉP TRỤC CẦU 100% CHUẨN
+                    
+                    let targetBay = mucTieu ? mucTieu.clone() : viTriXuatChieu.clone().add(curDir.clone().multiplyScalar(150));
+                    kq.lookAt(targetBay); 
+                    
+                    // 🌟 Bí thuật của Zoro: Xoay nghiêng 45 độ để 2 nhát tạo thành chữ X
+                    kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
+                    
+                    scene.add(kq);
+                    
+                    kyNangKizaru.push({ 
+                        mesh: kq, type: 'E_BLADE', speed: 18.0, life: 80, // Tốc độ 18.0 nhanh hơn Zoro
+                        targetPos: targetBay, damage: dameGoc * 0.3, isRemote: isRemote, upVector: curUp.clone() 
+                    });
+                }
             }
             else if (phim === 'R') {
                 for(let i = 0; i < 8; i++) {
@@ -300,7 +321,7 @@
                 taoVuNoAnhSangKZR(mucTieu, isRemote, dameGoc * 1.0, 35, curUp);
                 kyNangKizaru.push({ mesh: tiaBu, type: 'TIA_CHOP', life: 25 });
             }
-        }, 500); 
+        }, 300); // 🌟 ÉP XUNG XUỐNG CÒN 300MS CHO MƯỢT
     };
 
     // ==========================================
@@ -313,26 +334,12 @@
             if (s.type === 'TIA_CHOP') {
                 s.mesh.traverse(c => { if (c.material) c.material.opacity *= 0.8; });
             }
+            // 🌟 3. VÁ LỖI: VẬT LÝ CHIÊU E BAY THẲNG TẮP KHÔNG LƯỢN VÒNG VÈO NỮA
             else if (s.type === 'E_BLADE') {
-                s.mesh.translateZ(s.speed);
-                s.mesh.scale.x += 0.2; 
-                s.mesh.scale.z += 0.2; 
+                s.mesh.translateZ(s.speed); // Bay thẳng xuyên suốt như Tu Tiên
                 
-                if (s.targetPos) {
-                    if (!s.isRemote) {
-                        const mucTieuMoi = window.layMucTieuGanNhatKZR(s.mesh.position);
-                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
-                    }
-                    
-                    const dummy = new THREE.Object3D(); 
-                    dummy.position.copy(s.mesh.position); 
-                    dummy.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), s.upVector || new THREE.Vector3(0,1,0));
-                    dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.3); 
-                }
-
-                if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 8 || s.life < 5) {
-                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 30, s.upVector || new THREE.Vector3(0,1,0)); 
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 8 || s.life < 5) {
+                    taoVuNoAnhSangKZR(s.targetPos, s.isRemote, Math.round(s.damage), 20, s.upVector || new THREE.Vector3(0,1,0)); 
                     s.life = 0;
                 }
             }
@@ -343,7 +350,6 @@
             }
         }
 
-        // 🌟 CẬP NHẬT TRỌNG LỰC GIỌT BỤI VÀNG RƠI THEO TÂM ĐỊA CẦU MAP CẦU
         for (let i = hieuUngKizaru.length - 1; i >= 0; i--) {
             let h = hieuUngKizaru[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
@@ -389,7 +395,12 @@
         window.HePhaiHienTai = {
             tenPhai: "Đô Đốc Kizaru",
             khoiTao: function () {
-                console.log("⚡ Kizaru V2: Tốc độ ánh sáng không giật trễ hình ảnh!");
+                console.log("⚡ Kizaru V3: Kiếm Khí Chữ X Tốc Độ Ánh Sáng Xuất Chiến!");
+
+                // 🌟 4. VÁ LỖI: PRELOAD THÊM KIEMQUANG2.glb CỦA ZORO ĐỂ BĂM NGAY TỨC KHẮC
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG2.glb', () => {});
+                }
 
                 if (window.animationsMap) {
                     for (let key in window.animationsMap) {
