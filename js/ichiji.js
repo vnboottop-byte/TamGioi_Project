@@ -333,7 +333,8 @@
                 const lazerTrai = taoTiaLazerDo(diemBanTrai, mucTieu, 1.0);
                 scene.add(lazerTrai);
 
-                taoVuNoLUA_ICJ(mucTieu, isRemote, dameGoc * 0.15, 15);
+                // 🌟 ĐỒNG BỘ CHUẨN 7.8: Hạ dame lazer phụ về 0 để tránh lỗi chồng dame
+                taoVuNoLUA_ICJ(mucTieu, isRemote, 0, 15);
                 kyNangIchiji.push({ mesh: lazerTrai, type: 'TIA_CHOP', life: 15 });
             }, 200);
         }
