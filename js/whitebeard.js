@@ -1,6 +1,6 @@
 // ==========================================
-// 🧔 MÔN PHÁI ĐOẠT XÁ: TỨ HOÀNG RÂU TRẮNG (BỐ GIÀ - MASTER V3)
-// 👑 CÔNG NGHỆ: AIMBOT TẦM NHIỆT + TRỌNG LỰC CẦU 3D + DYNAMIC BONE TRACKING
+// 🧔 MÔN PHÁI ĐOẠT XÁ: TỨ HOÀNG RÂU TRẮNG (BỐ GIÀ - MASTER V4)
+// 👑 CÔNG NGHỆ: AIMBOT VECTOR TUYỆT ĐỐI + TRỌNG LỰC CẦU 3D + DYNAMIC BONE
 // ==========================================
 
 (function () {
@@ -26,6 +26,7 @@
         danhSachSoBayWB.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
+    // 🌟 RADAR QUÉT MỤC TIÊU MỚI NHẤT
     window.layMucTieuGanNhatWB = function (viTriGoc) {
         if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
@@ -198,7 +199,7 @@
     }
 
     // ==========================================
-    // ⚔️ TUNG CHIÊU BỐ GIÀ (ĐÃ FIX TẦM NHIỆT & LẤY MỤC TIÊU MỚI TRONG SETTIMEOUT)
+    // ⚔️ TUNG CHIÊU BỐ GIÀ 
     // ==========================================
     window.tungComboWhitebeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -265,7 +266,7 @@
         }
 
         // ===============================================
-        // ⚔️ NHÓM CHIÊU Q: (TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT)
+        // ⚔️ NHÓM CHIÊU Q: 
         // ===============================================
         if (animCanMua === 'ATTACK5') { 
             for (let i = 0; i < 5; i++) {
@@ -276,12 +277,7 @@
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
                     let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
 
-                    // 🌟 QUÉT LẠI MỤC TIÊU MỚI NHẤT
                     let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
-                    if (!isRemote) {
-                        let objMoi = window.layMucTieuGanNhatWB(curPos);
-                        if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                    }
 
                     const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 30);
                     kq.position.copy(curPos).add(curDir.clone().multiplyScalar(2));
@@ -301,10 +297,6 @@
                 let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
                 
                 let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
-                if (!isRemote) {
-                    let objMoi = window.layMucTieuGanNhatWB(curPos);
-                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                }
 
                 const gocXoay = [0, Math.PI / 3, -Math.PI / 3]; 
                 for (let i = 0; i < 3; i++) {
@@ -327,10 +319,6 @@
                 let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
 
                 let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
-                if (!isRemote) {
-                    let objMoi = window.layMucTieuGanNhatWB(curPos);
-                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                }
 
                 const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50); 
                 kq.position.copy(curPos).add(curDir.clone().multiplyScalar(2));
@@ -358,10 +346,6 @@
                     if (tayF_E) tayF_E.getWorldPosition(diemBan);
 
                     let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(curDir.clone().multiplyScalar(150));
-                    if (!isRemote) {
-                        let objMoi = window.layMucTieuGanNhatWB(diemBan);
-                        if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                    }
 
                     const cauEnergy = taoVatTheWB('energy', 2); 
                     cauEnergy.position.copy(diemBan).add(curDir.clone().multiplyScalar(1.5));
@@ -393,10 +377,6 @@
                 if (tayR) tayR.getWorldPosition(diemBan);
 
                 let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(curDir.clone().multiplyScalar(150));
-                if (!isRemote) {
-                    let objMoi = window.layMucTieuGanNhatWB(diemBan);
-                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                }
 
                 const cauEnergy = taoVatTheWB('energy', 1); 
                 cauEnergy.position.copy(diemBan).add(curDir.clone().multiplyScalar(2.0));
@@ -417,10 +397,6 @@
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
                 let targetBay = mucTieu ? mucTieu.clone() : curNvc.position.clone();
-                if (!isRemote) {
-                    let objMoi = window.layMucTieuGanNhatWB(curNvc.position);
-                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                }
 
                 const cauEnergy = taoVatTheWB('energy', 1); 
                 let posXuatPhat = targetBay.clone().add(curUp.clone().multiplyScalar(120)); 
@@ -453,10 +429,6 @@
                 if (tayF_E) tayF_E.getWorldPosition(diemBan);
 
                 let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(curDir.clone().multiplyScalar(150));
-                if (!isRemote) {
-                    let objMoi = window.layMucTieuGanNhatWB(diemBan);
-                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
-                }
 
                 const cauEnergy = taoVatTheWB('energy', 15);
                 cauEnergy.position.copy(diemBan).add(curDir.clone().multiplyScalar(2.0));
@@ -473,7 +445,7 @@
     };
 
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ BỐ GIÀ (ĐÃ FIX TẦM NHIỆT AIMBOT)
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ BỐ GIÀ (ĐÃ FIX TẦM NHIỆT AIMBOT BẰNG TOÁN HỌC VECTOR)
     // ==========================================
     window.updateCombatWB = function () {
 
@@ -484,7 +456,7 @@
                 s.mesh.userData.mixer.update(0.03); 
             }
 
-            // 🌟 TÍCH HỢP TẦM NHIỆT (AIMBOT) CHO TẤT CẢ ĐẠN BAY NGANG
+            // 🌟 CÔNG NGHỆ AIMBOT CHUẨN VECTOR 3D TUYỆT ĐỐI
             if (s.type === 'BAY_THANG' || s.type === 'BAY_THANG_PHINH_TO' || s.type === 'BAY_THANG_PHINH_TO_F') {
                 if (s.currentScale !== undefined && s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
@@ -492,27 +464,37 @@
                 }
                 if (s.mesh.children.length > 0 && s.type !== 'BAY_THANG') s.mesh.children[0].rotateY(0.2); 
 
-                if (s.targetPos) {
-                    if (!s.isRemote) {
-                        let mucTieuMoi = window.layMucTieuGanNhatWB(s.mesh.position);
-                        if (mucTieuMoi && mucTieuMoi.mesh) {
-                            s.targetPos = window.layHitbox(mucTieuMoi.mesh).tamNguc.clone();
-                        }
+                // 1. Quét radar cập nhật mục tiêu liên tục
+                if (!s.isRemote) {
+                    let mucTieuMoi = window.layMucTieuGanNhatWB(s.mesh.position);
+                    if (mucTieuMoi && mucTieuMoi.mesh) {
+                        s.targetPos = window.layHitbox(mucTieuMoi.mesh).tamNguc.clone();
                     }
+                }
+
+                let huongBay = new THREE.Vector3();
+                if (s.targetPos) {
+                    // 2. Ép quay mặt Slerp đẹp mắt
                     const dummy = new THREE.Object3D(); 
                     dummy.position.copy(s.mesh.position); 
                     dummy.up.copy(s.upVector || new THREE.Vector3(0,1,0));
                     dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.15); // Bẻ lái đuổi theo quái
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.2); 
+                    
+                    // 3. 🌟 BÍ THUẬT: Tịnh tiến tuyệt đối bằng Vector3 Sub (Khắc phục lỗi Negative Z translate)
+                    huongBay.subVectors(s.targetPos, s.mesh.position).normalize();
+                } else {
+                    // Nếu mất cự ly, bay theo hướng mặt hiện tại (Mũi tên âm Z của ThreeJS lookAt)
+                    s.mesh.getWorldDirection(huongBay);
+                    huongBay.negate(); 
                 }
 
-                s.mesh.translateZ(s.speed); // Dịch chuyển về phía trước thay vì tịnh tiến tĩnh
+                // Đẩy viên đạn tới trước
+                s.mesh.position.add(huongBay.multiplyScalar(s.speed));
 
-                // 🌟 CHẠM MỤC TIÊU MỚI NỔ (Khắc phục lỗi mù 100%)
+                // 4. KIỂM TRA VA CHẠM THỰC TẾ
                 let daVaCham = false;
-                if (!s.isRemote && s.targetPos) {
-                    if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 10) daVaCham = true;
-                } else if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 10) {
+                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 15) {
                     daVaCham = true;
                 }
 
@@ -539,13 +521,15 @@
                 }
             }
             
-            // 🌟 TÍCH HỢP TẦM NHIỆT RƠI CHO THIÊN THẠCH
+            // 🌟 THIÊN THẠCH RƠI XUỐNG VỚI AIMBOT HÚT NGANG
             else if (s.type === 'ROI_THANG_PHINH_TO') {
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
                 if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.2);
+
+                let cUp = s.upVector || new THREE.Vector3(0,1,0);
 
                 if (!s.isRemote) {
                     let mucTieuMoi = window.layMucTieuGanNhatWB(s.mesh.position);
@@ -554,23 +538,24 @@
                     }
                 }
                 
-                // Hút thiên thạch theo trục Ngang (Mặc kệ Trái đất tròn)
+                // Kéo dạt viên đạn sang ngang (Hút theo quái)
                 if (s.targetPos) {
                     let vecToTarget = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position);
-                    vecToTarget.projectOnPlane(s.upVector || new THREE.Vector3(0,1,0));
-                    if (vecToTarget.lengthSq() > 1.0) {
-                        vecToTarget.normalize().multiplyScalar(s.speed * 0.4); 
+                    vecToTarget.projectOnPlane(cUp); 
+                    if (vecToTarget.lengthSq() > 0.1) {
+                        vecToTarget.normalize().multiplyScalar(s.speed * 0.5); 
                         s.mesh.position.add(vecToTarget);
                     }
                 }
 
                 s.speed *= 1.05; 
-                s.mesh.position.sub((s.upVector || new THREE.Vector3(0,1,0)).clone().multiplyScalar(s.speed)); 
+                s.mesh.position.sub(cUp.clone().multiplyScalar(s.speed)); 
 
                 let khoangCach = s.targetPos ? s.mesh.position.distanceTo(s.targetPos) : 9999;
-                if (khoangCach <= s.speed + 20 || s.life <= 5) {
-                    if (s.isRemote === false) gaySatThuongWB(s.targetPos || s.mesh.position, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) window.gaySatThuongBossToPlayer(s.targetPos || s.mesh.position, s.damage, s.noBanKinh);
+                if (khoangCach <= s.speed + 30 || s.life <= 5) {
+                    let diemNoThucTe = s.targetPos ? s.targetPos : s.mesh.position;
+                    if (s.isRemote === false) gaySatThuongWB(diemNoThucTe, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) window.gaySatThuongBossToPlayer(diemNoThucTe, s.damage, s.noBanKinh);
                     s.life = 0;
                 }
             }
@@ -626,7 +611,7 @@
         window.HePhaiHienTai = {
             tenPhai: "Tứ Hoàng Râu Trắng",
             khoiTao: function () {
-                console.log("🧔 Sức mạnh hủy diệt thế giới! Khởi động Râu Trắng V3 (Aimbot Edition)!");
+                console.log("🧔 Sức mạnh hủy diệt thế giới! Khởi động Râu Trắng V4 (Aimbot Vector Tuyệt Đối)!");
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset('uploads/anims/energy.glb', () => {});
