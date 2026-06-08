@@ -235,7 +235,7 @@
             }
         }
 
-        let diemChanMucTieu = mucTieu.clone(); diemChanMucTieu.y = window.matDatY || 0;
+        let diemChanMucTieu = mucTieu.clone();
 
         // ===============================================
         // 🗡️ CHIÊU Q: Ném vukhikaya.glb, xoay tròn trục đứng
