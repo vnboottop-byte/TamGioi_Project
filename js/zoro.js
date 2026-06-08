@@ -166,7 +166,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO 
+    // 🏹 HÀM XẢ COMBO (BẢN HỎA TỐC: BẤM LÀ BAY, KHÔNG CHỜ ĐỢI DELAY)
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -176,22 +176,16 @@
         if (!nvc) return;
 
         if (isRemote === false) {
-            window.dangMuaChieu = true;
-            window.currentAnimName = '';
-
+            // 🌟 ĐÃ XÓA SẠCH BIẾN dangMuaChieu & SETTIMEOUT! 
+            // Giờ Sếp bấm nhồi 4 nút cùng lúc, nó cũng sẽ chém ra ngay!
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
-
-            if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
-            window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 500);
         }
 
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-
         let huongMat = new THREE.Vector3();
 
-        // 🌟 BẢN VÁ TỐI THƯỢNG 2: LẤY HƯỚNG CAMERA ĐỂ CHỐNG LỖI ANIMATION QUAY LƯNG
         if (typeof camera !== 'undefined' && !isRemote) {
             camera.getWorldDirection(huongMat);
             huongMat.projectOnPlane(upVector).normalize();
@@ -200,9 +194,7 @@
             nvc.getWorldDirection(huongMat);
             huongMat.projectOnPlane(upVector).normalize();
         }
-        if (huongMat.lengthSq() < 0.001) {
-            huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
-        }
+        if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
 
         let mucTieu = null;
 
@@ -221,17 +213,14 @@
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
 
-            // 🌟 BẢN VÁ TỐI THƯỢNG 1: BỌC TRY/CATCH + RELIABLE FALSE CHỐNG CRASH VÒNG LẶP DO SPAM
             try {
                 if (window.room && window.room.localParticipant) {
                     window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                         type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro',
                         origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
-                    })), { reliable: false }); // <-- ÉP VỀ FALSE ĐỂ CHỐNG NGỘP DATA
+                    })), { reliable: false });
                 }
-            } catch (err) {
-                console.warn("Lỗi mạng khi bắn chiêu (Bỏ qua để không nuốt chiêu):", err);
-            }
+            } catch (err) { }
         }
 
         let dameGoc = window.DAME_CUA_TOI || 100;
@@ -240,9 +229,6 @@
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) dameGoc = window.remotePlayers[casterId].damage || 100;
         }
 
-        // ========================================================
-        // 🚀 ĐÚC KIẾM QUANG
-        // ========================================================
         let offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
 
         function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
@@ -267,15 +253,12 @@
                 else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
                 else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
 
-                // 🌟 BẢN VÁ TỐI THƯỢNG 3: CHO KIẾM HIỆN LUÔN KHÔNG TÀNG HÌNH NỮA
+                // 🌟 QUYẾT ĐỊNH SỐ 1: BẤM PHÁT LÀ KIẾM HIỆN RA NGAY LẬP TỨC (XÓA BỎ VISIBLE = FALSE)
                 scene.add(kq);
-
-                let delayBase = (kieuChem === 'Q') ? 5 : ((kieuChem === 'E') ? 10 : ((kieuChem === 'R') ? 15 : 20));
-                let delayFrames = delayBase + (i * 4);
 
                 kyNangZoro.push({
                     mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
-                    delay: delayFrames, targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
+                    targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
                 });
             }
         }
@@ -294,12 +277,8 @@
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
             let s = kyNangZoro[i];
 
-            // 🌟 CẬP NHẬT HIỆU ỨNG TỤ LỰC NHƯ TU TIÊN (XOAY TRONG LÚC CHỜ)
-            if (typeof s.delay === 'number' && s.delay > 0) {
-                s.delay--;
-                if (s.mesh) s.mesh.rotateZ(0.2); // Kiếm xoay tít thò lò chờ phóng
-                continue;
-            }
+            // 🌟 QUYẾT ĐỊNH SỐ 2: ĐÃ XÓA SẠCH VÒNG LẶP KIẾM XOAY TÀNG HÌNH CHỜ ĐỢI
+            // Đạn nằm trong nòng là lao thẳng vào mặt kẻ thù luôn!
 
             s.life--;
 
@@ -321,6 +300,8 @@
                 kyNangZoro.splice(i, 1);
             }
         }
+
+        // ... (Vòng lặp hạt xanh lá và số bay giữ nguyên ở bên dưới như cũ)
 
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
