@@ -1,6 +1,6 @@
 // ==========================================
 // 🏰 MÔN PHÁI ĐOẠT XÁ: BỐ GIÀ CAPONE BEGE (PHÁO ĐÀI SỐNG)
-// 👑 CÔNG NGHỆ: AUTO-LOOP ANIMATION + MULTI-BONE WEAPON + PARABOLA & ROCKET TRAIL
+// 👑 CÔNG NGHỆ: BẢN GỐC + VÁ LỖI TRỤC CẦU 3D & TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT
 // ==========================================
 
 (function () {
@@ -96,8 +96,8 @@
         }
     }
 
-    // 🌟 4. HIỆU ỨNG VỤ NỔ
-    function taoVuNoBege(pos, banKinh = 15) {
+    // 🌟 4. HIỆU ỨNG VỤ NỔ (CẬP NHẬT TRỤC CẦU CHO KHÓI)
+    function taoVuNoBege(pos, banKinh = 15, upVector = new THREE.Vector3(0, 1, 0)) {
         if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
         else if (typeof window.playSound === 'function') window.playSound('no');
 
@@ -105,12 +105,15 @@
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
+        
+        let qNolo = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), upVector);
 
         for (let i = 0; i < soLuong; i++) {
             posArr[i * 3] = pos.x; posArr[i * 3 + 1] = pos.y + 1; posArr[i * 3 + 2] = pos.z;
             let speed = Math.random() * 2.5 + 0.5;
-            let vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
-            vels.push(vec);
+            let vLocal = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
+            vLocal.applyQuaternion(qNolo); // Nắn vụ nổ theo trục không gian
+            vels.push(vLocal);
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
@@ -130,11 +133,11 @@
         });
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngBege.push({ system: pts, velocities: vels, life: 25 });
+        hieuUngBege.push({ system: pts, velocities: vels, life: 25, upVector: upVector.clone() });
     }
 
     // 🌟 5. ĐUÔI LỬA TÊN LỬA (Học hỏi từ Usopp)
-    function taoDuoiLuaMiniBege(pos, direction, speed) {
+    function taoDuoiLuaMiniBege(pos, direction, speed, upVector = new THREE.Vector3(0,1,0)) {
         if (window.isMobile && Math.random() > 0.5) return; 
         const soLuong = 4; 
         const geo = new THREE.BufferGeometry();
@@ -156,7 +159,7 @@
 
         const mat = new THREE.PointsMaterial({ color: mauChon, size: 2.5 + Math.random() * 2.0, transparent: true, opacity: 0.8, map: window.textureBuiBege, blending: THREE.AdditiveBlending, depthWrite: false });
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngBege.push({ system: pts, velocities: vels, life: 15, type: 'trail' });
+        hieuUngBege.push({ system: pts, velocities: vels, life: 15, type: 'trail', upVector: upVector.clone() });
     }
 
     // 🌟 6. ĐÚC MODEL (HỖ TRỢ vukhibege & VIENDAN)
@@ -212,13 +215,13 @@
             
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
 
-            // 🌟 CÔNG NGHỆ AUTO-LOOP ANIMATION (DÀNH CHO CHIÊU F)
+            // 🌟 CÔNG NGHỆ AUTO-LOOP ANIMATION CỦA SẾP
             if (phim === 'F') {
                 let loopCount = 0;
                 let fLoop = setInterval(() => {
                     if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('ATTACK3');
                     loopCount++;
-                    if (loopCount >= 3) clearInterval(fLoop); // 3 lần * 500ms = 1.5s
+                    if (loopCount >= 3) clearInterval(fLoop); 
                 }, 500);
                 
                 if (window.henGioTatMuaBG) clearTimeout(window.henGioTatMuaBG);
@@ -257,22 +260,6 @@
             }
         }
 
-        // 🌟 BỘ QUÉT XƯƠNG (BONES) CHUYÊN DỤNG CHO BỐ GIÀ
-        let tayPhaiPos = viTriGoc.clone();
-        let ngucPos = viTriGoc.clone();
-        
-        nvc.traverse(c => {
-            if (c.isBone) {
-                if (c.name === 'Rhand_Weapon02_02_045') c.getWorldPosition(tayPhaiPos);
-                if (c.name === 'Bone') c.getWorldPosition(ngucPos);
-            }
-        });
-
-        // Nếu xương không load kịp, dùng offset tương đối
-        if (tayPhaiPos.distanceTo(viTriGoc) < 0.1) tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
-        if (ngucPos.distanceTo(viTriGoc) < 0.1) ngucPos.sub(upVector.clone().multiplyScalar(0.5));
-
-        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
         let dameGoc = window.DAME_CUA_TOI || 100;
         if (isRemote !== false) {
             if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
@@ -281,71 +268,108 @@
             }
         }
 
-        // 💣 ĐỘNG CƠ 1: BẮN ĐẠN PARABOL (COPY TỪ USOPP)
-        function banDanParabolBege(nongSung, tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
+        // 💣 ĐỘNG CƠ 1: BẮN ĐẠN PARABOL (COPY TỪ USOPP CỦA SẾP + VÁ TỌA ĐỘ ĐỘNG)
+        function banDanParabolBege(viTriNong, tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
             for (let i = 0; i < soLuong; i++) {
+                // SẾP CHÚ Ý: Em dời việc quét xương vào TỚI TẬN TRONG setTimeout để đạn mọc đúng vị trí hiện tại!
                 setTimeout(() => {
+                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    if (!curNvc) return;
+                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+
+                    let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                    curNvc.traverse(c => {
+                        if (c.isBone) {
+                            if (viTriNong === 'TAY' && c.name === 'Rhand_Weapon02_02_045') c.getWorldPosition(diemBan);
+                            if (viTriNong === 'NGUC' && c.name === 'Bone') c.getWorldPosition(diemBan);
+                        }
+                    });
+
                     const vienDan = taoVatTheBege(tenModel, kichCo);
-                    vienDan.position.copy(nongSung).add(huongMat.clone().multiplyScalar(1.5));
+                    vienDan.position.copy(diemBan).add(curDir.clone().multiplyScalar(1.5));
                     
                     let doLech = soLuong > 1 ? 5 : 0;
                     let targetLecH = mucTieu.clone();
+                    
+                    if (!isRemote) { // AimBot
+                        let objMoi = window.layMucTieuGanNhatBege(diemBan);
+                        if (objMoi && objMoi.mesh) targetLecH = window.layHitbox(objMoi.mesh).tamNguc.clone();
+                    }
+
                     if (doLech > 0) {
                         let vecLech = new THREE.Vector3((Math.random() - 0.5) * doLech, 0, (Math.random() - 0.5) * doLech);
-                        vecLech.projectOnPlane(upVector); 
+                        vecLech.projectOnPlane(curUp); 
                         targetLecH.add(vecLech);
                     }
 
+                    vienDan.up.copy(curUp); // 🌟 VÁ LỖI GÃY TRỤC ĐẠN BAY
+                    vienDan.lookAt(targetLecH);
                     scene.add(vienDan);
-                    let khoangCachToiDich = nongSung.distanceTo(targetLecH);
+                    
+                    let khoangCachToiDich = diemBan.distanceTo(targetLecH);
                     let thoiGianBay = khoangCachToiDich / tocDo;
 
                     kyNangBege.push({
                         mesh: vienDan, type: 'BAY_VONG_CUNG',
                         startPos: vienDan.position.clone(), targetPos: targetLecH, 
                         progress: 0, speedProgress: 1.0 / (thoiGianBay || 1), 
-                        arcHeight: chieuCaoVongCung, upVector: upVector.clone(),
+                        arcHeight: chieuCaoVongCung, upVector: curUp.clone(),
                         life: 200, damage: dameGoc * heSoDame, isRemote: isRemote, noBanKinh: banKinhNo
                     });
                 }, i * 200);
             }
         }
 
-        // 🚀 ĐỘNG CƠ 2: BẮN TÊN LỬA TẦM THẲNG (CÓ ĐUÔI LỬA)
-        function banTenLuaBege(nongSung, soLuong, delay, heSoDame) {
+        // 🚀 ĐỘNG CƠ 2: BẮN TÊN LỬA TẦM THẲNG 
+        function banTenLuaBege(viTriNong, soLuong, delay, heSoDame) {
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
-                    const tenLua = taoVatTheBege('vukhibege', 4.5); // Kéo model tên lửa to ra
-                    tenLua.position.copy(nongSung).add(huongMat.clone().multiplyScalar(2));
+                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    if (!curNvc) return;
+                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+
+                    let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                    curNvc.traverse(c => {
+                        if (c.isBone) {
+                            if (viTriNong === 'TAY' && c.name === 'Rhand_Weapon02_02_045') c.getWorldPosition(diemBan);
+                            if (viTriNong === 'NGUC' && c.name === 'Bone') c.getWorldPosition(diemBan);
+                        }
+                    });
+
+                    const tenLua = taoVatTheBege('vukhibege', 4.5); 
+                    tenLua.position.copy(diemBan).add(curDir.clone().multiplyScalar(2));
                     
                     let targetLecH = mucTieu.clone();
-                    if (soLuong > 1) { // Tán xạ mục tiêu diện rộng để dập Boss
+                    if (!isRemote) { // AimBot
+                        let objMoi = window.layMucTieuGanNhatBege(diemBan);
+                        if (objMoi && objMoi.mesh) targetLecH = window.layHitbox(objMoi.mesh).tamNguc.clone();
+                    }
+
+                    if (soLuong > 1) { // Tán xạ
                         let vecLech = new THREE.Vector3((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 8);
+                        vecLech.projectOnPlane(curUp);
                         targetLecH.add(vecLech);
                     }
                     
+                    tenLua.up.copy(curUp); // 🌟 VÁ LỖI GÃY TRỤC ĐẠN BAY
                     tenLua.lookAt(targetLecH);
                     scene.add(tenLua);
                     
                     kyNangBege.push({
                         mesh: tenLua, type: 'BAY_THANG_ROCKET', speed: 10.0, life: 100,
-                        targetPos: targetLecH, damage: dameGoc * heSoDame, isRemote: isRemote, noBanKinh: 18
+                        targetPos: targetLecH, damage: dameGoc * heSoDame, isRemote: isRemote, noBanKinh: 18, upVector: curUp.clone()
                     });
                 }, i * delay);
             }
         }
 
-        // 🎯 CHIÊU Q: 1 Viên đạn Parabol bắn từ NGỰC
-        if (phim === 'Q') banDanParabolBege(ngucPos, 'VIENDAN', 1, 3.5, 10, 8.0, 0.4, 10);
-        
-        // 🎯 CHIÊU E: 3 Viên đạn Parabol bắn từ NGỰC
-        else if (phim === 'E') banDanParabolBege(ngucPos, 'VIENDAN', 3, 3.5, 12, 8.0, 0.2, 12);
-        
-        // 🚀 CHIÊU R: 3 Tên lửa bắn từ TAY PHẢI
-        else if (phim === 'R') banTenLuaBege(tayPhaiPos, 3, 200, 0.166);
-        
-        // 🔥 CHIÊU F: 10 Tên lửa liên thanh bắn từ TAY PHẢI (Kéo dài 1.5s -> Mỗi viên cách nhau 150ms)
-        else if (phim === 'F') banTenLuaBege(tayPhaiPos, 10, 150, 0.1);
+        // 🎯 GỌI HÀM VỚI THAM SỐ TỌA ĐỘ CHUỖI ĐỂ TÌM XƯƠNG ĐỘNG
+        if (phim === 'Q') banDanParabolBege('NGUC', 'VIENDAN', 1, 3.5, 10, 8.0, 0.4, 10);
+        else if (phim === 'E') banDanParabolBege('NGUC', 'VIENDAN', 3, 3.5, 12, 8.0, 0.2, 12);
+        else if (phim === 'R') banTenLuaBege('TAY', 3, 200, 0.166);
+        else if (phim === 'F') banTenLuaBege('TAY', 10, 150, 0.1);
     };
 
     // ==========================================
@@ -369,15 +393,11 @@
                 s.mesh.lookAt(curPos.clone().add(huongBay)); 
 
                 if (s.progress >= 1 || s.life <= 0) {
-                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG (ĐẠN PARABOL Q, E)
                     if (s.isRemote === false) gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
                     else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
                         if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
-                    } else if (s.isRemote === true) {
-                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
-                    }
-
-                    taoVuNoBege(s.targetPos, s.noBanKinh);
+                    } 
+                    taoVuNoBege(s.targetPos, s.noBanKinh, s.upVector);
                     s.life = 0;
                 }
             }
@@ -385,27 +405,22 @@
             else if (s.type === 'BAY_THANG_ROCKET') {
                 let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                 s.mesh.position.add(huongBay.multiplyScalar(s.speed));
-                s.mesh.lookAt(s.targetPos);
-
-                // GỌI ĐUÔI LỬA CHO TÊN LỬA
+                
                 let dirNguoc = huongBay.clone().negate();
-                taoDuoiLuaMiniBege(s.mesh.position, dirNguoc, s.speed);
+                taoDuoiLuaMiniBege(s.mesh.position, dirNguoc, s.speed, s.upVector);
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    // 🌟 QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG (TÊN LỬA R, F)
-                    if (s.isRemote === false) gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
-                    } else if (s.isRemote === true) {
-                        // PvP Kẻ địch bắn (Để Server trừ máu, chống x2 Dame)
-                    }
+                    let diemNoThucTe = (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) ? s.targetPos.clone() : s.mesh.position.clone();
 
-                    taoVuNoBege(s.targetPos, s.noBanKinh);
+                    if (s.isRemote === false) gaySatThuongBege(diemNoThucTe, s.damage, s.noBanKinh);
+                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(diemNoThucTe, s.damage, s.noBanKinh);
+                    } 
+                    taoVuNoBege(diemNoThucTe, s.noBanKinh, s.upVector);
                     s.life = 0;
                 }
             }
 
-            // 🛑 DỌN RÁC MODEL
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
                 else {
@@ -416,18 +431,22 @@
             }
         }
 
-        // Dọn rác Hạt Bụi + Đuôi lửa
+        // 🌟 BẢN VÁ: VẬT LÝ BỤI LỬA BAY THEO TRỤC CẦU
         for (let i = hieuUngBege.length - 1; i >= 0; i--) {
             let h = hieuUngBege[i]; h.life--;
 
             let posArr = h.system.geometry.attributes.position.array;
+            
+            // Khói lửa bốc lên trên (ngược chiều trọng lực)
+            let bocKhoiVec = h.upVector ? h.upVector.clone().multiplyScalar(0.02) : new THREE.Vector3(0, 0.02, 0);
+
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x; 
                 posArr[j * 3 + 1] += h.velocities[j].y; 
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 
                 h.velocities[j].multiplyScalar(0.9); 
-                if (h.type !== 'trail') h.velocities[j].y += 0.02; 
+                if (h.type !== 'trail') h.velocities[j].add(bocKhoiVec); 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / (h.type === 'trail' ? 15 : 25);
@@ -460,13 +479,19 @@
     setInterval(window.updateCombatBege, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO HỆ PHÁI
+    // 🌟 KHỞI TẠO HỆ PHÁI VÀ PRELOAD
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('bege')) {
         window.HePhaiHienTai = {
             tenPhai: "Bố Già Bege",
             khoiTao: function () {
-                console.log("🏰 Pháo đài di động! Khởi động Bố Già Capone Bege!");
+                console.log("🏰 Pháo đài di động! Khởi động Bố Già Capone Bege (Fix Lỗi Map Cầu)!");
+
+                // 🌟 BẢN VÁ: PRELOAD RAM TẢI ĐẠN ĐỂ CHỐNG SẬP LOADER
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset('uploads/anims/VIENDAN.glb', () => {});
+                    window.taiHoacNhanBanAsset('uploads/anims/vukhibege.glb', () => {});
+                }
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
@@ -478,7 +503,6 @@
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
 
-                        // Vá chống giật lùi (Root Motion)
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO') || k.includes('SHOOT')) {
                             if (clip && clip.tracks) {
                                 clip.tracks = clip.tracks.filter(track => {
