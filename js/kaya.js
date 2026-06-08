@@ -290,7 +290,7 @@
         }
 
         // ===============================================
-        // ☄️ CHIÊU F: MƯA VŨ KHÍ (ĐÃ UPGRADE THEO STYLE NAMI - BAO MAP CẦU & BOSS BAY)
+        // ☄️ CHIÊU F: MƯA VŨ KHÍ (COPY LOGIC FUJITORA, UPGRADE THEO STYLE NAMI - BAO MAP CẦU & BOSS BAY)
         // ===============================================
         else if (phim === 'F') {
             let tongThoiGian = 3000;
@@ -312,7 +312,7 @@
                     if (i > 0) {
                         // Tán xạ vũ khí ngẫu nhiên xung quanh mục tiêu men theo độ cong mặt cầu
                         let randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-                        randomVec.projectOnPlane(upV).normalize(); // Ép chạy ngang
+                        randomVec.projectOnPlane(upV).normalize(); // Ép vector chạy ngang
                         let randomRadius = Math.random() * 22.5; // Bán kính vòng tròn 22.5m
                         posDap.add(randomVec.multiplyScalar(randomRadius));
                     }
@@ -329,9 +329,10 @@
                     muaVk.lookAt(posDap); // Vũ khí chúi đầu hướng thẳng vào điểm đáp
                     scene.add(muaVk);
 
+                    // 🌟 BƯỚC 3: CÂN BẰNG SÁT THƯƠNG E-SPORTS CHUẨN 7.8 (0.06 x 15 = 0.9)
                     kyNangKaya.push({
                         mesh: muaVk, type: 'MUA_VU_KHI', speed: 4.5, life: 150,
-                        targetPos: posDap, damage: dameGoc * 0.06, noBanKinh: 25, isRemote: isRemote
+                        targetPos: posDap, damage: dameGoc * 0.06, isRemote: isRemote, noBanKinh: 25 // 🌟 SỬA HỆ SỐ TỪ 0.066 THÀNH 0.06
                     });
                     
                 }, 500 + i * delayPerVukhi);
