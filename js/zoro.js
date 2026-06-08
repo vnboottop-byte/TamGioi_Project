@@ -211,10 +211,29 @@
             window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
 
+
+
+
+
+
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-        let huongMat = new THREE.Vector3(); nvc.getWorldDirection(huongMat); huongMat.normalize();
+        
+        let huongMat = new THREE.Vector3(); 
+        nvc.getWorldDirection(huongMat); 
+        // 🌟 BẢN VÁ TỐI THƯỢNG: ÉP HƯỚNG MẶT LUÔN PHẲNG SONG SONG MẶT ĐẤT
+        // Chống tình trạng lộn nhào múa chiêu cũ làm chiêu mới cắm thẳng xuống đất!
+        huongMat.projectOnPlane(upVector).normalize();
+        if (huongMat.lengthSq() < 0.001) { // Đề phòng lỗi ngửa cổ lên trời góc tụt bằng 0
+            huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
+        }
+
         let mucTieu = null;
+
+
+
+
+
 
         if (isRemote) {
             viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
