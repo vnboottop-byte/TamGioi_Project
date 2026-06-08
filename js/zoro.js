@@ -199,18 +199,15 @@
         if (!nvc) return;
 
         if (isRemote === false) {
-            let bayGio = Date.now();
-
-            // 🛡️ BẢN VÁ TỐI THƯỢNG: LÁ CHẮN CHỐNG SPAM GÂY GIẬT TUNG NGƯỜI
-            // Khóa mõm Auto-Attack hoặc đè phím, ép phải cách nhau 800ms mới được bốc thăm chiêu mới!
-            if (bayGio - window.thoiDiemChemCuoi_ZR < 800) return;
-            window.thoiDiemChemCuoi_ZR = bayGio;
-
             window.dangMuaChieu = true;
-            window.currentAnimName = ''; // An tâm xóa trí nhớ vì đã có khiên 800ms bảo vệ
+            window.currentAnimName = ''; 
 
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
+            
+            // Khóa chân đứng im múa kiếm trong 1.2s (Y hệt Tu Tiên)
+            if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
+            window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
 
         let viTriGocToTam = new THREE.Vector3();
