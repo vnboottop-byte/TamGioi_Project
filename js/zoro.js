@@ -187,7 +187,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO 
+    // 🏹 HÀM XẢ COMBO (ĐÃ ĐỒNG BỘ CÔNG NGHỆ TU TIÊN - KHÔNG DÙNG SETTIMEOUT)
     // ==========================================
     window.thoiDiemChemCuoi_ZR = window.thoiDiemChemCuoi_ZR || 0;
 
@@ -205,35 +205,23 @@
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
 
-            // 🌟 CÔNG NGHỆ TU TIÊN: Bỏ chặn return! Cứ bấm là xả skill, Cooldown để Controller lo!
-            // Đặt đồng hồ 1.2s sau tự động nhả khóa đứng im
+            // Tự động mở khóa đứng im sau 1.2s
             if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
             window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 1200);
         }
-
-
-
-
-
 
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         
         let huongMat = new THREE.Vector3(); 
         nvc.getWorldDirection(huongMat); 
-        // 🌟 BẢN VÁ TỐI THƯỢNG: ÉP HƯỚNG MẶT LUÔN PHẲNG SONG SONG MẶT ĐẤT
-        // Chống tình trạng lộn nhào múa chiêu cũ làm chiêu mới cắm thẳng xuống đất!
+        // Ép phẳng vector hướng nhìn, chống đâm xuống đất
         huongMat.projectOnPlane(upVector).normalize();
-        if (huongMat.lengthSq() < 0.001) { // Đề phòng lỗi ngửa cổ lên trời góc tụt bằng 0
+        if (huongMat.lengthSq() < 0.001) { 
             huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
         }
 
         let mucTieu = null;
-
-
-
-
-
 
         if (isRemote) {
             viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
@@ -258,99 +246,98 @@
             }
         }
 
-        // 🌟 BẢN VÁ: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
         let dameGoc = window.DAME_CUA_TOI || 100;
         
         if (isRemote !== false) {
             if (typeof isRemote === 'number' && isRemote > 0) {
-                dameGoc = isRemote; // Lấy dame của Boss
+                dameGoc = isRemote;
             } else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
-                dameGoc = window.remotePlayers[casterId].damage || 100; // Lấy dame của Kẻ thù PVP
+                dameGoc = window.remotePlayers[casterId].damage || 100;
             }
         }
 
-        setTimeout(() => {
-            let tayPhaiPos = viTriGocToTam.clone();
-            let tayTraiPos = viTriGocToTam.clone();
-            let xuongTayPhai = null; let xuongTayTrai = null;
+        // ========================================================
+        // 🚀 ĐÚC KIẾM QUANG: ĐẨY NGAY VÀO MẢNG, KHÔNG CHỜ SETTIMEOUT
+        // ========================================================
+        let tayPhaiPos = viTriGocToTam.clone();
+        let tayTraiPos = viTriGocToTam.clone();
+        let xuongTayPhai = null; let xuongTayTrai = null;
 
-            nvc.traverse(c => {
-                if (c.isBone) {
-                    if (c.name === 'weapon_03_joint_050') xuongTayPhai = c;
-                    if (c.name === 'weapon_02_joint_040') xuongTayTrai = c;
-                }
-            });
-
-            if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
-            else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
-
-            if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
-            else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
-
-            function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
-                for (let i = 0; i < soNhatChem; i++) {
-                    setTimeout(() => {
-                        let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
-
-                        const kq = taoKiemQuangFile(kichCo);
-                        kq.position.copy(nòngGoc);
-
-                        kq.position.add(huongMat.clone().multiplyScalar(2.5));
-                        kq.up.copy(upVector);
-
-                        let doLan = (soNhatChem > 1) ? 3.0 : 0;
-                        let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * doLan, (Math.random() - 0.5) * doLan, 0));
-
-                        kq.lookAt(targetBay);
-
-                        // 🌟 BẺ GÓC CHÉM ĐẸP MẮT
-                        if (kieuChem === 'E') {
-                            let gocXoay = (i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4);
-                            kq.rotateZ(gocXoay);
-                        }
-                        else if (kieuChem === 'R') {
-                            let gocXoay = (i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3));
-                            kq.rotateZ(gocXoay);
-                        }
-                        else if (kieuChem === 'F') {
-                            let gocXoay = (i * Math.PI) / 3;
-                            kq.rotateZ(gocXoay);
-                        }
-
-                        scene.add(kq);
-
-                        kyNangZoro.push({
-                            mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
-                            targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
-                        });
-                    }, i * 150);
-                }
+        nvc.traverse(c => {
+            if (c.isBone) {
+                if (c.name === 'weapon_03_joint_050') xuongTayPhai = c;
+                if (c.name === 'weapon_02_joint_040') xuongTayTrai = c;
             }
-           
-            // 🌟 THÔNG SỐ VÀNG CỦA SẾP (ĐÃ CÂN BẰNG CHUẨN 7.8 DPS)
-            // Q = 1 Chém (1 hit x 0.4 = 0.4 Dame)
-            if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
+        });
 
-            // E = 2 Chém (2 hit x 0.3 = 0.6 Dame)
-            else if (phim === 'E') phongKiemQuang(2, 0.3, 40, 'E');
+        if (xuongTayPhai) xuongTayPhai.getWorldPosition(tayPhaiPos);
+        else tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
 
-            // R = 4 Chém (4 hit x 0.125 = 0.5 Dame)
-            else if (phim === 'R') phongKiemQuang(4, 0.125, 50, 'R');
+        if (xuongTayTrai) xuongTayTrai.getWorldPosition(tayTraiPos);
+        else tayTraiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(1.5));
 
-            // F = 8 Chém Tuyệt Kỹ (8 hit x 0.125 = 1.0 Dame)
-            else if (phim === 'F') phongKiemQuang(8, 0.125, 70, 'F');
+        function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
+            for (let i = 0; i < soNhatChem; i++) {
+                let nòngGoc = (i % 2 === 0) ? tayPhaiPos : tayTraiPos;
 
-        }, 300);
+                const kq = taoKiemQuangFile(kichCo);
+                kq.position.copy(nòngGoc);
+                kq.position.add(huongMat.clone().multiplyScalar(2.5));
+                kq.up.copy(upVector);
+
+                let doLan = (soNhatChem > 1) ? 3.0 : 0;
+                let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * doLan, (Math.random() - 0.5) * doLan, 0));
+                kq.lookAt(targetBay);
+
+                if (kieuChem === 'E') kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
+                else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
+                else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
+
+                kq.visible = false; 
+                scene.add(kq);
+
+                // Delay theo frames vật lý: 300ms base + 150ms mỗi nhịp
+                let delayFrames = 10 + (i * 5); 
+
+                kyNangZoro.push({
+                    mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
+                    delay: delayFrames, // Tham số delay ma thuật
+                    targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote,
+                    huongMat: huongMat.clone(), xuongTay: (i % 2 === 0) ? xuongTayPhai : xuongTayTrai
+                });
+            }
+        }
+       
+        // Thông số vàng
+        if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
+        else if (phim === 'E') phongKiemQuang(2, 0.3, 40, 'E');
+        else if (phim === 'R') phongKiemQuang(4, 0.125, 50, 'R');
+        else if (phim === 'F') phongKiemQuang(8, 0.125, 70, 'F');
     };
 
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO (ĐÃ FIX TRÀN RAM)
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO
     // ==========================================
     window.updateCombatZoro = function () {
         
         // 1. VÒNG LẶP KIẾM QUANG BAY
         for (let i = kyNangZoro.length - 1; i >= 0; i--) {
-            let s = kyNangZoro[i]; s.life--;
+            let s = kyNangZoro[i]; 
+
+            // 🌟 VẬT LÝ TU TIÊN: Xử lý đếm lùi delay xuất chiêu
+            if (typeof s.delay === 'number' && s.delay > 0) {
+                s.delay--;
+                // Trong lúc nén chiêu, ghim model 3D vào đúng thanh kiếm trên tay
+                if (s.xuongTay && s.mesh) {
+                    let tayHienTai = new THREE.Vector3();
+                    s.xuongTay.getWorldPosition(tayHienTai);
+                    s.mesh.position.copy(tayHienTai).add(s.huongMat.clone().multiplyScalar(2.5));
+                }
+                if (s.delay <= 0 && s.mesh) s.mesh.visible = true; // Hết giờ thì hiện hình bay đi
+                continue; 
+            }
+
+            s.life--; // Bắt đầu bay mới trừ sinh mệnh
 
             if (s.type === 'BAY_THANG') {
                 s.mesh.translateZ(s.speed);
@@ -387,7 +374,7 @@
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
 
-            // 🛑 VÁ DỌN RÁC HẠT (CHỐNG TRÀN VRAM TẬN GỐC)
+            // 🛑 DỌN RÁC HẠT (CHỐNG TRÀN VRAM TẬN GỐC)
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
                 if (h.system.geometry) h.system.geometry.dispose(); 
