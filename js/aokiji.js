@@ -1,6 +1,6 @@
 // ==========================================
-// ❄️ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC AOKIJI (KUZAN) - MASTER FILE V2
-// 👑 CÔNG NGHỆ: MULTI-HIT ORBIT 3D + KHÓA TRỤC CẦU + PRELOAD RAM + TỌA ĐỘ ĐỘNG
+// ❄️ MÔN PHÁI ĐOẠT XÁ: ĐÔ ĐỐC AOKIJI (KUZAN) - MASTER FILE V3
+// 👑 CÔNG NGHỆ: MULTI-HIT ORBIT 3D + QUATERNION ÉP TRỤC + X3 ĐỘ DÀY BÃO TUYẾT
 // ==========================================
 
 (function () {
@@ -193,7 +193,7 @@
     }
 
     // ==========================================
-    // 🏹 TUNG CHIÊU AOKIJI (BẢN V2 CHỐNG NUỐT CHIÊU, CHUẨN VECTOR 3D)
+    // 🏹 TUNG CHIÊU AOKIJI 
     // ==========================================
     window.tungComboAokiji = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -208,7 +208,6 @@
         if (phim === 'R') animCanMua = 'ATTACK5';
         if (phim === 'F') animCanMua = 'ATTACK3';
 
-        // 🌟 VÁ LỖI 3: Gỡ bỏ khóa gông, bấm xả vô hạn
         if (isRemote === false) {
             window.currentAnimName = '';
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
@@ -218,7 +217,6 @@
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3(); 
         
-        // 🌟 VÁ LỖI 1: Ép phẳng Vector hướng mặt
         if (typeof camera !== 'undefined' && !isRemote) {
             camera.getWorldDirection(huongMat);
             huongMat.projectOnPlane(upVector).normalize();
@@ -255,7 +253,6 @@
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) dameGoc = window.remotePlayers[casterId].damage || 100;
         }
 
-        // 🌟 VÁ LỖI 6: XÓA CHẶT TRỤC Y = 0 (Cho Map Cầu)
         let diemChanMucTieu = mucTieu.clone(); 
 
         // ===============================================
@@ -263,7 +260,6 @@
         // ===============================================
         if (phim === 'Q') {
             setTimeout(() => {
-                // 🌟 VÁ LỖI 4: Tọa độ động bên trong SetTimeout
                 let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
@@ -273,7 +269,9 @@
 
                 const kq = taoKiemQuangBăng(40);
                 kq.position.copy(curPos).add(curDir.clone().multiplyScalar(2.5));
-                kq.up.copy(curUp); // 🌟 VÁ LỖI 7
+                
+                // Ép Trục Quaternion
+                kq.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp); 
 
                 let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
                 kq.lookAt(targetBay);
@@ -287,7 +285,7 @@
         }
 
         // ===============================================
-        // ❄️ CHIÊU E: BÃO TUYẾT QUAY VÒNG (ORBIT CHUẨN CẦU)
+        // ❄️ CHIÊU E: BÃO TUYẾT X3 ĐỘ DÀY & X2 SCALE (120)
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
@@ -296,18 +294,26 @@
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
 
-                const baoTuyet = taoVatTheAokiji('TUYET', 60, false); 
-                let tamBaoNo = diemChanMucTieu.clone().add(curUp.clone().multiplyScalar(3.0)); // Nâng lên 3m theo trục cầu
+                // 🌟 TẠO GROUP CHỨA 3 CƠN BÃO CHO ĐẶC KỊT (Scale tăng gấp đôi thành 120)
+                const baoTuyetGroup = new THREE.Group();
+                for (let k = 0; k < 3; k++) {
+                    const tuyet = taoVatTheAokiji('TUYET', 120, false);
+                    tuyet.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+                    baoTuyetGroup.add(tuyet);
+                }
 
-                baoTuyet.position.copy(tamBaoNo);
-                baoTuyet.up.copy(curUp); // 🌟 VÁ LỖI 7
-                scene.add(baoTuyet);
+                let tamBaoNo = diemChanMucTieu.clone().add(curUp.clone().multiplyScalar(4.0)); // Nâng cao một chút cho tâm bão đẹp
+
+                baoTuyetGroup.position.copy(tamBaoNo);
+                // 🌟 ÉP TRỤC QUATERNION CHO MAP CẦU
+                baoTuyetGroup.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp); 
+                scene.add(baoTuyetGroup);
 
                 kyNangAokiji.push({
-                    mesh: baoTuyet, type: 'BAO_ORBIT', speed: 0.15, life: 90,
+                    mesh: baoTuyetGroup, type: 'BAO_ORBIT', speed: 0.15, life: 90,
                     tamQuay: tamBaoNo, gocXoay: 0, banKinh: 6, ticksDame: 0, 
-                    damage: dameGoc * 0.055, isRemote: isRemote, noBanKinh: 20,
-                    upVector: curUp.clone(), huongMatBanDau: curDir.clone() // Cấy vệ tinh
+                    damage: dameGoc * 0.055, isRemote: isRemote, noBanKinh: 30, // Tăng nhẹ bán kính nổ khớp với 120m
+                    upVector: curUp.clone(), huongMatBanDau: curDir.clone() 
                 });
             }, 300);
         }
@@ -332,10 +338,10 @@
 
                     let posXuatPhat = posDap.clone();
                     posXuatPhat.add(curUp.clone().multiplyScalar(60)); 
-                    posXuatPhat.sub(curDir.clone().multiplyScalar(20)); // Tạo góc xéo đổ về
+                    posXuatPhat.sub(curDir.clone().multiplyScalar(20));
 
                     thienThach.position.copy(posXuatPhat);
-                    thienThach.up.copy(curUp); // 🌟 VÁ LỖI 7
+                    thienThach.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp); // 🌟 ÉP TRỤC CẦU
                     thienThach.lookAt(posDap);
                     scene.add(thienThach);
 
@@ -374,7 +380,7 @@
                     posXuatPhat.sub(curDir.clone().multiplyScalar(40));
 
                     thienThach.position.copy(posXuatPhat);
-                    thienThach.up.copy(curUp); // 🌟 VÁ LỖI 7
+                    thienThach.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp); // 🌟 ÉP TRỤC CẦU
                     thienThach.lookAt(posDap);
                     scene.add(thienThach);
 
@@ -392,18 +398,27 @@
     // ==========================================
     window.updateCombatAokiji = function () {
 
-        // Aura Băng quanh người
+        // 🌟 BÃO TUYẾT HỘ THỂ (ĐÃ NHÂN ĐÔI ĐỘ DÀY VÀ ÉP CHUẨN TRỤC CẦU BẰNG QUATERNION)
         let nvc = window.playerModel || window.nhanVatChinh;
         if (nvc) {
             if (!window.aokijiAura) {
-                window.aokijiAura = taoVatTheAokiji('TUYET', 40, false);
+                window.aokijiAura = new THREE.Group();
+                let tuyet1 = taoVatTheAokiji('TUYET', 45, false);
+                let tuyet2 = taoVatTheAokiji('TUYET', 45, false);
+                tuyet2.rotation.set(Math.PI / 2, 0, Math.PI / 4); // Cố tình lệch góc để che khít khoảng trống
+                window.aokijiAura.add(tuyet1);
+                window.aokijiAura.add(tuyet2);
                 scene.add(window.aokijiAura);
+                window.aokijiAuraGoc = 0;
             }
             window.aokijiAura.position.copy(nvc.position);
             let curUp = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-            window.aokijiAura.up.copy(curUp); // Ép Aura bám Trục Đứng
-            // Rotate the aura on its local Y axis
-            window.aokijiAura.rotateY(0.01); 
+            
+            // Ép Trục Y của Bão Hộ Thể cắm thẳng xuống trọng lực hành tinh
+            window.aokijiAura.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp);
+            
+            window.aokijiAuraGoc += 0.02;
+            window.aokijiAura.rotateY(window.aokijiAuraGoc); // Xoay vòng tròn dựa trên nền Trục Cầu đã ép
         }
 
         for (let i = kyNangAokiji.length - 1; i >= 0; i--) {
@@ -426,7 +441,7 @@
                     s.life = 0;
                 }
             }
-            // 🌟 VẬT LÝ BÃO TUYẾT VỆ TINH (VÁ LỖI 7): QUAY CHUẨN TRỤC ORBIT 3D
+            // 🌟 VẬT LÝ BÃO TUYẾT VỆ TINH: QUAY CHUẨN TRỤC ORBIT 3D
             else if (s.type === 'BAO_ORBIT') {
                 s.gocXoay += s.speed;
                 
@@ -435,9 +450,17 @@
                 
                 let vecLech = rightVec.multiplyScalar(Math.cos(s.gocXoay) * s.banKinh).add(fwdVec.multiplyScalar(Math.sin(s.gocXoay) * s.banKinh));
                 s.mesh.position.copy(s.tamQuay).add(vecLech);
-                s.mesh.up.copy(s.upVector); // Ép xoay bám Trục Cầu
+                
+                // Ép Trục Cầu Cứng cho Bão Orbit
+                s.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), s.upVector);
+                // Cho cái Group xoay tít
+                s.mesh.rotateY(s.gocXoay * 2.0);
 
-                if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.2);
+                // Cho từng cục TUYET bên trong xoay hỗn loạn
+                s.mesh.children.forEach((child, idx) => {
+                    child.rotateX(0.05 + idx * 0.02);
+                    child.rotateY(0.1);
+                });
 
                 s.ticksDame++;
                 if (s.ticksDame % 10 === 0) {
@@ -505,7 +528,6 @@
             khoiTao: function () {
                 console.log("❄️ Băng Tuyết Phủ Kín! Kích hoạt Động cơ Preload RAM & Orbit Vector 3D!");
 
-                // 🌟 VÁ LỖI 2: PRELOAD CACHE 3D (CHỐNG SẬP LOADER NUỐT CHIÊU)
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset('uploads/anims/TUYET.glb', () => {});
                     window.taiHoacNhanBanAsset('uploads/anims/THIENTHACH.glb', () => {});
