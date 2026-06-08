@@ -1,6 +1,6 @@
 // ==========================================
 // 🏰 MÔN PHÁI ĐOẠT XÁ: BỐ GIÀ CAPONE BEGE (PHÁO ĐÀI SỐNG)
-// 👑 CÔNG NGHỆ: BẢN GỐC + VÁ LỖI TRỤC CẦU 3D & TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT
+// 👑 CÔNG NGHỆ: MỞ KHÓA SPAM LIÊN THANH + VÁ LỖI TRỤC CẦU 3D & TỌA ĐỘ ĐỘNG
 // ==========================================
 
 (function () {
@@ -12,7 +12,7 @@
     window.KHO_ANIM_TANCONG = [];
     window.tongSoChuNoi_Bege = 0;
 
-    // 🌟 1. HIỂN THỊ SÁT THƯƠNG (Màu Đỏ Cam Lửa)
+    // 🌟 1. HIỂN THỊ SÁT THƯƠNG
     function taoSoSatThuongBege(pos3D, satThuong, mauSac = '#ff3300') {
         if (window.isMobile) return;
         if (satThuong <= 0) return;
@@ -96,7 +96,7 @@
         }
     }
 
-    // 🌟 4. HIỆU ỨNG VỤ NỔ (CẬP NHẬT TRỤC CẦU CHO KHÓI)
+    // 🌟 4. HIỆU ỨNG VỤ NỔ
     function taoVuNoBege(pos, banKinh = 15, upVector = new THREE.Vector3(0, 1, 0)) {
         if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
         else if (typeof window.playSound === 'function') window.playSound('no');
@@ -112,7 +112,7 @@
             posArr[i * 3] = pos.x; posArr[i * 3 + 1] = pos.y + 1; posArr[i * 3 + 2] = pos.z;
             let speed = Math.random() * 2.5 + 0.5;
             let vLocal = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
-            vLocal.applyQuaternion(qNolo); // Nắn vụ nổ theo trục không gian
+            vLocal.applyQuaternion(qNolo); 
             vels.push(vLocal);
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
@@ -136,7 +136,7 @@
         hieuUngBege.push({ system: pts, velocities: vels, life: 25, upVector: upVector.clone() });
     }
 
-    // 🌟 5. ĐUÔI LỬA TÊN LỬA (Học hỏi từ Usopp)
+    // 🌟 5. ĐUÔI LỬA TÊN LỬA
     function taoDuoiLuaMiniBege(pos, direction, speed, upVector = new THREE.Vector3(0,1,0)) {
         if (window.isMobile && Math.random() > 0.5) return; 
         const soLuong = 4; 
@@ -188,8 +188,6 @@
         return group;
     }
 
-    window.thoiDiemBanCuoi_Bege = window.thoiDiemBanCuoi_Bege || 0;
-
     // ==========================================
     // 🏹 TUNG CHIÊU BEGE
     // ==========================================
@@ -200,22 +198,19 @@
         }
         if (!nvc) return;
 
-        // 🌟 GÁN ANIMATION CHUẨN THEO LỆNH SẾP
         let animCanMua = 'ATTACK1';
-        if (phim === 'Q') animCanMua = 'ATTACK4'; // Bắn đạn ngực
-        if (phim === 'E') animCanMua = 'ATTACK4'; // Bắn đạn ngực chùm
-        if (phim === 'R') animCanMua = 'ATTACK1'; // Tên lửa tay
-        if (phim === 'F') animCanMua = 'ATTACK3'; // Liên thanh tay
+        if (phim === 'Q') animCanMua = 'ATTACK4'; 
+        if (phim === 'E') animCanMua = 'ATTACK4'; 
+        if (phim === 'R') animCanMua = 'ATTACK1'; 
+        if (phim === 'F') animCanMua = 'ATTACK3'; 
 
+        // ===============================================
+        // 🌟 BƯỚC ĐỘT PHÁ TẠI ĐÂY: XÓA `return` BLOCK ĐỂ CHỐNG NUỐT CHIÊU
+        // ===============================================
         if (isRemote === false) {
-            let bayGio = Date.now();
-            if (bayGio - window.thoiDiemBanCuoi_Bege < 600) return;
-            window.thoiDiemBanCuoi_Bege = bayGio;
             window.dangMuaChieu = true;
-            
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
 
-            // 🌟 CÔNG NGHỆ AUTO-LOOP ANIMATION CỦA SẾP
             if (phim === 'F') {
                 let loopCount = 0;
                 let fLoop = setInterval(() => {
@@ -226,6 +221,9 @@
                 
                 if (window.henGioTatMuaBG) clearTimeout(window.henGioTatMuaBG);
                 window.henGioTatMuaBG = setTimeout(() => { window.dangMuaChieu = false; }, 1500);
+            } else {
+                if (window.henGioTatMuaBG) clearTimeout(window.henGioTatMuaBG);
+                window.henGioTatMuaBG = setTimeout(() => { window.dangMuaChieu = false; }, 600); // 🌟 Thêm giải phóng cho Q, E, R
             }
         }
 
@@ -268,10 +266,9 @@
             }
         }
 
-        // 💣 ĐỘNG CƠ 1: BẮN ĐẠN PARABOL (COPY TỪ USOPP CỦA SẾP + VÁ TỌA ĐỘ ĐỘNG)
+        // 💣 ĐỘNG CƠ 1: BẮN ĐẠN PARABOL
         function banDanParabolBege(viTriNong, tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
             for (let i = 0; i < soLuong; i++) {
-                // SẾP CHÚ Ý: Em dời việc quét xương vào TỚI TẬN TRONG setTimeout để đạn mọc đúng vị trí hiện tại!
                 setTimeout(() => {
                     let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
                     if (!curNvc) return;
@@ -292,7 +289,7 @@
                     let doLech = soLuong > 1 ? 5 : 0;
                     let targetLecH = mucTieu.clone();
                     
-                    if (!isRemote) { // AimBot
+                    if (!isRemote) { 
                         let objMoi = window.layMucTieuGanNhatBege(diemBan);
                         if (objMoi && objMoi.mesh) targetLecH = window.layHitbox(objMoi.mesh).tamNguc.clone();
                     }
@@ -303,7 +300,7 @@
                         targetLecH.add(vecLech);
                     }
 
-                    vienDan.up.copy(curUp); // 🌟 VÁ LỖI GÃY TRỤC ĐẠN BAY
+                    vienDan.up.copy(curUp); 
                     vienDan.lookAt(targetLecH);
                     scene.add(vienDan);
                     
@@ -342,18 +339,18 @@
                     tenLua.position.copy(diemBan).add(curDir.clone().multiplyScalar(2));
                     
                     let targetLecH = mucTieu.clone();
-                    if (!isRemote) { // AimBot
+                    if (!isRemote) { 
                         let objMoi = window.layMucTieuGanNhatBege(diemBan);
                         if (objMoi && objMoi.mesh) targetLecH = window.layHitbox(objMoi.mesh).tamNguc.clone();
                     }
 
-                    if (soLuong > 1) { // Tán xạ
+                    if (soLuong > 1) { 
                         let vecLech = new THREE.Vector3((Math.random() - 0.5) * 8, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 8);
                         vecLech.projectOnPlane(curUp);
                         targetLecH.add(vecLech);
                     }
                     
-                    tenLua.up.copy(curUp); // 🌟 VÁ LỖI GÃY TRỤC ĐẠN BAY
+                    tenLua.up.copy(curUp); 
                     tenLua.lookAt(targetLecH);
                     scene.add(tenLua);
                     
@@ -365,7 +362,6 @@
             }
         }
 
-        // 🎯 GỌI HÀM VỚI THAM SỐ TỌA ĐỘ CHUỖI ĐỂ TÌM XƯƠNG ĐỘNG
         if (phim === 'Q') banDanParabolBege('NGUC', 'VIENDAN', 1, 3.5, 10, 8.0, 0.4, 10);
         else if (phim === 'E') banDanParabolBege('NGUC', 'VIENDAN', 3, 3.5, 12, 8.0, 0.2, 12);
         else if (phim === 'R') banTenLuaBege('TAY', 3, 200, 0.166);
@@ -380,7 +376,6 @@
         for (let i = kyNangBege.length - 1; i >= 0; i--) {
             let s = kyNangBege[i]; s.life--;
 
-            // 🔮 XỬ LÝ ĐẠN PARABOL (Q, E)
             if (s.type === 'BAY_VONG_CUNG') {
                 s.progress += s.speedProgress;
                 if (s.progress > 1) s.progress = 1;
@@ -401,7 +396,6 @@
                     s.life = 0;
                 }
             }
-            // 🚀 XỬ LÝ TÊN LỬA (R, F)
             else if (s.type === 'BAY_THANG_ROCKET') {
                 let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                 s.mesh.position.add(huongBay.multiplyScalar(s.speed));
@@ -431,13 +425,11 @@
             }
         }
 
-        // 🌟 BẢN VÁ: VẬT LÝ BỤI LỬA BAY THEO TRỤC CẦU
         for (let i = hieuUngBege.length - 1; i >= 0; i--) {
             let h = hieuUngBege[i]; h.life--;
 
             let posArr = h.system.geometry.attributes.position.array;
             
-            // Khói lửa bốc lên trên (ngược chiều trọng lực)
             let bocKhoiVec = h.upVector ? h.upVector.clone().multiplyScalar(0.02) : new THREE.Vector3(0, 0.02, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
@@ -460,7 +452,6 @@
             }
         }
 
-        // Dọn rác Số Máu
         for (let i = danhSachSoBayBege.length - 1; i >= 0; i--) {
             let it = danhSachSoBayBege[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -485,9 +476,8 @@
         window.HePhaiHienTai = {
             tenPhai: "Bố Già Bege",
             khoiTao: function () {
-                console.log("🏰 Pháo đài di động! Khởi động Bố Già Capone Bege (Fix Lỗi Map Cầu)!");
+                console.log("🏰 Pháo đài di động! Khởi động Bố Già Capone Bege (Spam Max Tốc & Sát Thương Chuẩn)!");
 
-                // 🌟 BẢN VÁ: PRELOAD RAM TẢI ĐẠN ĐỂ CHỐNG SẬP LOADER
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     window.taiHoacNhanBanAsset('uploads/anims/VIENDAN.glb', () => {});
                     window.taiHoacNhanBanAsset('uploads/anims/vukhibege.glb', () => {});
