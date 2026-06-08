@@ -290,7 +290,7 @@
         }
 
         // ===============================================
-        // ☄️ CHIÊU F: MƯA VŨ KHÍ (Copy Logic Fujitora)
+        // ☄️ CHIÊU F: MƯA VŨ KHÍ (ĐÃ UPGRADE THEO STYLE NAMI - BAO MAP CẦU & BOSS BAY)
         // ===============================================
         else if (phim === 'F') {
             let tongThoiGian = 3000;
@@ -302,20 +302,36 @@
                     const muaVk = taoVatTheKaya('vukhikaya', 7);
 
                     let posDap = diemChanMucTieu.clone();
-                    posDap.x += (Math.random() - 0.5) * 45;
-                    posDap.z += (Math.random() - 0.5) * 45;
 
-                    let posXuatPhat = posDap.clone();
-                    posXuatPhat.y += 160 + Math.random() * 40; 
+                    // 🌟 BƯỚC 1: LẤY TRỤC "LÊN TRỜI" CHUẨN XÁC DYNAMIC
+                    let upV = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        upV = posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    }
+
+                    if (i > 0) {
+                        // Tán xạ vũ khí ngẫu nhiên xung quanh mục tiêu men theo độ cong mặt cầu
+                        let randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+                        randomVec.projectOnPlane(upV).normalize(); // Ép chạy ngang
+                        let randomRadius = Math.random() * 22.5; // Bán kính vòng tròn 22.5m
+                        posDap.add(randomVec.multiplyScalar(randomRadius));
+                    }
+
+                    // 🌟 BƯỚC 2: TÍNH ĐIỂM XUẤT PHÁT TRÊN TRỜI DỰA THEO TRỤC UP VÀ HƯỚNG MẮT
+                    // Đẩy ngược lên trời theo trục upV một khoảng 160m - 200m
+                    let chieuCaoMua = 160 + Math.random() * 40;
+                    let posXuatPhat = posDap.clone().add(upV.clone().multiplyScalar(chieuCaoMua));
+                    
+                    // Thụt lùi ra sau lưng hướng mặt một chút để tạo góc rơi chéo điện ảnh
                     posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); 
 
                     muaVk.position.copy(posXuatPhat);
-                    muaVk.lookAt(posDap);
+                    muaVk.lookAt(posDap); // Vũ khí chúi đầu hướng thẳng vào điểm đáp
                     scene.add(muaVk);
 
                     kyNangKaya.push({
                         mesh: muaVk, type: 'MUA_VU_KHI', speed: 4.5, life: 150,
-                        targetPos: posDap, damage: dameGoc * 0.06, noBanKinh: 25 // 🌟 ĐỒNG BỘ 780%
+                        targetPos: posDap, damage: dameGoc * 0.06, noBanKinh: 25, isRemote: isRemote
                     });
                     
                 }, 500 + i * delayPerVukhi);
