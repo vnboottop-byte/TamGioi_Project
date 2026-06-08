@@ -1,6 +1,6 @@
 // ==========================================
-// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH (MASTER FILE - BẢN FINAL 1000%)
-// 👑 CÔNG NGHỆ: CACHE TU TIÊN + CHỐNG NUỐT CHIÊU + KHÔNG SETTIMEOUT + RANDOM 6 KIẾM
+// ⚔️ MÔN PHÁI ĐOẠT XÁ: ĐẠI KIẾM KHÁCH (MASTER FILE V2 - FIX NUỐT CHIÊU TẬN GỐC)
+// 👑 CÔNG NGHỆ: CHỐNG CRASH MẠNG + RADAR CAMERA + CACHE TU TIÊN
 // ==========================================
 
 (function () {
@@ -132,17 +132,12 @@
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
         hieuUngZoro.push({ system: pts, velocities: vels, life: 25 });
-        
-        // Âm thanh 3D eSports nếu Sếp có cấy Howler.js
+
         if (typeof window.phatAmThanh3D === 'function') window.phatAmThanh3D('CHEM_KIEM', pos);
     }
 
-    // ==========================================
-    // 🌟 ĐÚC 6 LOẠI KIẾM QUANG: TỐI ƯU CÔNG NGHỆ CACHE NHƯ TU TIÊN
-    // ==========================================
     function taoKiemQuangFile(scaleSize, urlCanTai) {
         const group = new THREE.Group();
-
         if (typeof window.taiHoacNhanBanAsset === 'function') {
             window.taiHoacNhanBanAsset(urlCanTai, (v) => {
                 v.traverse(c => {
@@ -171,7 +166,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO (KHÔNG DÙNG SETTIMEOUT, KHÔNG BLOCK 800MS)
+    // 🏹 HÀM XẢ COMBO 
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -182,24 +177,30 @@
 
         if (isRemote === false) {
             window.dangMuaChieu = true;
-            window.currentAnimName = ''; 
+            window.currentAnimName = '';
 
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
 
-            // Múa cực nhanh, tự nhả khóa chân sau 500ms để spam cho mượt
             if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
-            window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 500); 
+            window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 500);
         }
 
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-        
-        let huongMat = new THREE.Vector3(); 
-        nvc.getWorldDirection(huongMat); 
-        // 🌟 BẢN VÁ: Ép phẳng vector hướng nhìn, chống đâm xuống đất khi lộn nhào
-        huongMat.projectOnPlane(upVector).normalize();
-        if (huongMat.lengthSq() < 0.001) { 
+
+        let huongMat = new THREE.Vector3();
+
+        // 🌟 BẢN VÁ TỐI THƯỢNG 2: LẤY HƯỚNG CAMERA ĐỂ CHỐNG LỖI ANIMATION QUAY LƯNG
+        if (typeof camera !== 'undefined' && !isRemote) {
+            camera.getWorldDirection(huongMat);
+            huongMat.projectOnPlane(upVector).normalize();
+            if (huongMat.lengthSq() < 0.001) { nvc.getWorldDirection(huongMat); huongMat.projectOnPlane(upVector).normalize(); }
+        } else {
+            nvc.getWorldDirection(huongMat);
+            huongMat.projectOnPlane(upVector).normalize();
+        }
+        if (huongMat.lengthSq() < 0.001) {
             huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
         }
 
@@ -220,11 +221,16 @@
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
 
-            if (window.room && window.room.localParticipant) {
-                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                    type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro',
-                    origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
-                })), { reliable: true });
+            // 🌟 BẢN VÁ TỐI THƯỢNG 1: BỌC TRY/CATCH + RELIABLE FALSE CHỐNG CRASH VÒNG LẶP DO SPAM
+            try {
+                if (window.room && window.room.localParticipant) {
+                    window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                        type: 'TUNG_CHIEU', skillType: phim, className: 'Zoro',
+                        origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
+                    })), { reliable: false }); // <-- ÉP VỀ FALSE ĐỂ CHỐNG NGỘP DATA
+                }
+            } catch (err) {
+                console.warn("Lỗi mạng khi bắn chiêu (Bỏ qua để không nuốt chiêu):", err);
             }
         }
 
@@ -235,21 +241,19 @@
         }
 
         // ========================================================
-        // 🚀 ĐÚC KIẾM QUANG (DÀN TRẬN TỪ CACHE RAM, CHỐNG NUỐT CHIÊU)
+        // 🚀 ĐÚC KIẾM QUANG
         // ========================================================
         let offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
 
         function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
             for (let i = 0; i < soNhatChem; i++) {
-                
-                // 🌟 Lấy Random 1 trong 6 file cho TỪNG NHÁT CHÉM (Siêu đẹp)
+
                 let soNgauNhien = Math.floor(Math.random() * 6) + 1;
                 let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb';
-                
+
                 const kq = taoKiemQuangFile(kichCo, urlCanTai);
 
-                // Dàn trận ngang tản ra 2 bên chống chồng hình
-                let offset = (i - (soNhatChem - 1) / 2) * 1.5; 
+                let offset = (i - (soNhatChem - 1) / 2) * 1.5;
                 let posNongGoc = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
 
                 kq.position.copy(posNongGoc);
@@ -263,21 +267,19 @@
                 else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
                 else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
 
-                kq.visible = false; 
+                // 🌟 BẢN VÁ TỐI THƯỢNG 3: CHO KIẾM HIỆN LUÔN KHÔNG TÀNG HÌNH NỮA
                 scene.add(kq);
 
-                // Độ trễ delay chuẩn Tu Tiên
                 let delayBase = (kieuChem === 'Q') ? 5 : ((kieuChem === 'E') ? 10 : ((kieuChem === 'R') ? 15 : 20));
-                let delayFrames = delayBase + (i * 4); 
+                let delayFrames = delayBase + (i * 4);
 
                 kyNangZoro.push({
-                    mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, 
+                    mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
                     delay: delayFrames, targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
                 });
             }
         }
-       
-        // Thông số vàng eSports
+
         if (phim === 'Q') phongKiemQuang(1, 0.4, 35, 'Q');
         else if (phim === 'E') phongKiemQuang(2, 0.3, 40, 'E');
         else if (phim === 'R') phongKiemQuang(4, 0.125, 50, 'R');
@@ -288,16 +290,15 @@
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ZORO
     // ==========================================
     window.updateCombatZoro = function () {
-        
-        // 1. VÒNG LẶP KIẾM QUANG BAY
-        for (let i = kyNangZoro.length - 1; i >= 0; i--) {
-            let s = kyNangZoro[i]; 
 
-            // Logic đếm lùi Delay
+        for (let i = kyNangZoro.length - 1; i >= 0; i--) {
+            let s = kyNangZoro[i];
+
+            // 🌟 CẬP NHẬT HIỆU ỨNG TỤ LỰC NHƯ TU TIÊN (XOAY TRONG LÚC CHỜ)
             if (typeof s.delay === 'number' && s.delay > 0) {
                 s.delay--;
-                if (s.delay <= 0 && s.mesh) s.mesh.visible = true;
-                continue; 
+                if (s.mesh) s.mesh.rotateZ(0.2); // Kiếm xoay tít thò lò chờ phóng
+                continue;
             }
 
             s.life--;
@@ -320,42 +321,40 @@
                 kyNangZoro.splice(i, 1);
             }
         }
-         
-        // 2. VÒNG LẶP HẠT VỤ NỔ XANH LÁ
+
         for (let i = hieuUngZoro.length - 1; i >= 0; i--) {
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
-            
+
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4; 
+                h.velocities[j].y -= 0.4;
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
 
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
-                if (h.system.geometry) h.system.geometry.dispose(); 
-                if (h.system.material) h.system.material.dispose(); 
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
                 hieuUngZoro.splice(i, 1);
             }
         }
 
-        // 3. VÒNG LẶP SỐ DAME TRÊN MÀN HÌNH
         for (let i = danhSachSoBayZR.length - 1; i >= 0; i--) {
             let it = danhSachSoBayZR[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
             if (p.z < 1) {
                 it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
             } else { it.el.style.display = 'none'; }
-            
-            if (it.life <= 0) { 
-                it.el.remove(); 
-                danhSachSoBayZR.splice(i, 1); 
-                window.tongSoChuNoi_ZR--; 
+
+            if (it.life <= 0) {
+                it.el.remove();
+                danhSachSoBayZR.splice(i, 1);
+                window.tongSoChuNoi_ZR--;
             }
         }
     };
@@ -363,41 +362,40 @@
     setInterval(window.updateCombatZoro, 30);
 
     // ==========================================
-    // 🌟 KHỞI TẠO MÔN PHÁI & TẢI TRƯỚC VRAM (PRELOAD)
+    // 🌟 KHỞI TẠO MÔN PHÁI & TẢI TRƯỚC VRAM
     // ==========================================
     if (typeof window.SCRIPT_PHAI_CUA_TOI !== 'undefined' && window.SCRIPT_PHAI_CUA_TOI.trim() !== '') {
-        
+
         window.HePhaiHienTai = {
             tenPhai: "Đại Kiếm Khách",
             khoiTao: function () {
-                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã kích hoạt Cache Tu Tiên!");
+                console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã cấy mạng lưới chống Nuốt chiêu!");
 
-                // 🌟 BÍ QUYẾT TỐI THƯỢNG: TẢI TRƯỚC VÀO RAM 6 KIẾM QUANG
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     for (let i = 1; i <= 6; i++) {
-                        window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG' + i + '.glb', () => {});
+                        window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG' + i + '.glb', () => { });
                     }
                 }
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
                     window.KHO_ANIM_TANCONG = [];
-                    
+
                     let coBay = false; let coChay = false;
                     let animBay = null; let animChay = null;
 
                     for (let key in window.animationsMap) {
                         let k = key.toUpperCase();
                         let clip = window.animationsMap[key];
-                        
+
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('COMBO')) {
                             if (clip && clip.tracks) {
                                 clip.tracks = clip.tracks.filter(track => {
                                     let tenTrack = track.name.toLowerCase();
                                     if (tenTrack.includes('.position') && (tenTrack.includes('armature') || tenTrack.includes('hips') || tenTrack.includes('pelvis') || tenTrack.includes('root'))) {
-                                        return false; 
+                                        return false;
                                     }
-                                    return true; 
+                                    return true;
                                 });
                             }
                         }
@@ -406,7 +404,7 @@
                         if (k.includes('ATTACK') || k.includes('SKILL') || k.includes('PUNCH') || k.includes('KICK') || k.includes('COMBO') || k.includes('CHET')) {
                             if (!k.includes('CHET')) window.KHO_ANIM_TANCONG.push(key);
                         }
-                        
+
                         if (k.includes('BAY') || k.includes('FLY')) {
                             coBay = true; animBay = window.animationsMap[key]; window.animationsMap['BAY'] = animBay;
                         }
