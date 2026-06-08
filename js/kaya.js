@@ -1,6 +1,6 @@
 // ==========================================
 // 🌿 MÔN PHÁI ĐOẠT XÁ: TIỂU THƯ KAYA (SÁT THỦ Y TẾ)
-// 👑 CÔNG NGHỆ: ĐA TRỤC XOAY VẬT LÝ + MƯA VŨ KHÍ (FUJITORA STYLE)
+// 👑 CÔNG NGHỆ: BẢN GỐC + VÁ LỖI TRỤC CẦU 3D & MỞ KHÓA SPAM
 // ==========================================
 
 (function () {
@@ -95,8 +95,8 @@
         }
     }
 
-    // 🌟 3. HIỆU ỨNG VỤ NỔ
-    function taoHieuUngNoKaya(pos, isBig = false) {
+    // 🌟 3. HIỆU ỨNG VỤ NỔ (VÁ LỖI BỤI BAY THEO TRỤC CẦU 3D)
+    function taoHieuUngNoKaya(pos, isBig = false, upVector = new THREE.Vector3(0, 1, 0)) {
         if (typeof window.playSound3D === 'function') window.playSound3D('no', pos); 
         else if (typeof window.playSound === 'function') window.playSound('no');
 
@@ -105,11 +105,15 @@
         const posArr = new Float32Array(soLuong * 3);
         const vels = [];
 
+        // 🌟 Ép bụi bung ra theo trục Cầu
+        let qNolo = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), upVector);
+
         for (let i = 0; i < soLuong; i++) {
             posArr[i * 3] = pos.x; posArr[i * 3 + 1] = pos.y + 1; posArr[i * 3 + 2] = pos.z;
             let speed = isBig ? (Math.random() * 2.5 + 1) : (Math.random() * 1.5 + 0.5);
-            let vec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
-            vels.push(vec);
+            let vLocal = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize().multiplyScalar(speed);
+            vLocal.applyQuaternion(qNolo);
+            vels.push(vLocal);
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
@@ -117,7 +121,7 @@
             let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
             let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
             gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-            gradient.addColorStop(0.3, 'rgba(204, 255, 0, 0.9)'); // Màu Vàng Chanh
+            gradient.addColorStop(0.3, 'rgba(204, 255, 0, 0.9)'); 
             gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
             ctx.fillStyle = gradient; ctx.fillRect(0, 0, 64, 64);
             window.textureBuiKaya = new THREE.CanvasTexture(canvas);
@@ -129,7 +133,7 @@
         });
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngKaya.push({ system: pts, velocities: vels, life: 25 });
+        hieuUngKaya.push({ system: pts, velocities: vels, life: 25, upVector: upVector.clone() });
     }
 
     // 🌟 4. ĐÚC MODEL VŨ KHÍ KAYA
@@ -162,7 +166,7 @@
     window.thoiDiemChemCuoi_Kaya = window.thoiDiemChemCuoi_Kaya || 0;
 
     // ==========================================
-    // 🏹 TUNG CHIÊU KAYA
+    // 🏹 TUNG CHIÊU KAYA (MỞ KHÓA SPAM & TỌA ĐỘ ĐỘNG VECTOR 3D)
     // ==========================================
     window.tungComboKaya = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -171,19 +175,19 @@
         }
         if (!nvc) return;
 
-        // Ép Animation cứng theo yêu cầu của Sếp
         let animCanMua = 'ATTACK1';
         if (phim === 'Q') animCanMua = 'ATTACK1';
         if (phim === 'E') animCanMua = 'ATTACK2';
         if (phim === 'R') animCanMua = 'ATTACK3';
         if (phim === 'F') animCanMua = 'ATTACK4';
 
+        // 🌟 BẢN VÁ: XÓA `return 800ms` ĐỂ MỞ KHÓA SPAM CHỐNG NUỐT CHIÊU
         if (isRemote === false) {
-            let bayGio = Date.now();
-            if (bayGio - window.thoiDiemChemCuoi_Kaya < 800) return;
-            window.thoiDiemChemCuoi_Kaya = bayGio;
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
+            
+            if (window.henGioTatMuaKaya) clearTimeout(window.henGioTatMuaKaya);
+            window.henGioTatMuaKaya = setTimeout(() => { window.dangMuaChieu = false; }, 600); // Mở khóa nhanh
         }
 
         let viTriGoc = new THREE.Vector3();
@@ -202,7 +206,11 @@
             } else if (nvc.up) {
                 upVector = nvc.up.clone().normalize();
             }
-            nvc.getWorldDirection(huongMat); huongMat.normalize();
+            // 🌟 BẢN VÁ: Ép phẳng hướng mặt để không cắm xuống đất
+            nvc.getWorldDirection(huongMat); 
+            huongMat.projectOnPlane(upVector).normalize();
+            if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
+            
             viTriGoc = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5)); 
 
             let targetRadar = window.layMucTieuGanNhatKaya(viTriGoc);
@@ -217,16 +225,6 @@
             }
         }
 
-        // 🌟 TÌM ĐÚNG XƯƠNG RHand_Weapon_042
-        let tayPhaiPos = viTriGoc.clone();
-        nvc.traverse(c => {
-            if (c.isBone && c.name === 'RHand_Weapon_042') {
-                c.getWorldPosition(tayPhaiPos);
-            }
-        });
-        if (tayPhaiPos.distanceTo(viTriGoc) < 0.1) tayPhaiPos.add(new THREE.Vector3().crossVectors(huongMat, upVector).normalize().multiplyScalar(-1.5));
-
-        // 🌟 BẢN VÁ 1: TÁCH BẠCH DAME CỦA BOSS VÀ DAME CỦA SẾP
         let dameGoc = window.DAME_CUA_TOI || 100;
         if (isRemote !== false) {
             if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
@@ -235,62 +233,102 @@
             }
         }
 
-        let diemChanMucTieu = mucTieu.clone();
+        let diemChanMucTieu = mucTieu.clone(); // Không ép cứng y=0
 
         // ===============================================
-        // 🗡️ CHIÊU Q: Ném vukhikaya.glb, xoay tròn trục đứng
+        // 🗡️ CHIÊU Q: Ném vukhikaya.glb
         // ===============================================
         if (phim === 'Q') {
             setTimeout(() => {
+                // 🌟 BẢN VÁ: Dời tọa độ tay vào TRONG SetTimeout để đạn rớt chuẩn
+                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                if (!curNvc) return;
+                let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                
+                let tayPhaiPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                curNvc.traverse(c => {
+                    if (c.isBone && c.name === 'RHand_Weapon_042') c.getWorldPosition(tayPhaiPos);
+                });
+
                 const vk = taoVatTheKaya('vukhikaya', 5);
-                vk.position.copy(tayPhaiPos).add(huongMat.clone().multiplyScalar(1.5));
+                vk.position.copy(tayPhaiPos).add(curDir.clone().multiplyScalar(1.5));
+                vk.up.copy(curUp); // 🌟 VÁ LỖI 7: ÉP TRỤC
                 vk.lookAt(mucTieu);
                 scene.add(vk);
 
                 kyNangKaya.push({
                     mesh: vk, type: 'BAY_THANG_XOAY_DUNG', speed: 10.0, life: 100,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 12, isRemote: isRemote
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 12, isRemote: isRemote, upVector: curUp.clone()
                 });
             }, 300);
         }
 
         // ===============================================
-        // 🗡️ CHIÊU E: Bẻ góc 90 độ, xoay tròn chậm
+        // 🗡️ CHIÊU E: Bẻ góc 90 độ
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
+                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                if (!curNvc) return;
+                let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                
+                let tayPhaiPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                curNvc.traverse(c => {
+                    if (c.isBone && c.name === 'RHand_Weapon_042') c.getWorldPosition(tayPhaiPos);
+                });
+
                 const vk = taoVatTheKaya('vukhikaya', 5);
-                vk.position.copy(tayPhaiPos).add(huongMat.clone().multiplyScalar(1.5));
+                vk.position.copy(tayPhaiPos).add(curDir.clone().multiplyScalar(1.5));
+                vk.up.copy(curUp); // 🌟 VÁ LỖI 7: ÉP TRỤC
                 vk.lookAt(mucTieu);
                 scene.add(vk);
 
                 kyNangKaya.push({
                     mesh: vk, type: 'BAY_THANG_BE_GOC_90', speed: 8.0, life: 120, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 12, initialized: false, isRemote: isRemote
+                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 12, initialized: false, isRemote: isRemote, upVector: curUp.clone()
                 });
             }, 400);
         }
 
         // ===============================================
-        // 🗡️ CHIÊU R: Model to hơn, xoay ngang (ĐÃ CẬP NHẬT RADAR TẦM NHIỆT LIVE)
+        // 🗡️ CHIÊU R: Model to hơn, xoay ngang 
         // ===============================================
         else if (phim === 'R') {
             setTimeout(() => {
+                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                if (!curNvc) return;
+                let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                
+                let tayPhaiPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                curNvc.traverse(c => {
+                    if (c.isBone && c.name === 'RHand_Weapon_042') c.getWorldPosition(tayPhaiPos);
+                });
+
+                let targetBay = mucTieu.clone();
+                if (!isRemote) { // AimBot mini
+                    let objMoi = window.layMucTieuGanNhatKaya(tayPhaiPos);
+                    if (objMoi && objMoi.mesh) targetBay = window.layHitbox(objMoi.mesh).tamNguc.clone();
+                }
+
                 const vkBig = taoVatTheKaya('vukhikaya', 10);
-                vkBig.position.copy(tayPhaiPos).add(huongMat.clone().multiplyScalar(2.0));
-                vkBig.lookAt(mucTieu);
+                vkBig.position.copy(tayPhaiPos).add(curDir.clone().multiplyScalar(2.0));
+                vkBig.up.copy(curUp); // 🌟 VÁ LỖI 7: ÉP TRỤC
+                vkBig.lookAt(targetBay);
                 scene.add(vkBig);
 
                 kyNangKaya.push({
                     mesh: vkBig, type: 'BAY_THANG_XOAY_NGANG', speed: 9.0, life: 120,
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.7, noBanKinh: 20, isRemote: isRemote // 🌟 BƠM LẠI TRÍ NHỚ CHO ĐẠN
+                    targetPos: targetBay, damage: dameGoc * 0.7, noBanKinh: 20, isRemote: isRemote, upVector: curUp.clone()
                 });
 
             }, 500);
         }
 
         // ===============================================
-        // ☄️ CHIÊU F: MƯA VŨ KHÍ (COPY LOGIC FUJITORA, UPGRADE THEO STYLE NAMI - BAO MAP CẦU & BOSS BAY)
+        // ☄️ CHIÊU F: MƯA VŨ KHÍ 
         // ===============================================
         else if (phim === 'F') {
             let tongThoiGian = 3000;
@@ -302,47 +340,46 @@
                     const muaVk = taoVatTheKaya('vukhikaya', 7);
 
                     let posDap = diemChanMucTieu.clone();
-
-                    // 🌟 BƯỚC 1: LẤY TRỤC "LÊN TRỜI" CHUẨN XÁC DYNAMIC
+                    
                     let upV = new THREE.Vector3(0, 1, 0);
                     if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
                         upV = posDap.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    } else if (nvc.up) {
+                        upV = nvc.up.clone().normalize();
                     }
 
                     if (i > 0) {
-                        // Tán xạ vũ khí ngẫu nhiên xung quanh mục tiêu men theo độ cong mặt cầu
                         let randomVec = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
-                        randomVec.projectOnPlane(upV).normalize(); // Ép vector chạy ngang
-                        let randomRadius = Math.random() * 22.5; // Bán kính vòng tròn 22.5m
+                        randomVec.projectOnPlane(upV).normalize(); 
+                        let randomRadius = Math.random() * 22.5; 
                         posDap.add(randomVec.multiplyScalar(randomRadius));
                     }
 
-                    // 🌟 BƯỚC 2: TÍNH ĐIỂM XUẤT PHÁT TRÊN TRỜI DỰA THEO TRỤC UP VÀ HƯỚNG MẮT
-                    // Đẩy ngược lên trời theo trục upV một khoảng 160m - 200m
                     let chieuCaoMua = 160 + Math.random() * 40;
                     let posXuatPhat = posDap.clone().add(upV.clone().multiplyScalar(chieuCaoMua));
                     
-                    // Thụt lùi ra sau lưng hướng mặt một chút để tạo góc rơi chéo điện ảnh
-                    posXuatPhat.sub(huongMat.clone().multiplyScalar(80)); 
+                    // Thụt lùi góc rớt
+                    let huongTam = new THREE.Vector3(); 
+                    if(nvc) nvc.getWorldDirection(huongTam);
+                    posXuatPhat.sub(huongTam.normalize().multiplyScalar(80)); 
 
                     muaVk.position.copy(posXuatPhat);
-                    muaVk.lookAt(posDap); // Vũ khí chúi đầu hướng thẳng vào điểm đáp
+                    muaVk.up.copy(upV); // 🌟 VÁ LỖI 7: Ép trục cong
+                    muaVk.lookAt(posDap); 
                     scene.add(muaVk);
 
-                    // 🌟 BƯỚC 3: CÂN BẰNG SÁT THƯƠNG E-SPORTS CHUẨN 7.8 (0.06 x 15 = 0.9)
                     kyNangKaya.push({
                         mesh: muaVk, type: 'MUA_VU_KHI', speed: 4.5, life: 150,
-                        targetPos: posDap, damage: dameGoc * 0.06, isRemote: isRemote, noBanKinh: 25 // 🌟 SỬA HỆ SỐ TỪ 0.066 THÀNH 0.06
+                        targetPos: posDap, damage: dameGoc * 0.06, isRemote: isRemote, noBanKinh: 25, upVector: upV.clone()
                     });
                     
                 }, 500 + i * delayPerVukhi);
             }
         }
-
     };
 
     // ==========================================
-    // 🌪️ VÒNG LẶP RENDER VẬT LÝ KAYA
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ KAYA (GIỮ NGUYÊN 100% CỦA SẾP)
     // ==========================================
     window.updateCombatKaya = function () {
         
@@ -354,51 +391,45 @@
                 let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                 s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                 
-                // 🌟 XỬ LÝ QUÁN TÍNH XOAY CHO TỪNG CHIÊU THỨC
+                // Quán tính xoay
                 if (hienThiModel) {
                     if (s.type === 'BAY_THANG_XOAY_DUNG') {
-                        hienThiModel.rotateY(0.4); // Xoay dọc tít thò lò
+                        hienThiModel.rotateY(0.4); 
                     } 
                     else if (s.type === 'BAY_THANG_BE_GOC_90') {
                         if (!s.initialized) {
-                            hienThiModel.rotation.set(Math.PI / 2, 0, 0); // Bẻ cúp xuống 90 độ 1 lần duy nhất
+                            hienThiModel.rotation.set(Math.PI / 2, 0, 0); 
                             s.initialized = true;
                         }
-                        hienThiModel.rotateZ(0.15); // Xoay chậm theo trục đã bị bẻ
+                        hienThiModel.rotateZ(0.15); 
                     }
                     else if (s.type === 'BAY_THANG_XOAY_NGANG') {
-                        hienThiModel.rotateX(0.4); // Xoay lộn nhào trục ngang
+                        hienThiModel.rotateX(0.4); 
                     }
                     else if (s.type === 'MUA_VU_KHI') {
-                        hienThiModel.rotateZ(0.3); // Vũ khí rơi từ trên trời cắm xuống xoay vòng
-                        s.speed *= 1.05; // Gia tốc rơi trọng lực hệt như Fujitora
+                        hienThiModel.rotateZ(0.3); 
+                        s.speed *= 1.05; 
                         if (s.speed > 18.0) s.speed = 18.0;
                     }
                 }
 
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     
-                    // 🌟 2. QUY TẮC 3 QUYỀN LỰC SÁT THƯƠNG
                     if (s.isRemote === false) {
-                        // QUYỀN 1: Sếp đánh (Gây dame Quái + Gọi mạng)
                         gaySatThuongKaya(s.targetPos, s.damage, s.noBanKinh);
                     } 
                     else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        // QUYỀN 2: Boss đánh (Trừ máu Sếp trực tiếp)
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
                     } 
-                    else if (s.isRemote === true) {
-                        // QUYỀN 3: Người chơi khác PVP (Bỏ qua để Server trừ máu)
-                    }
 
-                    taoHieuUngNoKaya(s.targetPos, s.type === 'MUA_VU_KHI');
+                    // 🌟 TRUYỀN upVector VÀO HÀM NỔ ĐỂ NẮN TRỤC
+                    taoHieuUngNoKaya(s.targetPos, s.type === 'MUA_VU_KHI', s.upVector);
                     s.life = 0;
                 }
             }
 
-            // 🛑 DỌN RÁC MODEL TẬN GỐC
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
                 else {
@@ -409,13 +440,21 @@
             }
         }
 
-        // Dọn rác Hạt Bụi Nổ
+        // 🌟 BẢN VÁ LỖI TRỌNG LỰC BỤI Y TẾ BAY LÊN CHUẨN TRỤC MAP CẦU
         for (let i = hieuUngKaya.length - 1; i >= 0; i--) {
             let h = hieuUngKaya[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
+            
+            // Khói bốc lên trời (Âm thành Dương)
+            let bocKhoiVec = h.upVector ? h.upVector.clone().multiplyScalar(0.05) : new THREE.Vector3(0, 0.05, 0);
+
             for (let j = 0; j < posArr.length / 3; j++) {
-                posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.05; 
+                posArr[j * 3] += h.velocities[j].x; 
+                posArr[j * 3 + 1] += h.velocities[j].y; 
+                posArr[j * 3 + 2] += h.velocities[j].z;
+                
+                h.velocities[j].multiplyScalar(0.9); 
+                h.velocities[j].add(bocKhoiVec); 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
@@ -428,7 +467,6 @@
             }
         }
 
-        // Dọn rác Thẻ số nhảy dame
         for (let i = danhSachSoBayKaya.length - 1; i >= 0; i--) {
             let it = danhSachSoBayKaya[i]; it.offsetY += 0.05; it.life--;
             const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
@@ -447,7 +485,12 @@
         window.HePhaiHienTai = {
             tenPhai: "Tiểu Thư Kaya",
             khoiTao: function () {
-                console.log("🌿 Bạo Y Thức Tỉnh! Khởi động Tiểu Thư Kaya thành công!");
+                console.log("🌿 Bạo Y Thức Tỉnh! Khởi động Tiểu Thư Kaya (Bản Vá Lỗi Đa Vũ Trụ)!");
+
+                // 🌟 BẢN VÁ: PRELOAD VRAM ĐỂ CHỐNG SẬP LOADER
+                if (typeof window.taiHoacNhanBanAsset === 'function') {
+                    window.taiHoacNhanBanAsset('uploads/anims/vukhikaya.glb', () => {});
+                }
 
                 if (window.animationsMap) {
                     window.KHO_ANIM_NHANROI = [];
