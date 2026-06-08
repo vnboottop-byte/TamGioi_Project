@@ -370,10 +370,9 @@
             khoiTao: function () {
                 console.log("⚔️ Kiếm Phái Thức Tỉnh! Đã cấy mạng lưới chống Nuốt chiêu!");
 
+                // 🌟 BÍ QUYẾT TỐI THƯỢNG: TẢI TRƯỚC 1 FILE DUY NHẤT VÀO RAM 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
-                    for (let i = 1; i <= 6; i++) {
-                        window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG' + i + '.glb', () => { });
-                    }
+                     window.taiHoacNhanBanAsset('uploads/anims/KIEMQUANG.glb', () => { });
                 }
 
                 if (window.animationsMap) {
