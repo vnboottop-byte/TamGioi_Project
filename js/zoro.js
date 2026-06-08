@@ -166,7 +166,7 @@
     }
 
     // ==========================================
-    // 🏹 HÀM XẢ COMBO (BẢN HỎA TỐC: BẤM LÀ BAY, KHÔNG CHỜ ĐỢI DELAY)
+    // 🏹 HÀM XẢ COMBO (BẢN CHUẨN: SEQUENCE SETTIMEOUT + SINGLE CACHE)
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -175,13 +175,13 @@
         }
         if (!nvc) return;
 
+        // 🌟 KHÔNG DÙNG dangMuaChieu NỮA! Cứ bấm là múa, nhồi Combo thoải mái!
         if (isRemote === false) {
-            // 🌟 ĐÃ XÓA SẠCH BIẾN dangMuaChieu & SETTIMEOUT! 
-            // Giờ Sếp bấm nhồi 4 nút cùng lúc, nó cũng sẽ chém ra ngay!
             let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
         }
 
+        // Lấy tọa độ sơ khởi (Dành cho việc khóa Radar mục tiêu)
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3();
@@ -229,37 +229,55 @@
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) dameGoc = window.remotePlayers[casterId].damage || 100;
         }
 
-        let offsetRight = new THREE.Vector3().crossVectors(huongMat, upVector).normalize();
-
+        // ========================================================
+        // 🚀 ĐÚC KIẾM QUANG: SỰ TRỞ LẠI CỦA SETTIMEOUT COMBO 
+        // ========================================================
         function phongKiemQuang(soNhatChem, heSoDame, kichCo, kieuChem) {
+            // 🌟 CHÂN LÝ TU TIÊN: Dùng 1 file duy nhất để mượt 100%, không bị Engine ngầm nuốt!
+            let urlCanTai = 'uploads/anims/KIEMQUANG.glb'; 
+
             for (let i = 0; i < soNhatChem; i++) {
+                
+                // 🌟 TÁCH RỜI NHÁT CHÉM BẰNG SETTIMEOUT (Cách nhau 120ms) -> Tránh chồng hình
+                setTimeout(() => {
+                    // TÍNH TOÁN LẠI TỌA ĐỘ ĐỘNG: Đảm bảo vừa chạy vừa xả chiêu không bị rớt kiếm lại phía sau
+                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    if (!curNvc) return;
 
-                let soNgauNhien = Math.floor(Math.random() * 6) + 1;
-                let urlCanTai = 'uploads/anims/KIEMQUANG' + soNgauNhien + '.glb';
+                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir);
+                    curDir.projectOnPlane(curUp).normalize();
+                    if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
 
-                const kq = taoKiemQuangFile(kichCo, urlCanTai);
+                    let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                    let offsetRight = new THREE.Vector3().crossVectors(curDir, curUp).normalize();
 
-                let offset = (i - (soNhatChem - 1) / 2) * 1.5;
-                let posNongGoc = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
+                    // Đúc kiếm
+                    const kq = taoKiemQuangFile(kichCo, urlCanTai);
 
-                kq.position.copy(posNongGoc);
-                kq.up.copy(upVector);
+                    // Dàn trận tản ngang
+                    let offset = (i - (soNhatChem - 1) / 2) * 1.5;
+                    let spawnPos = curPos.clone().add(curDir.clone().multiplyScalar(2.5)).add(offsetRight.clone().multiplyScalar(offset));
 
-                let doLan = (soNhatChem > 1) ? 3.0 : 0;
-                let targetBay = mucTieu.clone().add(new THREE.Vector3((Math.random() - 0.5) * doLan, (Math.random() - 0.5) * doLan, 0));
-                kq.lookAt(targetBay);
+                    kq.position.copy(spawnPos);
+                    kq.up.copy(curUp);
 
-                if (kieuChem === 'E') kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
-                else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
-                else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
+                    let targetBay = mucTieu ? mucTieu.clone() : curPos.clone().add(curDir.clone().multiplyScalar(150));
+                    kq.lookAt(targetBay);
 
-                // 🌟 QUYẾT ĐỊNH SỐ 1: BẤM PHÁT LÀ KIẾM HIỆN RA NGAY LẬP TỨC (XÓA BỎ VISIBLE = FALSE)
-                scene.add(kq);
+                    // Xoay kiếm vát chéo
+                    if (kieuChem === 'E') kq.rotateZ((i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4));
+                    else if (kieuChem === 'R') kq.rotateZ((i === 0) ? (Math.PI / 2) : ((i % 2 === 0) ? (Math.PI / 3) : (-Math.PI / 3)));
+                    else if (kieuChem === 'F') kq.rotateZ((i * Math.PI) / 3);
 
-                kyNangZoro.push({
-                    mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
-                    targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
-                });
+                    // Phi ra không gian
+                    scene.add(kq);
+
+                    kyNangZoro.push({
+                        mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80,
+                        targetPos: targetBay, damage: dameGoc * heSoDame, isRemote: isRemote
+                    });
+                }, i * 120); // 🌟 BÍ THUẬT: Delay 120ms mỗi nhát chém để tạo chuỗi Combo uy lực
             }
         }
 
