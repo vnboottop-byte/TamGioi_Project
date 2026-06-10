@@ -1,6 +1,6 @@
 // ==========================================
-// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V25 - BẠO CHÚA TỐC ĐỘ CAO)
-// 👑 CÔNG NGHỆ: COOLDOWN 2 GIÂY + ÉP TỐC ĐỘ ANIMATION + ÁP SÁT TÓE MÁU
+// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V26 - BẠO CHÚA TỐC ĐỘ CAO)
+// 👑 CÔNG NGHỆ: ÉP ANIMATION 1 GIÂY + HỦY LƯỚT WASD + KIẾM QUANG MINI
 // ==========================================
 
 (function() {
@@ -8,7 +8,6 @@
     let hieuUngLuyenThe = [];
     let danhSachSoBayLT = []; 
 
-    // 🌟 THỜI GIAN HỒI CHIÊU: CHỈ CÒN 2 GIÂY CHO MỌI CHIÊU!
     const THOI_GIAN_HOI = { 'Q': 2000, 'E': 2000, 'R': 2000, 'F': 2000 };
     const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
 
@@ -96,7 +95,6 @@
     }
 
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
-        // HÚT MÁU BƠM VÀO UI
         function kichHoatHutMau() {
             let luongHut = Math.round(luongSatThuong * 0.05); 
             if (typeof window.mauBanThan !== 'undefined' && window.MAU_TOI_DA) {
@@ -156,7 +154,6 @@
         }
     }
 
-    // ĐÃ XÓA VÒNG TRÒN SÓNG ÂM, TẠO MÁU ĐỎ MỊN
     function taoVuNoLT(pos, upV, mauHex, banKinh) {
         if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
 
@@ -230,12 +227,11 @@
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc) return;
 
-        // 🌟 KIỂM TRA ĐIỀU KIỆN HỒI CHIÊU (COOLDOWN CHỈ CÒN 2 GIÂY)
         let bayGio = Date.now();
         if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
         choHoiChieu[phim] = bayGio;
 
-        // 🌟 VẼ UI ĐỒNG HỒ ĐẾM NGƯỢC (Đã cập nhật theo tốc độ 2 giây)
+        // VẼ ĐỒNG HỒ COOLDOWN 2S TRÊN UI NÚT BẤM
         let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
         if (!nutKyNang) {
             let cacNut = document.querySelectorAll('div, button');
@@ -287,41 +283,43 @@
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
         } else {
-            // Không có quái thì đấm gió
             window.trangThaiLT.state = 'IDLE'; 
             let randomAnim = bốcChiêuTấnCôngNgẫuNhiên();
             if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
 
-            // 🌟 ÉP TỐC ĐỘ ANIMATION KHI ĐẤM GIÓ
-            if (window.currentActionChar) {
-                window.currentActionChar.setEffectiveTimeScale(1.8);
+            // Ép múa gió xong trong 1 giây
+            if (window.currentActionChar && window.currentActionChar.getClip) {
+                let duration = window.currentActionChar.getClip().duration;
+                window.currentActionChar.setEffectiveTimeScale(duration / 1.0); 
             }
 
             let nvcUp = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0,1,0);
             let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd); fwd.projectOnPlane(nvcUp).normalize();
             
-            let kqGio = taoVatTheLT('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 20);
+            // 🌟 KIẾM QUANG THU NHỎ CỰC MẠNH VÀO TẦM GẦN (SIZE 2)
+            let kqGio = taoVatTheLT('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 2.0);
             kqGio.position.copy(viTriGoc).add(nvcUp.clone().multiplyScalar(3.5)).add(fwd.clone().multiplyScalar(2));
             kqGio.up.copy(nvcUp); kqGio.lookAt(viTriGoc.clone().add(nvcUp.clone().multiplyScalar(3.5)).add(fwd.clone().multiplyScalar(10)));
             kqGio.rotateZ((Math.random() - 0.5) * Math.PI);
             scene.add(kqGio);
-            kyNangLT.push({ mesh: kqGio, life: 10, scale: 20 });
+            kyNangLT.push({ mesh: kqGio, life: 10, scale: 2.0 });
 
             setTimeout(() => { window.dangMuaChieu = false; }, 600);
         }
     };
 
     // ===================================================
-    // 🚀 LÕI VẬT LÝ CHIẾN ĐẬU V25
+    // 🚀 LÕI VẬT LÝ CHIẾN ĐẬU V26
     // ===================================================
     window.updateCombatLT = function () {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc) return;
 
+        // XỬ LÝ KIẾM QUANG BÉ XÍU
         for(let i = kyNangLT.length - 1; i >= 0; i--) {
             let s = kyNangLT[i];
             s.life--;
-            s.scale += 1.5; 
+            s.scale += 0.2; // Phình to cực ít để giữ vết chém sắc nét
             s.mesh.scale.set(s.scale, s.scale, s.scale);
             if(s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
@@ -329,8 +327,16 @@
             }
         }
 
-        // ÁP SÁT "CHẠM THỊT"
+        // LƯỚT VÀ ĐẤM
         if (window.trangThaiLT.state === 'DASHING' && window.trangThaiLT.target) {
+            
+            // 🌟 CẢM BIẾN HỦY LƯỚT (CANCEL DASH) NẾU NGƯỜI CHƠI BẤM WASD / CHUỘT
+            if (window.isMoving || window.isKeyboardMoving) {
+                window.trangThaiLT.state = 'IDLE';
+                window.dangMuaChieu = false;
+                return;
+            }
+
             let t = window.trangThaiLT.target;
             if (t.isDead || t.hp <= 0) { window.trangThaiLT.state = 'IDLE'; return; }
             
@@ -348,41 +354,53 @@
             let fwd = vecToTarget.clone().projectOnPlane(curUp).normalize();
             if (fwd.lengthSq() > 0) {
                 dummy.lookAt(nvc.position.clone().add(fwd));
-                nvc.quaternion.slerp(dummy.quaternion, 0.4); 
+                nvc.quaternion.slerp(dummy.quaternion, 0.5); 
             }
             
             if (distNgang > 1.2) { 
-                nvc.position.add(fwd.multiplyScalar(3.5)); // Chạy cực nhanh
+                nvc.position.add(fwd.multiplyScalar(6.0)); // 🌟 CHẠY NƯỚC RÚT SIÊU NHANH ĐỂ ÁP SÁT
                 if (typeof window.playAnim === 'function') window.playAnim('CHAYBO');
                 
-                // 🌟 ÉP TỐC ĐỘ ANIMATION KHI LƯỚT CHẠY
-                if (window.currentActionChar) {
-                    window.currentActionChar.setEffectiveTimeScale(2.0); 
+                if (window.currentActionChar && window.currentActionChar.getClip) {
+                    window.currentActionChar.setEffectiveTimeScale(3.0); // Guồng chân chạy x3
                 }
-
                 if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
             } 
             else {
+                // CHẠM MẶT -> XẢ ĐÒN!
                 window.trangThaiLT.state = 'HITTING';
                 
                 let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
                 if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
 
-                // 🌟 ÉP TỐC ĐỘ ANIMATION KHI TUNG QUYỀN ĐÁNH QUÁI
-                if (window.currentActionChar) {
-                    window.currentActionChar.setEffectiveTimeScale(1.8); 
+                // 🌟 BÍ THUẬT: ÉP MÚA XONG TRONG ĐÚNG 1 GIÂY
+                let targetScale = 1.0;
+                if (window.currentActionChar && window.currentActionChar.getClip) {
+                    let duration = window.currentActionChar.getClip().duration;
+                    targetScale = duration / 1.0; // Bắt buộc phải xong trong 1s
                 }
 
-                let kq = taoVatTheLT('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 25);
-                kq.position.copy(tHit.tamNguc); kq.up.copy(curUp);
+                // KIẾM QUANG MINI (SIZE 1.5) CHÉM VÁT NGANG MẶT ĐỊCH
+                let kq = taoVatTheLT('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 1.5);
+                
+                // Dịch vết chém ra giữa NVC và Quái để không bị chém sau lưng
+                let diemChem = new THREE.Vector3().lerpVectors(nvc.position.clone().add(curUp.clone().multiplyScalar(3.5)), tHit.tamNguc, 0.5);
+                kq.position.copy(diemChem); 
+                kq.up.copy(curUp);
                 kq.lookAt(nvc.position); 
                 kq.rotateZ((Math.random() - 0.5) * Math.PI); 
                 scene.add(kq);
-                kyNangLT.push({ mesh: kq, life: 12, scale: 15 });
+                kyNangLT.push({ mesh: kq, life: 12, scale: 1.5 });
 
                 let banKinhNo = (window.trangThaiLT.skillKey === 'F') ? 15 : 5;
                 taoVuNoLT(tHit.tamNguc, curUp, 0xff0000, banKinhNo);
                 gaySatThuongLT(tHit.tamNguc, (window.DAME_CUA_TOI || 200) * window.trangThaiLT.dameRatio, banKinhNo);
+                
+                // GENSHIN HIT-STOP BÁM THEO TỐC ĐỘ 1S
+                if(window.currentActionChar) {
+                    window.currentActionChar.setEffectiveTimeScale(0.01);
+                    setTimeout(() => { if(window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(targetScale); }, 100);
+                }
                 
                 let camY = camera.position.y; let camX = camera.position.x;
                 let shake = setInterval(() => { 
@@ -391,11 +409,11 @@
                 }, 20);
                 setTimeout(() => { clearInterval(shake); camera.position.y = camY; camera.position.x = camX; }, 120);
                 
-                setTimeout(() => { if(window.trangThaiLT.state === 'HITTING') window.trangThaiLT.state = 'IDLE'; }, 300);
+                // 1 giây sau tự động nhả IDLE (Bằng đúng thời lượng đã ép)
+                setTimeout(() => { if(window.trangThaiLT.state === 'HITTING') window.trangThaiLT.state = 'IDLE'; }, 1000);
             }
         }
 
-        // DỌN RÁC HIỆU ỨNG MÁU
         for (let i = hieuUngLuyenThe.length - 1; i >= 0; i--) {
             let vfx = hieuUngLuyenThe[i];
             vfx.life--;
@@ -436,7 +454,6 @@
         }
     };
 
-    // BẬT CÔNG TẮC VẬT LÝ!
     if (window.idVongLapCombatLT) clearInterval(window.idVongLapCombatLT);
     window.idVongLapCombatLT = setInterval(window.updateCombatLT, 30);
 
@@ -444,7 +461,7 @@
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
             khoiTao: function () {
-                console.log("🔥 Luyện Thể Berserker Khởi động (Cooldown 2s + Ép Tốc Độ Đánh + Kiếm Quang Tóe Máu)!");
+                console.log("🔥 Luyện Thể Berserker Khởi động (Cooldown 2s + Tốc độ 1s + Hủy Lướt WASD)!");
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     for(let i=1; i<=6; i++) {
