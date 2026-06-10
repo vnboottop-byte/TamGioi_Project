@@ -218,12 +218,12 @@
         // ========================================================
         // 🌟 1. QUY TẮC "3 QUYỀN LỰC" (CHỐNG LỖI X2 DAME & 1-HIT-KILL)
         // ========================================================
-        let dameGoc = window.DAME_CUA_TOI || 200;
+        let dameGoc = window.DAME_CUA_TOI || 100;
         
         if (isRemote !== false) {
             if (typeof isRemote === 'number' && isRemote > 0) dameGoc = isRemote;
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
-                dameGoc = window.remotePlayers[casterId].damage || 200;
+                dameGoc = window.remotePlayers[casterId].damage || 100;
             }
             
             // Tìm điểm nổ (Ưu tiên nổ tại ngực mục tiêu, nếu không có thì nổ tại người vung tay)
