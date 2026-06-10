@@ -1,6 +1,6 @@
 // ==========================================
-// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V24.1 - BẠO CHÚA BERSERKER)
-// 👑 CÔNG NGHỆ: CUỒNG HÓA 15S + KIẾM QUANG TÓE MÁU + ÁP SÁT CHẠM THỊT + BẬT VÒNG LẶP
+// 🥊 HỆ THỐNG KỸ NĂNG: LUYỆN THỂ (V25 - BẠO CHÚA TỐC ĐỘ CAO)
+// 👑 CÔNG NGHỆ: COOLDOWN 2 GIÂY + ÉP TỐC ĐỘ ANIMATION + ÁP SÁT TÓE MÁU
 // ==========================================
 
 (function() {
@@ -8,14 +8,15 @@
     let hieuUngLuyenThe = [];
     let danhSachSoBayLT = []; 
 
+    // 🌟 THỜI GIAN HỒI CHIÊU: CHỈ CÒN 2 GIÂY CHO MỌI CHIÊU!
+    const THOI_GIAN_HOI = { 'Q': 2000, 'E': 2000, 'R': 2000, 'F': 2000 };
+    const choHoiChieu = { 'Q': 0, 'E': 0, 'R': 0, 'F': 0 };
+
     window.trangThaiLT = {
         state: 'IDLE', 
         target: null,
         skillKey: null,
-        dameRatio: 1,
-        isBerserk: false,        
-        berserkEndTime: 0,
-        lastHitTime: 0
+        dameRatio: 1
     };
 
     window.tongSoChuNoi_LT = 0; 
@@ -95,7 +96,7 @@
     }
 
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
-        // HÚT MÁU KẾT NỐI UI
+        // HÚT MÁU BƠM VÀO UI
         function kichHoatHutMau() {
             let luongHut = Math.round(luongSatThuong * 0.05); 
             if (typeof window.mauBanThan !== 'undefined' && window.MAU_TOI_DA) {
@@ -155,7 +156,7 @@
         }
     }
 
-    // ĐÃ XÓA VÒNG TRÒN SÓNG ÂM, THÊM VỤ NỔ MÁU MỊN
+    // ĐÃ XÓA VÒNG TRÒN SÓNG ÂM, TẠO MÁU ĐỎ MỊN
     function taoVuNoLT(pos, upV, mauHex, banKinh) {
         if (typeof window.phatAmThanhNo === 'function') window.phatAmThanhNo();
 
@@ -229,17 +230,52 @@
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc) return;
 
-        // BẬT CHẾ ĐỘ CUỒNG SÁT 15s
-        window.trangThaiLT.isBerserk = true;
-        window.trangThaiLT.berserkEndTime = Date.now() + 15000; 
-        window.trangThaiLT.skillKey = phim;
-        window.dangMuaChieu = true;
+        // 🌟 KIỂM TRA ĐIỀU KIỆN HỒI CHIÊU (COOLDOWN CHỈ CÒN 2 GIÂY)
+        let bayGio = Date.now();
+        if (bayGio - choHoiChieu[phim] < THOI_GIAN_HOI[phim]) return;
+        choHoiChieu[phim] = bayGio;
 
-        if (typeof window.hienThongBaoBoGoc === 'function') {
-            window.hienThongBaoBoGoc("🩸 BERSERK 15S: SPAM TỚI BẾN!", "#ff0000");
+        // 🌟 VẼ UI ĐỒNG HỒ ĐẾM NGƯỢC (Đã cập nhật theo tốc độ 2 giây)
+        let nutKyNang = document.getElementById('btn' + phim.toUpperCase()) || document.getElementById('skill' + phim.toUpperCase());
+        if (!nutKyNang) {
+            let cacNut = document.querySelectorAll('div, button');
+            for (let n of cacNut) {
+                if (n.innerText && n.innerText.trim().toUpperCase() === phim.toUpperCase() && (n.style.borderRadius === '50%' || n.className.includes('skill'))) {
+                    nutKyNang = n; break;
+                }
+            }
         }
 
-        taoVuNoLT(nvc.position.clone().add(new THREE.Vector3(0,2,0)), nvc.up || new THREE.Vector3(0,1,0), 0xff0000, 20);
+        if (nutKyNang) {
+            nutKyNang.style.pointerEvents = 'none'; 
+            nutKyNang.style.filter = 'brightness(0.4) grayscale(100%)'; 
+            
+            let idDongHo = 'dongho_lt_' + phim;
+            let soDemNguoc = document.getElementById(idDongHo);
+            if (!soDemNguoc) {
+                soDemNguoc = document.createElement('div');
+                soDemNguoc.id = idDongHo;
+                soDemNguoc.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:#fff; font-size:18px; font-weight:900; text-shadow:0px 0px 6px #000, 1px 1px 2px #000; z-index:999; pointer-events:none;';
+                nutKyNang.appendChild(soDemNguoc);
+            }
+            
+            let thoiGian = THOI_GIAN_HOI[phim] / 1000;
+            soDemNguoc.innerText = thoiGian.toFixed(1);
+            
+            let demDongHo = setInterval(() => {
+                thoiGian -= 0.1;
+                if (thoiGian <= 0) {
+                    clearInterval(demDongHo);
+                    if (soDemNguoc && soDemNguoc.parentNode) soDemNguoc.parentNode.removeChild(soDemNguoc); 
+                    nutKyNang.style.filter = ''; 
+                    nutKyNang.style.pointerEvents = ''; 
+                } else {
+                    soDemNguoc.innerText = thoiGian.toFixed(1);
+                }
+            }, 100);
+        }
+
+        window.dangMuaChieu = false;
 
         let viTriGoc = nvc.position.clone();
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
@@ -248,11 +284,18 @@
             const dameChiTiet = { 'Q': 1.0, 'E': 1.0, 'R': 1.0, 'F': 1.0 };
             window.trangThaiLT.state = 'DASHING';
             window.trangThaiLT.target = targetQuai;
+            window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
         } else {
+            // Không có quái thì đấm gió
             window.trangThaiLT.state = 'IDLE'; 
             let randomAnim = bốcChiêuTấnCôngNgẫuNhiên();
             if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
+
+            // 🌟 ÉP TỐC ĐỘ ANIMATION KHI ĐẤM GIÓ
+            if (window.currentActionChar) {
+                window.currentActionChar.setEffectiveTimeScale(1.8);
+            }
 
             let nvcUp = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0,1,0);
             let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd); fwd.projectOnPlane(nvcUp).normalize();
@@ -269,13 +312,12 @@
     };
 
     // ===================================================
-    // 🚀 LÕI VẬT LÝ CHIẾN ĐẬU
+    // 🚀 LÕI VẬT LÝ CHIẾN ĐẬU V25
     // ===================================================
     window.updateCombatLT = function () {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         if (!nvc) return;
 
-        // XỬ LÝ KIẾM QUANG
         for(let i = kyNangLT.length - 1; i >= 0; i--) {
             let s = kyNangLT[i];
             s.life--;
@@ -287,34 +329,7 @@
             }
         }
 
-        // BERSERK: MỞ KHÓA COOLDOWN UI LẬP TỨC
-        if (window.trangThaiLT.isBerserk) {
-            let now = Date.now();
-            if (now > window.trangThaiLT.berserkEndTime) {
-                window.trangThaiLT.isBerserk = false; 
-                window.dangMuaChieu = false;
-            } else {
-                // Xóa UI Cooldown của Control để Sếp bấm ầm ầm
-                if (window.cd_thoiDiemBopCo) {
-                    window.cd_thoiDiemBopCo['Q'] = 0; window.cd_thoiDiemBopCo['E'] = 0;
-                    window.cd_thoiDiemBopCo['R'] = 0; window.cd_thoiDiemBopCo['F'] = 0;
-                }
-                
-                // Tự động tìm quái đấm tiếp nếu đang rảnh
-                if (window.trangThaiLT.state === 'IDLE' && now - window.trangThaiLT.lastHitTime > 300) {
-                    let mienMoi = layQuaiVatGanNhatLT(nvc.position);
-                    if (mienMoi) {
-                        window.trangThaiLT.target = mienMoi;
-                        window.trangThaiLT.state = 'DASHING';
-                        window.dangMuaChieu = true;
-                    } else {
-                        window.dangMuaChieu = false;
-                    }
-                }
-            }
-        }
-
-        // ÁP SÁT "CHẠM THỊT" VÀ XẢ ĐÒN
+        // ÁP SÁT "CHẠM THỊT"
         if (window.trangThaiLT.state === 'DASHING' && window.trangThaiLT.target) {
             let t = window.trangThaiLT.target;
             if (t.isDead || t.hp <= 0) { window.trangThaiLT.state = 'IDLE'; return; }
@@ -336,20 +351,28 @@
                 nvc.quaternion.slerp(dummy.quaternion, 0.4); 
             }
             
-            // Lướt tốc độ cao cho đến khi chạm mặt (1.2m)
             if (distNgang > 1.2) { 
                 nvc.position.add(fwd.multiplyScalar(3.5)); // Chạy cực nhanh
                 if (typeof window.playAnim === 'function') window.playAnim('CHAYBO');
+                
+                // 🌟 ÉP TỐC ĐỘ ANIMATION KHI LƯỚT CHẠY
+                if (window.currentActionChar) {
+                    window.currentActionChar.setEffectiveTimeScale(2.0); 
+                }
+
                 if (window.controls) window.controls.target.lerp(tHit.tamNguc, 0.1);
             } 
             else {
                 window.trangThaiLT.state = 'HITTING';
-                window.trangThaiLT.lastHitTime = Date.now();
                 
                 let randomAtk = bốcChiêuTấnCôngNgẫuNhiên();
                 if(typeof window.playAnim === 'function') window.playAnim(randomAtk);
 
-                // KIẾM QUANG CHÉM NHÁY
+                // 🌟 ÉP TỐC ĐỘ ANIMATION KHI TUNG QUYỀN ĐÁNH QUÁI
+                if (window.currentActionChar) {
+                    window.currentActionChar.setEffectiveTimeScale(1.8); 
+                }
+
                 let kq = taoVatTheLT('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 25);
                 kq.position.copy(tHit.tamNguc); kq.up.copy(curUp);
                 kq.lookAt(nvc.position); 
@@ -360,11 +383,6 @@
                 let banKinhNo = (window.trangThaiLT.skillKey === 'F') ? 15 : 5;
                 taoVuNoLT(tHit.tamNguc, curUp, 0xff0000, banKinhNo);
                 gaySatThuongLT(tHit.tamNguc, (window.DAME_CUA_TOI || 200) * window.trangThaiLT.dameRatio, banKinhNo);
-                
-                if(window.currentActionChar) {
-                    window.currentActionChar.setEffectiveTimeScale(0.01);
-                    setTimeout(() => { if(window.currentActionChar) window.currentActionChar.setEffectiveTimeScale(1.5); }, 100);
-                }
                 
                 let camY = camera.position.y; let camX = camera.position.x;
                 let shake = setInterval(() => { 
@@ -418,15 +436,15 @@
         }
     };
 
+    // BẬT CÔNG TẮC VẬT LÝ!
     if (window.idVongLapCombatLT) clearInterval(window.idVongLapCombatLT);
     window.idVongLapCombatLT = setInterval(window.updateCombatLT, 30);
 
-    // 🌟 SỬA ĐIỀU KIỆN TÌM TÊN PHÁI CHO CHUẨN XÁC CHỐNG LỖI HOOK
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('luyenthe')) {
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
             khoiTao: function () {
-                console.log("🔥 Luyện Thể Berserker Khởi động (Cuồng Sát 15s + Kiếm Quang Tóe Máu)!");
+                console.log("🔥 Luyện Thể Berserker Khởi động (Cooldown 2s + Ép Tốc Độ Đánh + Kiếm Quang Tóe Máu)!");
 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
                     for(let i=1; i<=6; i++) {
