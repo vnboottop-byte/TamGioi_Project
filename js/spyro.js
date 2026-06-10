@@ -525,7 +525,7 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI
     // ==========================================
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('ichiji')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('spyro')) {
         window.HePhaiHienTai = {
             tenPhai: "Tia Lửa Đỏ Ichiji",
             khoiTao: function () {
