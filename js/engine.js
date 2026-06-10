@@ -1871,9 +1871,21 @@ function playAnim(animName) {
                 if (actionChar) {
                     if (window.currentActionChar) window.currentActionChar.fadeOut(0.2);
                     window.currentActionChar = actionChar;
+
+                    // 🌟 CÔNG THỨC ÉP ANIMATION VỪA KHÍT 1.5 GIÂY (CHỐNG BỊ NGẮT)
+                    if (laChieuTanCong) {
+                        let thoiLuongGoc = window.currentActionChar.getClip().duration; // Số giây gốc
+                        let thoiGianMongMuon = 1.5; // Chốt cứng 1.5s theo ý Sếp
+                        
+                        // Tua nhanh hoặc làm chậm để vừa khít 1.5s
+                        window.currentActionChar.timeScale = thoiLuongGoc / thoiGianMongMuon; 
+                        kichHoatKhiencAnimation(1500); // Khóa chân đúng 1500ms
+                    } else {
+                        window.currentActionChar.timeScale = 1.0;
+                    }
+
                     window.currentActionChar.reset().fadeIn(0.2).play();
                     window.currentAnimNameChar = upName;
-                    if (laChieuTanCong) kichHoatKhiencAnimation(actionChar.getClip().duration * 1000);
                 }
             }
         } else {
@@ -1968,6 +1980,8 @@ function playAnim(animName) {
     }
 
     if (currentAnimName === finalAnimName) return;
+
+
     if (!action) return;
 
     if (currentAction) currentAction.fadeOut(0.2);
@@ -1976,18 +1990,30 @@ function playAnim(animName) {
     // 🌟 BẢN VÁ: NẾU LÀ ANIMATION CHẾT THÌ NGÃ XUỐNG VÀ NẰM IM TRÊN ĐẤT
     if (finalAnimName.includes('DIE') || finalAnimName.includes('DEATH') || finalAnimName.includes('CHET')) {
         currentAction.setLoop(THREE.LoopOnce);
-        currentAction.clampWhenFinished = true; // Đóng băng ở khung hình cuối cùng
+        currentAction.clampWhenFinished = true; 
     } else {
         currentAction.setLoop(THREE.LoopRepeat);
     }
 
+    // 🌟 CÔNG THỨC ÉP ANIMATION VỪA KHÍT 1.5 GIÂY CHO NGƯỜI ĐI BỘ & BOSS
+    if (laChieuTanCong) {
+        let thoiLuongGoc = currentAction.getClip().duration; 
+        let thoiGianMongMuon = 1.5; 
+        
+        currentAction.timeScale = thoiLuongGoc / thoiGianMongMuon; 
+        kichHoatKhiencAnimation(1500); 
+    } 
+    else if (checkName === 'CHAYBO' || checkName === 'RUN') {
+        currentAction.timeScale = 1.3; 
+    } 
+    else {
+        currentAction.timeScale = 1.0; 
+    }
+
     currentAction.reset().fadeIn(0.2).play();
     currentAnimName = finalAnimName;
-
-    if (laChieuTanCong) {
-        kichHoatKhiencAnimation(currentAction.getClip().duration * 1000);
-    }
 }
+
 
 // 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
 function kichHoatKhiencAnimation(thoiGianTheoAnim) {
