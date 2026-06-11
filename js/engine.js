@@ -177,6 +177,9 @@ window.donRac3D = function (obj) {
 window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || [];
 window.danhSachSetVuKhi = window.danhSachSetVuKhi || [];
 
+// ==========================================
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ CHỐNG "BÓNG ĐÈ" CHO NHÂN VẬT & THÚ CƯỠI (BẢN VẤN ĐỀ ĐA GIÁC V5)
+// ==========================================
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     if (!meshVuKhi) return;
 
@@ -195,7 +198,7 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     });
     window.danhSachSetVuKhi = window.danhSachSetVuKhi.filter(s => s && s.parent && s.parent.parent === meshVuKhi);
 
-    if (capDo < 1) return; // Bắt đầu có hào quang nhẹ từ +1
+    if (capDo < 1) return; // Không có cấp đập thì nghỉ
 
     // QUY HOẠCH MÀU SẮC CHUẨN RPG CỦA SẾP
     let mauAura = 0x2ecc71; // +1 đến +3: Lá
@@ -204,86 +207,90 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     else if (capDo >= 10 && capDo <= 12) mauAura = 0xffaa00; // +10 đến +12: Vàng
     else if (capDo >= 13) mauAura = 0xff3300;                // +13 đến +15: Đỏ
 
-    let mauLua = 0xff5500;
-    let tyLeManh = capDo / 15.0;
+    let mauLua = 0xff5500; 
+    let tyLeManh = capDo / 15.0; 
 
-    // CHẠY LỚP VỎ HÀO QUANG (LÀM MỜ ĐỂ HIỆN RÕ THÂN VŨ KHÍ GỐC)
-    meshVuKhi.traverse(child => {
-        if (child.isMesh && !child.userData.isAura) {
-            // 🌟 GIẢM ĐỘ ĐẬM: Hạ Opacity xuống để tôn dáng thanh kiếm, không che mắt người nhìn
-            let voAura = new THREE.Mesh(
-                child.geometry.clone(),
-                new THREE.MeshBasicMaterial({
-                    color: mauAura,
-                    transparent: true,
-                    opacity: 0.05 + (tyLeManh * 0.2), // Tối đa chỉ 0.25, cực kỳ dịu mắt
-                    blending: THREE.AdditiveBlending,
-                    depthWrite: false,
-                    wireframe: false
-                })
-            );
-            voAura.userData.isAura = true;
-            child.add(voAura);
+    // 🔍 MÁY QUÉT RA-DAR: Kiểm tra xem cục mô hình này có chứa Xương/Xoay chuyển (SkinnedMesh) không?
+    let laSinhVatCoXuong = false;
+    meshVuKhi.traverse(c => {
+        if (c.isSkinnedMesh) laSinhVatCoXuong = true;
+    });
 
-            // ĐÚC LỚP SẤM SÉT ĐAN CHÉO (RÚT BỚT ĐỘ CHÓI)
-            if (capDo >= 10) {
-                let luoiSet = new THREE.Mesh(
+    // 🛑 LÁ CHẮN BẢO VỆ MÔ HÌNH: Chỉ đúc lớp vỏ đa giác + lưới sét nếu đây là VŨ KHÍ CỨNG.
+    // Nếu là Nhân Vật hoặc Thú Cưỡi (laSinhVatCoXuong === true) -> BỎ QUA BƯỚC NÀY ĐỂ TRÁNH LỖI OVERLAP!
+    if (!laSinhVatCoXuong) {
+        meshVuKhi.traverse(child => {
+            if (child.isMesh && !child.userData.isAura) {
+                let voAura = new THREE.Mesh(
                     child.geometry.clone(),
                     new THREE.MeshBasicMaterial({
                         color: mauAura,
                         transparent: true,
-                        opacity: 0.1 + (tyLeManh * 0.4), // Giảm độ gắt nét chéo
-                        blending: THREE.AdditiveBlending,
+                        opacity: 0.05 + (tyLeManh * 0.2), 
+                        blending: THREE.AdditiveBlending, 
                         depthWrite: false,
-                        wireframe: true
+                        wireframe: false 
                     })
                 );
-                luoiSet.userData.isAura = true;
-                luoiSet.userData.mauGoc = mauAura;
-                luoiSet.userData.capDo = capDo;
-                child.add(luoiSet);
-                window.danhSachSetVuKhi.push(luoiSet);
-            }
+                voAura.userData.isAura = true;
+                child.add(voAura);
 
-            if (capDo >= 13) {
-                let loiAura = new THREE.Mesh(
-                    child.geometry.clone(),
-                    new THREE.MeshBasicMaterial({
-                        color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false
-                    })
-                );
-                loiAura.userData.isAura = true;
-                child.add(loiAura);
-            }
-        }
-    });
+                if (capDo >= 10) {
+                    let luoiSet = new THREE.Mesh(
+                        child.geometry.clone(),
+                        new THREE.MeshBasicMaterial({
+                            color: mauAura,
+                            transparent: true,
+                            opacity: 0.1 + (tyLeManh * 0.4), 
+                            blending: THREE.AdditiveBlending,
+                            depthWrite: false,
+                            wireframe: true 
+                        })
+                    );
+                    luoiSet.userData.isAura = true;
+                    luoiSet.userData.mauGoc = mauAura; 
+                    luoiSet.userData.capDo = capDo; 
+                    child.add(luoiSet);
+                    window.danhSachSetVuKhi.push(luoiSet);
+                }
 
-    // 2. 🌟 BẢN VÁ TỐI THƯỢNG CỦA SẾP: ĐÚC DUY NHẤT 1 CỤM HẠT BỤI LỬA CHO CẢ CÂY KIẾM
+                if (capDo >= 13) {
+                    let loiAura = new THREE.Mesh(
+                        child.geometry.clone(),
+                        new THREE.MeshBasicMaterial({
+                            color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false
+                        })
+                    );
+                    child.add(loiAura);
+                }
+            }
+        });
+    }
+
+    // 🔥 2. BẢN VÁ TỐI THƯỢNG: GIỮ LẠI HIỆU ỨNG BỤI LỬA BỐC LÊN CHO MỌI THỨ
+    // Vì hệ thống hạt Points được add trực tiếp vào Group gốc nên nó sẽ xoay lượn nương theo cử động cốt tủy
     if (capDo >= 7) {
         meshVuKhi.updateMatrixWorld(true);
         const globalBox = new THREE.Box3().setFromObject(meshVuKhi);
-
-        // Đo đạc không gian tuyệt đối từ lòng bàn chân/gốc mỏ neo của vũ khí
+        
         const localMin = meshVuKhi.worldToLocal(globalBox.min.clone());
         const localMax = meshVuKhi.worldToLocal(globalBox.max.clone());
-
+        
         let sizeX = Math.abs(localMax.x - localMin.x);
         let sizeY = Math.abs(localMax.y - localMin.y);
         let sizeZ = Math.abs(localMax.z - localMin.z);
         let maxDim = Math.max(sizeX, sizeY, sizeZ) || 1;
 
-        // Chốt cứng số lượng hạt toàn cục (Không nhân theo sub-mesh nữa!)
-        const soHat = window.isMobile ? 25 : 65;
+        const soHat = window.isMobile ? 25 : 65; 
         const geoBui = new THREE.BufferGeometry();
         const posBui = new Float32Array(soHat * 3);
-        const colorsBui = new Float32Array(soHat * 3);
+        const colorsBui = new Float32Array(soHat * 3); 
         const velBui = [];
 
         let cAura = new THREE.Color(mauAura);
         let cLua = new THREE.Color(mauLua);
 
         for (let i = 0; i < soHat; i++) {
-            // Rải đều tịnh tiến từ gốc min tới gốc max của hộp chứa kiếm
             posBui[i * 3] = localMin.x + Math.random() * sizeX;
             posBui[i * 3 + 1] = localMin.y + Math.random() * sizeY;
             posBui[i * 3 + 2] = localMin.z + Math.random() * sizeZ;
@@ -301,33 +308,26 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         }
 
         geoBui.setAttribute('position', new THREE.BufferAttribute(posBui, 3));
-        geoBui.setAttribute('color', new THREE.BufferAttribute(colorsBui, 3));
-
+        geoBui.setAttribute('color', new THREE.BufferAttribute(colorsBui, 3)); 
+        
         const texture = typeof window.layTextureLua === 'function' ? window.layTextureLua() : null;
         const matBui = new THREE.PointsMaterial({
-            size: maxDim * (window.isMobile ? 0.035 : 0.02), // 🌟 THU NHỎ HẠT: Biến thành tro tàn li ti siêu mịn, hiện rõ lưỡi kiếm
+            size: maxDim * (window.isMobile ? 0.035 : 0.025), 
             map: texture,
             transparent: true,
             opacity: 0.8,
             blending: THREE.AdditiveBlending,
-            vertexColors: true,
+            vertexColors: true, 
             depthWrite: false
         });
 
         const heThongBui = new THREE.Points(geoBui, matBui);
         heThongBui.userData.isAura = true;
-        meshVuKhi.add(heThongBui); // Ghép thẳng vào gốc cha
+        meshVuKhi.add(heThongBui); 
 
         window.danhSachBuiTienKhi.push({
-            pts: heThongBui,
-            vels: velBui,
-            localMin: localMin.clone(),
-            localMax: localMax.clone(),
-            sizeX: sizeX,
-            sizeY: sizeY,
-            sizeZ: sizeZ,
-            maxDim: maxDim,
-            seed: Math.random() * 100
+            pts: heThongBui, vels: velBui, localMin: localMin.clone(), localMax: localMax.clone(),
+            sizeX: sizeX, sizeY: sizeY, sizeZ: sizeZ, maxDim: maxDim, seed: Math.random() * 100 
         });
     }
 };
