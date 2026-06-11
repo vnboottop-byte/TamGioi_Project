@@ -178,7 +178,7 @@ window.danhSachBuiTienKhi = window.danhSachBuiTienKhi || [];
 window.danhSachSetVuKhi = window.danhSachSetVuKhi || [];
 
 // ==========================================
-// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ CHỐNG "BÓNG ĐÈ" CHO NHÂN VẬT & THÚ CƯỠI (BẢN VẤN ĐỀ ĐA GIÁC V5)
+// ✨ BỘ LỌC HÀO QUANG VŨ KHÍ CHỐNG "BÓNG ĐÈ" VÀ CHỐNG TRÀN BỘ NHỚ (BẢN VÁ LỖI MAXIMUM CALL STACK)
 // ==========================================
 window.bocHaoQuang3D = function (meshVuKhi, capDo) {
     if (!meshVuKhi) return;
@@ -216,59 +216,66 @@ window.bocHaoQuang3D = function (meshVuKhi, capDo) {
         if (c.isSkinnedMesh) laSinhVatCoXuong = true;
     });
 
-    // 🛑 LÁ CHẮN BẢO VỆ MÔ HÌNH: Chỉ đúc lớp vỏ đa giác + lưới sét nếu đây là VŨ KHÍ CỨNG.
-    // Nếu là Nhân Vật hoặc Thú Cưỡi (laSinhVatCoXuong === true) -> BỎ QUA BƯỚC NÀY ĐỂ TRÁNH LỖI OVERLAP!
+    // 🛑 LÁ CHẮN BẢO VỆ MÔ HÌNH: Tránh bị đệ quy vô hạn (Maximum call stack size exceeded)
+    // Thay vì add trực tiếp trong vòng lặp traverse, ta sẽ gom các cục Mesh lại rồi mới add!
+    let danhSachCacCucThit = [];
+
     if (!laSinhVatCoXuong) {
         meshVuKhi.traverse(child => {
-            if (child.isMesh && !child.userData.isAura) {
-                let voAura = new THREE.Mesh(
+            if (child.isMesh && !child.userData.isAura && child.visible) {
+                danhSachCacCucThit.push(child);
+            }
+        });
+
+        // Bắt đầu bọc hào quang an toàn
+        danhSachCacCucThit.forEach(child => {
+            let voAura = new THREE.Mesh(
+                child.geometry.clone(),
+                new THREE.MeshBasicMaterial({
+                    color: mauAura,
+                    transparent: true,
+                    opacity: 0.05 + (tyLeManh * 0.2), 
+                    blending: THREE.AdditiveBlending, 
+                    depthWrite: false,
+                    wireframe: false 
+                })
+            );
+            voAura.userData.isAura = true;
+            child.add(voAura);
+
+            if (capDo >= 10) {
+                let luoiSet = new THREE.Mesh(
                     child.geometry.clone(),
                     new THREE.MeshBasicMaterial({
                         color: mauAura,
                         transparent: true,
-                        opacity: 0.05 + (tyLeManh * 0.2), 
-                        blending: THREE.AdditiveBlending, 
+                        opacity: 0.1 + (tyLeManh * 0.4), 
+                        blending: THREE.AdditiveBlending,
                         depthWrite: false,
-                        wireframe: false 
+                        wireframe: true 
                     })
                 );
-                voAura.userData.isAura = true;
-                child.add(voAura);
+                luoiSet.userData.isAura = true;
+                luoiSet.userData.mauGoc = mauAura; 
+                luoiSet.userData.capDo = capDo; 
+                child.add(luoiSet);
+                window.danhSachSetVuKhi.push(luoiSet);
+            }
 
-                if (capDo >= 10) {
-                    let luoiSet = new THREE.Mesh(
-                        child.geometry.clone(),
-                        new THREE.MeshBasicMaterial({
-                            color: mauAura,
-                            transparent: true,
-                            opacity: 0.1 + (tyLeManh * 0.4), 
-                            blending: THREE.AdditiveBlending,
-                            depthWrite: false,
-                            wireframe: true 
-                        })
-                    );
-                    luoiSet.userData.isAura = true;
-                    luoiSet.userData.mauGoc = mauAura; 
-                    luoiSet.userData.capDo = capDo; 
-                    child.add(luoiSet);
-                    window.danhSachSetVuKhi.push(luoiSet);
-                }
-
-                if (capDo >= 13) {
-                    let loiAura = new THREE.Mesh(
-                        child.geometry.clone(),
-                        new THREE.MeshBasicMaterial({
-                            color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false
-                        })
-                    );
-                    child.add(loiAura);
-                }
+            if (capDo >= 13) {
+                let loiAura = new THREE.Mesh(
+                    child.geometry.clone(),
+                    new THREE.MeshBasicMaterial({
+                        color: 0xffffff, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending, depthWrite: false
+                    })
+                );
+                loiAura.userData.isAura = true; // 🌟 CHI TIẾT CỨU SỐNG SERVER NẰM Ở ĐÂY NÈ SẾP!
+                child.add(loiAura);
             }
         });
     }
 
     // 🔥 2. BẢN VÁ TỐI THƯỢNG: GIỮ LẠI HIỆU ỨNG BỤI LỬA BỐC LÊN CHO MỌI THỨ
-    // Vì hệ thống hạt Points được add trực tiếp vào Group gốc nên nó sẽ xoay lượn nương theo cử động cốt tủy
     if (capDo >= 7) {
         meshVuKhi.updateMatrixWorld(true);
         const globalBox = new THREE.Box3().setFromObject(meshVuKhi);
