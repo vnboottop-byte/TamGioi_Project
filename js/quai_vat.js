@@ -566,18 +566,24 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
             // ==========================================
-            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & LỖI ANIMATION)
+            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & LỖI T-POSE)
             // ==========================================
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
-                if (quai.targetPosLK) quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
+                let khoangCachTruot = 0;
+                if (quai.targetPosLK) {
+                    khoangCachTruot = quai.mesh.position.distanceTo(quai.targetPosLK);
+                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
+                }
                 if (quai.targetQuatLK) quai.mesh.quaternion.slerp(quai.targetQuatLK, 0.2); // Xoay cổ
                 
-                // 🌟 ĐỒNG BỘ ANIMATION MẠNG (CHỐNG KẸT ATTACK LÊ LẾT TRÊN ĐẤT)
+                // 🌟 ĐỒNG BỘ ANIMATION BẰNG TỐC ĐỘ VẬT LÝ (KHÔNG BAO GIỜ KẸT T-POSE)
                 let dangMuaChieu = quai.thoiGianKhoaChieu && Date.now() < quai.thoiGianKhoaChieu;
-                if (!dangMuaChieu && quai.targetAnimLK) {
-                    if (quai.targetAnimLK === 'CHASE' || quai.targetAnimLK === 'RETREAT') {
+                if (!dangMuaChieu) {
+                    if (khoangCachTruot > 1.0) { 
+                        // Bị lôi đi nhanh -> Ép play RUN
                         if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
-                    } else if (quai.targetAnimLK === 'IDLE') {
+                    } else { 
+                        // Đứng im tại chỗ -> Ép play IDLE
                         if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
                     }
                 }
