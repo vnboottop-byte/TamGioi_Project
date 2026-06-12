@@ -546,12 +546,20 @@ livekitScript.onload = async () => {
                                                     window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
                                                 }
 
+                                                // 🛑 BÍ THUẬT AAA: ĐÁNH LỪA AUTO-AIM CỦA 100+ PHÁI!
+                                                // Tạm thời đánh tráo playerModel thành tọa độ của nạn nhân để đạn 100 phái tự động bẻ cong trúng đích!
+                                                let backupPlayerModel = window.playerModel;
+                                                window.playerModel = { position: pTarget.clone() };
+
                                                 try {
-                                                    // 🌟 TRUYỀN THẲNG SÁT THƯƠNG THẬT VÀO HÀM (Cấm truyền chữ true nữa!)
                                                     window[funcName](data.chieu, dmgBoss, bOrigin, pTarget, bDir, renderId, bossWeapon);
                                                 } catch (e) { }
 
-                                                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 2000);
+                                                // Trả lại nhân vật chính nguyên vẹn ngay mili-giây tiếp theo (Mọi thứ trở lại bình thường)
+                                                window.playerModel = backupPlayerModel;
+
+                                                // 🛑 Kéo dài sự sống của Boss ảo lên 8 GIÂY (CHỐNG CRASH CHO NGƯỜI ĐỨNG XEM)
+                                                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                                             } else {
                                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, pTarget, phaiCode, data.chieu);
                                             }
