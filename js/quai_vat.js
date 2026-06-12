@@ -726,7 +726,8 @@ window.capNhatAIQuaiVat = function (delta) {
         if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho && !window.isDead) {
             let dangLui = false;
             if (boNao && boNao.choPhepLuiBinh) {
-                dangLui = window.xuLyQuaiLuiBinh(quai, playerModel.position, delta);
+                // 🌟 BẢN VÁ: Lùi xa khỏi kẻ địch gần nhất chứ không phải Sếp
+                dangLui = window.xuLyQuaiLuiBinh(quai, posNguoiChoi, delta);
             }
             // 🌟 1. LÁ CHẮN BẢO VỆ ANIMATION (CHỐNG TRƯỢT BĂNG & ĐÈ CHIÊU LÚC ĐANG RƯỢT)
             let dangMuaChieu = quai.thoiGianKhoaChieu && Date.now() < quai.thoiGianKhoaChieu;
@@ -742,7 +743,8 @@ window.capNhatAIQuaiVat = function (delta) {
                 else {
                     // Nếu đang múa chiêu dở dang -> Khóa chân, chỉ xoay mặt liếc theo Sếp
                     if (dangMuaChieu) {
-                        let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                        // 🌟 BẢN VÁ: Liếc theo Nick B nếu B đứng gần hơn
+                        let huongNhin = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
@@ -754,21 +756,23 @@ window.capNhatAIQuaiVat = function (delta) {
                         quai.thoiGianKhoaChieu = Date.now() + 1500; // 🌟 KHÓA CHÂN 1.5 GIÂY CHO MÚA XONG
                         const chieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
                         if (typeof quai.playAnim === 'function') quai.playAnim('CHIEU' + chieu);
-                        // Xoay mặt thẳng vào Sếp lúc vung tay
-                        let huongNhin = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                        
+                        // 🌟 BẢN VÁ: Xoay mặt thẳng vào KẺ ĐỨNG GẦN NHẤT lúc vung tay
+                        let huongNhin = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.5);
 
-
                         let dmgBoss = 30 * (quai.level || 1);        
                         // Lấy tọa độ từ lõi ngực Boss
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
                         if (!quai.tamThucTeLocal) bOrigin.y += 5; 
-                        const pTarget = playerModel.position.clone(); pTarget.y += 5;
-                        const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                         
+                        // 🌟 BẢN VÁ: Khóa mục tiêu chiêu mạng vào KẺ ĐỨNG GẦN NHẤT
+                        const pTarget = posNguoiChoi.clone(); pTarget.y += 5;
+
+                        const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); 
                         // 🌟 BẢN VÁ 1: KÉO NÒNG SÚNG RA KHỎI BỤNG BOSS CHỐNG KẸT ĐẠN
                         let khoangCach = bOrigin.distanceTo(pTarget);
                         let doDayBung = (quai.heSoToLon || 1) * 6;
@@ -849,23 +853,24 @@ window.capNhatAIQuaiVat = function (delta) {
                 if (!dangMuaChieu) {
                     quai.state = 'CHASE';
                     if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
-                    // 🌟 BẢN VÁ AAA: Bọc thép ngay từ bên ngoài, gọi 1 lần dùng chung cho cả đi bộ và bay!
                     let tocDoRuot = (boNao && typeof boNao.getTocDoRuot === 'function') ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
+                    
                     if (boNao && boNao.he === 'BAY') {
-                        let mucTieuBay = playerModel.position.clone();
-                        // 🌟 BẢN VÁ AAA: Chống Crash nếu AI quên cài đặt hàm getChieuCaoNgam
+                        // 🌟 BẢN VÁ: Bay rượt theo KẺ ĐỨNG GẦN NHẤT
+                        let mucTieuBay = posNguoiChoi.clone();
                         let chieuCaoNgam = typeof boNao.getChieuCaoNgam === 'function' ? boNao.getChieuCaoNgam() : 15;
                         mucTieuBay.add(quai.upVector.clone().multiplyScalar(chieuCaoNgam));
                         let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
                         quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
                     } else {
-                        // Thú đi bộ rượt đuổi
-                        let huongRuot = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).normalize();
+                        // 🌟 BẢN VÁ: Thú đi bộ rượt theo KẺ ĐỨNG GẦN NHẤT
+                        let huongRuot = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).normalize();
                         let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
                         quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
                     }
-                    // Quay mặt bám theo Sếp lúc rượt
-                    let huongRuotPhang = new THREE.Vector3().subVectors(playerModel.position, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
+                    
+                    // 🌟 BẢN VÁ: Xoay mặt nhìn chằm chằm KẺ ĐỨNG GẦN NHẤT lúc rượt
+                    let huongRuotPhang = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                     if (huongRuotPhang.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
@@ -874,6 +879,7 @@ window.capNhatAIQuaiVat = function (delta) {
                     }
                 }
             }
+
         }
           else {
             // HẾT THẤY SẾP THÌ TỰ ĐỘNG ĐỨNG THỞ HOẶC ĐI TUẦN TRA
@@ -889,10 +895,6 @@ window.capNhatAIQuaiVat = function (delta) {
                         if (!quai.spawnPos) quai.spawnPos = quai.mesh.position.clone();
                         quai.gocY = quai.spawnPos.y;
                     }
-
-
-
-
 
                     // 1. CHỮA BỆNH "SCALE TO BAY NHỎ": 
                     // Gắn bán kính bay tỷ lệ thuận 100% với kích cỡ Boss. Boss to = Vòng lượn to.
