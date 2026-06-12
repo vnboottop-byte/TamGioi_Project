@@ -260,71 +260,40 @@ livekitScript.onload = async () => {
                 await window.room.connect(authData.url, authData.token);
                 console.log("%c🟢 Đã vào Cổng Cực Lạc: " + window.room.name, "color:#2ecc71; font-weight:bold;");
                 if (loginGate) loginGate.style.display = 'none';
-                // ==========================================
-                // 🌟 BỘ PHẬN ĐÓNG DẤU HẢI QUAN TỰ ĐỘNG V2 (HỖ TRỢ CẢ OBJECT VÀ ARRAY TỌA ĐỘ)
-                // ==========================================
-                const publishGoc = window.room.localParticipant.publishData;
-                window.room.localParticipant.publishData = function(payload, options) {
-                    try {
-                        let textStr = new TextDecoder().decode(payload);
-                        
-                        // A. Nếu gửi gói tin Object (Skill, Chat, Gọi đệ tử...)
-                        if (textStr.startsWith('{')) { 
-                            let dataObj = JSON.parse(textStr);
-                            if (!dataObj.zone_id) dataObj.zone_id = window.ZONE_ID || 'TRUNG_CHAU';
-                            payload = new TextEncoder().encode(JSON.stringify(dataObj));
-                        } 
-                        // B. 🌟 BẢN VÁ AAA: Gửi gói tin mảng tọa độ [1, x, y, z...] - Ép Passport Map vào index 16!
-                        else if (textStr.startsWith('[')) {
-                            let dataArr = JSON.parse(textStr);
-                            if (dataArr && dataArr[0] === 1) {
-                                dataArr[16] = window.ZONE_ID || 'TRUNG_CHAU'; // Cưỡng chế găm Map hiện tại vào mảng gửi đi
-                                payload = new TextEncoder().encode(JSON.stringify(dataArr));
-                            }
-                        }
-                    } catch(e) {}
-                    return publishGoc.call(this, payload, options); // Gửi đi
-                };
+
+
+
+
+
+
+
+
+
+                // 🛑 ĐÃ GỠ BỎ TƯỜNG LỬA PUBLISH_DATA GÂY TÀNG HÌNH NGƯỜI CHƠI!
                 
                 // ==========================================
-                // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME (BẢN AN TOÀN - KHÔNG PHÁ ĐỒ CHUNG)
+                // 🚪 XỬ LÝ NGƯỜI CHƠI THOÁT GAME 
                 // ==========================================
                 window.room.on('participantDisconnected', (participant) => {
                     if (window.remotePlayers && window.remotePlayers[participant.identity]) {
                         const playerLeaver = window.remotePlayers[participant.identity];
-
                         if (playerLeaver.mesh) {
-                            // 🌟 THAY VÌ donRac3D, TA CHỈ GỠ KHỎI MÀN HÌNH
-                            // Để giữ lại bộ khung (Geometry) cho những người chơi cùng hệ phái khác đang đứng đó.
                             if (playerLeaver.mesh.parent) playerLeaver.mesh.parent.remove(playerLeaver.mesh);
                             scene.remove(playerLeaver.mesh);
                         }
-
                         if (playerLeaver.tag) playerLeaver.tag.remove();
-
-                        // Xóa dữ liệu trong mảng quản lý
                         delete window.remotePlayers[participant.identity];
                     }
                 });
 
-                // ==========================================
-                // 🔊 LẮP LOA: PHÁT ÂM THANH KHI CÓ NGƯỜI NÓI (BẢN PRO)
-                // ==========================================
                 window.room.on('trackSubscribed', (track, publication, participant) => {
                     if (track.kind === 'audio') {
                         const audioElement = track.attach();
-                        audioElement.style.display = 'none'; // Giấu cái loa đi
-                        document.body.appendChild(audioElement);
-                        console.log("🔊 Đã gắn Mic của: " + participant.identity);
-
-                        // Cưỡng chế phát âm thanh và báo cáo nếu bị trình duyệt chặn
-                        audioElement.play().catch((error) => {
-                            console.warn("⚠️ Mute: Trình duyệt chặn âm thanh của " + participant.identity + " do bạn chưa click chuột vào Game!", error);
-                        });
+                        audioElement.style.display = 'none'; document.body.appendChild(audioElement);
+                        audioElement.play().catch((error) => {});
                     }
                 });
 
-                // Gỡ loa ra khi người ta tắt Mic hoặc thoát Game
                 window.room.on('trackUnsubscribed', (track, publication, participant) => {
                     track.detach().forEach(el => el.remove());
                 });
@@ -338,29 +307,18 @@ livekitScript.onload = async () => {
                         // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
                         // ==========================================
                         if (Array.isArray(data) && data[0] === 1) {
+                            // 🌟 BẢN VÁ: Chỉ lọc Map khi Controller có gửi Map (Tránh xóa nhầm tàng hình)
+                            let senderZone = data[16];
+                            if (senderZone && window.ZONE_ID && senderZone !== window.ZONE_ID) {
+                                if (window.remotePlayers[senderId]) {
+                                    let rpLeaver = window.remotePlayers[senderId];
+                                    if (rpLeaver.mesh) { if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh); scene.remove(rpLeaver.mesh); }
+                                    if (rpLeaver.tag) rpLeaver.tag.remove();
+                                    delete window.remotePlayers[senderId];
+                                }
+                                return; 
+                            }
 
-                       // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì GỠ KHỎI MÀN HÌNH!
-                       let senderZone = data[16] || 'TRUNG_CHAU';
-                       if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
-                       if (window.remotePlayers[senderId]) {
-                          let rpLeaver = window.remotePlayers[senderId];
-            
-                       // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
-                          if (rpLeaver.mesh) {
-                          if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh);
-                          scene.remove(rpLeaver.mesh);
-                         }
-            
-                        // Hủy CMND (Thẻ tên)
-                        if (rpLeaver.tag) rpLeaver.tag.remove();
-            
-                       // Xóa sổ khỏi sổ Nam Tào
-                       delete window.remotePlayers[senderId];
-                   }
-                      return; // Đuổi về, không cho cập nhật tọa độ nữa!
-                   }
-
-                            // 🌟 TỐI ƯU MOBILE: Nếu người chơi khác ở quá xa (> 2500m), không cần tải/Render để tiết kiệm VRAM!
                             let pX = data[1], pY = data[2], pZ = data[3];
                             let khoangCachNguoiChoi = (window.playerModel) ? window.playerModel.position.distanceTo(new THREE.Vector3(pX, pY, pZ)) : 0;
                             
@@ -369,55 +327,35 @@ livekitScript.onload = async () => {
                                     window.remotePlayers[senderId].mesh.visible = false;
                                     if (window.remotePlayers[senderId].tag) window.remotePlayers[senderId].tag.style.display = 'none';
                                 }
-                                return; // Khất từ việc tải mô hình nếu họ ở quá xa
+                                return; 
                             }
 
                             let mappedData = {
                                 type: 'vitri', x: data[1], y: data[2], z: data[3], rx: data[4], ry: data[5], rz: data[6],
-                                size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14],
-                                vuKhiHienThi: data[15]
+                                size: data[7], hp: data[8], maxHp: data[9], anim: data[10], model: data[11], weapon: data[12], mount: data[13], phai: data[14], vuKhiHienThi: data[15]
                             };
 
                             let rp = window.remotePlayers[senderId];
-                            if (rp && rp.mesh) rp.mesh.visible = true; // 🌟 Trùng Map thì hiện hình lại
+                            if (rp && rp.mesh) rp.mesh.visible = true; 
 
-                            // Nếu chưa có nhân vật -> Nặn ra
-                            if (!rp) {
-                                taoBanSaoNguoiChoi(senderId, mappedData);
-                            }
-                            // 🌟 Nếu có rồi -> Kéo tọa độ đi (KHÚC NÀY CỦA SẾP PHẢI GIỮ NGUYÊN)
+                            if (!rp) { taoBanSaoNguoiChoi(senderId, mappedData); }
                             else if (rp.status === 'ready') {
                                 rp.targetPos = new THREE.Vector3(mappedData.x, mappedData.y, mappedData.z);
-                               // Chuyển Euler nhận được từ mạng sang Quaternion ngay lập tức
-                               let gocEuler = new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz, 'XYZ');
-                               rp.targetQuat = new THREE.Quaternion().setFromEuler(gocEuler);
-                                // 🌟 ÉP SIZE ĐỒNG BỘ TỪ MÁY CHỦ SANG!
-                                if (mappedData.size > 0 && rp.mesh.scale.x !== mappedData.size) {
-                                    rp.mesh.scale.setScalar(mappedData.size);
-                                }
+                                rp.targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(mappedData.rx, mappedData.ry, mappedData.rz, 'XYZ'));
+                                
+                                if (mappedData.size > 0 && rp.mesh.scale.x !== mappedData.size) rp.mesh.scale.setScalar(mappedData.size);
 
                                 let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
                                 if (hpBar) hpBar.style.width = Math.max(0, (mappedData.hp / mappedData.maxHp) * 100) + '%';
-
-                                // 🌟 THỰC THI ÁN LỆNH: Bật/Tắt vũ khí Live theo đúng ý Sếp!
-                                if (rp.vuKhiModel && mappedData.vuKhiHienThi !== undefined) {
-                                    rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
-                                }
+                                if (rp.vuKhiModel && mappedData.vuKhiHienThi !== undefined) rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
 
                                 if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
                                     let upAnim = mappedData.anim.toUpperCase();
-                                    
-                                    // 🌟 NẾU THẰNG KIA CÓ RỒNG MÀ ĐANG ĐỨNG IM -> ÉP NÓ VỀ THẾ NGỒI BÀNH HÁNG!
-                                    if (upAnim === 'NHANROI' && mappedData.mount && mappedData.mount.trim() !== '') {
-                                        upAnim = 'NHANROI_CUOITHU';
-                                    }
-
-                                    // Lệnh cho quái / thú cưỡi (nếu có)
+                                    if (upAnim === 'NHANROI' && mappedData.mount && mappedData.mount.trim() !== '') upAnim = 'NHANROI_CUOITHU';
                                     if (rp.anims && Object.keys(rp.anims).length > 0) {
                                         let action = rp.anims[upAnim] || rp.anims['NHANROI'] || Object.values(rp.anims)[0];
                                         if (action) { if (rp.activeAction) rp.activeAction.fadeOut(0.2); rp.activeAction = action; rp.activeAction.reset().fadeIn(0.2).play(); }
                                     }
-                                    // Lệnh cho người chơi (Đã đi qua Máy Phiên Dịch AI)
                                     if (rp.animsChar && Object.keys(rp.animsChar).length > 0) {
                                         let actionChar = rp.animsChar[upAnim] || rp.animsChar['NHANROI'] || Object.values(rp.animsChar)[0];
                                         if (actionChar) { if (rp.activeActionChar) rp.activeActionChar.fadeOut(0.2); rp.activeActionChar = actionChar; rp.activeActionChar.reset().fadeIn(0.2).play(); }
@@ -431,113 +369,65 @@ livekitScript.onload = async () => {
                         // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
                         // ==========================================
                         else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-                            
-                            // 🌟 HẢI QUAN CHẶN KHÁC MAP (BẢN VÁ: CHỐNG TÀNG HÌNH CHIÊU THỨC VÀ PHANTOM)
-                            if (data.zone_id && window.ZONE_ID && data.zone_id !== window.ZONE_ID) {
-                                return; // Nếu chiêu thức bay từ Map khác tới -> Tịch thu, hủy ngay lập tức!
-                            }
-                            // 🌟 CHỈ NHẬN HIỆU ỨNG SÁT THƯƠNG (KHÔNG ÉP MÁU)
+                            if (data.zone_id && window.ZONE_ID && data.zone_id !== window.ZONE_ID) return; 
+
                             if (data.type === 'BOSS_HIT') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.id);
                                     if (boss && !boss.isDead) {
-                                        // Hiển thị số sát thương nhảy lên đầu Boss
-                                        if (data.damageDealt > 0) {
-                                            let posNo = new THREE.Vector3(boss.mesh.position.x, boss.mesh.position.y + 10, boss.mesh.position.z);
-                                            if (typeof taoSoSatThuong === 'function') taoSoSatThuong(posNo, data.damageDealt);
-                                        }
-                                        // Khớp animation
+                                        if (data.damageDealt > 0 && typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(boss.mesh.position.x, boss.mesh.position.y + 10, boss.mesh.position.z), data.damageDealt);
                                         if (typeof boss.playAnim === 'function' && boss.state !== 'ATTACK') boss.playAnim('HIT');
-                                        
-                                        // Trừ máu ảo trên UI cho mượt (Máu thật sẽ do Radar 3s ép)
                                         boss.hp = Math.max(0, boss.hp - data.damageDealt);
-                                        if (boss.tagEl) {
-                                            let bar = boss.tagEl.querySelector('.hp-bar');
-                                            if (bar) bar.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%';
-                                        }
+                                        if (boss.tagEl) { let bar = boss.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100) + '%'; }
                                     }
                                 }
                             }
-
-
-                            
-
-
-
-
-
-
-
-
-
-
-
-
-                            // ==========================================
-                            // 📡 1. ĐỒNG BỘ TỌA ĐỘ VÀ GÓC QUAY (CHỐNG MOONWALK)
-                            // ==========================================
                             else if (data.type === 'BOSS_POS') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
                                         let toiLaHost = (!boss.thoiGianBiDieuKhienQuaMang || boss.thoiGianBiDieuKhienQuaMang < Date.now());
-                                        if (toiLaHost && window.myUsername > senderId) {
-                                            boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
-                                        } else if (!toiLaHost) {
-                                            boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
-                                        }
+                                        if (toiLaHost && window.myUsername > senderId) boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
+                                        else if (!toiLaHost) boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
 
                                         boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z);
                                         boss.targetAnimLK = data.anim;
-                                        // 🌟 BẢN VÁ AAA: Nhận góc quay để Boss không bị ngoẹo cổ
-                                        if (data.rx !== undefined) {
-                                            let eul = new THREE.Euler(data.rx, data.ry, data.rz, 'XYZ');
-                                            boss.targetQuatLK = new THREE.Quaternion().setFromEuler(eul);
-                                        }
+                                        if (data.rx !== undefined) boss.targetQuatLK = new THREE.Quaternion().setFromEuler(new THREE.Euler(data.rx, data.ry, data.rz, 'XYZ'));
                                     }
                                 }
                             }
-
-
-
-
-
-
-
-
-
-
                             // ==========================================
-                            // 🛡️ 2. XỬ LÝ CHIÊU THỨC BOSS (CHỐNG ĐẠN ĐUỔI & SÁT THƯƠNG LAN)
+                            // 🛡️ XỬ LÝ CHIÊU THỨC BOSS (BÍ THUẬT SPECTATOR CHỐNG ĐẠN ĐUỔI)
                             // ==========================================
                             else if (data.type === 'BOSS_SKILL') {
-                                if (data.phai === 'FAKE_PLAYER') return; // Chặn lỗi báo đỏ F12 do Phantom
+                                if (data.phai === 'FAKE_PLAYER') return; // Quái ảo để cho quai_vat.js lo
 
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
                                         boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
+                                        boss.thoiGianKhoaChieu = Date.now() + 1500; // 🌟 KHÓA CHÂN CHỐNG TRƯỢT
                                         boss.mesh.lookAt(data.target.x, data.target.y, data.target.z);
                                         if (typeof boss.playAnim === 'function') boss.playAnim('ATTACK');
-
+                                        
                                         let dmgBoss = data.dmg || 30;
-                                        // Xử lý Rồng & Cá... (Giữ nguyên)
+
                                         if (data.phai === 'RONG' && typeof window.tungComboRong === 'function') {
                                             const box = new THREE.Box3().setFromObject(boss.mesh); const size = new THREE.Vector3(); box.getSize(size);
                                             let bOrigin = boss.mesh.position.clone(); bOrigin.y += size.y * 0.35;
                                             let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); bOrigin.add(bDir.clone().multiplyScalar(size.z * 0.1));
                                             window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return;
+                                            return; 
                                         }
                                         else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
                                             let bOrigin = boss.mesh.position.clone(); let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                                             window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return;
+                                            return; 
                                         }
 
-                                        let phaiCode = data.phai || 'TU_TIEN';
+                                        let phaiCode = data.phai || 'TU_TIEN'; 
                                         let parts = phaiCode.split('_'); let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                                         let funcName = 'tungCombo' + camelCase;
 
@@ -552,17 +442,12 @@ livekitScript.onload = async () => {
                                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
                                         let renderId = "BOSS_" + String(boss.id);
 
-                                        let thiTrienQuaMang = function () {
+                                        let thiTrienQuaMang = function() {
                                             if (typeof window[funcName] === 'function') {
                                                 if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
 
-                                                let backupPlayerModel = window.playerModel;
-                                                window.playerModel = { position: pTarget.clone() };
-
-                                                // 🛑 BẢN VÁ AAA: BẮT BUỘC TRUYỀN 'TRUE' ĐỂ KHÓA AUTO-AIM CỦA 100 PHÁI
-                                                try { window[funcName](data.chieu, true, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch (e) { }
-
-                                                window.playerModel = backupPlayerModel;
+                                                // 🛑 BÍ THUẬT AAA: Truyền chuỗi "SPECTATOR" để 100+ phái không hiểu là true (Đạn bay thẳng không đuổi!)
+                                                try { window[funcName](data.chieu, "SPECTATOR", bOrigin, pTarget, bDir, renderId, bossWeapon); } catch (e) { }
 
                                                 // 💣 HỆ THỐNG SÁT THƯƠNG ĐỘC LẬP: Sau 1.5s đạn tới nơi, ai đứng gần đích sẽ mất máu
                                                 setTimeout(() => {
@@ -582,19 +467,16 @@ livekitScript.onload = async () => {
                                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                                             if (!window.dangTaiVoCongBoss[phaiCode]) {
                                                 window.dangTaiVoCongBoss[phaiCode] = true;
-                                                let fileName = phaiCode.toLowerCase().replace(/_/g, '');
+                                                let fileName = phaiCode.toLowerCase().replace(/_/g, ''); 
                                                 let theScript = document.createElement('script');
                                                 theScript.src = 'js/' + fileName + '.js?v=' + Date.now();
-                                                theScript.onload = function () { thiTrienQuaMang(); };
+                                                theScript.onload = function() { thiTrienQuaMang(); };
                                                 document.head.appendChild(theScript);
                                             }
                                         }
                                     }
                                 }
                             }
-
-
-
 
 
 
