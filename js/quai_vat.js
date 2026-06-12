@@ -512,15 +512,19 @@ window.capNhatAIQuaiVat = function (delta) {
     if (!window.danhSachQuaiVat || !playerModel) return;
 
     window.danhSachQuaiVat.forEach(quai => {
-        if (!quai || quai.isDead || !quai.mesh) return;
+            if (!quai || quai.isDead || !quai.mesh) return;
 
-            // 🛑 BẢN VÁ AAA: KIỂM TRA CHẾ ĐỘ "CON RỐI"
+            // 1. CHO PHÉP CHẠY ANIMATION TRƯỚC (Dù là Rối hay là Host đều cần múa)
+            if (quai.mixer) quai.mixer.update(delta);
+            if (quai.isDead) return;
+
+            // 2. 🛑 BẢN VÁ AAA: KIỂM TRA CHẾ ĐỘ "CON RỐI" (ĐẶT Ở ĐÂY LÀ CHUẨN NHẤT)
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
                 // Đang làm con rối cho máy khác -> CẤM SUY NGHĨ, CHỈ ĐƯỢC TRƯỢT THEO TỌA ĐỘ MẠNG!
                 if (quai.targetPosLK) {
                     quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt mượt mà theo máy Host
                 }
-                return; // 🌟 RETURN LUÔN! Thoát khỏi vòng lặp, cấm chạy các lệnh tìm mục tiêu bên dưới!
+                return; // 🌟 RETURN LUÔN! Cấm chạy các lệnh tìm mục tiêu (AI) bên dưới!
             }
         if (quai.mixer) quai.mixer.update(delta);
         if (quai.isDead) return;
