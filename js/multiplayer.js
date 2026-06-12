@@ -444,16 +444,40 @@ livekitScript.onload = async () => {
                                     }
                                 }
                             }
+
+
                             
+
+
+
+
+
+
+
+
+
+
+
+
                             else if (data.type === 'BOSS_POS') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
-                                    if (boss && !boss.isDead) { 
-                                        boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z); 
-                                        boss.targetAnimLK = data.anim; 
-                                        
-                                        // 🌟 BẢN VÁ AAA: TIÊM THUỐC LÚ (KHÓA MÕM AI NỘI BỘ TRONG 3 GIÂY)
-                                        boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
+                                    if (boss && !boss.isDead) {
+
+                                        // 🌟 THUẬT TOÁN ĐỘC TÔN (TIE-BREAKER): Phân định quyền Host bằng Tên Đăng Nhập
+                                        let toiLaHost = (!boss.thoiGianBiDieuKhienQuaMang || boss.thoiGianBiDieuKhienQuaMang < Date.now());
+
+                                        if (toiLaHost && window.myUsername > senderId) {
+                                            // Dù tôi đang là Host, nhưng tên tôi xếp sau nó trong bảng chữ cái (VD: Zeno > Alpha)
+                                            // -> Tôi phải tự phế võ công, nhường quyền Host cho nó!
+                                            boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
+                                        } else if (!toiLaHost) {
+                                            // Tôi đang là Con Rối thì tiếp tục khóa não 3 giây, cứ ngoan ngoãn nghe lời
+                                            boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
+                                        }
+
+                                        boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z);
+                                        boss.targetAnimLK = data.anim;
                                     }
                                 }
                             }
