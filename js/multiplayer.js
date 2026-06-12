@@ -4,13 +4,9 @@
 const livekitScript = document.createElement('script');
 livekitScript.src = 'https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js';
 document.head.appendChild(livekitScript);
-
 window.remotePlayers = {}; 
 window.room = null;
 window.khoModelMau = {}; // 🌟 KHO CHỨA MODEL MẪU ĐỂ NHÂN BẢN (CHỐNG GIẬT LAG)
-
-
-
 // 🌟 BỘ MÁY AI PHIÊN DỊCH ANIMATION TỰ ĐỘNG (DÙNG CHO 1000 NHÂN VẬT)
 window.phienDichAnimation = function(mixer, clips) {
     const kq = {};
@@ -33,16 +29,11 @@ window.phienDichAnimation = function(mixer, clips) {
             if (!kq['NHANROI']) kq['NHANROI'] = act; 
         }
     });
-    
     if (!kq['NHANROI_CUOITHU']) kq['NHANROI_CUOITHU'] = kq['NHANROI'];
-    
     // 🌟 THUẬT TOÁN THÔNG MINH: Nếu không có Animation CHẠY BỘ, lấy Animation BAY đắp vào!
     if (!kq['CHAYBO']) kq['CHAYBO'] = kq['BAY'] || kq['NHANROI']; 
-    
     return kq;
 };
-
-
 
 // 🌟 HÀM TẢI HOẶC NHÂN BẢN SIÊU TỐC (CHÌA KHÓA CỦA ĐỘ MƯỢT)
 function taiHoacNhanBan(url, callback) {
@@ -64,19 +55,12 @@ function taiHoacNhanBan(url, callback) {
     });
 }
 
-
-
-
-
 // 🌟 TÁI TẠO NGƯỜI CHƠI TỪ TỔNG KHO ASSET (BẢN V22 - FIX CÚ PHÁP VÀ VŨ KHÍ)
 function taoBanSaoNguoiChoi(identity, data) {
     if (window.remotePlayers[identity]) return;
     
     let rp = { status: 'loading', pos: new THREE.Vector3(data.x, data.y, data.z) };
     window.remotePlayers[identity] = rp;
-
-
-
 
     const tag = document.createElement('div');
     
@@ -95,23 +79,13 @@ function taoBanSaoNguoiChoi(identity, data) {
     tag.style.cssText = 'position:absolute; pointer-events:none; z-index:9; transform:translate(-50%, -100%); display:none;';
     document.body.appendChild(tag);
 
-
-
-
-
-
-
     rp.tag = tag;
-
-
 
     // TẬN DỤNG TỔNG KHO ASSET
     const mountUrl = data.mount;
     const charUrl = data.model;
     // 🌟 BẢN VÁ: Trust 100% SQL, không có model thì hủy tạo Clone
     if (!charUrl || charUrl.trim() === '') return;
-
-
 
     if (mountUrl && mountUrl.trim() !== "") {
         // 1. TẢI RỒNG
@@ -149,15 +123,11 @@ function taoBanSaoNguoiChoi(identity, data) {
 
                 nhanVat.position.set(0, (xuongYenNgua ? 0 : 3), 0);
 
-
-
                 let isCungThu = data.phai && data.phai.toLowerCase().includes('cungthu');
                 // 🌟 BẢN VÁ: Gọt sạch CUNG.glb. Dùng trực tiếp data mạng truyền về!
                 let linkVuKhi = data.weapon;
 
                 if (linkVuKhi && linkVuKhi.trim() !== "") {
-
-
 
                     window.taiHoacNhanBanAsset(linkVuKhi, (vuKhi) => {
                         vuKhi.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
@@ -195,11 +165,6 @@ function taoBanSaoNguoiChoi(identity, data) {
                         rp.vuKhiModel = vuKhi;
                     });
                 }
-
-
-
-
-
                 rp.mesh = thuCuoi; rp.meshChar = nhanVat; rp.mixer = mixer; rp.mixerChar = mixerChar; rp.anims = anims; rp.animsChar = animsChar; rp.status = 'ready'; rp.currentAnim = '';
             });
         });
@@ -267,25 +232,6 @@ function taoBanSaoNguoiChoi(identity, data) {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ==========================================
 // 🔴 PHẦN LOGIC MẠNG (GIỮ NGUYÊN 100%)
 // ==========================================
@@ -347,10 +293,6 @@ livekitScript.onload = async () => {
                     }
                 });
 
-
-
-
-
                 // ==========================================
                 // 🔊 LẮP LOA: PHÁT ÂM THANH KHI CÓ NGƯỜI NÓI (BẢN PRO)
                 // ==========================================
@@ -373,23 +315,10 @@ livekitScript.onload = async () => {
                     track.detach().forEach(el => el.remove());
                 });
 
-
-
-
-
                 window.room.on('dataReceived', (payload, participant) => {
                     try {
                         let data = JSON.parse(new TextDecoder().decode(payload));
                         const senderId = participant.identity;
-
-
-
-
-
-
-
-
-
 
                         // ==========================================
                         // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
@@ -416,19 +345,6 @@ if (Array.isArray(data) && data[0] === 1) {
         }
         return; // Đuổi về, không cho cập nhật tọa độ nữa!
     }
-
-
-
-
-
-
-
-
- 
-
-    
-
-
 
                             // 🌟 TỐI ƯU MOBILE: Nếu người chơi khác ở quá xa (> 2500m), không cần tải/Render để tiết kiệm VRAM!
                             let pX = data[1], pY = data[2], pZ = data[3];
@@ -534,9 +450,6 @@ if (Array.isArray(data) && data[0] === 1) {
                                 }
                             }
                             
-
-
-
                             else if (data.type === 'BOSS_POS') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
@@ -549,6 +462,15 @@ if (Array.isArray(data) && data[0] === 1) {
                                     }
                                 }
                             }
+
+
+
+
+
+
+
+
+
 
 
 
