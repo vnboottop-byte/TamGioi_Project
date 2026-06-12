@@ -369,24 +369,22 @@ window.updateCombatTuTien = function () {
             if (skill.type === 'kiem_q' || skill.type === 'kiem_r') {
                 if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
 
-                // 🌟 TẦM NHIỆT (HOMING) CHO Q VÀ R
+
+
+                // 🌟 BẢN VÁ AAA: TẦM NHIỆT ĐÃ ĐƯỢC CHỮA BỆNH ĐẠN ĐUỔI!
                 if (skill.targetPos) {
-                    if (skill.isRemote === false) { // Của Sếp thì nhắm Quái
+                    if (skill.isRemote === false) { 
                         const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
                         const mucTieuMoi = window.layMucTieuGanNhatTT(skill.mesh.position, fwd);
                         if (mucTieuMoi) skill.targetPos = mucTieuMoi;
                     } 
-                    // 🌟 CỦA BOSS THÌ NHẮM SẾP
-                    else if (skill.isRemote === true || (typeof skill.isRemote === 'number' && skill.isRemote > 0)) {
-                        if (typeof playerModel !== 'undefined' && playerModel) {
-                            skill.targetPos = playerModel.position.clone();
-                            skill.targetPos.y += 5; 
-                        }
-                    }
+                    // 🛑 ĐÃ XÓA LỆNH ÉP ĐẠN TÌM SẾP Ở ĐÂY. Đạn mạng sẽ bay thẳng tắp tới đích ban đầu!
 
                     const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
-                    skill.mesh.quaternion.slerp(dummy.quaternion, 0.15); // Bẻ lái 15% mỗi frame
+                    skill.mesh.quaternion.slerp(dummy.quaternion, 0.15); 
                 }
+
+
 
                 skill.mesh.translateZ(skill.speed);
                 const realDir = new THREE.Vector3(); skill.mesh.getWorldDirection(realDir);
@@ -406,22 +404,22 @@ window.updateCombatTuTien = function () {
                     if (skill.swordMesh && skill.swordMesh.rotation.x >= 0) { skill.swordMesh.rotation.x = 0; skill.state = 'BAY_DI'; }
                 }
                 else if (skill.state === 'BAY_DI') {
+
+
+
                     if (skill.targetPos) {
                         if (skill.isRemote === false) {
                             const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
                             const mucTieuMoi = window.layMucTieuGanNhatTT(skill.mesh.position, fwd);
                             if (mucTieuMoi) skill.targetPos = mucTieuMoi;
                         } 
-                        else if (skill.isRemote === true || (typeof skill.isRemote === 'number' && skill.isRemote > 0)) {
-                            if (typeof playerModel !== 'undefined' && playerModel) {
-                                skill.targetPos = playerModel.position.clone();
-                                skill.targetPos.y += 5; 
-                            }
-                        }
-                        
+                        // 🛑 ĐÃ XÓA LỆNH ÉP ĐẠN TÌM SẾP
+
                         const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                         skill.mesh.quaternion.slerp(dummy.quaternion, 0.2);
                     }
+
+
                     const khoangCachTam = skill.mesh.position.distanceTo(skill.targetPos);
                     if (khoangCachTam < 40 && skill.swordMesh) { const tyLe = Math.max(0, khoangCachTam / 40); skill.swordMesh.position.y = 10.0 * tyLe; }
                     skill.mesh.rotateZ(-0.3); skill.mesh.translateZ(skill.speed);
