@@ -673,13 +673,31 @@ window.capNhatAIQuaiVat = function (delta) {
             return; 
         }
         // ========================================================
-        // 🎯 TÍNH TOÁN KHOẢNG CÁCH CHUNG CHO MỌI LOẠI QUÁI
+        // 🎯 TÍNH TOÁN KHOẢNG CÁCH CHUNG CHO MỌI LOẠI QUÁI (MẮT THẦN ĐA MỤC TIÊU)
         // ========================================================
-        let myDist = quai.mesh.position.distanceTo(playerModel.position);
+        let mucTieuTotNhat = playerModel;
+        let myDist = (typeof window.isDead !== 'undefined' && window.isDead) ? Infinity : quai.mesh.position.distanceTo(playerModel.position);
+
+        // 🌟 QUÉT ĐA MỤC TIÊU: Giúp máy Host (Nick A) nhìn thấy cả Nick B để chuyển mục tiêu rượt đuổi
+        if (typeof window.remotePlayers !== 'undefined') {
+            for (let id in window.remotePlayers) {
+                let rp = window.remotePlayers[id];
+                // Chỉ quét người chơi thực sự, bỏ qua các bóng ma Phantom hệ thống tự đẻ
+                if (rp && rp.status === 'ready' && rp.mesh && !id.startsWith("PHANTOM_")) {
+                    let d = quai.mesh.position.distanceTo(rp.mesh.position);
+                    if (d < myDist) {
+                        myDist = d;
+                        mucTieuTotNhat = rp.mesh; // Khóa mục tiêu vào người đứng gần hơn
+                    }
+                }
+            }
+        }
+        let posNguoiChoi = mucTieuTotNhat.position.clone();
+        let isMucTieuLaToi = (mucTieuTotNhat === playerModel);
         let posNgangQuai = quai.mesh.position.clone().projectOnPlane(quai.upVector);
-        let posNgangSep = playerModel.position.clone().projectOnPlane(quai.upVector);
+        let posNgangSep = posNguoiChoi.clone().projectOnPlane(quai.upVector);
         let distNgang = posNgangQuai.distanceTo(posNgangSep);
-        let isClosest = true; 
+        let isClosest = true;
         // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
         // Mặc định cho những phái chưa được nâng cấp (Cắt gân chuẩn Esports)
