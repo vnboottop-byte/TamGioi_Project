@@ -323,28 +323,28 @@ livekitScript.onload = async () => {
                         // ==========================================
                         // 1. NẾU LÀ MẢNG (DATA TỌA ĐỘ NGƯỜI CHƠI)
                         // ==========================================
-if (Array.isArray(data) && data[0] === 1) {
+                        if (Array.isArray(data) && data[0] === 1) {
 
-    // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì GỠ KHỎI MÀN HÌNH!
-    let senderZone = data[16] || 'TRUNG_CHAU';
-    if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
-        if (window.remotePlayers[senderId]) {
-            let rpLeaver = window.remotePlayers[senderId];
+                       // 🌟 HẢI QUAN ĐA VŨ TRỤ (VÁ LỖI AAA): Kẻ nào không cùng Map thì GỠ KHỎI MÀN HÌNH!
+                       let senderZone = data[16] || 'TRUNG_CHAU';
+                       if (window.ZONE_ID && senderZone !== window.ZONE_ID) {
+                       if (window.remotePlayers[senderId]) {
+                          let rpLeaver = window.remotePlayers[senderId];
             
-            // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
-            if (rpLeaver.mesh) {
-                if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh);
-                scene.remove(rpLeaver.mesh);
-            }
+                       // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
+                          if (rpLeaver.mesh) {
+                          if (rpLeaver.mesh.parent) rpLeaver.mesh.parent.remove(rpLeaver.mesh);
+                          scene.remove(rpLeaver.mesh);
+                         }
             
-            // Hủy CMND (Thẻ tên)
-            if (rpLeaver.tag) rpLeaver.tag.remove();
+                        // Hủy CMND (Thẻ tên)
+                        if (rpLeaver.tag) rpLeaver.tag.remove();
             
-            // Xóa sổ khỏi sổ Nam Tào
-            delete window.remotePlayers[senderId];
-        }
-        return; // Đuổi về, không cho cập nhật tọa độ nữa!
-    }
+                       // Xóa sổ khỏi sổ Nam Tào
+                       delete window.remotePlayers[senderId];
+                   }
+                      return; // Đuổi về, không cho cập nhật tọa độ nữa!
+                   }
 
                             // 🌟 TỐI ƯU MOBILE: Nếu người chơi khác ở quá xa (> 2500m), không cần tải/Render để tiết kiệm VRAM!
                             let pX = data[1], pY = data[2], pZ = data[3];
