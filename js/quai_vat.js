@@ -683,7 +683,7 @@ window.capNhatAIQuaiVat = function (delta) {
             for (let id in window.remotePlayers) {
                 let rp = window.remotePlayers[id];
                 // Chỉ quét người chơi thực sự, bỏ qua các bóng ma Phantom hệ thống tự đẻ
-                if (rp && rp.status === 'ready' && rp.mesh && !id.startsWith("PHANTOM_")) {
+                if (rp && rp.status === 'ready' && rp.mesh && !id.startsWith("PHANTOM_") && !id.startsWith("BOSS_")) {
                     let d = quai.mesh.position.distanceTo(rp.mesh.position);
                     if (d < myDist) {
                         myDist = d;
@@ -842,8 +842,14 @@ window.capNhatAIQuaiVat = function (delta) {
                             }
 
                         }
-                        if (window.room && window.room.state === 'connected') {
-                            try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
+                        // Gửi Tọa độ & Sát thương cho các máy khác biết đường mà né
+                        if (window.room && window.room.localParticipant) {
+                            window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
+                                type: 'BOSS_SKILL', chieu: chieu, bossId: quai.id, 
+                                target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, 
+                                phai: quai.classCode,
+                                dmg: dmgBoss // 🌟 BẢN VÁ: Gửi kèm luôn Sát Thương nhé!
+                            })), { reliable: true });
                         }
                     }
                 }
