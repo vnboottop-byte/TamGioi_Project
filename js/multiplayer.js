@@ -84,8 +84,14 @@ function taoBanSaoNguoiChoi(identity, data) {
     // TẬN DỤNG TỔNG KHO ASSET
     const mountUrl = data.mount;
     const charUrl = data.model;
-    // 🌟 BẢN VÁ: Trust 100% SQL, không có model thì hủy tạo Clone
-    if (!charUrl || charUrl.trim() === '') return;
+    // 🌟 BẢN VÁ AAA: GIẢI PHÓNG TRẠNG THÁI LOADING NẾU HỤT DATA SQL ĐỂ THỬ LẠI KHUNG HÌNH SAU!
+    if (!charUrl || charUrl.trim() === '') {
+        if (tag) tag.remove();
+        delete window.remotePlayers[identity];
+        return;
+    }
+
+
 
     if (mountUrl && mountUrl.trim() !== "") {
         // 1. TẢI RỒNG
@@ -255,18 +261,26 @@ livekitScript.onload = async () => {
                 console.log("%c🟢 Đã vào Cổng Cực Lạc: " + window.room.name, "color:#2ecc71; font-weight:bold;");
                 if (loginGate) loginGate.style.display = 'none';
                 // ==========================================
-                // 🌟 BỘ PHẬN ĐÓNG DẤU HẢI QUAN TỰ ĐỘNG (CHỐNG CHIÊU THỨC BAY XUYÊN VŨ TRỤ)
+                // 🌟 BỘ PHẬN ĐÓNG DẤU HẢI QUAN TỰ ĐỘNG V2 (HỖ TRỢ CẢ OBJECT VÀ ARRAY TỌA ĐỘ)
                 // ==========================================
                 const publishGoc = window.room.localParticipant.publishData;
                 window.room.localParticipant.publishData = function(payload, options) {
                     try {
                         let textStr = new TextDecoder().decode(payload);
-                        // Nếu Sếp xả Skill, gọi Đệ tử, hay Báo Máu (Gói tin dạng JSON Object)
+                        
+                        // A. Nếu gửi gói tin Object (Skill, Chat, Gọi đệ tử...)
                         if (textStr.startsWith('{')) { 
                             let dataObj = JSON.parse(textStr);
-                            // Tự động đóng dấu Hộ chiếu Map vào gói tin
                             if (!dataObj.zone_id) dataObj.zone_id = window.ZONE_ID || 'TRUNG_CHAU';
                             payload = new TextEncoder().encode(JSON.stringify(dataObj));
+                        } 
+                        // B. 🌟 BẢN VÁ AAA: Gửi gói tin mảng tọa độ [1, x, y, z...] - Ép Passport Map vào index 16!
+                        else if (textStr.startsWith('[')) {
+                            let dataArr = JSON.parse(textStr);
+                            if (dataArr && dataArr[0] === 1) {
+                                dataArr[16] = window.ZONE_ID || 'TRUNG_CHAU'; // Cưỡng chế găm Map hiện tại vào mảng gửi đi
+                                payload = new TextEncoder().encode(JSON.stringify(dataArr));
+                            }
                         }
                     } catch(e) {}
                     return publishGoc.call(this, payload, options); // Gửi đi
