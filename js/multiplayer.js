@@ -543,6 +543,9 @@ if (Array.isArray(data) && data[0] === 1) {
                                     if (boss && !boss.isDead) { 
                                         boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z); 
                                         boss.targetAnimLK = data.anim; 
+                                        
+                                        // 🌟 BẢN VÁ AAA: TIÊM THUỐC LÚ (KHÓA MÕM AI NỘI BỘ TRONG 3 GIÂY)
+                                        boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                     }
                                 }
                             }
@@ -554,6 +557,8 @@ if (Array.isArray(data) && data[0] === 1) {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
+                                        // 🌟 BẢN VÁ AAA: TIÊM THUỐC LÚ KHI NHẬN CHIÊU
+                                        boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                         boss.mesh.lookAt(data.target.x, data.target.y, data.target.z);
                                         if (typeof boss.playAnim === 'function') boss.playAnim('ATTACK');
                                         
