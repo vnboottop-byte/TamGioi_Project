@@ -573,13 +573,13 @@ if (Array.isArray(data) && data[0] === 1) {
                                             window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
                                         }
                                         // Sếp chèn đoạn này ngay dưới cái ngoặc của: if (data.phai === 'RONG' ...) { ... } 
-else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
-    let bOrigin = boss.mesh.position.clone();
-    let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
-    let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-    // Gây dame = 0 vì mạng chỉ cần diễn hình ảnh máu xịt cho đẹp
-    window.tungComboChimCa('CAN_CHIEN', 0, bOrigin, pTarget, bDir, data.bossId, null, true);
-}
+                                         else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
+                                         let bOrigin = boss.mesh.position.clone();
+                                         let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+                                         let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+                                         // Gây dame = 0 vì mạng chỉ cần diễn hình ảnh máu xịt cho đẹp
+                                          window.tungComboChimCa('CAN_CHIEN', 0, bOrigin, pTarget, bDir, data.bossId, null, true);
+                            }
 
 
 
@@ -675,6 +675,13 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                                     document.head.appendChild(theScript);
                                 }
                             }
+
+
+
+
+
+
+
 
 
                             else if (data.type === 'BI_CHEM') {
