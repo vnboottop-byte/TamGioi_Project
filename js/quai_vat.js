@@ -512,6 +512,16 @@ window.capNhatAIQuaiVat = function (delta) {
     if (!window.danhSachQuaiVat || !playerModel) return;
 
     window.danhSachQuaiVat.forEach(quai => {
+        if (!quai || quai.isDead || !quai.mesh) return;
+
+            // 🛑 BẢN VÁ AAA: KIỂM TRA CHẾ ĐỘ "CON RỐI"
+            if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
+                // Đang làm con rối cho máy khác -> CẤM SUY NGHĨ, CHỈ ĐƯỢC TRƯỢT THEO TỌA ĐỘ MẠNG!
+                if (quai.targetPosLK) {
+                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt mượt mà theo máy Host
+                }
+                return; // 🌟 RETURN LUÔN! Thoát khỏi vòng lặp, cấm chạy các lệnh tìm mục tiêu bên dưới!
+            }
         if (quai.mixer) quai.mixer.update(delta);
         if (quai.isDead) return;
 
