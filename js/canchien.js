@@ -68,7 +68,7 @@
     }
 
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
-        // 🌟 VÁ LỖI 6: CHUẨN HÓA HÚT MÁU DỰA TRÊN BIẾN GLOBAL CỦA GAME
+        // 🌟 CHUẨN HÓA HÚT MÁU DỰA TRÊN BIẾN GLOBAL CỦA GAME
         function kichHoatHutMau() {
             if (typeof window.mauBanThan !== 'undefined' && typeof window.MAU_TOI_DA !== 'undefined' && window.mauBanThan < window.MAU_TOI_DA) {
                 window.mauBanThan = Math.min(window.MAU_TOI_DA, window.mauBanThan + (luongSatThuong * 0.05));
@@ -79,34 +79,51 @@
             }
         }
 
-        // 🌟 VÁ LỖI 5: ĐỒNG BỘ DAME CƠ BẢN NHƯ CÁC PHÁI KHÁC
+        // 🛡️ BỘ LỌC CHỐNG CHÉM ĐÚP (VÁ LỖI 2 DÒNG MÁU KHÁC MÀU)
+        let mucTieuDaXyLy = new Set();
+
+        // 1. QUÉT NGƯỜI CHƠI (PVP)
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
-                if (rp.status === 'ready' && rp.mesh) {
+
+                // 🛑 LÁ CHẮN NHẬN DIỆN: Nếu Boss đang mượn lốt Người chơi để tung chiêu -> Đá nó ra khỏi luồng PVP!
+                let laBossDangMuonId = false;
+                if (typeof window.danhSachQuaiVat !== 'undefined') {
+                    laBossDangMuonId = window.danhSachQuaiVat.some(q => String(q.id) === String(id) || "PLAYER_" + q.id === String(id) || "BOSS_" + q.id === String(id));
+                }
+
+                if (rp.status === 'ready' && rp.mesh && !laBossDangMuonId && !mucTieuDaXyLy.has(rp.mesh)) {
                     let hit = window.layHitbox(rp.mesh);
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        mucTieuDaXyLy.add(rp.mesh); // Đóng dấu đã ăn đòn
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                        taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00');
-                        kichHoatHutMau(); 
+
+                        taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00'); // Sát thương PVP màu Cam Vàng
+                        kichHoatHutMau();
                         if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
                     }
                 }
             }
         }
-        
+
+        // 2. QUÉT QUÁI & BOSS (PVE)
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
-                if (!quai.isDead && quai.mesh) {
+                // Chỉ đấm những đứa chưa ăn đòn ở luồng trên (nếu có)
+                if (!quai.isDead && quai.mesh && !mucTieuDaXyLy.has(quai.mesh)) {
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        mucTieuDaXyLy.add(quai.mesh); // Đóng dấu đã ăn đòn
+
                         if (quai.isBoss) {
-                            taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
-                            kichHoatHutMau(); 
+                            taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff'); // Màu Tím cho Boss
+                            kichHoatHutMau();
                             if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
                         } else {
-                            quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
-                            kichHoatHutMau(); 
+                            quai.hp -= luongSatThuong;
+                            taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong); // Màu Đỏ Mặc Định cho Quái thường
+                            kichHoatHutMau();
 
                             if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
                             if (quai.hp <= 0) {
