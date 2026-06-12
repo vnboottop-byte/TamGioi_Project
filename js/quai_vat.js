@@ -511,21 +511,64 @@ window.xuLyQuaiLuiBinh = function (quai, targetPos, delta) {
 window.capNhatAIQuaiVat = function (delta) {
     if (!window.danhSachQuaiVat || !playerModel) return;
 
-    window.danhSachQuaiVat.forEach(quai => {
-            if (!quai || quai.isDead || !quai.mesh) return;
 
-            // 1. CHO PHÉP CHẠY ANIMATION TRƯỚC (Dù là Rối hay là Host đều cần múa)
+
+
+    window.danhSachQuaiVat.forEach(quai => {
+            if (!quai || !quai.mesh) return;
+
             if (quai.mixer) quai.mixer.update(delta);
+
+            // ==========================================
+            // 🛡️ 1. HỆ THỐNG QUẢN LÝ BẢNG TÊN (VÁ LỖI KẸT & NHẤP NHÁY)
+            // ==========================================
+            if (quai.tagEl && typeof camera !== 'undefined' && typeof playerModel !== 'undefined' && playerModel) {
+                // Nếu quái chết hoặc tàng hình -> Ép ẩn ngay lập tức!
+                if (quai.isDead || !quai.mesh.visible) {
+                    quai.tagEl.style.display = 'none';
+                } else {
+                    const worldPos = new THREE.Vector3(); 
+                    quai.mesh.getWorldPosition(worldPos);
+                    let khoangCach = worldPos.distanceTo(playerModel.position);
+                    
+                    if (khoangCach > (window.isMobile ? 1500 : 2500)) { 
+                        quai.tagEl.style.display = 'none'; 
+                    } else {
+                        // Vá lỗi sập biến upVector
+                        let upV = new THREE.Vector3(0, 1, 0);
+                        if (quai.mesh.up) upV.copy(quai.mesh.up).normalize();
+                        else if (quai.upVector) upV.copy(quai.upVector).normalize();
+                        
+                        let chieuCao = quai.chieuCaoThuc || quai.chieuCao || 5;
+                        let viTriTag = worldPos.clone().add(upV.multiplyScalar(chieuCao + 2.0));
+                        viTriTag.project(camera);
+                        
+                        if (viTriTag.z < 1) {
+                            quai.tagEl.style.left = `${(viTriTag.x * 0.5 + 0.5) * window.innerWidth}px`;
+                            quai.tagEl.style.top = `${(viTriTag.y * -0.5 + 0.5) * window.innerHeight}px`;
+                            quai.tagEl.style.display = 'block'; 
+                        } else { 
+                            quai.tagEl.style.display = 'none'; 
+                        }
+                    }
+                }
+            }
+
+            // Kẻ chết không được phép chạy AI hay trượt đi đâu cả
             if (quai.isDead) return;
 
-            // 2. 🛑 BẢN VÁ AAA: KIỂM TRA CHẾ ĐỘ "CON RỐI" (ĐẶT Ở ĐÂY LÀ CHUẨN NHẤT)
+            // ==========================================
+            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG)
+            // ==========================================
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
-                // Đang làm con rối cho máy khác -> CẤM SUY NGHĨ, CHỈ ĐƯỢC TRƯỢT THEO TỌA ĐỘ MẠNG!
                 if (quai.targetPosLK) {
-                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt mượt mà theo máy Host
+                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt theo máy Host
                 }
-                return; // 🌟 RETURN LUÔN! Cấm chạy các lệnh tìm mục tiêu (AI) bên dưới!
+                return; // Thoát ngang an toàn (Bảng tên đã xử lý xong ở trên)
             }
+
+
+
         
 
         // Tự động tính toán hệ số to lớn và lõi thịt của Boss
