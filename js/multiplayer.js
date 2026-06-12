@@ -495,82 +495,63 @@ livekitScript.onload = async () => {
 
  
                             // ==========================================
-                            // 🛡️ BỨC TƯỜNG LỬA XỬ LÝ KỸ NĂNG BOSS (CHỐNG LỖI 100+ PHÁI)
+                            // 🛡️ XỬ LÝ KỸ NĂNG BOSS (BẢN VÁ CHUẨN SÁT THƯƠNG & CHỐNG LÚ)
                             // ==========================================
                             else if (data.type === 'BOSS_SKILL') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
-                                        // 🌟 1. TIÊM THUỐC LÚ KHI NHẬN CHIÊU
                                         boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                         boss.mesh.lookAt(data.target.x, data.target.y, data.target.z);
                                         if (typeof boss.playAnim === 'function') boss.playAnim('ATTACK');
                                         
-                                        // 🌟 2. XỬ LÝ NGOẠI LỆ CHO CHIM / CÁ / RỒNG (Giữ nguyên của Sếp)
+                                        // 🌟 LẤY SÁT THƯƠNG TỪ MẠNG GỬI VỀ (Hoặc mặc định 30)
+                                        let dmgBoss = data.dmg || 30;
+
                                         if (data.phai === 'RONG' && typeof window.tungComboRong === 'function') {
-                                            const box = new THREE.Box3().setFromObject(boss.mesh);
-                                            const size = new THREE.Vector3(); box.getSize(size);
+                                            const box = new THREE.Box3().setFromObject(boss.mesh); const size = new THREE.Vector3(); box.getSize(size);
                                             let bOrigin = boss.mesh.position.clone(); bOrigin.y += size.y * 0.35;
                                             let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
-                                            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-                                            bOrigin.add(bDir.clone().multiplyScalar(size.z * 0.1));
-                                            let dmgBoss = boss.maxHp * 0.05;
+                                            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); bOrigin.add(bDir.clone().multiplyScalar(size.z * 0.1));
                                             window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return; // Chạy xong ngoại lệ thì thoát
+                                            return; 
                                         }
                                         else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
-                                            let bOrigin = boss.mesh.position.clone();
-                                            let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+                                            let bOrigin = boss.mesh.position.clone(); let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-                                            window.tungComboChimCa('CAN_CHIEN', true, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return; // Chạy xong ngoại lệ thì thoát
+                                            window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
+                                            return; 
                                         }
 
-                                        // 🌟 3. BỘ CHUYỂN MẠCH THÔNG MINH CHO 100+ PHÁI ĐOẠT XÁ
                                         let phaiCode = data.phai || 'TU_TIEN'; 
-                                        let parts = phaiCode.split('_');
-                                        let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+                                        let parts = phaiCode.split('_'); let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                                         let funcName = 'tungCombo' + camelCase;
 
-                                        // Châm chước các phái gõ sai tên từ xưa
                                         if (phaiCode === 'SIEUANHHUNG') funcName = 'tungComboLazer';
                                         if (phaiCode === 'CUNG_TEN') funcName = 'tungComboCungThu';
                                         if (phaiCode === 'CAN_CHIEN') funcName = 'tungComboLuyenThe';
 
-                                        // Định vị tọa độ vàng của ngực Boss
                                         let bOrigin = boss.mesh.position.clone();
-                                        if (boss.tamThucTeLocal) bOrigin = boss.tamThucTeLocal.clone().applyMatrix4(boss.mesh.matrixWorld);
-                                        else bOrigin.y += 5;
-                                        
+                                        if (boss.tamThucTeLocal) bOrigin = boss.tamThucTeLocal.clone().applyMatrix4(boss.mesh.matrixWorld); else bOrigin.y += 5;
                                         let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                         let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                                        let tempId = String(boss.id);
+                                        
+                                        // 🌟 GẮN CHỮ "BOSS_" ĐỂ MẮT THẦN KHÔNG BỊ LÚ BẮN NHẦM
+                                        let renderId = "BOSS_" + String(boss.id);
 
                                         let thiTrienQuaMang = function() {
                                             if (typeof window[funcName] === 'function') {
-                                                // 🛡️ BƯỚC A: TẠO MÔI TRƯỜNG ẢO
                                                 if (typeof window.remotePlayers !== 'undefined') {
-                                                    window.remotePlayers[tempId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
+                                                    window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
                                                 }
-                                                
-                                                // 🛡️ BƯỚC B: BẬT CÔNG TẮC TƯỜNG LỬA (Để các file võ công biết đây là đồ giả)
-                                                window.DANG_XU_LY_SKILL_MANG = true;
-                                                window.ID_AO_ANH_HIENTAI = tempId;
 
                                                 try {
-                                                    // 🛡️ BƯỚC C: GỌI HÀM VÕ CÔNG (Truyền chữ "true" để ép nó hiểu là Remote, không múa local)
-                                                    window[funcName](data.chieu, true, bOrigin, pTarget, bDir, tempId, bossWeapon);
-                                                } catch (e) { 
-                                                    console.error("⛔ Lỗi bên trong Võ công " + phaiCode + ":", e); 
-                                                }
+                                                    // 🌟 TRUYỀN THẲNG SÁT THƯƠNG THẬT VÀO HÀM (Cấm truyền chữ true nữa!)
+                                                    window[funcName](data.chieu, dmgBoss, bOrigin, pTarget, bDir, renderId, bossWeapon);
+                                                } catch (e) { }
 
-                                                // 🛡️ BƯỚC D: TẮT CÔNG TẮC AN TOÀN NGAY LẬP TỨC
-                                                window.DANG_XU_LY_SKILL_MANG = false;
-                                                window.ID_AO_ANH_HIENTAI = null;
-
-                                                // 🛡️ BƯỚC E: THU HỒI MÔI TRƯỜNG ẢO
-                                                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
+                                                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 2000);
                                             } else {
                                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, pTarget, phaiCode, data.chieu);
                                             }
@@ -579,7 +560,6 @@ livekitScript.onload = async () => {
                                         if (typeof window[funcName] === 'function') {
                                             thiTrienQuaMang();
                                         } else {
-                                            // ⏳ TẢI FILE NẾU CHƯA CÓ
                                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                                             if (!window.dangTaiVoCongBoss[phaiCode]) {
                                                 window.dangTaiVoCongBoss[phaiCode] = true;
