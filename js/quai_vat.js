@@ -113,9 +113,8 @@ window.TU_DIEN_AI_QUAI['LUYEN_THE'] = {
                     if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Bị Quái Vật Luyện Thể Đấm Chết");
                 }
             }
-
             if (window.room && window.room.state === 'connected') {
-                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'CHIM', chieu: 'CAN_CHIEN' })), { reliable: true }); } catch (e) { }
+                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'CHIM', chieu: 'CAN_CHIEN', dmg: dmgBoss })), { reliable: true }); } catch (e) { }
             }
         }
     }
@@ -842,14 +841,8 @@ window.capNhatAIQuaiVat = function (delta) {
                             }
 
                         }
-                        // Gửi Tọa độ & Sát thương cho các máy khác biết đường mà né
-                        if (window.room && window.room.localParticipant) {
-                            window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
-                                type: 'BOSS_SKILL', chieu: chieu, bossId: quai.id, 
-                                target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, 
-                                phai: quai.classCode,
-                                dmg: dmgBoss // 🌟 BẢN VÁ: Gửi kèm luôn Sát Thương nhé!
-                            })), { reliable: true });
+                        if (window.room && window.room.state === 'connected') {
+                            try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
                         }
                     }
                 }
@@ -1335,12 +1328,11 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 // Giữ kết nối sát thương 2 giây để đạn bay tới nơi (Thay vì 100ms như cũ)
                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 2000);
                 // 🛑 ĐÃ QUÉT SẠCH CỤC MÌN GÂY SÁT THƯƠNG ẢO LÀM CHẾT OAN NGƯỜI CHƠI TẠI ĐÂY!
-
                 if (window.room && window.room.state === 'connected') {
                     window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                        type: 'BOSS_SKILL', bossId: bot.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'FAKE_PLAYER', classCode: phaiDung, chieu: nextChieu
+                        type: 'BOSS_SKILL', bossId: bot.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: 'FAKE_PLAYER', classCode: phaiDung, chieu: nextChieu, dmg: dmgBot
                     })), { reliable: true });
-                }
+                }  
             }
         }
     }
