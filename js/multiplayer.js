@@ -442,25 +442,29 @@ livekitScript.onload = async () => {
                                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
                                         let renderId = "BOSS_" + String(boss.id);
 
+
+
+
                                         let thiTrienQuaMang = function() {
                                             if (typeof window[funcName] === 'function') {
                                                 if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
 
-                                                // 🛑 BÍ THUẬT AAA: Truyền chuỗi "SPECTATOR" để 100+ phái không hiểu là true (Đạn bay thẳng không đuổi!)
-                                                try { window[funcName](data.chieu, "SPECTATOR", bOrigin, pTarget, bDir, renderId, bossWeapon); } catch (e) { }
+                                                let backupPlayerModel = window.playerModel;
+                                                window.playerModel = { position: pTarget.clone() };
 
-                                                // 💣 HỆ THỐNG SÁT THƯƠNG ĐỘC LẬP: Sau 1.5s đạn tới nơi, ai đứng gần đích sẽ mất máu
-                                                setTimeout(() => {
-                                                    if (!window.isDead && window.playerModel && window.playerModel.position.distanceTo(pTarget) < 25) {
-                                                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pTarget, dmgBoss, 25);
-                                                    }
-                                                }, 1500);
+                                                // 🌟 BẢN VÁ CUỐI CÙNG: TRUYỀN DAME THẬT! Đạn nổ ai đứng gần sẽ mất máu!
+                                                try { window[funcName](data.chieu, dmgBoss, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch (e) { }
 
+                                                window.playerModel = backupPlayerModel;
+
+                                                // Chờ 8s cho đạn bay xong mới dọn Bóng ma Boss
                                                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                                             } else {
                                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, pTarget, phaiCode, data.chieu);
                                             }
                                         };
+
+
 
                                         if (typeof window[funcName] === 'function') thiTrienQuaMang();
                                         else {
