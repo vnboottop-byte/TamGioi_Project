@@ -390,7 +390,6 @@ if (Array.isArray(data) && data[0] === 1) {
                                     rp.vuKhiModel.visible = (mappedData.vuKhiHienThi === 1);
                                 }
 
-
                                 if (mappedData.anim && mappedData.anim !== rp.currentAnim) {
                                     let upAnim = mappedData.anim.toUpperCase();
                                     
@@ -411,10 +410,6 @@ if (Array.isArray(data) && data[0] === 1) {
                                     }
                                     rp.currentAnim = mappedData.anim;
                                 }
-
-
-
-
                             }
                         }
 
