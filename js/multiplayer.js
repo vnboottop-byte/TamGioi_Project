@@ -624,8 +624,10 @@ if (Array.isArray(data) && data[0] === 1) {
                                                         window.remotePlayers[tempId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
                                                     }
                                                     
-                                                    // Gọi xuất chiêu (Chỉ vẽ hình, KHÔNG GÂY DAME TRỪ MÁU tránh x2 sát thương)
-                                                    window[funcName](data.chieu, 0, bOrigin, pTarget, bDir, tempId, bossWeapon, true);
+                                                    // GỐC BỊ LỖI: window[funcName](data.chieu, 0, bOrigin, pTarget, bDir, tempId, bossWeapon, true);
+                                                    
+                                                    // 🌟 BẢN VÁ: THAY SỐ 0 THÀNH CHỮ true (Báo hiệu đây là ảnh mạng, cấm bản thân múa!)
+                                                    window[funcName](data.chieu, true, bOrigin, pTarget, bDir, tempId, bossWeapon);
                                                     
                                                     setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
                                                 } else {
