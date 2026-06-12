@@ -552,18 +552,24 @@ window.capNhatAIQuaiVat = function (delta) {
                     }
                 }
             }
-
             // Kẻ chết không được phép chạy AI hay trượt đi đâu cả
             if (quai.isDead) return;
 
+
+
+
+
+
             // ==========================================
-            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG)
+            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & MOONWALK)
             // ==========================================
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
-                if (quai.targetPosLK) {
-                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt theo máy Host
-                }
-                return; // Thoát ngang an toàn (Bảng tên đã xử lý xong ở trên)
+                if (quai.targetPosLK) quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
+                
+                // 🌟 BẢN VÁ: XOAY CỔ THEO MÁY HOST!
+                if (quai.targetQuatLK) quai.mesh.quaternion.slerp(quai.targetQuatLK, 0.2); 
+                
+                return; // Thoát ngang an toàn
             }
 
 
@@ -805,6 +811,9 @@ window.capNhatAIQuaiVat = function (delta) {
                             funcName = 'tungCombo' + camelCase;
                         }
 
+
+
+
                         // 🛑 Cấp CCCD ảo cho Boss để 100+ file võ công không bị lỗi Undefined
                         let renderId = "BOSS_" + String(quai.id); 
 
@@ -812,15 +821,28 @@ window.capNhatAIQuaiVat = function (delta) {
                             if (typeof window[funcName] === 'function') {
                                 if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: quai.mesh, damage: 0 };
                                 
-                                let thamSoRemote = isMucTieuLaToi ? dmgBoss : true; 
-                                try { window[funcName](chieu, thamSoRemote, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch(e){}
+                                // 🛑 BẢN VÁ AAA: BẮT BUỘC TRUYỀN TRUE ĐỂ TẮT AUTO AIM LÀM LỆCH ĐẠN
+                                try { window[funcName](chieu, true, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch(e){}
                                 
-                                // TĂNG THỜI GIAN SỐNG LÊN 8 GIÂY
+                                // 💣 HỆ THỐNG SÁT THƯƠNG NỔ CHẬM: 1.5s sau ai đứng gần đích sẽ mất máu!
+                                setTimeout(() => {
+                                    if (!window.isDead && window.playerModel && window.playerModel.position.distanceTo(pTarget) < 25) {
+                                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pTarget, dmgBoss, 25);
+                                    }
+                                }, 1500);
+
+                                // TĂNG THỜI GIAN SỐNG LÊN 8 GIÂY để đạn nổ xong mới dọn rác
                                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
                         };
+
+
+
+
+
+
 
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); 
@@ -1083,13 +1105,29 @@ window.capNhatAIQuaiVat = function (delta) {
             }
         }
 
-        // Đồng bộ tọa độ lên mạng Livekit
+
+
+
+
+
+        // Đồng bộ tọa độ VÀ GÓC XOAY lên mạng Livekit
         if (window.room && window.room.state === 'connected') {
             if (Date.now() - (quai.lastPosSync || 0) > 100) {
                 quai.lastPosSync = Date.now();
-                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_POS', bossId: quai.id, x: parseFloat(quai.mesh.position.x.toFixed(2)), y: parseFloat(quai.mesh.position.y.toFixed(2)), z: parseFloat(quai.mesh.position.z.toFixed(2)), anim: quai.state })), { reliable: false }); } catch (e) { }
+                let rot = quai.mesh.rotation; // 🌟 Lấy góc xoay hiện tại
+                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
+                    type: 'BOSS_POS', bossId: quai.id, 
+                    x: parseFloat(quai.mesh.position.x.toFixed(2)), y: parseFloat(quai.mesh.position.y.toFixed(2)), z: parseFloat(quai.mesh.position.z.toFixed(2)), 
+                    rx: parseFloat(rot.x.toFixed(3)), ry: parseFloat(rot.y.toFixed(3)), rz: parseFloat(rot.z.toFixed(3)), // 🌟 Gửi kèm góc xoay
+                    anim: quai.state 
+                })), { reliable: false }); } catch (e) { }
             }
         }
+
+
+
+
+
 
     });
 };
