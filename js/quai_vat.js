@@ -743,22 +743,26 @@ window.capNhatAIQuaiVat = function (delta) {
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); // Đã học rồi thì múa luôn
                         } else {
+
                             // TỰ ĐỘNG TẢI FILE VÕ CÔNG MỚI (LAZY LOAD)
                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                             if (!window.dangTaiVoCongBoss[phaiCode]) {
-                                window.dangTaiVoCongBoss[phaiCode] = true;
-                                console.log("⏳ Boss xài chiêu lạ! Đang Auto-Download file võ công của: " + phaiCode);
-                                let theScript = document.createElement('script');
-                                theScript.src = 'js/' + phaiCode.toLowerCase() + '.js';
-                                theScript.onload = function() { thiTrienVoCong(); };
-                                theScript.onerror = function() {
-                                    let scriptDuPhong = document.createElement('script');
-                                    scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js';
-                                    scriptDuPhong.onload = function() { thiTrienVoCong(); };
-                                    document.head.appendChild(scriptDuPhong);
-                                };
-                                document.head.appendChild(theScript);
+                             window.dangTaiVoCongBoss[phaiCode] = true;
+                              console.log("⏳ Boss xài chiêu lạ! Đang Auto-Download file võ công của: " + phaiCode);
+                              let theScript = document.createElement('script');
+                                 // MÃ CŨ CỦA SẾP LÀ: theScript.src = 'js/' + phaiCode.toLowerCase() + '.js';
+                                 theScript.src = 'js/' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
+                                 theScript.onload = function() { thiTrienVoCong(); };
+                                 theScript.onerror = function() {
+                                 let scriptDuPhong = document.createElement('script');
+                                  // MÃ CŨ CỦA SẾP LÀ: scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js';
+                                 scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
+                                 scriptDuPhong.onload = function() { thiTrienVoCong(); };
+                                 document.head.appendChild(scriptDuPhong);
+                               };
+                               document.head.appendChild(theScript);
                             }
+
                         }
                         if (window.room && window.room.state === 'connected') {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu })), { reliable: true }); } catch (e) { }
