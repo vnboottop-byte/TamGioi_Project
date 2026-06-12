@@ -198,12 +198,17 @@
 
         // 🌟 VÁ LỖI 4: XÓA SẠCH KIỂM TRA HỒI CHIÊU CỤC BỘ Ở ĐÂY (Để Controller lo)
 
+
         let viTriGoc = nvc.position.clone();
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
         
-        window.dangMuaChieu = false; 
+        window.dangMuaChieu = true; 
 
         if (window.room && window.room.localParticipant) {
+
+
+
+
             let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
             let dichDen = targetQuai ? window.layHitbox(targetQuai.mesh || targetQuai).tamNguc : viTriGoc.clone().add(fwd.clone().multiplyScalar(5));
             const data = new TextEncoder().encode(JSON.stringify({ 
@@ -220,19 +225,27 @@
             window.trangThaiLT.target = targetQuai;
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
+
+
+
         } else {
-            window.trangThaiLT.state = 'IDLE'; 
-            // 🌟 VÁ LỖI 1: TẬN DỤNG RỔ ANIMATION THAY VÌ PHẢI QUÉT LẠI
+            window.trangThaiLT.state = 'IDLE';
             let randomAnim = window.KHO_ANIM_TANCONG.length > 0 ? window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)] : 'BAY';
-            if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
-            
+            if (typeof window.playAnim === 'function') window.playAnim(randomAnim);
+
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
             taoVuNoLT(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
+
+            // 🌟 NHẢ KHÓA SAU 800MS ĐỂ CHẠY TIẾP ĐƯỢC
+            if (window.henGioTatMuaLT) clearTimeout(window.henGioTatMuaLT);
+            window.henGioTatMuaLT = setTimeout(() => { window.dangMuaChieu = false; }, 800);
         }
+
+
     };
 
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('canchien')) {
 
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
@@ -377,7 +390,15 @@
                             camera.position.y = camY; camera.position.x = camX; 
                         }, 120);
                         
-                        setTimeout(() => { if(window.trangThaiLT.state === 'HITTING') window.trangThaiLT.state = 'IDLE'; }, 300);
+                        // 🌟 TỰ ĐỘNG THU TAY VỀ SAU KHI ĐẤM TRÚNG (800MS)
+                        if (window.henGioTatMuaLT) clearTimeout(window.henGioTatMuaLT);
+                        window.henGioTatMuaLT = setTimeout(() => {
+                            if (window.trangThaiLT.state === 'HITTING') {
+                                window.trangThaiLT.state = 'IDLE';
+                                window.dangMuaChieu = false;
+                                if (typeof window.playAnim === 'function') window.playAnim('NHANROI');
+                            }
+                        }, 800);
                     }
                 }
 
