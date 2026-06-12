@@ -751,6 +751,12 @@ window.capNhatAIQuaiVat = function (delta) {
                         dummy.lookAt(quai.mesh.position.clone().add(huongNhin));
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                     } 
+
+
+
+
+                    
+
                     // Nếu hồi chiêu xong -> Bắt đầu xả chiêu mới
                     else if (Date.now() - (quai.lastAttackTime || 0) > 3000) {
                         quai.lastAttackTime = Date.now();
@@ -758,7 +764,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         const chieu = ['Q', 'E', 'R', 'F'][Math.floor(Math.random() * 4)];
                         if (typeof quai.playAnim === 'function') quai.playAnim('CHIEU' + chieu);
                         
-                        // 🌟 BẢN VÁ: Xoay mặt thẳng vào KẺ ĐỨNG GẦN NHẤT lúc vung tay
+                        // 🌟 Xoay mặt thẳng vào KẺ ĐỨNG GẦN NHẤT lúc vung tay
                         let huongNhin = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
@@ -766,33 +772,24 @@ window.capNhatAIQuaiVat = function (delta) {
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.5);
 
                         let dmgBoss = 30 * (quai.level || 1);        
+                        
                         // Lấy tọa độ từ lõi ngực Boss
                         const bOrigin = quai.tamThucTeLocal ? quai.tamThucTeLocal.clone().applyMatrix4(quai.mesh.matrixWorld) : quai.mesh.position.clone();
                         if (!quai.tamThucTeLocal) bOrigin.y += 5; 
                         
-                        // 🌟 BẢN VÁ: Khóa mục tiêu chiêu mạng vào KẺ ĐỨNG GẦN NHẤT
+                        // 🌟 Khóa mục tiêu chiêu mạng vào KẺ ĐỨNG GẦN NHẤT
                         const pTarget = posNguoiChoi.clone(); pTarget.y += 5;
-
-                        const bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); 
-                        // 🌟 BẢN VÁ 1: KÉO NÒNG SÚNG RA KHỎI BỤNG BOSS CHỐNG KẸT ĐẠN
+                        let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); 
+                        
+                        // 🌟 KÉO NÒNG SÚNG RA KHỎI BỤNG BOSS CHỐNG KẸT ĐẠN
                         let khoangCach = bOrigin.distanceTo(pTarget);
                         let doDayBung = (quai.heSoToLon || 1) * 6;
                         let dayRaNgoai = Math.min(doDayBung, khoangCach * 0.8);
                         bOrigin.add(bDir.clone().multiplyScalar(dayRaNgoai));
 
-                        // 🌟 BẢN VÁ 2: TRẢ LẠI ĐÚNG ID VÀ BƠM THẲNG DAME VÀO LƯỚI MẠNG
-                        let tempId = String(quai.id); 
-                        if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[tempId] = { status: 'ready', mesh: quai.mesh, damage: dmgBoss };
-                        
-                        setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
-
-                        // ==========================================
-                        // 🌟 3. TRANG BỊ VŨ KHÍ MẶC ĐỊNH CHO BOSS (CHỐNG ĂN CẮP ĐỒ CỦA SẾP)
-                        // ==========================================
                         let phaiCode = quai.classCode;
-                        // 🌟 TỰ ĐỘNG ĐỌC VŨ KHÍ TỪ DATABASE THAY VÌ GẮN CHẾT TÊN FILE
                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                        // 🌟 TỰ ĐỘNG TÌM HÀM THEO HỆ PHÁI MỚI NHẤT
+                        
                         let tenHamMap = {
                             'TU_TIEN': 'tungComboTuTien',
                             'PHAP_SU': 'tungComboPhapSu',
@@ -803,30 +800,22 @@ window.capNhatAIQuaiVat = function (delta) {
                         };
                         let funcName = tenHamMap[phaiCode];
                         if (!funcName) {
-                            // Tự động nhận diện phái mới: 'JIMBEI' -> 'tungComboJimbei'
                             let parts = (phaiCode || "").split('_');
                             let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                             funcName = 'tungCombo' + camelCase;
                         }
 
-                        // 🌟 BẢN VÁ: Khóa mục tiêu chiêu mạng vào KẺ ĐỨNG GẦN NHẤT
-                        const pTarget = posNguoiChoi.clone(); pTarget.y += 5;
-
-                        let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
-                        let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                        
-                        // 🛑 BẢN VÁ AAA: Cấp CCCD ảo cho Boss để 100+ file võ công không bị lỗi Undefined
+                        // 🛑 Cấp CCCD ảo cho Boss để 100+ file võ công không bị lỗi Undefined
                         let renderId = "BOSS_" + String(quai.id); 
 
                         let thiTrienVoCong = function() {
                             if (typeof window[funcName] === 'function') {
-                                // Mở đăng ký tạm trú cho Boss trên máy mình
                                 if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: quai.mesh, damage: 0 };
                                 
                                 let thamSoRemote = isMucTieuLaToi ? dmgBoss : true; 
                                 try { window[funcName](chieu, thamSoRemote, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch(e){}
                                 
-                                // 🌟 TĂNG THỜI GIAN SỐNG LÊN 8 GIÂY để chờ đạn nổ xong mới xóa (CHỐNG CRASH)
+                                // TĂNG THỜI GIAN SỐNG LÊN 8 GIÂY
                                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
@@ -834,33 +823,26 @@ window.capNhatAIQuaiVat = function (delta) {
                         };
 
                         if (typeof window[funcName] === 'function') {
-                            thiTrienVoCong(); // Đã học rồi thì múa luôn
+                            thiTrienVoCong(); 
                         } else {
-
-                            // TỰ ĐỘNG TẢI FILE VÕ CÔNG MỚI (LAZY LOAD)
                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                             if (!window.dangTaiVoCongBoss[phaiCode]) {
-                             window.dangTaiVoCongBoss[phaiCode] = true;
-                              console.log("⏳ Boss xài chiêu lạ! Đang Auto-Download file võ công của: " + phaiCode);
-                              let theScript = document.createElement('script');
-                                 // MÃ CŨ CỦA SẾP LÀ: theScript.src = 'js/' + phaiCode.toLowerCase() + '.js';
-                                 theScript.src = 'js/' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
-                                 theScript.onload = function() { thiTrienVoCong(); };
-                                 theScript.onerror = function() {
-                                 let scriptDuPhong = document.createElement('script');
-                                  // MÃ CŨ CỦA SẾP LÀ: scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js';
-                                 scriptDuPhong.src = 'js/phai_' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
-                                 scriptDuPhong.onload = function() { thiTrienVoCong(); };
-                                 document.head.appendChild(scriptDuPhong);
-                               };
-                               document.head.appendChild(theScript);
+                                window.dangTaiVoCongBoss[phaiCode] = true;
+                                let theScript = document.createElement('script');
+                                theScript.src = 'js/' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); 
+                                theScript.onload = function() { thiTrienVoCong(); };
+                                document.head.appendChild(theScript);
                             }
-
                         }
+                        
                         if (window.room && window.room.state === 'connected') {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
                         }
                     }
+
+
+
+
                 }
             }
             else {
