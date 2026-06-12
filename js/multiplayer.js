@@ -459,25 +459,27 @@ livekitScript.onload = async () => {
 
 
 
+                            // ==========================================
+                            // 📡 1. ĐỒNG BỘ TỌA ĐỘ VÀ GÓC QUAY (CHỐNG MOONWALK)
+                            // ==========================================
                             else if (data.type === 'BOSS_POS') {
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
-
-                                        // 🌟 THUẬT TOÁN ĐỘC TÔN (TIE-BREAKER): Phân định quyền Host bằng Tên Đăng Nhập
                                         let toiLaHost = (!boss.thoiGianBiDieuKhienQuaMang || boss.thoiGianBiDieuKhienQuaMang < Date.now());
-
                                         if (toiLaHost && window.myUsername > senderId) {
-                                            // Dù tôi đang là Host, nhưng tên tôi xếp sau nó trong bảng chữ cái (VD: Zeno > Alpha)
-                                            // -> Tôi phải tự phế võ công, nhường quyền Host cho nó!
                                             boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                         } else if (!toiLaHost) {
-                                            // Tôi đang là Con Rối thì tiếp tục khóa não 3 giây, cứ ngoan ngoãn nghe lời
                                             boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                         }
 
                                         boss.targetPosLK = new THREE.Vector3(data.x, data.y, data.z);
                                         boss.targetAnimLK = data.anim;
+                                        // 🌟 BẢN VÁ AAA: Nhận góc quay để Boss không bị ngoẹo cổ
+                                        if (data.rx !== undefined) {
+                                            let eul = new THREE.Euler(data.rx, data.ry, data.rz, 'XYZ');
+                                            boss.targetQuatLK = new THREE.Quaternion().setFromEuler(eul);
+                                        }
                                     }
                                 }
                             }
@@ -491,39 +493,37 @@ livekitScript.onload = async () => {
 
 
 
-
-
- 
                             // ==========================================
-                            // 🛡️ XỬ LÝ KỸ NĂNG BOSS (BẢN VÁ CHUẨN SÁT THƯƠNG & CHỐNG LÚ)
+                            // 🛡️ 2. XỬ LÝ CHIÊU THỨC BOSS (CHỐNG ĐẠN ĐUỔI & SÁT THƯƠNG LAN)
                             // ==========================================
                             else if (data.type === 'BOSS_SKILL') {
+                                if (data.phai === 'FAKE_PLAYER') return; // Chặn lỗi báo đỏ F12 do Phantom
+
                                 if (typeof window.danhSachQuaiVat !== 'undefined') {
                                     let boss = window.danhSachQuaiVat.find(q => q.id == data.bossId);
                                     if (boss && !boss.isDead) {
                                         boss.thoiGianBiDieuKhienQuaMang = Date.now() + 3000;
                                         boss.mesh.lookAt(data.target.x, data.target.y, data.target.z);
                                         if (typeof boss.playAnim === 'function') boss.playAnim('ATTACK');
-                                        
-                                        // 🌟 LẤY SÁT THƯƠNG TỪ MẠNG GỬI VỀ (Hoặc mặc định 30)
-                                        let dmgBoss = data.dmg || 30;
 
+                                        let dmgBoss = data.dmg || 30;
+                                        // Xử lý Rồng & Cá... (Giữ nguyên)
                                         if (data.phai === 'RONG' && typeof window.tungComboRong === 'function') {
                                             const box = new THREE.Box3().setFromObject(boss.mesh); const size = new THREE.Vector3(); box.getSize(size);
                                             let bOrigin = boss.mesh.position.clone(); bOrigin.y += size.y * 0.35;
                                             let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize(); bOrigin.add(bDir.clone().multiplyScalar(size.z * 0.1));
                                             window.tungComboRong(data.chieu, dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return; 
+                                            return;
                                         }
                                         else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungComboChimCa === 'function') {
                                             let bOrigin = boss.mesh.position.clone(); let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                                             window.tungComboChimCa('CAN_CHIEN', dmgBoss, bOrigin, pTarget, bDir, data.bossId, null, true);
-                                            return; 
+                                            return;
                                         }
 
-                                        let phaiCode = data.phai || 'TU_TIEN'; 
+                                        let phaiCode = data.phai || 'TU_TIEN';
                                         let parts = phaiCode.split('_'); let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
                                         let funcName = 'tungCombo' + camelCase;
 
@@ -536,51 +536,42 @@ livekitScript.onload = async () => {
                                         let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
                                         let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
                                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                                        
-                                        // 🌟 GẮN CHỮ "BOSS_" ĐỂ MẮT THẦN KHÔNG BỊ LÚ BẮN NHẦM
                                         let renderId = "BOSS_" + String(boss.id);
 
-                                        let thiTrienQuaMang = function() {
+                                        let thiTrienQuaMang = function () {
                                             if (typeof window[funcName] === 'function') {
-                                                if (typeof window.remotePlayers !== 'undefined') {
-                                                    window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
-                                                }
+                                                if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
 
-                                                // 🛑 BÍ THUẬT AAA: ĐÁNH LỪA AUTO-AIM CỦA 100+ PHÁI!
-                                                // Tạm thời đánh tráo playerModel thành tọa độ của nạn nhân để đạn 100 phái tự động bẻ cong trúng đích!
                                                 let backupPlayerModel = window.playerModel;
                                                 window.playerModel = { position: pTarget.clone() };
 
-                                                try {
-                                                    window[funcName](data.chieu, dmgBoss, bOrigin, pTarget, bDir, renderId, bossWeapon);
-                                                } catch (e) { }
+                                                // 🛑 BẢN VÁ AAA: BẮT BUỘC TRUYỀN 'TRUE' ĐỂ KHÓA AUTO-AIM CỦA 100 PHÁI
+                                                try { window[funcName](data.chieu, true, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch (e) { }
 
-                                                // Trả lại nhân vật chính nguyên vẹn ngay mili-giây tiếp theo (Mọi thứ trở lại bình thường)
                                                 window.playerModel = backupPlayerModel;
 
-                                                // 🛑 Kéo dài sự sống của Boss ảo lên 8 GIÂY (CHỐNG CRASH CHO NGƯỜI ĐỨNG XEM)
+                                                // 💣 HỆ THỐNG SÁT THƯƠNG ĐỘC LẬP: Sau 1.5s đạn tới nơi, ai đứng gần đích sẽ mất máu
+                                                setTimeout(() => {
+                                                    if (!window.isDead && window.playerModel && window.playerModel.position.distanceTo(pTarget) < 25) {
+                                                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pTarget, dmgBoss, 25);
+                                                    }
+                                                }, 1500);
+
                                                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                                             } else {
                                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, pTarget, phaiCode, data.chieu);
                                             }
                                         };
 
-                                        if (typeof window[funcName] === 'function') {
-                                            thiTrienQuaMang();
-                                        } else {
+                                        if (typeof window[funcName] === 'function') thiTrienQuaMang();
+                                        else {
                                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                                             if (!window.dangTaiVoCongBoss[phaiCode]) {
                                                 window.dangTaiVoCongBoss[phaiCode] = true;
-                                                let fileName = phaiCode.toLowerCase().replace(/_/g, ''); 
+                                                let fileName = phaiCode.toLowerCase().replace(/_/g, '');
                                                 let theScript = document.createElement('script');
                                                 theScript.src = 'js/' + fileName + '.js?v=' + Date.now();
-                                                theScript.onload = function() { thiTrienQuaMang(); };
-                                                theScript.onerror = function() {
-                                                    let scriptDuPhong = document.createElement('script');
-                                                    scriptDuPhong.src = 'js/phai_' + fileName + '.js?v=' + Date.now();
-                                                    scriptDuPhong.onload = function() { thiTrienQuaMang(); };
-                                                    document.head.appendChild(scriptDuPhong);
-                                                };
+                                                theScript.onload = function () { thiTrienQuaMang(); };
                                                 document.head.appendChild(theScript);
                                             }
                                         }
