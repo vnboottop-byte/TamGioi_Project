@@ -584,9 +584,84 @@ if (Array.isArray(data) && data[0] === 1) {
 
 
 
+
                                         else {
-                                            if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, new THREE.Vector3(data.target.x, data.target.y, data.target.z), data.phai, data.chieu);
+                                            // 🌟 BẢN VÁ AAA: DYNAMIC DISPATCH - NHẬN DIỆN 1000 MÔN PHÁI TỰ ĐỘNG
+                                            let phaiCode = data.phai || 'TU_TIEN'; 
+                                            
+                                            // 1. Tự động chế tạo tên hàm (VD: 'WHITE_BEARD' -> 'tungComboWhiteBeard')
+                                            let parts = phaiCode.split('_');
+                                            let camelCase = parts.map(p => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase()).join('');
+                                            let funcName = 'tungCombo' + camelCase;
+
+                                            // 2. Chỉ châm chước đúng 3 phái đồ cổ bị sai tên từ ngày xưa (Sếp giữ nguyên)
+                                            if (phaiCode === 'SIEUANHHUNG') funcName = 'tungComboLazer';
+                                            if (phaiCode === 'CUNG_TEN') funcName = 'tungComboCungThu';
+                                            if (phaiCode === 'CAN_CHIEN') funcName = 'tungComboLuyenThe';
+
+                                            // Bắt tọa độ thực tế của ngực Boss
+                                            let bOrigin = boss.mesh.position.clone();
+                                            if (boss.tamThucTeLocal) {
+                                                bOrigin = boss.tamThucTeLocal.clone().applyMatrix4(boss.mesh.matrixWorld);
+                                            } else {
+                                                bOrigin.y += 5;
+                                            }
+                                            
+                                            let pTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+                                            let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+                                            let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
+                                            let tempId = String(boss.id);
+
+                                            let thiTrienQuaMang = function() {
+                                                if (typeof window[funcName] === 'function') {
+                                                    // Đăng ký thân phận tạm thời để nó có thể xả chiêu mượt mà
+                                                    if (typeof window.remotePlayers !== 'undefined') {
+                                                        window.remotePlayers[tempId] = { status: 'ready', mesh: boss.mesh, damage: 0 };
+                                                    }
+                                                    
+                                                    // Gọi xuất chiêu (Chỉ vẽ hình, KHÔNG GÂY DAME TRỪ MÁU tránh x2 sát thương)
+                                                    window[funcName](data.chieu, 0, bOrigin, pTarget, bDir, tempId, bossWeapon, true);
+                                                    
+                                                    setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[tempId]; }, 2000);
+                                                } else {
+                                                    // Nếu lỗi cực nặng (thiếu file/sai tên) mới lôi Hình Nón ra xài tạm
+                                                    if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(boss, pTarget, phaiCode, data.chieu);
+                                                }
+                                            };
+
+                                            if (typeof window[funcName] === 'function') {
+                                                thiTrienQuaMang();
+                                            } else {
+                                                // ⏳ TỰ ĐỘNG AUTO-DOWNLOAD FILE JS MỚI CỦA SẾP!
+                                                if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
+                                                if (!window.dangTaiVoCongBoss[phaiCode]) {
+                                                    window.dangTaiVoCongBoss[phaiCode] = true;
+                                                    console.log("⏳ Mạng: Đang tải Võ công lạ: " + phaiCode);
+                                                    
+                                                    // Tự động gọt bỏ dấu gạch dưới để khớp tên file Sếp tạo (VD: WHITE_BEARD -> whitebeard.js)
+                                                    let fileName = phaiCode.toLowerCase().replace(/_/g, ''); 
+                                                    
+                                                    let theScript = document.createElement('script');
+                                                    theScript.src = 'js/' + fileName + '.js?v=' + Date.now();
+                                                    
+                                                    theScript.onload = function() { thiTrienQuaMang(); };
+                                                    theScript.onerror = function() {
+                                                        // Dự phòng trường hợp tên file là phai_zoro.js thay vì zoro.js
+                                                        let scriptDuPhong = document.createElement('script');
+                                                        scriptDuPhong.src = 'js/phai_' + fileName + '.js?v=' + Date.now();
+                                                        scriptDuPhong.onload = function() { thiTrienQuaMang(); };
+                                                        document.head.appendChild(scriptDuPhong);
+                                                    };
+                                                    document.head.appendChild(theScript);
+                                                }
+                                            }
                                         }
+
+
+
+
+
+
                                     }
                                 }
                             }
