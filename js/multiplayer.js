@@ -615,6 +615,8 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                                 if (typeof window[tenHam] === 'function') {
                                     window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                 }
+
+
                                 // 2. NẾU CHƯA BIẾT CHIÊU NÀY -> TỰ ĐỘNG TẢI FILE SÁCH VÕ CÔNG VỀ HỌC NGAY!
                                 else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
@@ -630,9 +632,12 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                                     let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
 
                                     let theScript = document.createElement('script');
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js';
+                                    // MÃ CŨ CỦA SẾP LÀ: theScript.src = 'js/' + data.className.toLowerCase() + '.js';
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
 
                                     theScript.onload = function () {
+
+
                                         // 🛡️ BÍ THUẬT: PHỤC HỒI LINH HỒN (ĐÁ VĂNG KẺ ĐOẠT XÁ RA NGOÀI)
                                         window.HePhaiHienTai = backupHePhai;
                                         window.KHO_ANIM_NHANROI = backupIdle;
@@ -647,9 +652,12 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
 
                                     theScript.onerror = function () {
                                         let scriptDuPhong = document.createElement('script');
-                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js';
+                                        // MÃ CŨ CỦA SẾP LÀ: scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js';
+                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
 
                                         scriptDuPhong.onload = function () {
+
+
                                             // 🛡️ PHỤC HỒI LINH HỒN TẠI FILE DỰ PHÒNG
                                             window.HePhaiHienTai = backupHePhai;
                                             window.KHO_ANIM_NHANROI = backupIdle;
@@ -669,26 +677,6 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                             }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-   
-                            
                             else if (data.type === 'BI_CHEM') {
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
                                     window.mauBanThan -= Math.round(data.damage);
@@ -707,21 +695,11 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                                 }
                             }
 
-
-
-
-
                         }
                     } catch (e) {
                         // Bắt lỗi âm thầm, không cho sập vòng lặp
                     }
                 });
-
-
-
-
-
-
 
             } catch (err) { loginBtn.disabled = false; }
         });
@@ -741,11 +719,6 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                    if (rp.targetQuat) {
                    rp.mesh.quaternion.slerp(rp.targetQuat, 0.15);
                    }
-
-
-
-
-
 
                     if (rp.tag && typeof camera !== 'undefined') {
                         // 🌟 BẢN VÁ: QUÉT TRỰC TIẾP TỌA ĐỘ GỐC CỦA MESH
@@ -774,9 +747,6 @@ else if ((data.phai === 'CHIM' || data.phai === 'CA') && typeof window.tungCombo
                             rp.tag.style.display = 'none';
                         }
                     }
-
-
-
 
                 }
             }
@@ -823,10 +793,6 @@ micBtn.addEventListener('mouseleave', tatMic); // Lỡ kéo chuột ra khỏi n�
 micBtn.addEventListener('touchstart', batMic, {passive: false});
 micBtn.addEventListener('touchend', tatMic);
 micBtn.addEventListener('touchcancel', tatMic);
-
-
-
-
 // ==========================================
 // ⚔️ TỔNG PHỄU GOM SÁT THƯƠNG PVP (CHỐNG SPAM DATA KHI PK)
 // ==========================================
