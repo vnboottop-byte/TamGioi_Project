@@ -677,16 +677,18 @@ window.capNhatAIQuaiVat = function (delta) {
         let mucTieuTotNhat = playerModel;
         let myDist = (typeof window.isDead !== 'undefined' && window.isDead) ? Infinity : quai.mesh.position.distanceTo(playerModel.position);
 
-        // 🌟 QUÉT ĐA MỤC TIÊU: Giúp máy Host (Nick A) nhìn thấy cả Nick B để chuyển mục tiêu rượt đuổi
+        // 🌟 QUÉT ĐA MỤC TIÊU: MẮT THẦN NÂNG CẤP CHỐNG LÚ (VÁ LỖI BẮN NHAU)
         if (typeof window.remotePlayers !== 'undefined') {
             for (let id in window.remotePlayers) {
                 let rp = window.remotePlayers[id];
-                // Chỉ quét người chơi thực sự, bỏ qua các bóng ma Phantom hệ thống tự đẻ
-                if (rp && rp.status === 'ready' && rp.mesh && !id.startsWith("PHANTOM_") && !id.startsWith("BOSS_")) {
+                
+                // 🛑 BẢN VÁ AAA: Ép chuỗi ID thành in hoa và chặn tuyệt đối Bóng Ma + Boss Ảo
+                let uid = String(id).toUpperCase();
+                if (rp && rp.status === 'ready' && rp.mesh && !uid.includes("PHANTOM") && !uid.includes("BOSS")) {
                     let d = quai.mesh.position.distanceTo(rp.mesh.position);
                     if (d < myDist) {
                         myDist = d;
-                        mucTieuTotNhat = rp.mesh; // Khóa mục tiêu vào người đứng gần hơn
+                        mucTieuTotNhat = rp.mesh; 
                     }
                 }
             }
@@ -807,11 +809,25 @@ window.capNhatAIQuaiVat = function (delta) {
                             funcName = 'tungCombo' + camelCase;
                         }
 
+                        // 🌟 BẢN VÁ: Khóa mục tiêu chiêu mạng vào KẺ ĐỨNG GẦN NHẤT
+                        const pTarget = posNguoiChoi.clone(); pTarget.y += 5;
+
+                        let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
+                        let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
+                        
+                        // 🛑 BẢN VÁ AAA: Cấp CCCD ảo cho Boss để 100+ file võ công không bị lỗi Undefined
+                        let renderId = "BOSS_" + String(quai.id); 
+
                         let thiTrienVoCong = function() {
-                            // 🌟 BẢN VÁ: PHỤC HỒI DYNAMIC SCRIPT CHO MỌI HỆ PHÁI
                             if (typeof window[funcName] === 'function') {
-                           // Truyền TRUE để báo đây là đòn đánh từ Mạng/Boss
-                            window[funcName](chieu, dmgBoss, bOrigin, pTarget, bDir, tempId, bossWeapon, true);
+                                // Mở đăng ký tạm trú cho Boss trên máy mình
+                                if (typeof window.remotePlayers !== 'undefined') window.remotePlayers[renderId] = { status: 'ready', mesh: quai.mesh, damage: 0 };
+                                
+                                let thamSoRemote = isMucTieuLaToi ? dmgBoss : true; 
+                                try { window[funcName](chieu, thamSoRemote, bOrigin, pTarget, bDir, renderId, bossWeapon); } catch(e){}
+                                
+                                // 🌟 TĂNG THỜI GIAN SỐNG LÊN 8 GIÂY để chờ đạn nổ xong mới xóa (CHỐNG CRASH)
+                                setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[renderId]; }, 8000);
                             } else {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
