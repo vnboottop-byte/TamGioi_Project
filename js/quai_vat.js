@@ -526,8 +526,7 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
                 return; // 🌟 RETURN LUÔN! Cấm chạy các lệnh tìm mục tiêu (AI) bên dưới!
             }
-        if (quai.mixer) quai.mixer.update(delta);
-        if (quai.isDead) return;
+        
 
         // Tự động tính toán hệ số to lớn và lõi thịt của Boss
         if (!quai.heSoToLon) {
