@@ -560,17 +560,34 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
+
+
+
+
+
             // ==========================================
-            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & MOONWALK)
+            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & LỖI ANIMATION)
             // ==========================================
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
                 if (quai.targetPosLK) quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
+                if (quai.targetQuatLK) quai.mesh.quaternion.slerp(quai.targetQuatLK, 0.2); // Xoay cổ
                 
-                // 🌟 BẢN VÁ: XOAY CỔ THEO MÁY HOST!
-                if (quai.targetQuatLK) quai.mesh.quaternion.slerp(quai.targetQuatLK, 0.2); 
-                
+                // 🌟 ĐỒNG BỘ ANIMATION MẠNG (CHỐNG KẸT ATTACK LÊ LẾT TRÊN ĐẤT)
+                let dangMuaChieu = quai.thoiGianKhoaChieu && Date.now() < quai.thoiGianKhoaChieu;
+                if (!dangMuaChieu && quai.targetAnimLK) {
+                    if (quai.targetAnimLK === 'CHASE' || quai.targetAnimLK === 'RETREAT') {
+                        if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
+                    } else if (quai.targetAnimLK === 'IDLE') {
+                        if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                    }
+                }
                 return; // Thoát ngang an toàn
             }
+
+
+
+
+
 
 
 
