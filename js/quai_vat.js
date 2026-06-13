@@ -658,7 +658,7 @@ window.capNhatAIQuaiVat = function (delta) {
             // 2. LẤY THỜI GIAN CHUNG TOÀN SERVER (Cùng 1 mili-giây, mọi máy vẽ giống nhau)
             let tChung = Date.now() / 1000; 
 
-            // HÀM TÍNH TỌA ĐỘ VÀ UỐN CONG THEO VỎ TRÁI ĐẤT
+            // HÀM TÍNH TỌA ĐỘ VÀ UỐN CONG THEO VỎ TRÁI ĐẤT (FULL HÀNH TINH)
             let tinhToaDoToanHoc = function(tOffset) {
                 let goc = ((tChung + tOffset) * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2);
                 let kq = new THREE.Vector3();
@@ -672,26 +672,22 @@ window.capNhatAIQuaiVat = function (delta) {
                     if (right.lengthSq() < 0.001) right.set(0, 0, 1).cross(vUp).normalize();
                     let forward = new THREE.Vector3().crossVectors(right, vUp).normalize();
                     
-                    // 🌟 BẢN VÁ AAA: KHÔNG CỘNG TUYẾN TÍNH NỮA, MÀ ĐỔI SANG GÓC XOAY QUANH TÂM TRÁI ĐẤT
-                    // Đường cong Lissajous (Hình số 8 dẹp) giúp cá bơi dích dắc khắp Map
-                    let dx = Math.sin(goc) * quai.banKinhBay;
-                    let dz = Math.cos(goc * 0.8) * quai.banKinhBay; 
-                    
-                    // Đổi quãng đường thành Góc Xoay (Góc = Quãng đường / Bán kính)
-                    let angleX = dx / R_matDat;
-                    let angleZ = dz / R_matDat;
+                    // 🌟 BẢN VÁ: THÁO XÍCH MAP CẦU (BAY KHẮP HÀNH TINH)
+                    // Bỏ qua banKinhBay, ép góc quay chạy tới vô cực để cá bơi vòng quanh Trái Đất!
+                    let angleX = goc; // Quay vòng quanh kinh độ
+                    let angleZ = goc * 0.8; // Quay vòng quanh vĩ độ (Tạo đường bơi chéo len lỏi khắp map)
                     
                     let qX = new THREE.Quaternion().setFromAxisAngle(forward, angleX);
                     let qZ = new THREE.Quaternion().setFromAxisAngle(right, -angleZ);
                     
-                    // Uốn cong quỹ đạo bám sát vỏ Trái Đất
+                    // Uốn quỹ đạo bám sát vỏ Trái Đất (Du lịch khắp 5 châu 4 bể)
                     let finalDir = vUp.clone().applyQuaternion(qX).applyQuaternion(qZ).normalize();
                     
-                    // Bơm thêm độ cao y (Dương từ 0 đến Max 300m)
+                    // Bơm thêm độ cao y (Chỉ nổi lên 50-300m so với mặt đất)
                     let heightOffset = Math.abs(Math.sin(goc * 1.5)) * quai.doCaoNhaoLon;
                     kq.copy(tam).add(finalDir.multiplyScalar(R_matDat + heightOffset));
                 } else {
-                    // 🌟 ĐỐI VỚI MAP PHẲNG: Giới hạn bán kính không vượt quá 4000m để tránh đụng Mây
+                    // 🌟 MAP PHẲNG: Vẫn khóa cứng max 4000m để không đâm vào lưới Mây ở viền Map
                     let maxFlat = 4000; 
                     let dx = Math.sin(goc) * Math.min(quai.banKinhBay, maxFlat);
                     let dz = Math.cos(goc * 0.8) * Math.min(quai.banKinhBay, maxFlat);
