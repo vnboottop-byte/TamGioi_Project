@@ -634,7 +634,7 @@ window.capNhatAIQuaiVat = function (delta) {
         }
 
         // ========================================================
-        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ (QUỸ ĐẠO TOÁN HỌC ĐỒNG BỘ 1000%)
+        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ (QUỸ ĐẠO BÁM VỎ TRÁI ĐẤT & BẦU TRỜI)
         // ========================================================
         if (quai.classCode === 'TRANG_TRI') {
             let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
@@ -644,79 +644,93 @@ window.capNhatAIQuaiVat = function (delta) {
             if (quai.seedToanHoc === undefined) {
                 let hash = 0; let strId = String(quai.id);
                 for (let i = 0; i < strId.length; i++) hash = Math.imul(31, hash) + strId.charCodeAt(i) | 0;
-                quai.seedToanHoc = (Math.abs(hash) % 10000) / 10000; // Sinh ra 1 số cố định từ 0.0 đến 1.0 tùy theo ID
+                quai.seedToanHoc = (Math.abs(hash) % 10000) / 10000; 
                 
-                // Tự động phân hóa đa dạng dựa trên hạt giống
-                quai.banKinhBay = (500 + quai.seedToanHoc * 1500) * (quai.heSoToLon || 1); // Bán kính từ 500m -> 2000m
-                quai.tocDoGoc = 0.02 + (quai.seedToanHoc * 0.03); // Tốc độ bay đa dạng
-                quai.chieuThuan = (quai.seedToanHoc > 0.5) ? 1 : -1; // Nửa bầy bay xuôi, nửa bầy bay ngược
-                quai.doCaoNhaoLon = 100 + (quai.seedToanHoc * 200); // Biên độ lượn sóng (100m -> 300m)
+                // 🌟 BẢN VÁ: Thiết lập thông số bay An toàn tuyệt đối
+                // Map Cầu bay rộng bao phủ cả Map, Map Phẳng giới hạn max 4000m để không húc lưới Mây
+                quai.banKinhBay = 3000 + (quai.seedToanHoc * 3000); 
+                quai.tocDoGoc = 0.005 + (quai.seedToanHoc * 0.01); 
+                quai.chieuThuan = (quai.seedToanHoc > 0.5) ? 1 : -1; 
+                // Khóa độ cao chỉ từ 50m đến TỐI ĐA 300M (Tuyệt đối không bay ra vũ trụ)
+                quai.doCaoNhaoLon = 50 + (quai.seedToanHoc * 250); 
             }
 
-            // 2. LẤY THỜI GIAN CHUNG TOÀN SERVER (Đổi ra Giây)
-            // Ép chia cho 1000 để chạy theo giây, đảm bảo máy nhanh máy chậm đều ở đúng 1 mốc tọa độ
+            // 2. LẤY THỜI GIAN CHUNG TOÀN SERVER (Cùng 1 mili-giây, mọi máy vẽ giống nhau)
             let tChung = Date.now() / 1000; 
-            let gocHienTai = (tChung * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2); // Khởi đầu so le nhau
 
-            // 3. TÍNH TỌA ĐỘ TUYỆT ĐỐI (Toán học Deterministic - Cấm dùng random hay +=)
-            let dx = Math.sin(gocHienTai) * quai.banKinhBay;
-            let dz = Math.cos(gocHienTai) * quai.banKinhBay;
-            let dy = Math.sin(gocHienTai * 1.5) * quai.doCaoNhaoLon; // Đu đưa theo hình lượn sóng
-
-            let viTriDich = quai.spawnPos.clone();
-
-            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-                let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
-                if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
-                let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
+            // HÀM TÍNH TỌA ĐỘ VÀ UỐN CONG THEO VỎ TRÁI ĐẤT
+            let tinhToaDoToanHoc = function(tOffset) {
+                let goc = ((tChung + tOffset) * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2);
+                let kq = new THREE.Vector3();
                 
-                viTriDich.add(rightSpawn.multiplyScalar(dx));
-                viTriDich.add(forwardSpawn.multiplyScalar(dz));
-                viTriDich.add(upSpawn.multiplyScalar(dy));
-            } else {
-                viTriDich.x += dx;
-                viTriDich.z += dz;
-                viTriDich.y += dy;
-            }
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                    let tam = window.TAM_HANH_TINH_HIEN_TAI;
+                    let R_matDat = quai.spawnPos.distanceTo(tam); 
+                    let vUp = quai.spawnPos.clone().sub(tam).normalize();
+                    
+                    let right = new THREE.Vector3(1, 0, 0).cross(vUp).normalize();
+                    if (right.lengthSq() < 0.001) right.set(0, 0, 1).cross(vUp).normalize();
+                    let forward = new THREE.Vector3().crossVectors(right, vUp).normalize();
+                    
+                    // 🌟 BẢN VÁ AAA: KHÔNG CỘNG TUYẾN TÍNH NỮA, MÀ ĐỔI SANG GÓC XOAY QUANH TÂM TRÁI ĐẤT
+                    // Đường cong Lissajous (Hình số 8 dẹp) giúp cá bơi dích dắc khắp Map
+                    let dx = Math.sin(goc) * quai.banKinhBay;
+                    let dz = Math.cos(goc * 0.8) * quai.banKinhBay; 
+                    
+                    // Đổi quãng đường thành Góc Xoay (Góc = Quãng đường / Bán kính)
+                    let angleX = dx / R_matDat;
+                    let angleZ = dz / R_matDat;
+                    
+                    let qX = new THREE.Quaternion().setFromAxisAngle(forward, angleX);
+                    let qZ = new THREE.Quaternion().setFromAxisAngle(right, -angleZ);
+                    
+                    // Uốn cong quỹ đạo bám sát vỏ Trái Đất
+                    let finalDir = vUp.clone().applyQuaternion(qX).applyQuaternion(qZ).normalize();
+                    
+                    // Bơm thêm độ cao y (Dương từ 0 đến Max 300m)
+                    let heightOffset = Math.abs(Math.sin(goc * 1.5)) * quai.doCaoNhaoLon;
+                    kq.copy(tam).add(finalDir.multiplyScalar(R_matDat + heightOffset));
+                } else {
+                    // 🌟 ĐỐI VỚI MAP PHẲNG: Giới hạn bán kính không vượt quá 4000m để tránh đụng Mây
+                    let maxFlat = 4000; 
+                    let dx = Math.sin(goc) * Math.min(quai.banKinhBay, maxFlat);
+                    let dz = Math.cos(goc * 0.8) * Math.min(quai.banKinhBay, maxFlat);
+                    let dy = Math.abs(Math.sin(goc * 1.5)) * quai.doCaoNhaoLon; // Nổi lên 50-300m
+                    
+                    kq.set(quai.spawnPos.x + dx, quai.spawnPos.y + dy, quai.spawnPos.z + dz);
+                }
+                return kq;
+            };
 
-            // ÉP CỨNG TỌA ĐỘ VÀO ĐỊA CHỈ TOÁN HỌC (Không Lerp, không trượt)
+            // 3. XÁC ĐỊNH VỊ TRÍ VÀ HƯỚNG NHÌN
+            let viTriDich = tinhToaDoToanHoc(0);
+            let viTriTuongLai = tinhToaDoToanHoc(0.5); // Nhìn trước 0.5s để chỉnh mõm cá
+
             quai.mesh.position.copy(viTriDich);
-
-            // 4. TOÁN HỌC TÍNH HƯỚNG NHÌN (Lấy tọa độ tương lai trừ tọa độ hiện tại)
-            let gocTuongLai = ((tChung + 0.2) * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2);
-            let fx = Math.sin(gocTuongLai) * quai.banKinhBay;
-            let fz = Math.cos(gocTuongLai) * quai.banKinhBay;
-            let fy = Math.sin(gocTuongLai * 1.5) * quai.doCaoNhaoLon;
             
-            let viTriTuongLai = quai.spawnPos.clone();
+            // 🌟 CẬP NHẬT TRỤC UP LIÊN TỤC THEO ĐIỂM CHẠM MỚI NHẤT (CHỐNG LỘN ĐẦU LỘN ĐÍT)
+            let upV = new THREE.Vector3(0, 1, 0);
             if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-                let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
-                if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
-                let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
-                viTriTuongLai.add(rightSpawn.multiplyScalar(fx)); viTriTuongLai.add(forwardSpawn.multiplyScalar(fz)); viTriTuongLai.add(upSpawn.multiplyScalar(fy));
-            } else {
-                viTriTuongLai.x += fx; viTriTuongLai.z += fz; viTriTuongLai.y += fy;
+                upV.copy(quai.mesh.position).sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
             }
+            quai.upVector = upV;
 
             let huongBay = new THREE.Vector3().subVectors(viTriTuongLai, viTriDich).normalize();
 
             // QUAY MẶT VÀ NGHIÊNG CÁNH CHUẨN XÁC
             if (huongBay.lengthSq() > 0.001) {
-                let dummy = new THREE.Object3D(); dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                let dummy = new THREE.Object3D(); 
+                dummy.position.copy(quai.mesh.position); 
+                dummy.up.copy(upV); // 🌟 Dùng đúng cái Trục Lưng chuẩn để không bị lật ngửa
                 dummy.lookAt(quai.mesh.position.clone().add(huongBay));
 
                 let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
                 let lucNghieng = huongBay.dot(rightVec); 
                 dummy.rotateZ(lucNghieng * (boNao.lucNghieng || 1.5)); 
 
-                quai.mesh.quaternion.slerp(dummy.quaternion, 0.3); // Xoay cực nhạy
+                quai.mesh.quaternion.slerp(dummy.quaternion, 0.3); 
             }
 
-            if (window.KIEU_TRONG_LUC === 'PHANG') {
-                let yMin = quai.spawnPos.y - 100; if (quai.mesh.position.y < yMin) quai.mesh.position.y = yMin;
-            }
             if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
             if (quai.tagEl) quai.tagEl.style.display = 'none';
             return; 
