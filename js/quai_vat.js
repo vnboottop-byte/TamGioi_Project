@@ -1069,11 +1069,13 @@ window.capNhatAIQuaiVat = function (delta) {
                         quai.mesh.position.copy(viTriDich);
                     }
 
-                    if (huongBay.lengthSq() > 0.001) {
+                    // 🌟 BẢN VÁ: Ép góc nhìn song song mặt đất để Boss không bị cắm mặt xuống đất khi bước xuống không khí
+                    let huongNhinPhang = huongBay.clone().projectOnPlane(quai.upVector).normalize();
+                    if (huongNhinPhang.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
                         dummy.position.copy(quai.mesh.position);
                         dummy.up.copy(quai.upVector);
-                        dummy.lookAt(quai.mesh.position.clone().add(huongBay));
+                        dummy.lookAt(quai.mesh.position.clone().add(huongNhinPhang));
                         
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
                     }
@@ -1097,10 +1099,11 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
         // ========================================================
-        // 🌍 LÕI TRỌNG LỰC ĐA CHIỀU (CHỐNG LƠ LỬNG TRÊN KHÔNG)
+        // 🌍 LÕI TRỌNG LỰC ĐA CHIỀU (BẢN VÁ: ĐI BỘ TRÊN KHÔNG & HẠ CÁNH MƯỢT MÀ)
         // ========================================================
         if (quai.mucTieuY) {
-            let isFlying = (boNao && boNao.he === 'BAY');
+            let dangHuyetChien = (quai.state === 'CHASE' || quai.state === 'ATTACK');
+            let isFlying = (boNao && boNao.he === 'BAY') || dangHuyetChien;
             let kcAnToan = boNao ? boNao.khoangCachAnToan : 0;
 
             if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
@@ -1112,8 +1115,15 @@ window.capNhatAIQuaiVat = function (delta) {
                     quai.mesh.position.lerp(viTriCuuHo, 0.5);
                 } 
                 else if (!isFlying && kcQuai > kcDat + kcAnToan + 1.0) { 
+                    // 🌟 BẢN VÁ: TỪ TỪ BƯỚC XUỐNG CẦU THANG TÀNG HÌNH (Rơi 20m/s thay vì rớt tự do)
                     let viTriDat = window.TAM_HANH_TINH_HIEN_TAI.clone().add(quai.upVector.clone().multiplyScalar(kcDat + kcAnToan));
-                    quai.mesh.position.lerp(viTriDat, 0.2); 
+                    let tocDoRoi = 20 * delta; 
+                    if (quai.mesh.position.distanceTo(viTriDat) > tocDoRoi) {
+                        let huongRoi = new THREE.Vector3().subVectors(viTriDat, quai.mesh.position).normalize();
+                        quai.mesh.position.add(huongRoi.multiplyScalar(tocDoRoi));
+                    } else {
+                        quai.mesh.position.copy(viTriDat);
+                    }
                 }
             } 
             else if (window.KIEU_TRONG_LUC === 'PHANG') {
@@ -1121,7 +1131,10 @@ window.capNhatAIQuaiVat = function (delta) {
                     quai.mesh.position.y += (quai.mucTieuY.y + kcAnToan - quai.mesh.position.y) * 0.5;
                 }
                 else if (!isFlying && quai.mesh.position.y > quai.mucTieuY.y + kcAnToan + 1.0) { 
-                    quai.mesh.position.y -= (quai.mesh.position.y - (quai.mucTieuY.y + kcAnToan)) * 0.2;
+                    // 🌟 BẢN VÁ: TỪ TỪ BƯỚC XUỐNG CẦU THANG TÀNG HÌNH
+                    let tocDoRoi = 20 * delta;
+                    quai.mesh.position.y -= tocDoRoi;
+                    if (quai.mesh.position.y < quai.mucTieuY.y + kcAnToan) quai.mesh.position.y = quai.mucTieuY.y + kcAnToan;
                 }
             }
         }
