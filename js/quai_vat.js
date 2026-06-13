@@ -634,65 +634,94 @@ window.capNhatAIQuaiVat = function (delta) {
         }
 
         // ========================================================
-        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ LƯỢN LỜ ĐA VŨ TRỤ
+        // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ (QUỸ ĐẠO TOÁN HỌC ĐỒNG BỘ 1000%)
         // ========================================================
         if (quai.classCode === 'TRANG_TRI') {
             let boNao = window.TU_DIEN_AI_QUAI['TRANG_TRI'];
-            if (quai.gocY === undefined) quai.gocY = quai.mesh.position.y;
-            if (quai.gocTam === undefined) quai.gocTam = quai.spawnPos ? quai.spawnPos.clone() : quai.mesh.position.clone();
+            if (!quai.spawnPos) quai.spawnPos = new THREE.Vector3(quai.spawnX || quai.mesh.position.x, quai.mesh.position.y, quai.spawnZ || quai.mesh.position.z);
             
-            if (!quai.waypoint || quai.mesh.position.distanceTo(quai.waypoint) < 50) {
-                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                    let R = window.BAN_KINH_HANH_TINH_HIEN_TAI || 10000;
-                    let radius = quai.gocTam.distanceTo(window.TAM_HANH_TINH_HIEN_TAI) + (Math.random() * 50 - 25);
-                    let theta = Math.random() * Math.PI * 2; let phi = Math.random() * Math.PI;       
-                    let tam = window.TAM_HANH_TINH_HIEN_TAI;
-                    quai.waypoint = new THREE.Vector3(
-                        tam.x + radius * Math.sin(phi) * Math.cos(theta),
-                        tam.y + radius * Math.cos(phi),
-                        tam.z + radius * Math.sin(phi) * Math.sin(theta)
-                    );
-                } else {
-                    let range = 2000;
-                    quai.waypoint = new THREE.Vector3(
-                        quai.gocTam.x + (Math.random() - 0.5) * range,
-                        quai.gocY + (Math.random() * 50 - 25),
-                        quai.gocTam.z + (Math.random() - 0.5) * range
-                    );
-                }
-                quai.currentSpeed = 10 * (quai.heSoToLon || 1); 
+            // 1. TẠO "HẠT GIỐNG TOÁN HỌC" TỪ ID CỦA BOSS (CHỈ TẠO 1 LẦN)
+            if (quai.seedToanHoc === undefined) {
+                let hash = 0; let strId = String(quai.id);
+                for (let i = 0; i < strId.length; i++) hash = Math.imul(31, hash) + strId.charCodeAt(i) | 0;
+                quai.seedToanHoc = (Math.abs(hash) % 10000) / 10000; // Sinh ra 1 số cố định từ 0.0 đến 1.0 tùy theo ID
+                
+                // Tự động phân hóa đa dạng dựa trên hạt giống
+                quai.banKinhBay = (500 + quai.seedToanHoc * 1500) * (quai.heSoToLon || 1); // Bán kính từ 500m -> 2000m
+                quai.tocDoGoc = 0.02 + (quai.seedToanHoc * 0.03); // Tốc độ bay đa dạng
+                quai.chieuThuan = (quai.seedToanHoc > 0.5) ? 1 : -1; // Nửa bầy bay xuôi, nửa bầy bay ngược
+                quai.doCaoNhaoLon = 100 + (quai.seedToanHoc * 200); // Biên độ lượn sóng (100m -> 300m)
             }
 
-            let currentForward = new THREE.Vector3(0, 0, 1).applyQuaternion(quai.mesh.quaternion).normalize();
-            let maxSpeed = 30 * (quai.heSoToLon || 1);
-            if (quai.currentSpeed < maxSpeed) quai.currentSpeed += 5 * delta;
-            quai.mesh.position.add(currentForward.clone().multiplyScalar(quai.currentSpeed * delta));
+            // 2. LẤY THỜI GIAN CHUNG TOÀN SERVER (Đổi ra Giây)
+            // Ép chia cho 1000 để chạy theo giây, đảm bảo máy nhanh máy chậm đều ở đúng 1 mốc tọa độ
+            let tChung = Date.now() / 1000; 
+            let gocHienTai = (tChung * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2); // Khởi đầu so le nhau
 
-            let huongBayDich = new THREE.Vector3().subVectors(quai.waypoint, quai.mesh.position).normalize();
-            let huongBayNgang = huongBayDich.clone().projectOnPlane(quai.upVector).normalize();
-            if (huongBayNgang.lengthSq() < 0.001) huongBayNgang = currentForward.clone();
+            // 3. TÍNH TỌA ĐỘ TUYỆT ĐỐI (Toán học Deterministic - Cấm dùng random hay +=)
+            let dx = Math.sin(gocHienTai) * quai.banKinhBay;
+            let dz = Math.cos(gocHienTai) * quai.banKinhBay;
+            let dy = Math.sin(gocHienTai * 1.5) * quai.doCaoNhaoLon; // Đu đưa theo hình lượn sóng
 
-            let dummy = new THREE.Object3D();
-            dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
-            dummy.lookAt(quai.mesh.position.clone().sub(huongBayNgang));
+            let viTriDich = quai.spawnPos.clone();
 
-            let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
-            let gocRe = currentForward.dot(rightVec); 
-            dummy.rotateZ(gocRe * boNao.lucNghieng); 
-            quai.mesh.quaternion.slerp(dummy.quaternion, 0.02); 
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
+                if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
+                let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
+                
+                viTriDich.add(rightSpawn.multiplyScalar(dx));
+                viTriDich.add(forwardSpawn.multiplyScalar(dz));
+                viTriDich.add(upSpawn.multiplyScalar(dy));
+            } else {
+                viTriDich.x += dx;
+                viTriDich.z += dz;
+                viTriDich.y += dy;
+            }
 
-            let trucUpHienTai = new THREE.Vector3(0, 1, 0).applyQuaternion(quai.mesh.quaternion);
-            let nanTrucQuat = new THREE.Quaternion().setFromUnitVectors(trucUpHienTai, quai.upVector);
-            quai.mesh.quaternion.premultiply(nanTrucQuat);
+            // ÉP CỨNG TỌA ĐỘ VÀO ĐỊA CHỈ TOÁN HỌC (Không Lerp, không trượt)
+            quai.mesh.position.copy(viTriDich);
+
+            // 4. TOÁN HỌC TÍNH HƯỚNG NHÌN (Lấy tọa độ tương lai trừ tọa độ hiện tại)
+            let gocTuongLai = ((tChung + 0.2) * quai.tocDoGoc * quai.chieuThuan) + (quai.seedToanHoc * Math.PI * 2);
+            let fx = Math.sin(gocTuongLai) * quai.banKinhBay;
+            let fz = Math.cos(gocTuongLai) * quai.banKinhBay;
+            let fy = Math.sin(gocTuongLai * 1.5) * quai.doCaoNhaoLon;
+            
+            let viTriTuongLai = quai.spawnPos.clone();
+            if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
+                if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
+                let forwardSpawn = new THREE.Vector3().crossVectors(rightSpawn, upSpawn).normalize();
+                viTriTuongLai.add(rightSpawn.multiplyScalar(fx)); viTriTuongLai.add(forwardSpawn.multiplyScalar(fz)); viTriTuongLai.add(upSpawn.multiplyScalar(fy));
+            } else {
+                viTriTuongLai.x += fx; viTriTuongLai.z += fz; viTriTuongLai.y += fy;
+            }
+
+            let huongBay = new THREE.Vector3().subVectors(viTriTuongLai, viTriDich).normalize();
+
+            // QUAY MẶT VÀ NGHIÊNG CÁNH CHUẨN XÁC
+            if (huongBay.lengthSq() > 0.001) {
+                let dummy = new THREE.Object3D(); dummy.position.copy(quai.mesh.position); dummy.up.copy(quai.upVector);
+                dummy.lookAt(quai.mesh.position.clone().add(huongBay));
+
+                let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
+                let lucNghieng = huongBay.dot(rightVec); 
+                dummy.rotateZ(lucNghieng * (boNao.lucNghieng || 1.5)); 
+
+                quai.mesh.quaternion.slerp(dummy.quaternion, 0.3); // Xoay cực nhạy
+            }
 
             if (window.KIEU_TRONG_LUC === 'PHANG') {
-                let yMin = quai.gocY - 100;
-                if (quai.mesh.position.y < yMin) quai.mesh.position.y += (yMin - quai.mesh.position.y) * 0.1;
+                let yMin = quai.spawnPos.y - 100; if (quai.mesh.position.y < yMin) quai.mesh.position.y = yMin;
             }
             if (typeof quai.playAnim === 'function') quai.playAnim('RUN'); 
             if (quai.tagEl) quai.tagEl.style.display = 'none';
             return; 
         }
+
         // ========================================================
         // 🎯 TÍNH TOÁN KHOẢNG CÁCH CHUNG CHO MỌI LOẠI QUÁI (MẮT THẦN ĐA MỤC TIÊU)
         // ========================================================
@@ -884,10 +913,6 @@ window.capNhatAIQuaiVat = function (delta) {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
                         }
                     }
-
-
-
-
                 }
             }
             else {
@@ -1134,20 +1159,21 @@ window.capNhatAIQuaiVat = function (delta) {
         // ========================================================
         // 📡 MÁY PHÁT SÓNG: ĐỒNG BỘ TỌA ĐỘ, GÓC XOAY VÀ ANIMATION LÊN MẠNG
         // ========================================================
-        if (window.room && window.room.state === 'connected') {
-            if (Date.now() - (quai.lastPosSync || 0) > 100) {
-                quai.lastPosSync = Date.now();
-                let rot = quai.mesh.rotation; 
-                
-                // 🌟 CHÌA KHÓA VÀNG: Lấy ĐÚNG TÊN HOẠT ẢNH đang phát (RUN, IDLE, HIT...) thay vì trạng thái State!
-                let hienTrangAnim = quai.currentAnimName || quai.state || 'IDLE'; 
-                
-                try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
-                    type: 'BOSS_POS', bossId: quai.id, 
-                    x: parseFloat(quai.mesh.position.x.toFixed(2)), y: parseFloat(quai.mesh.position.y.toFixed(2)), z: parseFloat(quai.mesh.position.z.toFixed(2)), 
-                    rx: parseFloat(rot.x.toFixed(3)), ry: parseFloat(rot.y.toFixed(3)), rz: parseFloat(rot.z.toFixed(3)), 
-                    anim: hienTrangAnim 
-                })), { reliable: false }); } catch (e) { }
+        // 🌟 BẢN VÁ: Cấm Sinh Vật Cảnh (TRANG TRÍ) lên sóng LiveKit, vì nó đã dùng thuật toán đồng bộ tuyệt đối rồi!
+        if (quai.classCode !== 'TRANG_TRI') {
+            if (window.room && window.room.state === 'connected') {
+                if (Date.now() - (quai.lastPosSync || 0) > 100) {
+                    quai.lastPosSync = Date.now();
+                    let rot = quai.mesh.rotation; 
+                    let hienTrangAnim = quai.currentAnimName || quai.state || 'IDLE'; 
+                    
+                    try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
+                        type: 'BOSS_POS', bossId: quai.id, 
+                        x: parseFloat(quai.mesh.position.x.toFixed(2)), y: parseFloat(quai.mesh.position.y.toFixed(2)), z: parseFloat(quai.mesh.position.z.toFixed(2)), 
+                        rx: parseFloat(rot.x.toFixed(3)), ry: parseFloat(rot.y.toFixed(3)), rz: parseFloat(rot.z.toFixed(3)), 
+                        anim: hienTrangAnim 
+                    })), { reliable: false }); } catch (e) { }
+                }
             }
         }
 
@@ -1155,12 +1181,8 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-
     });
 };
-
-
-
 
 // 6. VÒNG LẶP SKILL VÀ SÁT THƯƠNG BOSS THƯỜNG
 setInterval(() => {
@@ -1206,7 +1228,6 @@ setInterval(() => {
 // =====================================================================
 // 👤 MODULE ĐẶC BIỆT: HỆ THỐNG "PHANTOM" - GIẢ LẬP NGƯỜI CHƠI (BẢN V16 - NPC QUA ĐƯỜNG)
 // =====================================================================
-
 window.taoTenNguoiChoiGia = function () {
     const ho = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Bạch", "Diệp"];
     const ten = ["Phong", "Linh", "Hải", "Tuấn", "Nam", "Long", "Vy", "Trang", "Anh", "Minh", "Khang", "Hùng", "Bảo", "Nhi", "Hân", "Thành", "Đạt", "Thịnh", "Huy", "Phúc", "Kiwii", "Ken", "Bo", "Bin"];
@@ -1326,8 +1347,6 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 let targetMat = new THREE.Matrix4().lookAt(bot.mesh.position, bot.mesh.position.clone().sub(huongNhinSep), newBotUp);
                 bot.mesh.quaternion.slerp(new THREE.Quaternion().setFromRotationMatrix(targetMat), 0.5);
             }
-
-
 
             if (Date.now() - (bot.lastAttackTime || 0) > 1200) {
                 bot.lastAttackTime = Date.now();
