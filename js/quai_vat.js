@@ -566,25 +566,18 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
             // ==========================================
-            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG & LỖI T-POSE)
+            // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG ANIMATION)
             // ==========================================
             if (quai.thoiGianBiDieuKhienQuaMang && Date.now() < quai.thoiGianBiDieuKhienQuaMang) {
-                let khoangCachTruot = 0;
-                if (quai.targetPosLK) {
-                    khoangCachTruot = quai.mesh.position.distanceTo(quai.targetPosLK);
-                    quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
-                }
+                if (quai.targetPosLK) quai.mesh.position.lerp(quai.targetPosLK, 0.15); // Trượt tọa độ
                 if (quai.targetQuatLK) quai.mesh.quaternion.slerp(quai.targetQuatLK, 0.2); // Xoay cổ
                 
-                // 🌟 ĐỒNG BỘ ANIMATION BẰNG TỐC ĐỘ VẬT LÝ (KHÔNG BAO GIỜ KẸT T-POSE)
+                // 🌟 BẢN VÁ KẾT LIỄU BỆNH GIẬT: ÉP CON RỐI SAO CHÉP 100% TÊN ANIMATION CỦA MÁY CHỦ!
                 let dangMuaChieu = quai.thoiGianKhoaChieu && Date.now() < quai.thoiGianKhoaChieu;
-                if (!dangMuaChieu) {
-                    if (khoangCachTruot > 1.0) { 
-                        // Bị lôi đi nhanh -> Ép play RUN
-                        if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
-                    } else { 
-                        // Đứng im tại chỗ -> Ép play IDLE
-                        if (typeof quai.playAnim === 'function') quai.playAnim('IDLE');
+                if (!dangMuaChieu && quai.targetAnimLK) {
+                    if (typeof quai.playAnim === 'function') {
+                        // Máy chủ gửi 'RUN' thì chạy 'RUN', gửi 'IDLE' thì chạy 'IDLE' -> Mượt tuyệt đối!
+                        quai.playAnim(quai.targetAnimLK);
                     }
                 }
                 return; // Thoát ngang an toàn
@@ -1138,16 +1131,22 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-        // Đồng bộ tọa độ VÀ GÓC XOAY lên mạng Livekit
+        // ========================================================
+        // 📡 MÁY PHÁT SÓNG: ĐỒNG BỘ TỌA ĐỘ, GÓC XOAY VÀ ANIMATION LÊN MẠNG
+        // ========================================================
         if (window.room && window.room.state === 'connected') {
             if (Date.now() - (quai.lastPosSync || 0) > 100) {
                 quai.lastPosSync = Date.now();
-                let rot = quai.mesh.rotation; // 🌟 Lấy góc xoay hiện tại
+                let rot = quai.mesh.rotation; 
+                
+                // 🌟 CHÌA KHÓA VÀNG: Lấy ĐÚNG TÊN HOẠT ẢNH đang phát (RUN, IDLE, HIT...) thay vì trạng thái State!
+                let hienTrangAnim = quai.currentAnimName || quai.state || 'IDLE'; 
+                
                 try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ 
                     type: 'BOSS_POS', bossId: quai.id, 
                     x: parseFloat(quai.mesh.position.x.toFixed(2)), y: parseFloat(quai.mesh.position.y.toFixed(2)), z: parseFloat(quai.mesh.position.z.toFixed(2)), 
-                    rx: parseFloat(rot.x.toFixed(3)), ry: parseFloat(rot.y.toFixed(3)), rz: parseFloat(rot.z.toFixed(3)), // 🌟 Gửi kèm góc xoay
-                    anim: quai.state 
+                    rx: parseFloat(rot.x.toFixed(3)), ry: parseFloat(rot.y.toFixed(3)), rz: parseFloat(rot.z.toFixed(3)), 
+                    anim: hienTrangAnim 
                 })), { reliable: false }); } catch (e) { }
             }
         }
