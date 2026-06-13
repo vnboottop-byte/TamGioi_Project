@@ -753,7 +753,7 @@ window.capNhatAIQuaiVat = function (delta) {
         // ========================================================
         // ⚙️ MÁY PHÂN TÍCH HÀNH VI (ATTACK - CHASE - IDLE)
         // ========================================================
-        if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho && !window.isDead) {
+        if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho) {
             let dangLui = false;
             if (boNao && boNao.choPhepLuiBinh) {
                 // 🌟 BẢN VÁ: Lùi xa khỏi kẻ địch gần nhất chứ không phải Sếp
