@@ -730,11 +730,11 @@ window.capNhatAIQuaiVat = function (delta) {
         let isClosest = true;
         // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
         let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
-        // Mặc định cho những phái chưa được nâng cấp (Cắt gân chuẩn Esports)
-        let scaleTamNhin = 120;  // 👁️ Thấy Sếp từ 120m là bắt đầu rượt
-        let scaleTamDanh = 80;   // 🎯 Rượt tới đúng 80m mới đứng lại xả chiêu
+        let scaleTamNhin = 120;  
+        let scaleTamDanh = 80;   
         let gioiHanLanhTho = 300;
         let khoangCachAnToan = 0;
+        
         if (boNao) {
             scaleTamDanh = boNao.getTamDanh(quai.heSoToLon || 1);
             scaleTamNhin = boNao.getTamNhin(quai.heSoToLon || 1);
@@ -742,17 +742,24 @@ window.capNhatAIQuaiVat = function (delta) {
             else gioiHanLanhTho = scaleTamNhin * 1.5;
             khoangCachAnToan = boNao.khoangCachAnToan || 0;
         } 
-        // 🛑 ĐÃ XÓA VĨNH VIỄN TOÀN BỘ CỤC "ELSE IF" KHAI BÁO CỨNG NHẮC!
+        
         if (quai.lastHp === undefined) quai.lastHp = quai.hp;
         if (quai.hp < quai.lastHp) { quai.thoiDiemBiChocGian = Date.now(); quai.lastHp = quai.hp; }
         else if (quai.hp > quai.lastHp) { quai.lastHp = quai.hp; }
         let dangCayCu = (quai.thoiDiemBiChocGian && (Date.now() - quai.thoiDiemBiChocGian < 15000));
-        if (quai.spawnPos === undefined) quai.spawnPos = quai.mesh.position.clone();
-        let cachXaO = quai.spawnPos.distanceTo(playerModel.position);
+        
+        // 🛑 BẢN VÁ AAA (SỐ 1): CHỐT CHẶT ĐIỂM HỒI SINH TỪ SQL ĐỂ CHỐNG DỊCH CHUYỂN KHI ĐỔI HOST!
+        if (quai.spawnPos === undefined) quai.spawnPos = new THREE.Vector3(quai.spawnX || quai.mesh.position.x, quai.mesh.position.y, quai.spawnZ || quai.mesh.position.z);
+        
+        // 🛑 BẢN VÁ AAA (SỐ 2): DÂY XÍCH (LEASH) PHẢI ĐO TỪ ĐIỂM HỒI SINH ĐẾN KẺ ĐỊCH GẦN NHẤT (NICK B), CHỨ KHÔNG ĐO ĐẾN SẾP NỮA!
+        let cachXaO = quai.spawnPos.distanceTo(posNguoiChoi);
+        
         if (dangCayCu && scaleTamNhin < gioiHanLanhTho) scaleTamNhin = gioiHanLanhTho;
+
         // ========================================================
         // ⚙️ MÁY PHÂN TÍCH HÀNH VI (ATTACK - CHASE - IDLE)
         // ========================================================
+        // 🛑 BẢN VÁ AAA (SỐ 3): ĐÃ XÓA '!window.isDead' - CHO PHÉP BOSS TIẾP TỤC ĐÁNH NICK B DÙ NICK A (HOST) ĐÃ CHẾT!
         if (isClosest && myDist < scaleTamNhin && cachXaO < gioiHanLanhTho) {
             let dangLui = false;
             if (boNao && boNao.choPhepLuiBinh) {
@@ -923,8 +930,8 @@ window.capNhatAIQuaiVat = function (delta) {
             }
 
         }
-          else {
-            // HẾT THẤY SẾP THÌ TỰ ĐỘNG ĐỨNG THỞ HOẶC ĐI TUẦN TRA
+              else {
+            // HẾT THẤY ĐỊCH THÌ TỰ ĐỘNG ĐỨNG THỞ HOẶC ĐI TUẦN TRA
             quai.state = 'IDLE';
             let thoiGianDaQua = Date.now() - (quai.lastAttackTime || 0);
 
@@ -934,23 +941,15 @@ window.capNhatAIQuaiVat = function (delta) {
                 if (['RONG', 'CHIM', 'CA'].includes(quai.classCode)) {
                     if (quai.tFlying === undefined) {
                         quai.tFlying = Math.random() * Math.PI * 2;
-                        if (!quai.spawnPos) quai.spawnPos = quai.mesh.position.clone();
+                        if (!quai.spawnPos) quai.spawnPos = new THREE.Vector3(quai.spawnX || quai.mesh.position.x, quai.mesh.position.y, quai.spawnZ || quai.mesh.position.z);
                         quai.gocY = quai.spawnPos.y;
                     }
 
-                    // 1. CHỮA BỆNH "SCALE TO BAY NHỎ": 
-                    // Gắn bán kính bay tỷ lệ thuận 100% với kích cỡ Boss. Boss to = Vòng lượn to.
                     let banKinhBay = 150 * (quai.heSoToLon || 1); 
-                    
-                    // 2. CHỮA BỆNH TỐC ĐỘ: Khóa chết tốc độ góc lượn lờ dạo chơi (cực chậm)
                     quai.tFlying += 0.15 * delta; 
                     
-                    // 3. CHỮA BỆNH QUỸ ĐẠO XUYÊN ĐẤT:
                     let dx = Math.sin(quai.tFlying) * banKinhBay;
                     let dz = Math.sin(quai.tFlying) * Math.cos(quai.tFlying) * banKinhBay;
-                    
-                    // Dùng Trị tuyệt đối (Math.abs) để dy LUÔN LUÔN DƯƠNG (>= 0). 
-                    // Đáy của số 8 chính là điểm xuất phát, Quái chỉ có vút lên cao rồi chao xuống đúng điểm xuất phát.
                     let dy = Math.abs(Math.sin(quai.tFlying)) * (banKinhBay * 0.4); 
 
                     let viTriDich = quai.spawnPos.clone();
@@ -970,13 +969,19 @@ window.capNhatAIQuaiVat = function (delta) {
                         viTriDich.y = quai.gocY + dy;
                     }
 
-                    let huongBay = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position).normalize();
-                    quai.mesh.position.lerp(viTriDich, 0.05); // 🌟 Tăng độ bám dính quỹ đạo để không bị bóp nhỏ vòng cua
+                    let huongBayRaw = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position);
+                    let khoangCach = huongBayRaw.length();
+                    let huongBay = huongBayRaw.normalize();
 
-
-
-
-
+                    // 🛑 BẢN VÁ CẮT DÂY THUN: Bắt buộc dùng Vật lý Bước chân, cấm Dịch chuyển!
+                    let tocDoDiDao = 60 * (quai.heSoToLon || 1);
+                    let maxStep = tocDoDiDao * delta;
+                    
+                    if (khoangCach > maxStep) {
+                        quai.mesh.position.add(huongBay.clone().multiplyScalar(maxStep));
+                    } else {
+                        quai.mesh.position.copy(viTriDich);
+                    }
 
                     if (huongBay.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
@@ -986,36 +991,29 @@ window.capNhatAIQuaiVat = function (delta) {
 
                         let rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(dummy.quaternion);
                         let lucNghieng = huongBay.dot(rightVec);
-                        dummy.rotateZ(lucNghieng * 1.5); // 🌟 Nghiêng cánh bo cua gắt hơn
+                        dummy.rotateZ(lucNghieng * 1.5); 
 
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
                     }
 
-                    // 🌟 CHỮA BỆNH ĐÈ ANIMATION: Gọi đúng 'RUN' để từ điển AI tự map sang Vỗ cánh
                     if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
                 }
                 else {
-                    // 🌟 BẢN VÁ AAA: TUẦN TRA QUỸ ĐẠO SỐ 8 TRÊN MẶT ĐẤT CHO CÁC PHÁI CÒN LẠI
+                    // 🌟 BẢN VÁ AAA: TUẦN TRA QUỸ ĐẠO SỐ 8 TRÊN MẶT ĐẤT
                     if (quai.tFlying === undefined) {
                         quai.tFlying = Math.random() * Math.PI * 2; 
-                        if (!quai.spawnPos) quai.spawnPos = quai.mesh.position.clone(); 
+                        if (!quai.spawnPos) quai.spawnPos = new THREE.Vector3(quai.spawnX || quai.mesh.position.x, quai.mesh.position.y, quai.spawnZ || quai.mesh.position.z);
                         quai.gocY = quai.spawnPos.y;
                     }
                     
-                    // 1. Tốc độ đi bộ dạo chơi (Chậm hơn bọn bay trên trời)
-                    quai.tFlying += 0.08 * delta; 
-                    
-                    // 2. Vòng số 8 to hơn để đi dạo cho thoải mái (Scale to thì vòng cũng to theo)
                     let banKinhBay = 250 * (quai.heSoToLon || 1); 
-                    
-                    // 3. Quỹ đạo mặt phẳng ngang (dy = 0 vì đi dưới đất, không chao liệng)
+                    quai.tFlying += 0.08 * delta; 
                     let dx = Math.sin(quai.tFlying) * banKinhBay;
                     let dz = Math.sin(quai.tFlying) * Math.cos(quai.tFlying) * banKinhBay;
 
                     let viTriDich = quai.spawnPos.clone();
 
                     if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-                        // Trượt theo độ cong của Trái đất
                         let upSpawn = quai.spawnPos.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
                         let rightSpawn = new THREE.Vector3(1, 0, 0).cross(upSpawn).normalize();
                         if (rightSpawn.lengthSq() < 0.001) rightSpawn.set(0, 0, 1).cross(upSpawn).normalize();
@@ -1024,15 +1022,24 @@ window.capNhatAIQuaiVat = function (delta) {
                         viTriDich.add(rightSpawn.multiplyScalar(dx));
                         viTriDich.add(forwardSpawn.multiplyScalar(dz));
                     } else {
-                        // Trượt trên mặt phẳng Bí cảnh
                         viTriDich.x += dx;
                         viTriDich.z += dz;
                         viTriDich.y = quai.gocY; 
                     }
 
-                    // Tính hướng để xoay mặt (Boss đi bộ thì không nghiêng người lúc bo cua)
-                    let huongBay = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position).normalize();
-                    quai.mesh.position.lerp(viTriDich, 0.05); 
+                    let huongBayRaw = new THREE.Vector3().subVectors(viTriDich, quai.mesh.position);
+                    let khoangCach = huongBayRaw.length();
+                    let huongBay = huongBayRaw.normalize();
+
+                    // 🛑 BẢN VÁ CẮT DÂY THUN: Bắt buộc dùng Vật lý Bước chân, cấm Dịch chuyển!
+                    let tocDoDiDao = 40 * (quai.heSoToLon || 1);
+                    let maxStep = tocDoDiDao * delta;
+
+                    if (khoangCach > maxStep) {
+                        quai.mesh.position.add(huongBay.clone().multiplyScalar(maxStep));
+                    } else {
+                        quai.mesh.position.copy(viTriDich);
+                    }
 
                     if (huongBay.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
@@ -1040,11 +1047,9 @@ window.capNhatAIQuaiVat = function (delta) {
                         dummy.up.copy(quai.upVector);
                         dummy.lookAt(quai.mesh.position.clone().add(huongBay));
                         
-                        // Slerp nhẹ nhàng để xoay người mượt mà, KHÔNG rotateZ (chống vẹo cổ)
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.05);
                     }
 
-                    // Kích hoạt hoạt ảnh đi bộ/chạy bộ
                     if (typeof quai.playAnim === 'function') quai.playAnim('RUN');
                 }
             }
