@@ -926,6 +926,7 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
             }
             else {
+                
                 // CHỈ RƯỢT ĐUỔI KHI KHÔNG BỊ KHÓA MÚA CHIÊU
                 if (!dangMuaChieu) {
                     quai.state = 'CHASE';
@@ -933,20 +934,19 @@ window.capNhatAIQuaiVat = function (delta) {
                     let tocDoRuot = (boNao && typeof boNao.getTocDoRuot === 'function') ? boNao.getTocDoRuot(quai.heSoToLon || 1) : 25;
                     
                     if (boNao && boNao.he === 'BAY') {
-                        // 🌟 BẢN VÁ: Bay rượt theo KẺ ĐỨNG GẦN NHẤT
+                        // 🌟 Boss Hệ Bay: Rượt theo KẺ ĐỨNG GẦN NHẤT
                         let mucTieuBay = posNguoiChoi.clone();
                         let chieuCaoNgam = typeof boNao.getChieuCaoNgam === 'function' ? boNao.getChieuCaoNgam() : 15;
                         mucTieuBay.add(quai.upVector.clone().multiplyScalar(chieuCaoNgam));
                         let huongBay = new THREE.Vector3().subVectors(mucTieuBay, quai.mesh.position).normalize();
                         quai.mesh.position.add(huongBay.multiplyScalar(tocDoRuot * delta));
                     } else {
-                        // 🌟 BẢN VÁ: Thú đi bộ rượt theo KẺ ĐỨNG GẦN NHẤT
+                        // 🌟 BẢN VÁ AAA: ĐẠP HƯ KHÔNG! Thú đi bộ rượt 3D thẳng lên trời (Không dùng huongRuotNgang nữa)
                         let huongRuot = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).normalize();
-                        let huongRuotNgang = huongRuot.clone().projectOnPlane(quai.upVector).normalize();
-                        quai.mesh.position.add(huongRuotNgang.multiplyScalar(tocDoRuot * delta));
+                        quai.mesh.position.add(huongRuot.multiplyScalar(tocDoRuot * delta));
                     }
                     
-                    // 🌟 BẢN VÁ: Xoay mặt nhìn chằm chằm KẺ ĐỨNG GẦN NHẤT lúc rượt
+                    // 🌟 Xoay mặt nhìn chằm chằm KẺ ĐỨNG GẦN NHẤT lúc rượt (Vẫn giữ trục phẳng để lưng luôn thẳng)
                     let huongRuotPhang = new THREE.Vector3().subVectors(posNguoiChoi, quai.mesh.position).projectOnPlane(quai.upVector).normalize();
                     if (huongRuotPhang.lengthSq() > 0.001) {
                         let dummy = new THREE.Object3D();
