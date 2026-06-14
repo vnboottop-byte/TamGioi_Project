@@ -302,7 +302,7 @@
 
         // 🌟 KHAI BÁO BIẾN CHỨA VŨ KHÍ THỰC TẾ Ở ĐÂY
         let vuKhiThucTe = weaponUrl;
-        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_CUNGTHU || window.WEAPON_URL || 'uploads/anims/VIENDAN.glb';
+        if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_CUNGTHU || window.WEAPON_URL || 'uploads/anims/CUNGTEN.glb';
 
         // ... (Giữ nguyên đoạn if isRemote và xác định radar khóa mục tiêu) ...
         if (isRemote) {
@@ -427,7 +427,7 @@
                 window.oldWeaponURL_CT = window.WEAPON_URL;
                 
                 let linkMuiTen = window.WEAPON_URL;
-                if (!linkMuiTen || linkMuiTen.trim() === '') linkMuiTen = 'uploads/anims/VIENDAN.glb';
+                if (!linkMuiTen || linkMuiTen.trim() === '') linkMuiTen = 'uploads/anims/CUNGTEN.glb';
                 if (window.LA_SKIN_ANIME || window.IS_SKIN_ANIME) linkMuiTen = ""; // Tàng hình nếu là Anime
                 
                 window.VUKHI_HIEN_TAI_CUA_CUNGTHU = linkMuiTen;
