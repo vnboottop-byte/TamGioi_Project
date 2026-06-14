@@ -37,12 +37,13 @@
     }
 
     function layQuaiVatGanNhatLT(viTriGoc) {
-        if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
+        // 🌟 BẢN VÁ: Cấm khóa mục tiêu tay vào Sinh vật cảnh
+        if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead && window.mucTieuHienTai.classCode !== 'TRANG_TRI') {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
             if (viTriGoc.distanceTo(hit.tamNguc) <= 80) return window.mucTieuHienTai;
         }
 
-        let targetNguoi = null; let minDNguoi = 80; 
+        let targetNguoi = null; let minDNguoi = 80;
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
@@ -54,16 +55,17 @@
         }
         if (targetNguoi) return targetNguoi;
 
-        let targetQuai = null; let minDQuai = 80; 
+        let targetQuai = null; let minDQuai = 80;
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
-                if (!quai.isDead && quai.mesh) {
+                // 🌟 BẢN VÁ AAA: Bơ đẹp bọn TRANG_TRI, chỉ khóa mục tiêu vào quái/boss đánh nhau!
+                if (!quai.isDead && quai.mesh && quai.classCode !== 'TRANG_TRI') {
                     let hit = window.layHitbox(quai.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
                     if (d > 0.1 && d < minDQuai) { minDQuai = d; targetQuai = quai; }
                 }
             });
         }
-        
+
         return targetQuai;
     }
 
