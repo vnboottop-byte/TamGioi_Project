@@ -2208,7 +2208,9 @@ function animate() {
                 playerModel.up.copy(huongLenTroi);
                 playerModel.quaternion.premultiply(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0).applyQuaternion(playerModel.quaternion), huongLenTroi));
 
-                var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+                var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff";  
+                // Thay vì đợi lên 5 mét, giờ chỉ cần cách đất 1.5 mét HOẶC đang đè phím Space là tự động tính là BAY!
+                var isFlying = doCao > 1.5 || (window.keys && window.keys.space);
 
                 // 🌍 Dưới 5m: Chạy bộ tà tà (0.2 - Khớp nhịp chân nhất)
                 if (doCao <= 5.0) { currentWalk = 0.1; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
@@ -2385,7 +2387,9 @@ function animate() {
 
 
 
-                var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff"; var isFlying = doCao > 5.0;
+                var currentWalk = 0.1; var currentSprint = 0.2; var tangKhongGian = "VŨ TRỤ"; var mauChu = "#ff00ff";  
+                // Thay vì đợi lên 5 mét, giờ chỉ cần cách đất 1.5 mét HOẶC đang đè phím Space là tự động tính là BAY!
+                var isFlying = doCao > 1.5 || (window.keys && window.keys.space);
 
                 // 🌍 Dưới 5m: Chạy bộ tà tà (0.2)
                 if (doCao <= 5.0 && timThayDat) { currentWalk = 0.1; currentSprint = 0.2; tangKhongGian = "🌍 MẶT ĐẤT"; mauChu = "#00ff00"; }
