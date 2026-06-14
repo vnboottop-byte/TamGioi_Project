@@ -742,7 +742,7 @@ let isAdmin = (tenCuaToi === "admin" || tenCuaToi === "kidlo" || window.ROLE ===
 
 if (isAdmin) {
     // 👑 ADMIN: Tầm nhìn của vị thần
-    controls.maxDistance = 115; // Cho phép lăn chuột ra xa tít mù tắp để nhìn cả bản đồ
+    controls.maxDistance = 215; // Cho phép lăn chuột ra xa tít mù tắp để nhìn cả bản đồ
     controls.minDistance = 2;    // Không cho zoom quá gần để tránh chui vào trong bụng Titan
 } else {
     // 👤 NGƯỜI THƯỜNG: Giữ nguyên như cũ
