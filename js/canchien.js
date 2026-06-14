@@ -224,10 +224,6 @@
         window.dangMuaChieu = true; 
 
         if (window.room && window.room.localParticipant) {
-
-
-
-
             let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
             let dichDen = targetQuai ? window.layHitbox(targetQuai.mesh || targetQuai).tamNguc : viTriGoc.clone().add(fwd.clone().multiplyScalar(5));
             const data = new TextEncoder().encode(JSON.stringify({ 
@@ -245,8 +241,6 @@
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
 
-
-
         } else {
             window.trangThaiLT.state = 'IDLE';
             let randomAnim = window.KHO_ANIM_TANCONG.length > 0 ? window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)] : 'BAY';
@@ -260,7 +254,6 @@
             if (window.henGioTatMuaLT) clearTimeout(window.henGioTatMuaLT);
             window.henGioTatMuaLT = setTimeout(() => { window.dangMuaChieu = false; }, 800);
         }
-
 
     };
 
