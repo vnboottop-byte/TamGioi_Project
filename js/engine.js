@@ -1008,46 +1008,77 @@ window.taiHoacNhanBanAsset = function (url, callback) {
     });
 };
 
+
+
+
+
 // =========================================================
-// ⚙️ BẢN VÁ AAA: CHUẨN HÓA KÍCH THƯỚC (VÔ CỰC TỐI THƯỢNG)
-// Quét bằng Box3 thuần túy - Cấm can thiệp tỷ lệ Node con
+// 📏 BỘ THƯỚC ĐO CHUẨN AAA: ĐO TRỤC Y DA THỊT (CHỐNG ĐO NHẦM VŨ KHÍ)
 // =========================================================
 window.chuanHoaKichThuoc = function (mesh, sizeMongMuon) {
     if (!mesh) return;
 
-    // 1. CHỈ RESET NÚT GỐC (ROOT)
-    // Tuyệt đối không được đụng vào scale của các xương hay mesh bên trong!
+    // Reset về nguyên thủy trước khi đo
     mesh.scale.set(1, 1, 1);
     mesh.updateMatrixWorld(true);
 
-    // 2. DÙNG MÁY QUÉT KHÔNG GIAN (BOX3) ĐỂ ĐO TOÀN BỘ KHỐI THỊT
-    const box = new THREE.Box3().setFromObject(mesh);
-    const size = new THREE.Vector3();
+    let box = new THREE.Box3();
+    box.min.set(Infinity, Infinity, Infinity);
+    box.max.set(-Infinity, -Infinity, -Infinity);
+    let coHinh = false;
+
+    // 1. TIA X-QUANG: Chỉ đo ĐA GIÁC (Thịt), vứt bỏ XƯƠNG và HÀO QUANG
+    mesh.traverse(function(child) {
+        if (child.isMesh && !child.userData.isAura && child.visible) {
+            if (child.geometry) {
+                child.geometry.computeBoundingBox();
+                if (child.geometry.boundingBox) {
+                    let b = child.geometry.boundingBox.clone();
+                    b.applyMatrix4(child.matrixWorld);
+                    box.union(b);
+                    coHinh = true;
+                }
+            }
+        }
+    });
+
+    // Nếu không có thịt (dạng rỗng), lấy bao quát toàn bộ
+    let laHopRong = (box.min.x > box.max.x || box.min.y > box.max.y || box.min.z > box.max.z);
+    if (!coHinh || laHopRong) {
+        box.setFromObject(mesh);
+    }
+
+    const size = new THREE.Vector3(); 
     box.getSize(size);
 
-    // Lấy chiều cao Y. Nếu quá lùn (Thú bò sát, vũ khí, cá bơi ngang), lấy cạnh dài nhất
+    // 2. THUẬT TOÁN ĐO THEO Ý SẾP: CHỈ LẤY ĐỘ CAO TRỤC Y CỦA DA THỊT
     let chieuCaoThucTe = size.y;
-    if (chieuCaoThucTe < 0.1) {
-        chieuCaoThucTe = Math.max(size.x, size.y, size.z);
+
+    // 🛡️ LÁ CHẮN DỰ PHÒNG: Bệnh nằm sấp của Blender (Trục Y lùn tịt, trục Z rất dài)
+    if (chieuCaoThucTe < size.z * 0.3) {
+        chieuCaoThucTe = size.z; 
     }
 
-    // Chống lỗi chia cho 0 làm nổ màn hình đen thui
+    // Chống lỗi chia 0 làm đen màn hình
     if (!isFinite(chieuCaoThucTe) || chieuCaoThucTe <= 0.001) {
-        console.warn("⚠️ Model vô hình hoặc Box3 bị lỗi! Kích hoạt size dự phòng.");
-        chieuCaoThucTe = 1.0;
+        chieuCaoThucTe = 1;
     }
 
-    // 3. BƠM TỶ LỆ CHUẨN (Chỉ ép lên gốc)
-    const tyLeChuan = sizeMongMuon / chieuCaoThucTe;
-    mesh.scale.setScalar(tyLeChuan);
+    // 3. Ép tỷ lệ nén/phóng to
+    const tyLe = sizeMongMuon / chieuCaoThucTe;
+    mesh.scale.setScalar(tyLe);
     mesh.updateMatrixWorld(true);
 
-    // 4. LƯU LẠI DỮ LIỆU HITBOX CHO SẾP PK
+    // 4. Khóa Tâm Ngực cho Quái Cắn/Đạn Bắn (Cứ chia đôi chiều cao thực tế là ra ngực)
     mesh.userData.chieuCaoThuc = sizeMongMuon;
     mesh.userData.tamThucTeLocal = new THREE.Vector3(0, chieuCaoThucTe / 2, 0);
 
-    console.log(`🤖 [ENGINE] Đã nén Model về ${sizeMongMuon}m (Đo được: ${chieuCaoThucTe.toFixed(3)}m -> Lực nén: ${tyLeChuan.toFixed(3)})`);
+    // Log ra để Sếp dễ kiểm tra trong F12
+    console.log(`🤖 [ENGINE] Đã nén Model về ${sizeMongMuon}m (Đo Trục Y Da Thịt: ${chieuCaoThucTe.toFixed(3)}m -> Lực nén: ${tyLe.toFixed(3)})`);
 };
+
+
+
 
 function tienHanhTaiNhanVat() {
     let coThuCuoi = window.MOUNT_URL && window.MOUNT_URL.trim() !== "";
