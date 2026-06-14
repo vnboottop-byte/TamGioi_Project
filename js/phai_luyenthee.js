@@ -303,16 +303,7 @@
                             }
                         }
 
-                        const tuKhoaIdle = ['idle', 'wait', 'stand', 'pose', 'nhanroi', 'breath', 'stay', 'normal'];
-                        if (tuKhoaIdle.some(tu => ten.includes(tu))) { window.KHO_ANIM_NHANROI.push(key); }
-
-                        const tuKhoaRun = ['run', 'walk', 'move', 'dash', 'sprint', 'chay', 'di', 'forward', 'step'];
-                        if (tuKhoaRun.some(tu => ten.includes(tu))) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = clip; window.animationsMap['RUN'] = clip; }
-
-                        const tuKhoaFly = ['fly', 'hover', 'float', 'bay', 'glide', 'BAY'];
-                        if (tuKhoaFly.some(tu => ten.includes(tu))) { coBay = true; animBay = clip; window.animationsMap['BAY'] = clip; window.animationsMap['FLY'] = clip; }
-
-                        // 🌟 VÁ LỖI 1: GOM HOẠT ẢNH TẤN CÔNG VÀO RỔ
+                        // 🌟 BẢN VÁ AAA: LỌC TẤN CÔNG XONG THÌ NGẮT LUÔN (CONTINUE), KHÔNG CHO TRÔI XUỐNG BÊN DƯỚI!
                         const tuKhoaTanCong = [
                             'attack', 'atk', 'punch', 'kick', 'combo', 'skill', 'smash', 'strike', 
                             'slash', 'chop', 'swing', 'bash', 'jab', 'hook', 'uppercut', 'bite', 
@@ -320,7 +311,20 @@
                             'chieu', 'danh', 'dam', 'da', 'chem', 'quat', 'tuyetchieu', 'kynang',
                             'kougeki', 'panchi', 'keri', 'action'
                         ];
-                        if (tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa))) { window.KHO_ANIM_TANCONG.push(key); }
+                        if (tuKhoaTanCong.some(tuKhoa => ten.includes(tuKhoa))) { 
+                            window.KHO_ANIM_TANCONG.push(key); 
+                            continue; // 🛑 CHỐT CHẶN: Đã là Tấn Công thì cấm được xếp vào rổ Chạy/Bay
+                        }
+
+                        const tuKhoaIdle = ['idle', 'wait', 'stand', 'pose', 'nhanroi', 'breath', 'stay', 'normal'];
+                        if (tuKhoaIdle.some(tu => ten.includes(tu))) { window.KHO_ANIM_NHANROI.push(key); }
+
+                        const tuKhoaRun = ['run', 'walk', 'move', 'dash', 'sprint', 'chay', 'di', 'forward', 'step'];
+                        if (tuKhoaRun.some(tu => ten.includes(tu))) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = clip; window.animationsMap['RUN'] = clip; }
+
+                        // Đã bổ sung đầy đủ từ vựng bay nhảy
+                        const tuKhoaFly = ['fly', 'hover', 'float', 'bay', 'glide', 'jump', 'fall', 'air', 'leap', 'soar'];
+                        if (tuKhoaFly.some(tu => ten.includes(tu))) { coBay = true; animBay = clip; window.animationsMap['BAY'] = clip; window.animationsMap['FLY'] = clip; }
                     }
 
                     if (coChay && !coBay) { window.animationsMap['BAY'] = animChay; window.animationsMap['FLY'] = animChay; }
