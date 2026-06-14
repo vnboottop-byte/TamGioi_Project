@@ -37,12 +37,13 @@
     }
 
     function layQuaiVatGanNhatLT(viTriGoc) {
-        if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead) {
+        // 🌟 BẢN VÁ: Cấm khóa mục tiêu tay vào Sinh vật cảnh
+        if (window.mucTieuHienTai && window.mucTieuHienTai.mesh && !window.mucTieuHienTai.isDead && window.mucTieuHienTai.classCode !== 'TRANG_TRI') {
             let hit = window.layHitbox(window.mucTieuHienTai.mesh);
             if (viTriGoc.distanceTo(hit.tamNguc) <= 80) return window.mucTieuHienTai;
         }
 
-        let targetNguoi = null; let minDNguoi = 80; 
+        let targetNguoi = null; let minDNguoi = 80;
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
@@ -54,21 +55,22 @@
         }
         if (targetNguoi) return targetNguoi;
 
-        let targetQuai = null; let minDQuai = 80; 
+        let targetQuai = null; let minDQuai = 80;
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
-                if (!quai.isDead && quai.mesh) {
+                // 🌟 BẢN VÁ AAA: Bơ đẹp bọn TRANG_TRI, chỉ khóa mục tiêu vào quái/boss đánh nhau!
+                if (!quai.isDead && quai.mesh && quai.classCode !== 'TRANG_TRI') {
                     let hit = window.layHitbox(quai.mesh); let d = viTriGoc.distanceTo(hit.tamNguc);
                     if (d > 0.1 && d < minDQuai) { minDQuai = d; targetQuai = quai; }
                 }
             });
         }
-        
+
         return targetQuai;
     }
 
     function gaySatThuongLT(tamNgucDich, luongSatThuong, banKinh) {
-        // 🌟 VÁ LỖI 6: CHUẨN HÓA HÚT MÁU DỰA TRÊN BIẾN GLOBAL CỦA GAME
+        // 🌟 CHUẨN HÓA HÚT MÁU DỰA TRÊN BIẾN GLOBAL CỦA GAME
         function kichHoatHutMau() {
             if (typeof window.mauBanThan !== 'undefined' && typeof window.MAU_TOI_DA !== 'undefined' && window.mauBanThan < window.MAU_TOI_DA) {
                 window.mauBanThan = Math.min(window.MAU_TOI_DA, window.mauBanThan + (luongSatThuong * 0.05));
@@ -79,34 +81,51 @@
             }
         }
 
-        // 🌟 VÁ LỖI 5: ĐỒNG BỘ DAME CƠ BẢN NHƯ CÁC PHÁI KHÁC
+        // 🛡️ BỘ LỌC CHỐNG CHÉM ĐÚP (VÁ LỖI 2 DÒNG MÁU KHÁC MÀU)
+        let mucTieuDaXyLy = new Set();
+
+        // 1. QUÉT NGƯỜI CHƠI (PVP)
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
-                if (rp.status === 'ready' && rp.mesh) {
+
+                // 🛑 LÁ CHẮN NHẬN DIỆN: Nếu Boss đang mượn lốt Người chơi để tung chiêu -> Đá nó ra khỏi luồng PVP!
+                let laBossDangMuonId = false;
+                if (typeof window.danhSachQuaiVat !== 'undefined') {
+                    laBossDangMuonId = window.danhSachQuaiVat.some(q => String(q.id) === String(id) || "PLAYER_" + q.id === String(id) || "BOSS_" + q.id === String(id));
+                }
+
+                if (rp.status === 'ready' && rp.mesh && !laBossDangMuonId && !mucTieuDaXyLy.has(rp.mesh)) {
                     let hit = window.layHitbox(rp.mesh);
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        mucTieuDaXyLy.add(rp.mesh); // Đóng dấu đã ăn đòn
                         let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                        taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00');
-                        kichHoatHutMau(); 
+
+                        taoSoSatThuongLT(posHienSo, luongSatThuong, '#ffaa00'); // Sát thương PVP màu Cam Vàng
+                        kichHoatHutMau();
                         if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
                     }
                 }
             }
         }
-        
+
+        // 2. QUÉT QUÁI & BOSS (PVE)
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
-                if (!quai.isDead && quai.mesh) {
+                // Chỉ đấm những đứa chưa ăn đòn ở luồng trên (nếu có)
+                if (!quai.isDead && quai.mesh && !mucTieuDaXyLy.has(quai.mesh)) {
                     let hit = window.layHitbox(quai.mesh);
                     if (tamNgucDich.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
+                        mucTieuDaXyLy.add(quai.mesh); // Đóng dấu đã ăn đòn
+
                         if (quai.isBoss) {
-                            taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
-                            kichHoatHutMau(); 
+                            taoSoSatThuongLT(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff'); // Màu Tím cho Boss
+                            kichHoatHutMau();
                             if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
                         } else {
-                            quai.hp -= luongSatThuong; taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong);
-                            kichHoatHutMau(); 
+                            quai.hp -= luongSatThuong;
+                            taoSoSatThuongLT(hit.tamNguc.clone(), luongSatThuong); // Màu Đỏ Mặc Định cho Quái thường
+                            kichHoatHutMau();
 
                             if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
                             if (quai.hp <= 0) {
@@ -198,10 +217,11 @@
 
         // 🌟 VÁ LỖI 4: XÓA SẠCH KIỂM TRA HỒI CHIÊU CỤC BỘ Ở ĐÂY (Để Controller lo)
 
+
         let viTriGoc = nvc.position.clone();
         let targetQuai = layQuaiVatGanNhatLT(viTriGoc);
         
-        window.dangMuaChieu = false; 
+        window.dangMuaChieu = true; 
 
         if (window.room && window.room.localParticipant) {
             let fwd = new THREE.Vector3(); nvc.getWorldDirection(fwd);
@@ -220,16 +240,21 @@
             window.trangThaiLT.target = targetQuai;
             window.trangThaiLT.skillKey = phim;
             window.trangThaiLT.dameRatio = dameChiTiet[phim];
+
         } else {
-            window.trangThaiLT.state = 'IDLE'; 
-            // 🌟 VÁ LỖI 1: TẬN DỤNG RỔ ANIMATION THAY VÌ PHẢI QUÉT LẠI
+            window.trangThaiLT.state = 'IDLE';
             let randomAnim = window.KHO_ANIM_TANCONG.length > 0 ? window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)] : 'BAY';
-            if(typeof window.playAnim === 'function') window.playAnim(randomAnim);
-            
+            if (typeof window.playAnim === 'function') window.playAnim(randomAnim);
+
             let nvcUp = nvc.up.clone().normalize();
             let banKinhNo = (phim === 'F') ? 15 : 5;
             taoVuNoLT(viTriGoc, nvcUp, 0xffaa00, banKinhNo);
+
+            // 🌟 NHẢ KHÓA SAU 800MS ĐỂ CHẠY TIẾP ĐƯỢC
+            if (window.henGioTatMuaLT) clearTimeout(window.henGioTatMuaLT);
+            window.henGioTatMuaLT = setTimeout(() => { window.dangMuaChieu = false; }, 800);
         }
+
     };
 
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe')) {
@@ -377,7 +402,15 @@
                             camera.position.y = camY; camera.position.x = camX; 
                         }, 120);
                         
-                        setTimeout(() => { if(window.trangThaiLT.state === 'HITTING') window.trangThaiLT.state = 'IDLE'; }, 300);
+                        // 🌟 TỰ ĐỘNG THU TAY VỀ SAU KHI ĐẤM TRÚNG (800MS)
+                        if (window.henGioTatMuaLT) clearTimeout(window.henGioTatMuaLT);
+                        window.henGioTatMuaLT = setTimeout(() => {
+                            if (window.trangThaiLT.state === 'HITTING') {
+                                window.trangThaiLT.state = 'IDLE';
+                                window.dangMuaChieu = false;
+                                if (typeof window.playAnim === 'function') window.playAnim('NHANROI');
+                            }
+                        }, 800);
                     }
                 }
 
