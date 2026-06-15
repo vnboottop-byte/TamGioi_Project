@@ -463,7 +463,7 @@ window.bocHDRI_NhanVat = function (model) {
 };
 
 // ==========================================
-// 🛠️ BẢN VÁ AAA: AI CÂN BẰNG SÁNG TỰ ĐỘNG (SMART EXPOSURE)
+// 🛠️ BẢN VÁ AAA: TÔN TRỌNG CHẤT LIỆU GỐC (GIỮ NGUYÊN ĐỘ BÓNG KIM LOẠI PBR)
 // ==========================================
 window.fixHieuUngDenThui = function (model) {
     if (!model) return;
@@ -473,49 +473,21 @@ window.fixHieuUngDenThui = function (model) {
             let mats = Array.isArray(child.material) ? child.material : [child.material];
 
             mats.forEach(mat => {
-                // 1. AI CÂN BẰNG MÀU SẮC GỐC (Base Color)
-                if (mat.color) {
-                    // Công thức tính độ chói theo thị giác mắt người (Luminance)
-                    let doSang = (mat.color.r * 0.299 + mat.color.g * 0.587 + mat.color.b * 0.114);
-
-                    if (doSang > 0.8) {
-                        // Quá chói lóa -> Bóp sáng mạnh (Giảm còn 40%)
-                        mat.color.multiplyScalar(0.4);
-                    } else if (doSang > 0.5) {
-                        // Hơi chói -> Giảm nhẹ (Còn 75%)
-                        mat.color.multiplyScalar(0.75);
-                    } else if (doSang < 0.1) {
-                        // Quá tối (Đen thui) -> Kéo sáng lên nhẹ nhàng để không bị bệt màu
-                        mat.color.r = Math.min(1.0, mat.color.r + 0.15);
-                        mat.color.g = Math.min(1.0, mat.color.g + 0.15);
-                        mat.color.b = Math.min(1.0, mat.color.b + 0.15);
-                    }
-                }
-
-                // 2. KÌM HÃM HÀO QUANG (Emissive)
+                // 1. KÌM HÃM HÀO QUANG (Chỉ bóp bớt các model tự phát sáng chói lóa mắt)
                 if (mat.emissive) {
                     let doSangEmissive = (mat.emissive.r * 0.299 + mat.emissive.g * 0.587 + mat.emissive.b * 0.114);
-                    // Nếu có tự phát sáng, không tắt hẳn mà khóa van lại ở mức dịu mắt (0.3)
                     if (doSangEmissive > 0) {
-                        mat.emissiveIntensity = Math.min(mat.emissiveIntensity || 1, 0.3);
-
-                        // Nếu bản thân cái màu phát sáng nó chói quá thì bóp bớt màu lại
-                        if (doSangEmissive > 0.5) {
-                            mat.emissive.multiplyScalar(0.5);
-                        }
+                        mat.emissiveIntensity = Math.min(mat.emissiveIntensity || 1, 0.5);
                     }
                 }
 
-                // 3. XỬ LÝ ĐỘ BÓNG VÀ KIM LOẠI (Standard/Physical Materials)
+                // 2. 🌟 GIẢI PHÓNG PHONG ẤN CHO VẬT LIỆU PBR (METALNESS/ROUGHNESS)
                 if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
-                    // Không cho phép bóng như cái gương (Giới hạn Metalness max là 0.4)
-                    if (mat.metalness !== undefined && mat.metalness > 0.5) mat.metalness = 0.4;
+                    // XÓA BỎ LỆNH ÉP METALNESS VÀ ROUGHNESS Ở ĐÂY!
+                    // Trả lại toàn quyền quyết định cho file 3D gốc của Artist.
 
-                    // Không cho phép trơn tuột như bôi mỡ (Giới hạn Roughness min là 0.5 để tán sáng đều)
-                    if (mat.roughness !== undefined && mat.roughness < 0.4) mat.roughness = 0.5;
-
-                    // Giảm nhẹ cường độ hắt sáng từ bầu trời
-                    mat.envMapIntensity = 0.8;
+                    // Kích hoạt cường độ phản chiếu môi trường (HDRI) mạnh mẽ để áo giáp bóng loáng như trong Shop
+                    mat.envMapIntensity = 1.2;
                 }
 
                 mat.needsUpdate = true;
