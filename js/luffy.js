@@ -315,71 +315,66 @@
             let s = kyNangLuffy[i]; 
             if (s.type === 'BULLET_PUNCH') {
                 s.life--;        
+
+
                 
                 if (s.state === 'OUT') {
-                    // 🌟 HỌC TẬP ZORO.JS: Tính toán hướng bay theo tọa độ thế giới tuyệt đối, chống ngược trục của model Boss
+                    // 1. BAY TỚI ĐÍCH NHƯ ZORO
                     if (s.targetPos) {
                         let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                         s.mesh.position.add(huongBay.multiplyScalar(s.speed));
-                        s.mesh.lookAt(s.targetPos); // Giữ hướng đấm chuẩn xác nhìn về mục tiêu
+                        s.mesh.lookAt(s.targetPos); 
                     } else {
                         s.mesh.translateZ(s.speed);
                     }
 
-
-
-
-                    let denDich = s.targetPos ? (s.mesh.position.distanceTo(s.targetPos) < s.speed + 2) : false;
+                    // 2. HỌC TẬP HỆ PHÁI GỐC: KHI NÀO CHẠM TỚI TỌA ĐỘ ĐÍCH MỚI ĐƯỢC NỔ!
+                    let denDich = s.targetPos ? (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) : false;
                     let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
-                    let daTrung = false;
 
-                    if (s.isRemote === false) {
-                        daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
-                        // 🌟 Nếu đấm bay tới đích mà trượt (không trúng ai), vẫn ép nổ hạt Haki rớt lả tả cho ngầu!
-                        if (!daTrung && denDich) taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector);
-                    } 
-                    else {
-                        if (window.playerModel && typeof window.isDead !== 'undefined' && !window.isDead) {
-                            let khoangCach = s.mesh.position.distanceTo(window.playerModel.position);
-                            // 🌟 Ép Nổ: Nếu chạm mặt Sếp (< 15m) HOẶC tay đã vươn tới đúng tọa độ đích!
-                            if (khoangCach <= 15 || denDich) { 
-                                if (khoangCach <= 15 && typeof window.gaySatThuongBossToPlayer === 'function') {
+                    if (denDich || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
+                        
+                        // 🌟 XẢ DAME VÀ GỌI HIỆU ỨNG NỔ NGAY TẠI ĐIỂM CHẠM
+                        if (s.isRemote === false) {
+                            let daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 15, s.upVector); 
+                            // Nếu đấm trượt quái, vẫn nổ Haki lả tả tại điểm cuối cho ngầu
+                            if (!daTrung) taoVuNoLuffy(s.mesh.position.clone(), 15, s.upVector);
+                        } 
+                        else {
+                            if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                                if (typeof window.gaySatThuongBossToPlayer === 'function') {
                                     window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 15);
                                 }
-                                taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); 
-                                daTrung = true; 
                             }
+                            // 🌟 Boss đánh luôn luôn nổ Haki đỏ rực tại điểm đích
+                            taoVuNoLuffy(s.mesh.position.clone(), 15, s.upVector); 
                         }
+
+                        s.state = 'IN'; // Đấm xong thụt tay về
                     }
-
-                    // Điều kiện dội ngược tay về
-                    if (daTrung || bayĐuocBaoXa >= s.maxDist || denDich || s.life < 10) {
-                        s.state = 'IN'; 
-                    }
-
-
-
-
                 }
                 else if (s.state === 'IN') {
-                    // 🌟 BẢN VÁ 4: GIẬT LÙI DỘI RA NHƯ LÒ XO, GIỮ NGUYÊN HƯỚNG MẶT ĐẤM!
+                    // 3. RÚT TAY VỀ LÒ XO CHUẨN XÁC
                     if (s.startPos) {
                         let huongVe = new THREE.Vector3().subVectors(s.startPos, s.mesh.position).normalize();
-                        s.mesh.position.add(huongVe.multiplyScalar(s.speed * 2.5)); // Rút về siêu tốc
-                        // ĐÃ XÓA LỆNH lookAt Ở ĐÂY ĐỂ TAY KHÔNG BỊ BẺ NGƯỢC CỔ TAY!
+                        s.mesh.position.add(huongVe.multiplyScalar(s.speed * 2.5)); 
                     } else {
-                        s.mesh.translateZ(-s.speed * 2.5); // Dịch lùi cục bộ
+                        s.mesh.translateZ(-s.speed * 2.5);
                     }
                 }
 
-                // 🌟 BẢN VÁ 5: BÓP NHỎ BÁN KÍNH XÓA CHIÊU (Chỉ xóa khi tay thực sự đã rụt sát bả vai < 20m)
+                // 4. KIỂM TRA TAY THỤT VỀ CHẠM VAI CHƯA ĐỂ XÓA (Thu hẹp bán kính quét rác)
                 let tocDoRut = s.speed * 2.5; 
-                let veNhaChua = s.startPos ? (s.mesh.position.distanceTo(s.startPos) <= tocDoRut) : true;
+                let veNhaChua = s.startPos ? (s.mesh.position.distanceTo(s.startPos) <= tocDoRut + 2) : true;
                 
                 if (s.life <= 0 || (s.state === 'IN' && veNhaChua)) {
                     if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                     kyNangLuffy.splice(i, 1);
                 }
+
+
+
+
             }
         }
 
