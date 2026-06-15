@@ -344,18 +344,20 @@
                     }
                 }
                 else if (s.state === 'IN') {
-                    // 🌟 HỌC TẬP ZORO.JS: Thu tay về thế giới thực nương theo startPos, không xài âm speed cục bộ
+                    // 🌟 BẢN VÁ 4: GIẬT LÙI DỘI RA NHƯ LÒ XO, GIỮ NGUYÊN HƯỚNG MẶT ĐẤM!
                     if (s.startPos) {
                         let huongVe = new THREE.Vector3().subVectors(s.startPos, s.mesh.position).normalize();
-                        s.mesh.position.add(huongVe.multiplyScalar(s.speed * 2.0));
-                        s.mesh.lookAt(s.startPos); // Quay mặt tay về gông vai xuất phát
+                        s.mesh.position.add(huongVe.multiplyScalar(s.speed * 2.5)); // Rút về siêu tốc
+                        // ĐÃ XÓA LỆNH lookAt Ở ĐÂY ĐỂ TAY KHÔNG BỊ BẺ NGƯỢC CỔ TAY!
                     } else {
-                        s.mesh.translateZ(-s.speed * 2.0);
+                        s.mesh.translateZ(-s.speed * 2.5); // Dịch lùi cục bộ
                     }
                 }
 
-                // Kiểm tra xem tay đã thu hồi về sát nách hay chưa
-                let veNhaChua = s.startPos ? (s.mesh.position.distanceTo(s.startPos) < s.speed * 3) : true;
+                // 🌟 BẢN VÁ 5: BÓP NHỎ BÁN KÍNH XÓA CHIÊU (Chỉ xóa khi tay thực sự đã rụt sát bả vai < 20m)
+                let tocDoRut = s.speed * 2.5; 
+                let veNhaChua = s.startPos ? (s.mesh.position.distanceTo(s.startPos) <= tocDoRut) : true;
+                
                 if (s.life <= 0 || (s.state === 'IN' && veNhaChua)) {
                     if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                     kyNangLuffy.splice(i, 1);
