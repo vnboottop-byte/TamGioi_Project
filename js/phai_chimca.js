@@ -88,13 +88,6 @@ if (!window.loopChimCaRunning) {
     }, 30);
 }
 
-
-
-
-
-
-
-
 // ==========================================
 // 🌟 TIÊM LÕI AI TẤN CÔNG VÀO TỪ ĐIỂN BÁCH THÚ (CHIM/CÁ)
 // ==========================================
@@ -102,12 +95,16 @@ window.TU_DIEN_AI_QUAI = window.TU_DIEN_AI_QUAI || {};
 
 if (window.TU_DIEN_AI_QUAI['CHIM']) {
     window.TU_DIEN_AI_QUAI['CHIM'].thucHienTanCong = function(quai, playerModel, delta) {
-        if(Date.now() - quai.lastAttackTime > 2000) {
-            quai.lastAttackTime = Date.now();
-            quai.thoiDiemDam = Date.now(); // Kích hoạt Lui Binh
-            if (typeof quai.playAnim === 'function') quai.playAnim('ATTACK');
 
-            let dmgBoss = (quai.maxHp || 4000) * 0.05; 
+        if(Date.now() - quai.lastAttackTime > 2000) {
+            quai.lastAttackTime = Date.now();    
+            // 🌟 BẢN VÁ AAA: KHÓA CHÂN ÉP MÚA CHUẨN CHIÊU CẮN (CHỐNG LUI BINH GHI ĐÈ)
+            quai.thoiGianKhoaChieu = Date.now() + 800; // Khóa 0.8 giây để cắn    
+            // Dời thời điểm Lùi Binh lại 0.8 giây (Đợi cắn xong mới được lướt bỏ chạy)
+            setTimeout(() => { if (quai && !quai.isDead) quai.thoiDiemDam = Date.now(); }, 800); 
+            // Gọi chiêu cắn (Nếu Model nghèo không có Attack, engine tự mượn dáng bay/chạy đắp vào)
+            if (typeof quai.playAnim === 'function') quai.playAnim('ATTACK');
+            let dmgBoss = (quai.maxHp || 4000) * 0.05;
             let bOrigin = quai.mesh.position.clone();
             let pTarget = playerModel.position.clone();
             let bDir = new THREE.Vector3().subVectors(pTarget, bOrigin).normalize();
