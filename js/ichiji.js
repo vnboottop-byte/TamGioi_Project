@@ -97,9 +97,10 @@
 
     // 🌟 3. HIỆU ỨNG VỤ NỔ (VÁ LỖI TRỤC CẦU 3D)
     function taoVuNoLUA_ICJ(pos, isRemote = false, luongDame = 100, banKinh = 15, upVector = new THREE.Vector3(0,1,0)) {
+        // 🌟 BẢN VÁ: GỠ BỎ KHIÊN CHẮN NUMBER. CỨ LÀ ĐẠN CỦA BOSS THÌ NỔ TRỪ MÁU!
         if (isRemote === false && luongDame > 0) {
             gaySatThuongICJ(pos, luongDame, banKinh);
-        } else if (typeof isRemote === 'number' && isRemote > 0) {
+        } else {
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
         }
         
@@ -302,7 +303,7 @@
         else if (animCanMua === 'ATTACK3') {
             setTimeout(() => {
                 // 🌟 BẢN VÁ: QUÉT LẠI TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT CHỐNG RỚT LẠI PHÍA SAU
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -347,7 +348,7 @@
             });
 
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
@@ -371,7 +372,7 @@
         // ===============================================
         else if (animCanMua === 'ATTACK6') {
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
