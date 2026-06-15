@@ -350,9 +350,12 @@
                 }
             }, 300);
         }
-    };
-    // 🌟 BẢN VÁ LỜI NGUYỀN SINH ĐÔI 2: THÔNG NÃO CHO BOSS (TRÁO ĐỔI CHỮ HOA - CHỮ THƯỜNG)
-    window.tungComboNightmareluffy = window.tungComboNightmareLuffy; 
+    }; // <--- ĐÂY LÀ DẤU NGOẶC KẾT THÚC CỦA HÀM TUNG COMBO
+
+    // 🌟 BẢN VÁ: THÔNG NÃO CHO BOSS (Ánh xạ chữ hoa - chữ thường)
+    window.tungComboNightmareluffy = window.tungComboNightmareLuffy;
+    window.tungComboNightmareluffyy = window.tungComboNightmareLuffy; // Trừ hao luôn file có 2 chữ yy của Sếp!
+
     // ==========================================
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ NIGHTMARE LUFFY (BẢN VÁ LỖI)
     // ==========================================
