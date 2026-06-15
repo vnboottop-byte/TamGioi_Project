@@ -98,13 +98,12 @@
     // 🌟 3. HIỆU ỨNG VỤ NỔ OSOBAMASK (VÁ LỖI TRỤC CẦU 3D)
     function taoVuNoOSO(pos, isRemote = false, luongDame = 100, banKinh = 15, upVector = new THREE.Vector3(0, 1, 0)) {
         
-        // 🌟 QUY TẮC 3 QUYỀN LỰC (GIỮ NGUYÊN HOÀN TOÀN CỦA SẾP)
+        // 🌟 QUY TẮC SÁT THƯƠNG ĐÃ VÁ (GỠ BỎ KHIÊN CHẮN NUMBER)
         if (isRemote === false && luongDame > 0) {
             gaySatThuongOSO(pos, luongDame, banKinh);
-        } else if (typeof isRemote === 'number' && isRemote > 0) {
+        } else {
+            // 🌟 BẢN VÁ: Cứ Đạn của Boss chạm mặt là trừ máu Sếp! Không chặn number nữa!
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
-        } else if (isRemote === true) {
-            // PvP Kẻ địch bắn (Để Server trừ máu)
         }
 
         if (typeof window.playSound3D === 'function') window.playSound3D('no', pos);
@@ -258,7 +257,7 @@
         if (animCanMua === 'ATTACK3') { 
             setTimeout(() => {
                 // 🌟 VÁ LỖI 4: QUÉT LẠI TỌA ĐỘ BÊN TRONG SETTIMEOUT
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -286,7 +285,7 @@
         // ===============================================
         else if (animCanMua === 'ATTACK2') { 
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -314,7 +313,7 @@
         // ===============================================
         else if (animCanMua === 'ATTACK1') { 
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -342,7 +341,7 @@
         // ===============================================
         else if (animCanMua === 'ATTACK14') { 
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
