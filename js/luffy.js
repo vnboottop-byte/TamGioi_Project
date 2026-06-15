@@ -220,14 +220,20 @@
         }
         if (fwd.lengthSq() < 0.001) { fwd.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(curUp).normalize(); }
 
-        let target = window.layMucTieuGanNhatLF(nvc.position);
         let targetPoint = null;
 
-        if (target && target.mesh) {
-            let hit = window.layHitbox(target.mesh);
-            targetPoint = hit.tamNguc.clone();
-            
-            if (!isRemote) {
+        // 🌟 BẢN VÁ 2: HỆ THỐNG PHÂN BIỆT ĐỊCH/TA RÕ RÀNG
+        if (isRemote && remoteDich) {
+            // Boss đánh: Khóa mõm Radar, ép mục tiêu là vị trí của Sếp do Server cung cấp!
+            targetPoint = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
+            if (remoteHuong) fwd = new THREE.Vector3(remoteHuong.x, remoteHuong.y, remoteHuong.z).normalize();
+        } else {
+            // Người chơi đánh: Xách Radar tự động tìm quái gần nhất
+            let target = window.layMucTieuGanNhatLF(nvc.position);
+            if (target && target.mesh) {
+                let hit = window.layHitbox(target.mesh);
+                targetPoint = hit.tamNguc.clone();
+                
                 let dummy = new THREE.Object3D();
                 dummy.position.copy(nvc.position);
                 dummy.up.copy(curUp);
@@ -257,8 +263,8 @@
 
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
-                    // 🌟 LẤY LẠI TỌA ĐỘ VÀ VECTOR CHUẨN KHI ĐANG CHẠY
-                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    // 🌟 BẢN VÁ 1: ÉP LẤY ĐÚNG THỰC THỂ ĐANG MÚA (BOSS HOẶC NGƯỜI CHƠI)
+                    let curNvc = nvc; // Tuyệt đối cấm xài playerModel ở đây nữa!
                     if (!curNvc) return;
                     let cUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
@@ -315,10 +321,12 @@
                     s.mesh.translateZ(s.speed); 
                     
                     let daTrung = false;
+
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
                     } 
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                    else {
+                        // 🌟 BẢN VÁ 3: Gỡ bỏ gông cùm typeof number, chỉ cần là Đạn của Boss chạm Sếp thì Trừ Máu!
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 12);
                             daTrung = true; 
