@@ -18,8 +18,6 @@ function taoHieuUngCaoCau(targetPos, dir, dame, isRemote) {
     // 🌟 TỐI ƯU MOBILE: Hạ máu văng xuống còn 15 tia
     const soLuong = window.isMobile ? 15 : 100;
     const geo = new THREE.BufferGeometry();
-
-
     const posArr = new Float32Array(soLuong * 3);
     const vels = [];
 
