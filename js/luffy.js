@@ -270,27 +270,19 @@
                     let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
                     if (cDir.lengthSq() < 0.001) cDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(cUp).normalize();
                     let right = new THREE.Vector3().crossVectors(cDir, cUp).normalize(); // Chỉ sang Phải
-
                     let isRight = (i % 2 === 0);
                     let tayClone = taoNamDamGatling(loaiDam, scaleTay);
-
                     let posSpawn = curNvc.position.clone().add(cUp.clone().multiplyScalar(5));
                     posSpawn.add(cDir.clone().multiplyScalar(1.5)); 
-                    
                     let lechNgang = right.clone().multiplyScalar(isRight ? -1.5 : 1.5); 
                     posSpawn.add(lechNgang);
-
                     tayClone.position.copy(posSpawn);
                     tayClone.up.copy(cUp); // 🌟 ÉP TRỤC CẦU CHO TAY BOOMERANG
-
                     let doLan = (loaiDam === 'LON') ? 2.5 : 1.5;
-                    let targetBay = baseTarget.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan));
-                    
+                    let targetBay = baseTarget.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan));           
                     tayClone.lookAt(targetBay);
                     scene.add(tayClone);
-
                     let maxDist = Math.min(posSpawn.distanceTo(targetBay) + 2, 50);
-
                     kyNangLuffy.push({ 
                         mesh: tayClone, type: 'BULLET_PUNCH', 
                         speed: tocDoBay, state: 'OUT', life: 100, 
@@ -301,13 +293,11 @@
                 }, i * 35); // 🌟 XẢ GATLING 35ms SIÊU TỐC
             }
         }
-
         if (phim === 'Q') banGatling(10, 0.04, 8.0, 5.0, 'NHO');   
         else if (phim === 'E') banGatling(6, 0.1, 8.0, 3.5, 'LON');  
         else if (phim === 'R') banGatling(4, 0.125, 8.0, 3.5, 'LON');
         else if (phim === 'F') banGatling(4, 0.25, 8.0, 3.5, 'LON'); 
     };
-
     // ==========================================
     // ⚙️ VÒNG LẶP VẬT LÝ VÀ DỌN RÁC
     // ==========================================
@@ -315,13 +305,10 @@
         for (let i = kyNangLuffy.length - 1; i >= 0; i--) {
             let s = kyNangLuffy[i]; 
             if (s.type === 'BULLET_PUNCH') {
-                s.life--;
-                
+                s.life--;        
                 if (s.state === 'OUT') {
-                    s.mesh.translateZ(s.speed); 
-                    
+                    s.mesh.translateZ(s.speed);            
                     let daTrung = false;
-
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
                     } 
