@@ -278,18 +278,27 @@
                     posSpawn.add(lechNgang);
                     tayClone.position.copy(posSpawn);
                     tayClone.up.copy(cUp); // 🌟 ÉP TRỤC CẦU CHO TAY BOOMERANG
+
+
                     let doLan = (loaiDam === 'LON') ? 2.5 : 1.5;
                     let targetBay = baseTarget.clone().add(new THREE.Vector3((Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan, (Math.random()-0.5)*doLan));           
                     tayClone.lookAt(targetBay);
                     scene.add(tayClone);
-                    let maxDist = Math.min(posSpawn.distanceTo(targetBay) + 2, 50);
+                    
+                    // 🌟 BẢN VÁ 1: Gỡ bỏ giới hạn 50m, cho phép tay vươn theo mục tiêu thoải mái!
+                    let maxDist = posSpawn.distanceTo(targetBay) + 15; 
+
                     kyNangLuffy.push({ 
                         mesh: tayClone, type: 'BULLET_PUNCH', 
                         speed: tocDoBay, state: 'OUT', life: 100, 
-                        startPos: posSpawn.clone(), maxDist: maxDist,
+                        startPos: posSpawn.clone(), 
+                        targetPos: targetBay.clone(), // 🌟 TỘI ĐỒ LÀ ĐÂY: Quên truyền tọa độ đích!
+                        maxDist: maxDist,
                         isRemote: isRemote, damage: dameGoc * heSoDame,
-                        upVector: cUp.clone() // Lấy Trục để rớt Haki
+                        upVector: cUp.clone() 
                     });
+
+
                 }, i * 35); // 🌟 XẢ GATLING 35ms SIÊU TỐC
             }
         }
@@ -317,31 +326,40 @@
                         s.mesh.translateZ(s.speed);
                     }
 
+
+
+
+                    let denDich = s.targetPos ? (s.mesh.position.distanceTo(s.targetPos) < s.speed + 2) : false;
+                    let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
                     let daTrung = false;
+
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
+                        // 🌟 Nếu đấm bay tới đích mà trượt (không trúng ai), vẫn ép nổ hạt Haki rớt lả tả cho ngầu!
+                        if (!daTrung && denDich) taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector);
                     } 
                     else {
-                        // Radar đo khoảng cách chạm vào Sếp
                         if (window.playerModel && typeof window.isDead !== 'undefined' && !window.isDead) {
                             let khoangCach = s.mesh.position.distanceTo(window.playerModel.position);
-                            if (khoangCach <= 15) { 
-                                if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            // 🌟 Ép Nổ: Nếu chạm mặt Sếp (< 15m) HOẶC tay đã vươn tới đúng tọa độ đích!
+                            if (khoangCach <= 15 || denDich) { 
+                                if (khoangCach <= 15 && typeof window.gaySatThuongBossToPlayer === 'function') {
                                     window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 15);
                                 }
-                                if (typeof taoVuNoLuffy === 'function') taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); 
+                                taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); 
                                 daTrung = true; 
                             }
                         }
                     }
 
-                    let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
-                    // Phòng hờ đấm bay lố qua mục tiêu thì ép quay đầu thu tay về liền
-                    let denDich = s.targetPos ? (s.mesh.position.distanceTo(s.targetPos) < s.speed + 2) : false;
-
+                    // Điều kiện dội ngược tay về
                     if (daTrung || bayĐuocBaoXa >= s.maxDist || denDich || s.life < 10) {
                         s.state = 'IN'; 
                     }
+
+
+
+
                 }
                 else if (s.state === 'IN') {
                     // 🌟 BẢN VÁ 4: GIẬT LÙI DỘI RA NHƯ LÒ XO, GIỮ NGUYÊN HƯỚNG MẶT ĐẤM!
