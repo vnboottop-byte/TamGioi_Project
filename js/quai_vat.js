@@ -349,7 +349,7 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
         const info = {
             id: id, classCode: classCode, level: level, isBoss: isBoss, mesh: quai, mixer: mixer, anims: anims, tagEl: tag,
             maxHp: hpMax, hp: mauHienTai, isDead: (mauHienTai <= 0), spawnX: x, spawnZ: z, state: 'IDLE', lastAttackTime: 0, currentAnimName: '',
-
+            modelFile: modelFile, // 🌟 BẢN VÁ: Lưu vết file đẻ quái để trích xuất tên kịch bản đoạt xá động
             playAnim: function (ten) {
                 let theLoaiCanTim = ten.toUpperCase();
                 if (this.currentAnimName === theLoaiCanTim) return;
@@ -764,10 +764,23 @@ window.capNhatAIQuaiVat = function (delta) {
         let posNgangSep = posNguoiChoi.clone().projectOnPlane(quai.upVector);
         let distNgang = posNgangQuai.distanceTo(posNgangSep);
         let isClosest = true;
-        // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
-        // Rửa sạch mã Class Code trước khi đọc (Xóa dãy số 1741584348_ ở đầu)
-        let phaiCodeChuan = quai.classCode ? quai.classCode.toUpperCase().replace(/^\d+_/, '').trim() : 'TU_TIEN';
-        let boNao = window.TU_DIEN_AI_QUAI[phaiCodeChuan];
+
+        // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI (PHÂN TÁCH GỐC VS ANIME)
+        let phaiCode = quai.classCode ? quai.classCode.toUpperCase().trim() : 'TU_TIEN';
+        
+        // 🔮 THUẬT TOÁN ĐOẠT XÁ THEO Ý SẾP: Nếu mã phái lưu trong DB là ALL -> Tự bốc file .glb ra băm chuỗi lấy tên phái!
+        if (phaiCode === 'ALL' && quai.modelFile) {
+            let tenFile = quai.modelFile.split('/').pop().split('.')[0].toUpperCase();
+            phaiCode = tenFile.replace(/^\d+_/, ''); // Cắt sạch timestamp, trả về ZORO, ACE, LUFFY
+        }
+
+        // Quy đổi chuẩn hóa các phái gốc
+        if (phaiCode === 'CUNG_TEN') phaiCode = 'CUNG_THU';
+        if (phaiCode === 'SUNG_DAN' || phaiCode === 'XA_THU') phaiCode = 'BAN_SUNG';
+        if (phaiCode === 'SIEUANHHUNG') phaiCode = 'LAZER';
+        if (phaiCode === 'CAN_CHIEN') phaiCode = 'LUYEN_THE';
+
+        let boNao = window.TU_DIEN_AI_QUAI[phaiCode];
         let scaleTamNhin = 120;  
         let scaleTamDanh = 80;   
         let gioiHanLanhTho = 300;
@@ -856,17 +869,19 @@ window.capNhatAIQuaiVat = function (delta) {
                         let dayRaNgoai = Math.min(doDayBung, khoangCach * 0.8);
                         bOrigin.add(bDir.clone().multiplyScalar(dayRaNgoai));
 
-                        // 🌟 BẢN VÁ RỬA MÃ PHÁI TRƯỚC KHI XUẤT CHIÊU
-                        let phaiCode = quai.classCode ? quai.classCode.toUpperCase().replace(/^\d+_/, '').trim() : 'TU_TIEN';
-                        
-                        // Quy hoạch lại các mã phái gốc cho chuẩn khớp với rom.php
+                        // 🌟 BẢN VÁ PHÂN TÁCH LÕI KHI XUẤT CHIÊU
+                        let phaiCode = quai.classCode ? quai.classCode.toUpperCase().trim() : 'TU_TIEN';
+                        if (phaiCode === 'ALL' && quai.modelFile) {
+                            let tenFile = quai.modelFile.split('/').pop().split('.')[0].toUpperCase();
+                            phaiCode = tenFile.replace(/^\d+_/, '');
+                        }
+
                         if (phaiCode === 'CUNG_TEN') phaiCode = 'CUNG_THU';
                         if (phaiCode === 'SUNG_DAN' || phaiCode === 'XA_THU') phaiCode = 'BAN_SUNG';
                         if (phaiCode === 'SIEUANHHUNG') phaiCode = 'LAZER';
                         if (phaiCode === 'CAN_CHIEN') phaiCode = 'LUYEN_THE';
 
                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
-                        
                          
                         let tenHamMap = {
                             'TU_TIEN': 'tungComboTuTien',
