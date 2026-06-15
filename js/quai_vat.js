@@ -371,11 +371,24 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                     // 🌟 BẢN VÁ AAA: MA TRẬN DỰ PHÒNG (FALLBACK) CHO QUÁI VẬT NHÀ NGHÈO
                     // ==========================================
                     if (!tenTrungKhop) {
-                        // 1. Máy quét phân loại tất cả những gì Model đang có
+
+
+
+                        
+                        // 1. 🌟 MÁY QUÉT MỚI: GOM VÀO RỔ VÀ BỐC THĂM RANDOM ĐỂ ĐA DẠNG CHIÊU THỨC
                         let animChayBay = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move|jump|fall/i.test(n));
-                        let animDungIm = danhSachTenGoc.find(n => /surface|idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
-                        let animDanh = danhSachTenGoc.find(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
                         let animChet = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
+
+                        // Gom tất cả hoạt ảnh NGHỈ NGƠI vào rổ rồi bốc thăm
+                        let roDungIm = danhSachTenGoc.filter(n => /surface|idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
+                        let animDungIm = roDungIm.length > 0 ? roDungIm[Math.floor(Math.random() * roDungIm.length)] : null;
+
+                        // Gom tất cả hoạt ảnh TẤN CÔNG (từ 1 đến 10) vào rổ rồi bốc thăm
+                        let roDanh = danhSachTenGoc.filter(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
+                        let animDanh = roDanh.length > 0 ? roDanh[Math.floor(Math.random() * roDanh.length)] : null;
+
+
+
 
                         // 2. Thuật toán bù trừ chéo (Thay thế mấy cái index cứng ngắc [1], [2] dễ gây Crash)
                         if (theLoaiCanTim === 'IDLE' || theLoaiCanTim === 'NHANROI') {
