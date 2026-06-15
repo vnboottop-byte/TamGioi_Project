@@ -527,9 +527,9 @@
     // ==========================================
     if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('spyro')) {
         window.HePhaiHienTai = {
-            tenPhai: "Tia Lửa Đỏ Ichiji",
+            tenPhai: "spyro",
             khoiTao: function () {
-                console.log("🔥 Sparking Red Ichiji (Mở Khóa SPAM 100% - Trục Cầu Chuẩn - Sát thương to)!");
+                console.log("🔥 spyro (Mở Khóa SPAM 100% - Trục Cầu Chuẩn - Sát thương to)!");
 
                 // 🌟 BẢN VÁ: PRELOAD RAM TẢI TRƯỚC VŨ KHÍ 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
