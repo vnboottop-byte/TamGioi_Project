@@ -4,9 +4,14 @@
 // ==========================================
 
 (function () {
-    const kyNangNL = [];
-    const hieuUngNL = [];
-    const danhSachSoBayNL = [];
+     // 🌟 BẢN VÁ LỜI NGUYỀN SINH ĐÔI 1: BỘ NHỚ TOÀN CỤC CHỐNG ĐÓNG BĂNG ĐẠN
+    window.kyNangNL_Global = window.kyNangNL_Global || [];
+    window.hieuUngNL_Global = window.hieuUngNL_Global || [];
+    window.danhSachSoBayNL_Global = window.danhSachSoBayNL_Global || [];
+    
+    let kyNangNL = window.kyNangNL_Global;
+    let hieuUngNL = window.hieuUngNL_Global;
+    let danhSachSoBayNL = window.danhSachSoBayNL_Global;
 
     window.KHO_ANIM_NHANROI = [];
     window.KHO_ANIM_TANCONG = [];
@@ -346,7 +351,8 @@
             }, 300);
         }
     };
-
+    // 🌟 BẢN VÁ LỜI NGUYỀN SINH ĐÔI 2: THÔNG NÃO CHO BOSS (TRÁO ĐỔI CHỮ HOA - CHỮ THƯỜNG)
+    window.tungComboNightmareluffy = window.tungComboNightmareLuffy; 
     // ==========================================
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ NIGHTMARE LUFFY (BẢN VÁ LỖI)
     // ==========================================
