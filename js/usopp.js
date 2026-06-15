@@ -258,7 +258,7 @@
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
                     // 🌟 VÁ LỖI 4: Lấy lại Tọa độ và Vector Động của nhân vật, tránh rớt đạn lại phía sau!
-                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    let curNvc = nvc;
                     if (!curNvc) return;
 
                     let curUp = new THREE.Vector3(0, 1, 0);
@@ -339,10 +339,16 @@
 
                 // Chạm đích -> Nổ
                 if (s.progress >= 1 || s.life <= 0) {
-                    if (s.isRemote === false) gaySatThuongUsopp(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) {
+                        gaySatThuongUsopp(s.targetPos, s.damage, s.noBanKinh);
+                    }
+                    else {
+                        // 🌟 BẢN VÁ: Gỡ bỏ khiên chắn number! Đạn nổ là Sếp bay màu!
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
                     } 
+                    // 🌟 Truyền upVector để vụ nổ bám theo độ cong hành tinh Map Cầu nếu có
                     taoVuNoUsopp(s.targetPos, s.noBanKinh);
                     s.life = 0;
                 }
