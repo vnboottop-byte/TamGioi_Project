@@ -308,17 +308,29 @@
                 s.life--;        
                 if (s.state === 'OUT') {
                     s.mesh.translateZ(s.speed);            
+
+
                     let daTrung = false;
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
                     } 
                     else {
-                        // 🌟 BẢN VÁ 3: Gỡ bỏ gông cùm typeof number, chỉ cần là Đạn của Boss chạm Sếp thì Trừ Máu!
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
-                            window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 12);
-                            daTrung = true; 
+                        // 🌟 BẢN VÁ 3.1: RADAR ĐO KHOẢNG CÁCH, CHẠM VÀO SẾP MỚI ĐƯỢC THU TAY VỀ!
+                        if (window.playerModel && typeof window.isDead !== 'undefined' && !window.isDead) {
+                            let khoangCach = s.mesh.position.distanceTo(window.playerModel.position);
+                            
+                            // Bán kính nắm đấm là 15m, vào tầm này là ăn đấm
+                            if (khoangCach <= 15) { 
+                                if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                                    window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 15);
+                                }
+                                taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); // Ép nổ Haki đỏ rực
+                                daTrung = true; // Trúng đích rồi, thu tay về đi!
+                            }
                         }
                     }
+
+
 
                     let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
                     if (daTrung || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
