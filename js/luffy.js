@@ -302,12 +302,13 @@
                 }, i * 35); // 🌟 XẢ GATLING 35ms SIÊU TỐC
             }
         }
-        // 🎯 Q, E: GIỮ NGUYÊN BẢN SẮC CŨ
+
+        // 🎯 Q, E: GIỮ NGUYÊN BẢN SẮC CŨ VÀ DAME CŨ
         if (phim === 'Q') banGatling(10, 0.04, 8.0, 5.0, 'NHO');   
         else if (phim === 'E') banGatling(6, 0.1, 8.0, 3.5, 'LON');  
 
         // 💥 R: LỤC ĐẠO GATLING (Học tập Phái Tu Tiên)
-        // Triệu hồi 8 Nắm Đấm Cao Su to hơn chiêu E (Scale 6.0) bao vây từ mọi hướng giáng xuống!
+        // 🌟 BẢO TOÀN DAME: 8 Đấm x 0.0625 = Tổng Dame 0.5 (Y hệt bản gốc)
         else if (phim === 'R') {
             const soLuong = 8;
             let qHanhTinh = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp);
@@ -322,12 +323,10 @@
                     let localDir = new THREE.Vector3(Math.cos(theta)*Math.sin(phi), Math.abs(Math.cos(phi))+0.1, Math.sin(theta)*Math.sin(phi)).normalize();
                     
                     let huongRaNgoai = localDir.applyQuaternion(qHanhTinh).normalize();
-                    
-                    // 🌟 Nắm đấm đẻ ra từ khoảng không cách mục tiêu 30m
                     const posNgoai = baseTarget.clone().add(huongRaNgoai.multiplyScalar(30));
-                    posNgoai.add(curUp.clone().multiplyScalar(8)); // Hơi chếch lên cao xíu
+                    posNgoai.add(curUp.clone().multiplyScalar(8)); 
 
-                    let tayR = taoNamDamGatling('LON', 6.0); // To hơn chiêu E
+                    let tayR = taoNamDamGatling('LON', 6.0); 
                     tayR.position.copy(posNgoai);
                     tayR.up.copy(curUp);
                     tayR.lookAt(baseTarget);
@@ -339,26 +338,25 @@
                         startPos: posNgoai.clone(), 
                         targetPos: baseTarget.clone(),
                         maxDist: posNgoai.distanceTo(baseTarget) + 15,
-                        isRemote: isRemote, damage: dameGoc * 0.15,
-                        upVector: curUp.clone(), radiusNo: 18 // Bán kính nổ lớn hơn
+                        isRemote: isRemote, 
+                        damage: dameGoc * 0.0625, // <--- BẢO TOÀN DAME GỐC
+                        upVector: curUp.clone(), radiusNo: 18 
                     });
-                }, i * 40); // Đổ bóng liên hoàn
+                }, i * 40); 
             }
         }
 
-        // 🔥 F: ĐẠI PHẬT GIGANT PUNCH (Học tập Katakuri + Vươn tới mục tiêu)
-        // Triệu hồi 1 Nắm Đấm Siêu Khổng Lồ (Scale 25.0) từ trên không giáng thẳng xuống đè bẹp mục tiêu!
+        // 🔥 F: ĐẠI PHẬT GIGANT PUNCH (Học tập Katakuri)
+        // 🌟 BẢO TOÀN DAME: 1 Đấm duy nhất dồn lực = Tổng Dame 1.0 (Y hệt bản gốc)
         else if (phim === 'F') {
             setTimeout(() => {
                 let curNvc = nvc; 
                 if (!curNvc) return;
 
                 let baseTarget = targetPoint ? targetPoint.clone() : curNvc.position.clone().add(fwd.clone().multiplyScalar(60));
-
-                // 🌟 Xuất hiện từ phía sau và trên cao của người chơi
                 let posSpawn = curNvc.position.clone().add(curUp.clone().multiplyScalar(25)).sub(fwd.clone().multiplyScalar(5));
                 
-                let tayF = taoNamDamGatling('LON', 25.0); // Khổng Lồ Áp Đảo
+                let tayF = taoNamDamGatling('LON', 25.0); 
                 tayF.position.copy(posSpawn);
                 tayF.up.copy(curUp);
                 tayF.lookAt(baseTarget);
@@ -366,17 +364,19 @@
 
                 kyNangLuffy.push({ 
                     mesh: tayF, type: 'BULLET_PUNCH', 
-                    speed: 4.0, // Bay chậm tạo cảm giác Uy Lực và Nặng Nề
+                    speed: 4.0, 
                     state: 'OUT', life: 300, 
                     startPos: posSpawn.clone(), 
                     targetPos: baseTarget.clone(),
                     maxDist: posSpawn.distanceTo(baseTarget) + 20,
-                    isRemote: isRemote, damage: dameGoc * 1.5,
-                    upVector: curUp.clone(), radiusNo: 40 // Cú nổ rung chấn bán kính 40m
+                    isRemote: isRemote, 
+                    damage: dameGoc * 1.0, // <--- BẢO TOÀN DAME GỐC
+                    upVector: curUp.clone(), radiusNo: 40 
                 });
-            }, 300); // Vận nội công 300ms rồi phang
+            }, 300); 
         }
     };
+
     // =========================================================
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU LUFFY (BẢN VÁ THEO PHONG CÁCH ZORO.JS)
     // =========================================================
