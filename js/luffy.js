@@ -308,8 +308,6 @@
                 s.life--;        
                 if (s.state === 'OUT') {
                     s.mesh.translateZ(s.speed);            
-
-
                     let daTrung = false;
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
@@ -329,9 +327,6 @@
                             }
                         }
                     }
-
-
-
                     let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
                     if (daTrung || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
                         s.state = 'IN'; 
