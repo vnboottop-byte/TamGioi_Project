@@ -765,13 +765,13 @@ window.capNhatAIQuaiVat = function (delta) {
         let distNgang = posNgangQuai.distanceTo(posNgangSep);
         let isClosest = true;
 
-        // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI (PHÂN TÁCH GỐC VS ANIME)
+        // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
         let phaiCode = quai.classCode ? quai.classCode.toUpperCase().trim() : 'TU_TIEN';
         
-        // 🔮 THUẬT TOÁN ĐOẠT XÁ THEO Ý SẾP: Nếu mã phái lưu trong DB là ALL -> Tự bốc file .glb ra băm chuỗi lấy tên phái!
+        // 🔮 THUẬT TOÁN ĐOẠT XÁ CỦA SẾP: Băm mảng, lấy khúc đuôi cùng!
         if (phaiCode === 'ALL' && quai.modelFile) {
             let tenFile = quai.modelFile.split('/').pop().split('.')[0].toUpperCase();
-            phaiCode = tenFile.replace(/^\d+_/, ''); // Cắt sạch timestamp, trả về ZORO, ACE, LUFFY
+            phaiCode = tenFile.split('_').pop(); 
         }
 
         // Quy đổi chuẩn hóa các phái gốc
@@ -873,7 +873,7 @@ window.capNhatAIQuaiVat = function (delta) {
                         let phaiCode = quai.classCode ? quai.classCode.toUpperCase().trim() : 'TU_TIEN';
                         if (phaiCode === 'ALL' && quai.modelFile) {
                             let tenFile = quai.modelFile.split('/').pop().split('.')[0].toUpperCase();
-                            phaiCode = tenFile.replace(/^\d+_/, '');
+                            phaiCode = tenFile.split('_').pop(); // Lấy đúng đuôi USOPP
                         }
 
                         if (phaiCode === 'CUNG_TEN') phaiCode = 'CUNG_THU';
