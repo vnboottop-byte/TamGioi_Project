@@ -270,7 +270,7 @@
         function banDanParabolBege(viTriNong, tenModel, soLuong, kichCo, chieuCaoVongCung, tocDo, heSoDame, banKinhNo) {
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
-                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    let curNvc = nvc;
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -322,7 +322,7 @@
         function banTenLuaBege(viTriNong, soLuong, delay, heSoDame) {
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
-                    let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                    let curNvc = nvc;
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -388,9 +388,14 @@
                 s.mesh.lookAt(curPos.clone().add(huongBay)); 
 
                 if (s.progress >= 1 || s.life <= 0) {
-                    if (s.isRemote === false) gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) {
+                        gaySatThuongBege(s.targetPos, s.damage, s.noBanKinh);
+                    }
+                    else {
+                        // 🌟 BẢN VÁ: Gỡ gông cùm number, Pháo nổ là Sếp mất máu!
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
                     } 
                     taoVuNoBege(s.targetPos, s.noBanKinh, s.upVector);
                     s.life = 0;
@@ -406,9 +411,14 @@
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     let diemNoThucTe = (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) ? s.targetPos.clone() : s.mesh.position.clone();
 
-                    if (s.isRemote === false) gaySatThuongBege(diemNoThucTe, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(diemNoThucTe, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) {
+                        gaySatThuongBege(diemNoThucTe, s.damage, s.noBanKinh);
+                    }
+                    else {
+                        // 🌟 BẢN VÁ: Tên lửa chạm mặt là trừ HP Sếp!
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(diemNoThucTe, s.damage, s.noBanKinh);
+                        }
                     } 
                     taoVuNoBege(diemNoThucTe, s.noBanKinh, s.upVector);
                     s.life = 0;
