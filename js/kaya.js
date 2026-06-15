@@ -241,7 +241,7 @@
         if (phim === 'Q') {
             setTimeout(() => {
                 // 🌟 BẢN VÁ: Dời tọa độ tay vào TRONG SetTimeout để đạn rớt chuẩn
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc; // 🌟 BẢN VÁ CHIÊU Q
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -269,7 +269,7 @@
         // ===============================================
         else if (phim === 'E') {
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc; // 🌟 BẢN VÁ CHIÊU E
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -297,7 +297,7 @@
         // ===============================================
         else if (phim === 'R') {
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc; // 🌟 BẢN VÁ CHIÊU R
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -418,16 +418,18 @@
                     if (s.isRemote === false) {
                         gaySatThuongKaya(s.targetPos, s.damage, s.noBanKinh);
                     } 
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
+                    else {
+                        // 🌟 BẢN VÁ: Gỡ bỏ gông cùm 'typeof number', cứ Boss ném trúng mục tiêu là trừ HP Sếp!
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
                     } 
 
-                    // 🌟 TRUYỀN upVector VÀO HÀM NỔ ĐỂ NẮN TRỤC
+                    // 🌟 TRUYỀN upVector VÀO HÀM NỔ ĐỂ NẮN TRỤC (Giữ nguyên gốc chuẩn của Sếp)
                     taoHieuUngNoKaya(s.targetPos, s.type === 'MUA_VU_KHI', s.upVector);
                     s.life = 0;
                 }
+
             }
 
             if (s.life <= 0) {
