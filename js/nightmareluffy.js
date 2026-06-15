@@ -359,7 +359,7 @@
             if (s.delay > 0) { s.delay--; continue; }
             s.life--;
 
-            // KIẾM KHÍ VÀ ĐẤM THẲNG Q, R, F
+               // KIẾM KHÍ VÀ ĐẤM THẲNG Q, R, F
             if (s.type === 'BAY_THANG' || s.type === 'BAY_THANG_GOM') {
                 if (s.targetPos) {
                     if (!s.isRemote) {
