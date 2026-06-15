@@ -302,10 +302,80 @@
                 }, i * 35); // 🌟 XẢ GATLING 35ms SIÊU TỐC
             }
         }
+        // 🎯 Q, E: GIỮ NGUYÊN BẢN SẮC CŨ
         if (phim === 'Q') banGatling(10, 0.04, 8.0, 5.0, 'NHO');   
         else if (phim === 'E') banGatling(6, 0.1, 8.0, 3.5, 'LON');  
-        else if (phim === 'R') banGatling(4, 0.125, 8.0, 3.5, 'LON');
-        else if (phim === 'F') banGatling(4, 0.25, 8.0, 3.5, 'LON'); 
+
+        // 💥 R: LỤC ĐẠO GATLING (Học tập Phái Tu Tiên)
+        // Triệu hồi 8 Nắm Đấm Cao Su to hơn chiêu E (Scale 6.0) bao vây từ mọi hướng giáng xuống!
+        else if (phim === 'R') {
+            const soLuong = 8;
+            let qHanhTinh = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp);
+            let baseTarget = targetPoint ? targetPoint.clone() : nvc.position.clone().add(fwd.clone().multiplyScalar(40));
+
+            for (let i = 0; i < soLuong; i++) {
+                setTimeout(() => {
+                    let curNvc = nvc; 
+                    if (!curNvc) return;
+
+                    const phi = Math.acos(-1 + (2 * i) / soLuong); const theta = Math.sqrt(soLuong * Math.PI) * phi;
+                    let localDir = new THREE.Vector3(Math.cos(theta)*Math.sin(phi), Math.abs(Math.cos(phi))+0.1, Math.sin(theta)*Math.sin(phi)).normalize();
+                    
+                    let huongRaNgoai = localDir.applyQuaternion(qHanhTinh).normalize();
+                    
+                    // 🌟 Nắm đấm đẻ ra từ khoảng không cách mục tiêu 30m
+                    const posNgoai = baseTarget.clone().add(huongRaNgoai.multiplyScalar(30));
+                    posNgoai.add(curUp.clone().multiplyScalar(8)); // Hơi chếch lên cao xíu
+
+                    let tayR = taoNamDamGatling('LON', 6.0); // To hơn chiêu E
+                    tayR.position.copy(posNgoai);
+                    tayR.up.copy(curUp);
+                    tayR.lookAt(baseTarget);
+                    scene.add(tayR);
+
+                    kyNangLuffy.push({ 
+                        mesh: tayR, type: 'BULLET_PUNCH', 
+                        speed: 5.5, state: 'OUT', life: 150, 
+                        startPos: posNgoai.clone(), 
+                        targetPos: baseTarget.clone(),
+                        maxDist: posNgoai.distanceTo(baseTarget) + 15,
+                        isRemote: isRemote, damage: dameGoc * 0.15,
+                        upVector: curUp.clone(), radiusNo: 18 // Bán kính nổ lớn hơn
+                    });
+                }, i * 40); // Đổ bóng liên hoàn
+            }
+        }
+
+        // 🔥 F: ĐẠI PHẬT GIGANT PUNCH (Học tập Katakuri + Vươn tới mục tiêu)
+        // Triệu hồi 1 Nắm Đấm Siêu Khổng Lồ (Scale 25.0) từ trên không giáng thẳng xuống đè bẹp mục tiêu!
+        else if (phim === 'F') {
+            setTimeout(() => {
+                let curNvc = nvc; 
+                if (!curNvc) return;
+
+                let baseTarget = targetPoint ? targetPoint.clone() : curNvc.position.clone().add(fwd.clone().multiplyScalar(60));
+
+                // 🌟 Xuất hiện từ phía sau và trên cao của người chơi
+                let posSpawn = curNvc.position.clone().add(curUp.clone().multiplyScalar(25)).sub(fwd.clone().multiplyScalar(5));
+                
+                let tayF = taoNamDamGatling('LON', 25.0); // Khổng Lồ Áp Đảo
+                tayF.position.copy(posSpawn);
+                tayF.up.copy(curUp);
+                tayF.lookAt(baseTarget);
+                scene.add(tayF);
+
+                kyNangLuffy.push({ 
+                    mesh: tayF, type: 'BULLET_PUNCH', 
+                    speed: 4.0, // Bay chậm tạo cảm giác Uy Lực và Nặng Nề
+                    state: 'OUT', life: 300, 
+                    startPos: posSpawn.clone(), 
+                    targetPos: baseTarget.clone(),
+                    maxDist: posSpawn.distanceTo(baseTarget) + 20,
+                    isRemote: isRemote, damage: dameGoc * 1.5,
+                    upVector: curUp.clone(), radiusNo: 40 // Cú nổ rung chấn bán kính 40m
+                });
+            }, 300); // Vận nội công 300ms rồi phang
+        }
     };
     // =========================================================
     // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU LUFFY (BẢN VÁ THEO PHONG CÁCH ZORO.JS)
