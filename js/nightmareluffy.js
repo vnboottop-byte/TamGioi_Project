@@ -223,7 +223,7 @@
         if (animCanMua === 'ATTACK1') {
             setTimeout(() => {
                 // 🌟 BẢN VÁ: CẬP NHẬT TỌA ĐỘ ĐỘNG TRONG SETTIMEOUT
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -278,7 +278,7 @@
         // ===============================================
         else if (animCanMua === 'ATTACK3') {
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -317,7 +317,7 @@
         // ⚔️ CHIÊU F (ATTACK4): KIẾM TRẬN NGÔI SAO LUC GIÁC DẤU * // ===============================================
         else if (animCanMua === 'ATTACK4') {
             setTimeout(() => {
-                let curNvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
+                let curNvc = nvc;
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -384,9 +384,13 @@
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     let diemNo = (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) ? s.targetPos.clone() : s.mesh.position.clone();
                     
-                    if (s.isRemote === false) gaySatThuongNL(diemNo, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(diemNo, s.damage, s.noBanKinh);
+                    if (s.isRemote === false) {
+                        gaySatThuongNL(diemNo, s.damage, s.noBanKinh);
+                    } else {
+                        // 🌟 BẢN VÁ: Gỡ bỏ khiên number! Kẻ địch dính đòn là bay màu!
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') {
+                            window.gaySatThuongBossToPlayer(diemNo, s.damage, s.noBanKinh);
+                        }
                     }
 
                     hieuUngNoNL(diemNo, s.noBanKinh, s.upVector);
