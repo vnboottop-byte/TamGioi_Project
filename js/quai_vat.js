@@ -752,7 +752,9 @@ window.capNhatAIQuaiVat = function (delta) {
         let distNgang = posNgangQuai.distanceTo(posNgangSep);
         let isClosest = true;
         // 🌟 KIẾN TRÚC MỞ AAA: RÚT THÔNG SỐ TỪ NÃO CỦA JS RIÊNG TỪNG PHÁI
-        let boNao = window.TU_DIEN_AI_QUAI[quai.classCode];
+        // Rửa sạch mã Class Code trước khi đọc (Xóa dãy số 1741584348_ ở đầu)
+        let phaiCodeChuan = quai.classCode ? quai.classCode.toUpperCase().replace(/^\d+_/, '').trim() : 'TU_TIEN';
+        let boNao = window.TU_DIEN_AI_QUAI[phaiCodeChuan];
         let scaleTamNhin = 120;  
         let scaleTamDanh = 80;   
         let gioiHanLanhTho = 300;
@@ -841,9 +843,18 @@ window.capNhatAIQuaiVat = function (delta) {
                         let dayRaNgoai = Math.min(doDayBung, khoangCach * 0.8);
                         bOrigin.add(bDir.clone().multiplyScalar(dayRaNgoai));
 
-                        let phaiCode = quai.classCode;
+                        // 🌟 BẢN VÁ RỬA MÃ PHÁI TRƯỚC KHI XUẤT CHIÊU
+                        let phaiCode = quai.classCode ? quai.classCode.toUpperCase().replace(/^\d+_/, '').trim() : 'TU_TIEN';
+                        
+                        // Quy hoạch lại các mã phái gốc cho chuẩn khớp với rom.php
+                        if (phaiCode === 'CUNG_TEN') phaiCode = 'CUNG_THU';
+                        if (phaiCode === 'SUNG_DAN' || phaiCode === 'XA_THU') phaiCode = 'BAN_SUNG';
+                        if (phaiCode === 'SIEUANHHUNG') phaiCode = 'LAZER';
+                        if (phaiCode === 'CAN_CHIEN') phaiCode = 'LUYEN_THE';
+
                         let bossWeapon = (typeof window.VUKHI_MAC_DINH_CAC_PHAI !== 'undefined' && window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode]) ? window.VUKHI_MAC_DINH_CAC_PHAI[phaiCode] : null;
                         
+                         
                         let tenHamMap = {
                             'TU_TIEN': 'tungComboTuTien',
                             'PHAP_SU': 'tungComboPhapSu',
