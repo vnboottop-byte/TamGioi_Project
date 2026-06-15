@@ -811,11 +811,6 @@ window.capNhatAIQuaiVat = function (delta) {
                         quai.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                     } 
 
-
-
-
-                    
-
                     // Nếu hồi chiêu xong -> Bắt đầu xả chiêu mới
                     else if (Date.now() - (quai.lastAttackTime || 0) > 3000) {
                         quai.lastAttackTime = Date.now();
@@ -864,9 +859,6 @@ window.capNhatAIQuaiVat = function (delta) {
                             funcName = 'tungCombo' + camelCase;
                         }
 
-
-
-
                         // 🛑 Cấp CCCD ảo cho Boss để 100+ file võ công không bị lỗi Undefined
                         let renderId = "BOSS_" + String(quai.id); 
 
@@ -890,12 +882,6 @@ window.capNhatAIQuaiVat = function (delta) {
                                 if (typeof window.bossTungTuyetKieu === 'function') window.bossTungTuyetKieu(quai, pTarget, phaiCode, chieu);
                             }
                         };
-
-
-
-
-
-
 
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); 
@@ -1076,19 +1062,6 @@ window.capNhatAIQuaiVat = function (delta) {
             }
         }
 
-
-
-
-
-        
-
-
-
-
-
-
-
-
         // ========================================================
         // 🌍 LÕI TRỌNG LỰC ĐA CHIỀU (BẢN VÁ: ĐI BỘ TRÊN KHÔNG & HẠ CÁNH MƯỢT MÀ)
         // ========================================================
@@ -1165,11 +1138,6 @@ window.capNhatAIQuaiVat = function (delta) {
             }
         }
 
-
-
-
-
-
         // ========================================================
         // 📡 MÁY PHÁT SÓNG: ĐỒNG BỘ TỌA ĐỘ, GÓC XOAY VÀ ANIMATION LÊN MẠNG
         // ========================================================
@@ -1190,11 +1158,6 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
             }
         }
-
-
-
-
-
     });
 };
 
@@ -1383,12 +1346,6 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                     window.remotePlayers[botFakeId] = { status: 'ready', mesh: bot.mesh, name: bot.name, damage: dmgBot, classCode: bot.fakePhai };
                 }
 
-
-
-
-
-
-
                 // 🌟 KHAI BÁO BIẾN BỊ THIẾU ĐỂ CỨU GAME KHỎI SẬP
                 let phaiDung = bot.fakePhai || 'TU_TIEN';
 
@@ -1405,21 +1362,12 @@ window.TU_DIEN_AI_QUAI['FAKE_PLAYER'] = {
                 }
                 let tenHamBot = 'tungCombo' + maPhaiBot;
 
-
-
-
-
-
                 // Tự động gọi chiêu thức nếu có Script
                 if (typeof window[tenHamBot] === 'function') {
                     window[tenHamBot](nextChieu, dmgBot, bOrigin, pTarget, bDir, botFakeId, phantomWeapon);
                 } else if (typeof window.bossTungTuyetKieu === 'function') {
                     window.bossTungTuyetKieu(bot, pTarget, phaiDung, nextChieu);
                 }
-
-
-
-
 
                 // Giữ kết nối sát thương 2 giây để đạn bay tới nơi (Thay vì 100ms như cũ)
                 setTimeout(() => { if (typeof window.remotePlayers !== 'undefined') delete window.remotePlayers[botFakeId]; }, 2000);
