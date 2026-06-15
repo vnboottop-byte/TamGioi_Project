@@ -298,45 +298,65 @@
         else if (phim === 'R') banGatling(4, 0.125, 8.0, 3.5, 'LON');
         else if (phim === 'F') banGatling(4, 0.25, 8.0, 3.5, 'LON'); 
     };
-    // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ VÀ DỌN RÁC
-    // ==========================================
+    // =========================================================
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU LUFFY (BẢN VÁ THEO PHONG CÁCH ZORO.JS)
+    // =========================================================
     window.updateCombatLuffy = function () {
         for (let i = kyNangLuffy.length - 1; i >= 0; i--) {
             let s = kyNangLuffy[i]; 
             if (s.type === 'BULLET_PUNCH') {
                 s.life--;        
+                
                 if (s.state === 'OUT') {
-                    s.mesh.translateZ(s.speed);            
+                    // 🌟 HỌC TẬP ZORO.JS: Tính toán hướng bay theo tọa độ thế giới tuyệt đối, chống ngược trục của model Boss
+                    if (s.targetPos) {
+                        let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
+                        s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                        s.mesh.lookAt(s.targetPos); // Giữ hướng đấm chuẩn xác nhìn về mục tiêu
+                    } else {
+                        s.mesh.translateZ(s.speed);
+                    }
+
                     let daTrung = false;
                     if (s.isRemote === false) {
                         daTrung = gaySatThuongLuffy(s.mesh.position, s.damage, 12, s.upVector); 
                     } 
                     else {
-                        // 🌟 BẢN VÁ 3.1: RADAR ĐO KHOẢNG CÁCH, CHẠM VÀO SẾP MỚI ĐƯỢC THU TAY VỀ!
+                        // Radar đo khoảng cách chạm vào Sếp
                         if (window.playerModel && typeof window.isDead !== 'undefined' && !window.isDead) {
                             let khoangCach = s.mesh.position.distanceTo(window.playerModel.position);
-                            
-                            // Bán kính nắm đấm là 15m, vào tầm này là ăn đấm
                             if (khoangCach <= 15) { 
                                 if (typeof window.gaySatThuongBossToPlayer === 'function') {
                                     window.gaySatThuongBossToPlayer(s.mesh.position, s.damage, 15);
                                 }
-                                taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); // Ép nổ Haki đỏ rực
-                                daTrung = true; // Trúng đích rồi, thu tay về đi!
+                                if (typeof taoVuNoLuffy === 'function') taoVuNoLuffy(s.mesh.position.clone(), 10, s.upVector); 
+                                daTrung = true; 
                             }
                         }
                     }
+
                     let bayĐuocBaoXa = s.startPos.distanceTo(s.mesh.position);
-                    if (daTrung || bayĐuocBaoXa >= s.maxDist || s.life < 10) {
+                    // Phòng hờ đấm bay lố qua mục tiêu thì ép quay đầu thu tay về liền
+                    let denDich = s.targetPos ? (s.mesh.position.distanceTo(s.targetPos) < s.speed + 2) : false;
+
+                    if (daTrung || bayĐuocBaoXa >= s.maxDist || denDich || s.life < 10) {
                         s.state = 'IN'; 
                     }
                 }
                 else if (s.state === 'IN') {
-                    s.mesh.translateZ(-s.speed * 2.0); 
+                    // 🌟 HỌC TẬP ZORO.JS: Thu tay về thế giới thực nương theo startPos, không xài âm speed cục bộ
+                    if (s.startPos) {
+                        let huongVe = new THREE.Vector3().subVectors(s.startPos, s.mesh.position).normalize();
+                        s.mesh.position.add(huongVe.multiplyScalar(s.speed * 2.0));
+                        s.mesh.lookAt(s.startPos); // Quay mặt tay về gông vai xuất phát
+                    } else {
+                        s.mesh.translateZ(-s.speed * 2.0);
+                    }
                 }
 
-                if (s.life <= 0 || (s.state === 'IN' && s.mesh.position.distanceTo(s.startPos) < s.speed * 3)) {
+                // Kiểm tra xem tay đã thu hồi về sát nách hay chưa
+                let veNhaChua = s.startPos ? (s.mesh.position.distanceTo(s.startPos) < s.speed * 3) : true;
+                if (s.life <= 0 || (s.state === 'IN' && veNhaChua)) {
                     if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                     kyNangLuffy.splice(i, 1);
                 }
@@ -356,14 +376,12 @@
         for (let i = hieuUngLuffy.length - 1; i >= 0; i--) {
             let h = hieuUngLuffy[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
-            
             let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.6) : new THREE.Vector3(0, -0.6, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
-
                 h.velocities[j].multiplyScalar(0.9);
                 h.velocities[j].add(fallVec); 
             }
