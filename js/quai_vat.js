@@ -364,29 +364,39 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                 }
                 else {
                     tenTrungKhop = danhSachTenGoc.find(n => n === theLoaiCanTim);
+
+
+
+                    // ==========================================
+                    // 🌟 BẢN VÁ AAA: MA TRẬN DỰ PHÒNG (FALLBACK) CHO QUÁI VẬT NHÀ NGHÈO
+                    // ==========================================
                     if (!tenTrungKhop) {
+                        // 1. Máy quét phân loại tất cả những gì Model đang có
+                        let animChayBay = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move|jump|fall/i.test(n));
+                        let animDungIm = danhSachTenGoc.find(n => /surface|idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
+                        let animDanh = danhSachTenGoc.find(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
+                        let animChet = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
 
-
-
-
-
-
-                        if (theLoaiCanTim === 'ATTACK') tenTrungKhop = danhSachTenGoc.find(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
-                        // 🌟 BẢN VÁ TỪ ĐIỂN: Ưu tiên "move f" (bơi thẳng) hoặc "swim" trước, rồi mới tới các từ khóa chung chung khác
-                        else if (theLoaiCanTim === 'RUN') tenTrungKhop = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move/i.test(n));
-                        else if (theLoaiCanTim === 'IDLE') tenTrungKhop = danhSachTenGoc.find(n => /surface|idle|wait|rest|stand|nghỉ|nhanroi/i.test(n));
-                        else if (theLoaiCanTim === 'DIE') tenTrungKhop = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
-                        else if (theLoaiCanTim.includes('CHIEU')) {
-
-
-
-
-
-
-                            tenTrungKhop = danhSachTenGoc.find(n => n.includes(theLoaiCanTim));
-                            if (!tenTrungKhop) tenTrungKhop = danhSachTenGoc.find(n => /tancong|attack|skill/i.test(n));
+                        // 2. Thuật toán bù trừ chéo (Thay thế mấy cái index cứng ngắc [1], [2] dễ gây Crash)
+                        if (theLoaiCanTim === 'IDLE' || theLoaiCanTim === 'NHANROI') {
+                            tenTrungKhop = animDungIm || animChayBay || danhSachTenGoc[0];
+                        }
+                        else if (theLoaiCanTim === 'RUN' || theLoaiCanTim === 'CHAYBO' || theLoaiCanTim === 'BAY' || theLoaiCanTim === 'FLY') {
+                            // Cần bay/chạy mà không có thì mượn thế đứng im trượt tới (bóng ma)
+                            tenTrungKhop = animChayBay || animDungIm || danhSachTenGoc[0];
+                        }
+                        else if (theLoaiCanTim === 'ATTACK' || theLoaiCanTim.includes('CHIEU')) {
+                            // Cần đánh mà không có hoạt ảnh đánh thì mượn dáng chạy lao húc thẳng vào mặt!
+                            tenTrungKhop = animDanh || animChayBay || animDungIm || danhSachTenGoc[0];
+                        }
+                        else if (theLoaiCanTim === 'DIE') {
+                            tenTrungKhop = animChet || danhSachTenGoc[0];
+                        }
+                        else {
+                            tenTrungKhop = danhSachTenGoc[0]; // Cứu cánh cuối cùng, nhét đại cái đầu tiên vào chống Crash
                         }
                     }
+
 
                     if (!tenTrungKhop) {
                         if (theLoaiCanTim === 'IDLE' || theLoaiCanTim === 'NHANROI') tenTrungKhop = danhSachTenGoc[0];
@@ -555,16 +565,6 @@ window.capNhatAIQuaiVat = function (delta) {
             // Kẻ chết không được phép chạy AI hay trượt đi đâu cả
             if (quai.isDead) return;
 
-
-
-
-
-
-
-
-
-
-
             // ==========================================
             // 🛡️ 2. CHẾ ĐỘ CON RỐI (CHỐNG GIẬT LAG ANIMATION)
             // ==========================================
@@ -582,15 +582,6 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
                 return; // Thoát ngang an toàn
             }
-
-
-
-
-
-
-
-
-        
 
         // Tự động tính toán hệ số to lớn và lõi thịt của Boss
         if (!quai.heSoToLon) {
