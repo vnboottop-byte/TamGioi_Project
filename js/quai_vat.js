@@ -894,18 +894,57 @@ window.capNhatAIQuaiVat = function (delta) {
                             }
                         };
 
+
+
+
                         if (typeof window[funcName] === 'function') {
                             thiTrienVoCong(); 
                         } else {
                             if (!window.dangTaiVoCongBoss) window.dangTaiVoCongBoss = {};
                             if (!window.dangTaiVoCongBoss[phaiCode]) {
                                 window.dangTaiVoCongBoss[phaiCode] = true;
-                                let theScript = document.createElement('script');
-                                theScript.src = 'js/' + phaiCode.toLowerCase() + '.js?v=' + Date.now(); 
-                                theScript.onload = function() { thiTrienVoCong(); };
-                                document.head.appendChild(theScript);
+                                
+                                let scriptSrc = 'js/' + phaiCode.toLowerCase() + '.js?v=' + Date.now();
+                                console.log(`🌀 [CORE-LOAD] Triệu hồi kịch bản võ công cách ly cho Boss: ${scriptSrc}`);
+
+                                // Sử dụng Fetch để ép trình duyệt tải nội dung về trước
+                                fetch(scriptSrc)
+                                    .then(res => { if (!res.ok) throw new Error("404"); return res.text(); })
+                                    .then(code => {
+                                        // 🛡️ BẬT VÒM SẮT: Sao lưu tuyệt đối thông số của Người Chơi Chính
+                                        let backup_script = window.SCRIPT_PHAI_CUA_TOI;
+                                        let backup_idle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : [];
+                                        let backup_atk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : [];
+                                        let backup_hephai = window.HePhaiHienTai;
+
+                                        // 🛑 KHÓA ĐỒNG BỘ: Ép tàng hình căn cước người chơi trong tích tắc kích hoạt Script
+                                        window.SCRIPT_PHAI_CUA_TOI = '';
+
+                                        try {
+                                            let scriptEl = document.createElement('script');
+                                            scriptEl.textContent = code + `\n//# sourceURL=${scriptSrc}`;
+                                            // Ép thực thi đồng bộ ngay tại đây khi append
+                                            document.head.appendChild(scriptEl); 
+                                        } catch (e) { console.error("❌ Lỗi biên dịch võ công Boss tại lõi:", e); }
+
+                                        // 🛡️ HỒI SỨC CẤP CỨU: Trả lại 100% quyền lực và võ công gốc cho Người Chơi
+                                        window.SCRIPT_PHAI_CUA_TOI = backup_script;
+                                        window.KHO_ANIM_NHANROI = backup_idle;
+                                        window.KHO_ANIM_TANCONG = backup_atk;
+                                        window.HePhaiHienTai = backup_hephai;
+
+                                        // Boss học võ xong, khai hỏa xuất chiêu thức!
+                                        thiTrienVoCong();
+                                    })
+                                    .catch(err => {
+                                        console.warn(`⚠️ [CORE-LOAD] Không tìm thấy võ công [js/${phaiCode.toLowerCase()}.js], Boss xài đấm thường.`);
+                                        thiTrienVoCong();
+                                    });
                             }
                         }
+
+
+
                         
                         if (window.room && window.room.state === 'connected') {
                             try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
