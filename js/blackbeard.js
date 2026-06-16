@@ -224,6 +224,9 @@
         return xuong;
     }
  
+    // ==========================================
+    // ⚔️ HÀM TUNG COMBO BỌC THÉP HOẠT HÌNH CHUẨN ENGINE
+    // ==========================================
     window.tungComboBlackbeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
@@ -238,11 +241,7 @@
         }
         if (!nvc) return;
 
-        // 🌟 Đảm bảo userData cho thực thể nvc để cô lập trạng thái hoạt hình
-        nvc.userData = nvc.userData || {};
-        nvc.userData.currentAnimation = nvc.userData.currentAnimation || 'IDLE';
-
-        // 🌟 CHUẨN HÓA NHẬN DIỆN CHIÊU THỨC CHO BOSS AI (Giữ nguyên phím Q, E, R, F)
+        // 🌟 CHUẨN HÓA NHẬN DIỆN CHIÊU THỨC CHO BOSS AI 
         let animCanMua = phim;
         if (typeof phim === 'string') {
             let pUp = phim.toUpperCase();
@@ -256,38 +255,21 @@
             }
         }
 
-        // 🌟 Hàm epNhanVatMua cục bộ cho thực thể nvc, không ghi đè window.playAnim
-        const epNhanVatMuaNvc = function(name) {
-            if (typeof name !== 'string') return;
-            // Kiểm tra trạng thái gồng R trên userData của nvc, không dùng biến window
-            if (nvc.userData.dangGongChieuR_BB && (name.includes('NHANROI') || name.includes('IDLE'))) return;
-
-            // Kiểm tra và đặt hoạt hình
-            if (nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[name]) {
-                const newClip = nvc.userData.animationsMap[name];
-                if (nvc.userData.currentClip !== newClip) {
-                    if (nvc.userData.currentClip) {
-                        nvc.userData.currentClip.fadeOut(0.3);
-                    }
-                    newClip.reset().fadeIn(0.3).play();
-                    nvc.userData.currentClip = newClip;
-                }
-            }
-        };
-
+        // 🌟 BẢN VÁ: TRẢ LẠI HÀM HOẠT HÌNH CHÍNH CHỦ CHO NGƯỜI CHƠI MÚA CHIÊU
         if (isRemote === false) {
-            // 🌟 Bám trạng thái dangMuaChieu VÀO userData của nvc
-            nvc.userData.dangMuaChieu = true;
-            epNhanVatMuaNvc(animCanMua);
+            window.dangMuaChieu = true;
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
+            else if (typeof window.playAnim === 'function') window.playAnim(animCanMua);
             
-            // Dọn dẹp hẹn giờ cũ VÀO userData của nvc
-            if (nvc.userData.henGioTatMuaBB) clearTimeout(nvc.userData.henGioTatMuaBB);
-            nvc.userData.henGioTatMuaBB = setTimeout(() => {
-                nvc.userData.dangMuaChieu = false;
-            }, 600);
+            if (window.henGioTatMuaBB) clearTimeout(window.henGioTatMuaBB);
+            window.henGioTatMuaBB = setTimeout(() => { window.dangMuaChieu = false; }, 600);
+        } else {
+            // Đối với Boss: Ép chạy trực tiếp trên Mixer riêng biệt của nó, tuyệt đối không chạm vào người chơi
+            if (nvc.userData && nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[animCanMua]) {
+                nvc.userData.animationsMap[animCanMua].reset().fadeIn(0.2).play();
+            }
         }
 
-        // 🌟 BẢN VÁ TRỤC CẦU: ÉP BOSS TÍNH TOÁN LỰC HÚT TRÁI ĐẤT
         let upVector = new THREE.Vector3(0, 1, 0);
         if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
             upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -314,7 +296,6 @@
             else mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
         } else {
             let targetRadar = window.layMucTieuGanNhatBB(viTriGocToTam);
-            // 🌟 HITBOX AN TOÀN CHỐNG CRASH FATAL
             if (targetRadar && targetRadar.mesh) {
                 let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
                 mucTieu = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
@@ -342,9 +323,7 @@
         
         if (animCanMua === 'ATTACK4') { 
             setTimeout(() => {
-                // 🌟 BẢN VÁ: GỠ NÒNG SÚNG VÀO BÊN TRONG TIMEOUT ĐỂ CHỐNG LỆCH TỌA ĐỘ KHI ĐANG CHẠY
-                let curNvc = nvc; // Ghim thực thể
-                if (!curNvc) return;
+                let curNvc = nvc; if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
                 
@@ -393,15 +372,26 @@
             }, 500);
         }
         else if (animCanMua === 'ATTACK1') { 
-            let curNvc = nvc; // Ghim thực thể
-            if (!curNvc) return;
+            let curNvc = nvc; if (!curNvc) return;
             let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
             let tayPhaiR = timXuong(curNvc, ['RHand_Palm_049', 'RHand']); 
             let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
             if (tayPhaiR) tayPhaiR.getWorldPosition(diemBan);
 
-            // 🌟 BẢN VÁ: Gồng chiêu R và cô lập hoạt hình VÀO userData CỦA nvc
-            curNvc.userData.dangGongChieuR_BB = true;
+            // 🌟 BẢN VÁ: CHỈ NGƯỜI CHƠI THỰC TẾ MỚI ĐƯỢC PHÉP CHẶN HOẠT HÌNH TOÀN CỤC CHƠI CHIÊU R
+            if (isRemote === false) {
+                window.dangGongChieuR_BB = true;
+                if (!window.playAnimGocBB) window.playAnimGocBB = window.playAnim || window.epNhanVatMua;
+                window.playAnim = window.epNhanVatMua = function(name) {
+                    if (window.dangGongChieuR_BB && (name.includes('NHANROI') || name.includes('IDLE'))) return; 
+                    if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB(name);
+                };
+            } else {
+                // Nếu là Boss: Ép hoạt hình gồng trên mixer riêng của nó
+                if (curNvc.userData && curNvc.userData.animationsMap && curNvc.userData.animationsMap['ATTACK1']) {
+                    curNvc.userData.animationsMap['ATTACK1'].reset().play();
+                }
+            }
 
             const blackHole = taoVatTheBB('blackenergy', 2.0, true); 
             blackHole.position.copy(diemBan);
@@ -415,7 +405,6 @@
             kyNangBB.push(skillTuLuc);
 
             setTimeout(() => {
-                // 🌟 BẢN VÁ: Ghim curNvc trong Timeout để chống lệch tọa độ khi đang chạy
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 
@@ -439,15 +428,15 @@
                 blackHole.up.copy(cUp); 
                 blackHole.lookAt(targetBay);
 
-                // 🌟 BẢN VÁ: Dọn dẹp trạng thái và hoạt hình CỦA curNvc
-                curNvc.userData.dangMuaChieu = false;
-                curNvc.userData.dangGongChieuR_BB = false;
-                if (!isRemote) {
-                    // Nếu là người chơi, sử dụng hàm hoạt hình toàn cục để chuyển
-                    if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua('NHANROI');
+                // 🌟 KẾT THÚC GỒM: NHẢ KHÓA HOẠT HÌNH SÒNG PHẲNG
+                if (isRemote === false) {
+                    window.dangMuaChieu = false;
+                    window.dangGongChieuR_BB = false;
+                    if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB('NHANROI');
                 } else {
-                    // Nếu là Boss, sử dụng hàm cục bộ để chuyển
-                    epNhanVatMuaNvc('NHANROI');
+                    if (curNvc.userData && curNvc.userData.animationsMap && curNvc.userData.animationsMap['NHANROI']) {
+                        curNvc.userData.animationsMap['NHANROI'].reset().play();
+                    }
                 }
             }, 2000); 
         }
