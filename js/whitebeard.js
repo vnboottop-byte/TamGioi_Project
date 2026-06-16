@@ -195,35 +195,52 @@
 
     window.tungComboWhitebeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-        if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
-            nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
+
+        // 🌟 BẢN VÁ LỖI ẢO TƯỞNG: CẤP THỂ XÁC CHUẨN CHO BOSS
+        if (isRemote && casterId) {
+            if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
+            } else if (typeof window.danhSachQuaiVat !== 'undefined') {
+                let boss = window.danhSachQuaiVat.find(q => q.id == casterId || q.id === casterId);
+                if (boss && boss.mesh) nvc = boss.mesh;
+            }
         }
         if (!nvc) return;
 
         let animCanMua = '';
-        if (phim === 'Q') {
+        if (phim === 'Q' || phim === 'ATTACK5' || phim === 'ATTACK6' || phim === 'ATTACK7') {
             let poolQ = ['ATTACK5', 'ATTACK6', 'ATTACK7'];
             animCanMua = poolQ[Math.floor(Math.random() * poolQ.length)];
-        } else if (phim === 'E') animCanMua = 'ATTACK4';
-        else if (phim === 'R') {
+            if (typeof phim === 'string' && phim.includes('ATTACK')) animCanMua = phim;
+        } else if (phim === 'E' || phim === 'ATTACK4') animCanMua = 'ATTACK4';
+        else if (phim === 'R' || phim === 'ATTACK2' || phim === 'ATTACK3') {
             let poolR = ['ATTACK2', 'ATTACK3'];
             animCanMua = poolR[Math.floor(Math.random() * poolR.length)];
-        } else if (phim === 'F') animCanMua = 'ATTACK1';
+            if (typeof phim === 'string' && phim.includes('ATTACK')) animCanMua = phim;
+        } else if (phim === 'F' || phim === 'ATTACK1') animCanMua = 'ATTACK1';
 
-        // ===============================================
-        // 🌟 BƯỚC ĐỘT PHÁ TẠI ĐÂY: XÓA `return` BLOCK 800MS ĐỂ CHỐNG NUỐT CHIÊU
-        // ===============================================
+        // 🌟 BẢN VÁ BẢO VỆ HOẠT HÌNH: CHỈ TÁC ĐỘNG NGƯỜI CHƠI
         if (isRemote === false) {
             window.dangMuaChieu = true;
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua); 
-            
-            // Nhả khóa nhanh để Spam Combo mượt mà
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
             if (window.henGioTatMuaWB) clearTimeout(window.henGioTatMuaWB);
             window.henGioTatMuaWB = setTimeout(() => { window.dangMuaChieu = false; }, 600);
+        } else {
+            // Boss AI múa an toàn không chạm vào người Sếp
+            if (nvc.userData && nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[animCanMua]) {
+                nvc.userData.animationsMap[animCanMua].reset().fadeIn(0.2).play();
+            }
         }
 
-        let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-        let huongMat = new THREE.Vector3(); 
+        // 🌟 BẢN VÁ TRỤC CẦU 3D: LẤY TÂM TRÁI ĐẤT LÀM CHUẨN
+        let upVector = new THREE.Vector3(0, 1, 0);
+        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+            upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+        } else if (nvc.up) {
+            upVector = nvc.up.clone().normalize();
+        }
+
+        let huongMat = new THREE.Vector3();
         if (typeof camera !== 'undefined' && !isRemote) {
             camera.getWorldDirection(huongMat);
             huongMat.projectOnPlane(upVector).normalize();
@@ -238,11 +255,17 @@
 
         let mucTieu = null;
         if (isRemote) {
-            mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
+            if (remoteDich) mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
+            else mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
         } else {
             let targetRadar = window.layMucTieuGanNhatWB(viTriGocToTam);
-            if (targetRadar && targetRadar.mesh) mucTieu = window.layHitbox(targetRadar.mesh).tamNguc.clone();
-            else mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
+            // 🌟 BẢN VÁ CRASH HITBOX TỨC THÌ
+            if (targetRadar && targetRadar.mesh) {
+                let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
+                mucTieu = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
+            } else {
+                mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
+            }
 
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
@@ -260,120 +283,225 @@
             }
         }
 
-        let diemChanMucTieu = mucTieu.clone(); // Không khóa y = 0
-        let tayChieuF_E = timXuong(nvc, ['Object_12', 'LHand_Palm_038']);
-        let tayChieuR = timXuong(nvc, ['Object_10']);
+        let diemChanMucTieu = mucTieu.clone();
 
         // ===============================================
-        // MẢNG CHIÊU THỨC (CÓ isRemote ĐỂ FIX SÁT THƯƠNG)
+        // 🌟 BẢN VÁ TỌA ĐỘ ĐỘNG TRONG TIMEOUT (Gắn chặt đạn vào tay người chạy)
         // ===============================================
-        if (animCanMua === 'ATTACK5') { 
+        if (animCanMua === 'ATTACK5') {
             for (let i = 0; i < 5; i++) {
                 setTimeout(() => {
+                    let curNvc = nvc; if (!curNvc) return;
+                    let cUp = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                    let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                    if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
+
+                    let cPos = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                    let targetBay = mucTieu ? mucTieu.clone() : cPos.clone().add(cDir.clone().multiplyScalar(150));
+                    if (!isRemote) {
+                        let objMoi = window.layMucTieuGanNhatWB(cPos);
+                        if (objMoi && objMoi.mesh) {
+                            let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                            targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                        }
+                    }
+
                     const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 30);
-                    kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
-                    kq.up.copy(upVector); 
-                    kq.lookAt(mucTieu); scene.add(kq);
-                    
-                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 8.0, life: 100, targetPos: mucTieu.clone(), damage: dameGoc * 0.08, noBanKinh: 12, isRemote: isRemote, upVector: upVector.clone() });
+                    kq.position.copy(cPos).add(cDir.clone().multiplyScalar(2));
+                    kq.up.copy(cUp);
+                    kq.lookAt(targetBay); scene.add(kq);
+
+                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 8.0, life: 100, targetPos: targetBay, damage: dameGoc * 0.08, noBanKinh: 12, isRemote: isRemote, upVector: cUp.clone() });
                 }, 200 * i);
             }
         }
-        else if (animCanMua === 'ATTACK6') { 
+        else if (animCanMua === 'ATTACK6') {
             setTimeout(() => {
-                const gocXoay = [0, Math.PI / 3, -Math.PI / 3]; 
+                let curNvc = nvc; if (!curNvc) return;
+                let cUp = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
+
+                let cPos = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                let targetBay = mucTieu ? mucTieu.clone() : cPos.clone().add(cDir.clone().multiplyScalar(150));
+                if (!isRemote) {
+                    let objMoi = window.layMucTieuGanNhatWB(cPos);
+                    if (objMoi && objMoi.mesh) {
+                        let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                        targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                    }
+                }
+
+                const gocXoay = [0, Math.PI / 3, -Math.PI / 3];
                 for (let i = 0; i < 3; i++) {
-                    const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 40); 
-                    kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
-                    kq.up.copy(upVector); 
-                    kq.lookAt(mucTieu);
+                    const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 40);
+                    kq.position.copy(cPos).add(cDir.clone().multiplyScalar(2));
+                    kq.up.copy(cUp);
+                    kq.lookAt(targetBay);
                     kq.rotateZ(gocXoay[i]);
                     scene.add(kq);
-                    
-                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 4.0, life: 150, targetPos: mucTieu.clone(), damage: dameGoc * 0.133, noBanKinh: 20, isRemote: isRemote, upVector: upVector.clone() });
+
+                    kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 4.0, life: 150, targetPos: targetBay, damage: dameGoc * 0.133, noBanKinh: 20, isRemote: isRemote, upVector: cUp.clone() });
                 }
             }, 300);
         }
-        else if (animCanMua === 'ATTACK7') { 
+        else if (animCanMua === 'ATTACK7') {
             setTimeout(() => {
-                const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50); 
-                kq.position.copy(viTriGocToTam).add(huongMat.clone().multiplyScalar(2));
-                kq.up.copy(upVector); 
-                kq.lookAt(mucTieu);
-                kq.rotateZ(Math.PI / 2); 
+                let curNvc = nvc; if (!curNvc) return;
+                let cUp = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
+
+                let cPos = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                let targetBay = mucTieu ? mucTieu.clone() : cPos.clone().add(cDir.clone().multiplyScalar(150));
+                if (!isRemote) {
+                    let objMoi = window.layMucTieuGanNhatWB(cPos);
+                    if (objMoi && objMoi.mesh) {
+                        let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                        targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                    }
+                }
+
+                const kq = taoVatTheWB('KIEMQUANG' + (Math.floor(Math.random() * 6) + 1), 50);
+                kq.position.copy(cPos).add(cDir.clone().multiplyScalar(2));
+                kq.up.copy(cUp);
+                kq.lookAt(targetBay);
+                kq.rotateZ(Math.PI / 2);
                 scene.add(kq);
-                
-                kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 3.0, life: 180, targetPos: mucTieu.clone(), damage: dameGoc * 0.4, noBanKinh: 25, isRemote: isRemote, upVector: upVector.clone() });
+
+                kyNangWB.push({ mesh: kq, type: 'BAY_THANG', speed: 3.0, life: 180, targetPos: targetBay, damage: dameGoc * 0.4, noBanKinh: 25, isRemote: isRemote, upVector: cUp.clone() });
             }, 300);
         }
         else if (animCanMua === 'ATTACK4') {
             for (let i = 0; i < 10; i++) {
                 setTimeout(() => {
-                    let diemBan = viTriGocToTam.clone();
-                    if (tayChieuF_E) tayChieuF_E.getWorldPosition(diemBan);
+                    let curNvc = nvc; if (!curNvc) return;
+                    let cUp = new THREE.Vector3(0, 1, 0);
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                    let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                    if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
 
-                    const cauEnergy = taoVatTheWB('energy', 2); 
-                    cauEnergy.position.copy(diemBan).add(huongMat.clone().multiplyScalar(1.5));
-                    cauEnergy.up.copy(upVector); 
-                    cauEnergy.lookAt(mucTieu); scene.add(cauEnergy);
+                    let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                    let tayChieu = timXuong(curNvc, ['Object_12', 'LHand_Palm_038']);
+                    if (tayChieu) tayChieu.getWorldPosition(diemBan);
+
+                    let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(cDir.clone().multiplyScalar(150));
+                    if (!isRemote) {
+                        let objMoi = window.layMucTieuGanNhatWB(diemBan);
+                        if (objMoi && objMoi.mesh) {
+                            let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                            targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                        }
+                    }
+
+                    const cauEnergy = taoVatTheWB('energy', 2);
+                    cauEnergy.position.copy(diemBan).add(cDir.clone().multiplyScalar(1.5));
+                    cauEnergy.up.copy(cUp);
+                    cauEnergy.lookAt(targetBay); scene.add(cauEnergy);
 
                     kyNangWB.push({
                         mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 8.0, life: 100,
                         currentScale: 2, maxScale: 12, growthRate: 0.5,
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.06, noBanKinh: 15, isRemote: isRemote, upVector: upVector.clone()
+                        targetPos: targetBay, damage: dameGoc * 0.06, noBanKinh: 15, isRemote: isRemote, upVector: cUp.clone()
                     });
                 }, i * 100);
             }
         }
-        else if (animCanMua === 'ATTACK2') { 
+        else if (animCanMua === 'ATTACK2') {
             setTimeout(() => {
-                let diemBan = viTriGocToTam.clone();
-                if (tayChieuR) tayChieuR.getWorldPosition(diemBan);
+                let curNvc = nvc; if (!curNvc) return;
+                let cUp = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
 
-                const cauEnergy = taoVatTheWB('energy', 1); 
-                cauEnergy.position.copy(diemBan).add(huongMat.clone().multiplyScalar(2.0));
-                cauEnergy.up.copy(upVector); 
-                cauEnergy.lookAt(mucTieu); scene.add(cauEnergy);
+                let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                let tayChieu = timXuong(curNvc, ['Object_10']);
+                if (tayChieu) tayChieu.getWorldPosition(diemBan);
+
+                let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(cDir.clone().multiplyScalar(150));
+                if (!isRemote) {
+                    let objMoi = window.layMucTieuGanNhatWB(diemBan);
+                    if (objMoi && objMoi.mesh) {
+                        let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                        targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                    }
+                }
+
+                const cauEnergy = taoVatTheWB('energy', 1);
+                cauEnergy.position.copy(diemBan).add(cDir.clone().multiplyScalar(2.0));
+                cauEnergy.up.copy(cUp);
+                cauEnergy.lookAt(targetBay); scene.add(cauEnergy);
 
                 kyNangWB.push({
-                    mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 3.5, life: 250, 
-                    currentScale: 1, maxScale: 40, growthRate: 0.6, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 30, isRemote: isRemote, upVector: upVector.clone()
+                    mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO', speed: 3.5, life: 250,
+                    currentScale: 1, maxScale: 40, growthRate: 0.6,
+                    targetPos: targetBay, damage: dameGoc * 0.5, noBanKinh: 30, isRemote: isRemote, upVector: cUp.clone()
                 });
             }, 1000);
         }
-        else if (animCanMua === 'ATTACK3') { 
+        else if (animCanMua === 'ATTACK3') {
             setTimeout(() => {
-                const cauEnergy = taoVatTheWB('energy', 1); 
-                let posXuatPhat = diemChanMucTieu.clone().add(upVector.clone().multiplyScalar(100)); 
-                
+                let curNvc = nvc; if (!curNvc) return;
+                let cUp = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+
+                const cauEnergy = taoVatTheWB('energy', 1);
+                let posXuatPhat = diemChanMucTieu.clone().add(cUp.clone().multiplyScalar(100));
+
                 cauEnergy.position.copy(posXuatPhat);
-                cauEnergy.up.copy(upVector);
+                cauEnergy.up.copy(cUp);
                 cauEnergy.lookAt(diemChanMucTieu); scene.add(cauEnergy);
 
                 kyNangWB.push({
-                    mesh: cauEnergy, type: 'ROI_THANG_PHINH_TO', speed: 2.0, life: 250, 
-                    currentScale: 1, maxScale: 60, growthRate: 0.8, 
-                    targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 40, isRemote: isRemote, upVector: upVector.clone()
+                    mesh: cauEnergy, type: 'ROI_THANG_PHINH_TO', speed: 2.0, life: 250,
+                    currentScale: 1, maxScale: 60, growthRate: 0.8,
+                    targetPos: diemChanMucTieu.clone(), damage: dameGoc * 0.5, noBanKinh: 40, isRemote: isRemote, upVector: cUp.clone()
                 });
             }, 500);
         }
         else if (animCanMua === 'ATTACK1') {
             setTimeout(() => {
-                let diemBan = viTriGocToTam.clone();
-                if (tayChieuF_E) tayChieuF_E.getWorldPosition(diemBan);
+                let curNvc = nvc; if (!curNvc) return;
+                let cUp = new THREE.Vector3(0, 1, 0);
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) cUp = curNvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                else if (curNvc.up) cUp = curNvc.up.clone().normalize();
+                let cDir = new THREE.Vector3(); curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize();
+                if (isNaN(cDir.x) || cDir.lengthSq() < 0.001) cDir.copy(huongMat);
+
+                let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                let tayChieu = timXuong(curNvc, ['Object_12', 'LHand_Palm_038']);
+                if (tayChieu) tayChieu.getWorldPosition(diemBan);
+
+                let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(cDir.clone().multiplyScalar(150));
+                if (!isRemote) {
+                    let objMoi = window.layMucTieuGanNhatWB(diemBan);
+                    if (objMoi && objMoi.mesh) {
+                        let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(objMoi.mesh) : null;
+                        targetBay = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : objMoi.mesh.position.clone();
+                    }
+                }
 
                 const cauEnergy = taoVatTheWB('energy', 15);
-                cauEnergy.position.copy(diemBan).add(huongMat.clone().multiplyScalar(2.0));
-                cauEnergy.up.copy(upVector); 
-                cauEnergy.lookAt(mucTieu); scene.add(cauEnergy);
+                cauEnergy.position.copy(diemBan).add(cDir.clone().multiplyScalar(2.0));
+                cauEnergy.up.copy(cUp);
+                cauEnergy.lookAt(targetBay); scene.add(cauEnergy);
 
                 kyNangWB.push({
                     mesh: cauEnergy, type: 'BAY_THANG_PHINH_TO_F', speed: 7.0, life: 150,
-                    currentScale: 15, maxScale: 60, growthRate: 2.0, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, noBanKinh: 50, isRemote: isRemote, upVector: upVector.clone()
+                    currentScale: 15, maxScale: 60, growthRate: 2.0,
+                    targetPos: targetBay, damage: dameGoc * 1.0, noBanKinh: 50, isRemote: isRemote, upVector: cUp.clone()
                 });
-            }, 1000); 
+            }, 1000);
         }
     };
 
@@ -383,7 +511,7 @@
             let s = kyNangWB[i]; s.life--;
 
             if (s.mesh.userData && s.mesh.userData.mixer) {
-                s.mesh.userData.mixer.update(0.03); 
+                s.mesh.userData.mixer.update(0.03);
             }
 
             if (s.type === 'BAY_THANG' || s.type === 'BAY_THANG_PHINH_TO' || s.type === 'BAY_THANG_PHINH_TO_F') {
@@ -391,42 +519,46 @@
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
-                if (s.mesh.children.length > 0 && s.type !== 'BAY_THANG') s.mesh.children[0].rotateY(0.2); 
+                if (s.mesh.children.length > 0 && s.type !== 'BAY_THANG') s.mesh.children[0].rotateY(0.2);
 
                 if (s.targetPos) {
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                    // 🌟 BẢN VÁ: CHỐNG VECTOR NaN ĐÓNG BĂNG ĐẠN TẠI TÂM
+                    if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                 } else s.mesh.translateZ(s.speed);
 
-                // ===============================================
-                // SÁT THƯƠNG HOẠT ĐỘNG HOÀN HẢO!
-                // ===============================================
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    
+
                     if (s.type === 'BAY_THANG_PHINH_TO_F') {
                         if (s.isRemote === false) gaySatThuongWB(s.targetPos, s.damage, s.noBanKinh);
-                        else if (typeof s.isRemote === 'number' && s.isRemote > 0) window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        else {
+                            // 🌟 BẢN VÁ LỖI ĐẠN CAO SU: BỐ GIÀ NÉM LÀ MẤT MÁU!
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
 
                         const vfx = taoVatTheWB('vfxenergy', 30);
-                        vfx.position.copy(s.targetPos); 
+                        vfx.position.copy(s.targetPos);
                         if (s.upVector) {
                             vfx.up.copy(s.upVector);
-                            vfx.lookAt(s.targetPos.clone().add(s.upVector)); 
+                            vfx.lookAt(s.targetPos.clone().add(s.upVector));
                         }
                         scene.add(vfx);
-                        
+
                         kyNangWB.push({ mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, currentScale: 30, maxScale: 400, growthRate: 15.0 });
                         if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
                         if (typeof window.taoVetNutBangCodeWB === 'function') window.taoVetNutBangCodeWB(s.targetPos, s.upVector);
                     } else {
                         let mauNo = s.type === 'BAY_THANG' ? '#cc33ff' : '#ffffff';
                         if (s.isRemote === false) gaySatThuongWB(s.targetPos, s.damage, s.noBanKinh, mauNo);
-                        else if (typeof s.isRemote === 'number' && s.isRemote > 0) window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        else {
+                            // 🌟 BẢN VÁ LỖI ĐẠN CAO SU
+                            if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                        }
                     }
                     s.life = 0;
                 }
             }
-            
+
             else if (s.type === 'ROI_THANG_PHINH_TO') {
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
@@ -434,13 +566,16 @@
                 }
                 if (s.mesh.children.length > 0) s.mesh.children[0].rotateY(0.2);
 
-                s.speed *= 1.05; 
-                let cUp = s.upVector || new THREE.Vector3(0,1,0);
-                s.mesh.position.sub(cUp.clone().multiplyScalar(s.speed)); 
+                s.speed *= 1.05;
+                let cUp = s.upVector || new THREE.Vector3(0, 1, 0);
+                s.mesh.position.sub(cUp.clone().multiplyScalar(s.speed));
 
                 if (s.mesh.position.distanceTo(s.targetPos) <= s.speed + 5 || s.life <= 0) {
                     if (s.isRemote === false) gaySatThuongWB(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    else {
+                        // 🌟 BẢN VÁ LỖI ĐẠN CAO SU
+                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    }
                     s.life = 0;
                 }
             }
@@ -454,10 +589,10 @@
 
             else if (s.type === 'VET_NUT_CODE') {
                 if (s.currentDraw < s.maxDraw) {
-                    s.currentDraw += s.growth; 
+                    s.currentDraw += s.growth;
                     s.mesh.geometry.setDrawRange(0, Math.floor(s.currentDraw));
                 }
-                if (s.life <= 15) { 
+                if (s.life <= 15) {
                     s.mesh.material.opacity = s.life / 15;
                 }
             }
