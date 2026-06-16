@@ -508,35 +508,6 @@
                 }
             }
             
-            else if (s.type === 'BAY_THANG') {
-                let huongBay = null;
-                if (s.targetPos) {
-                    huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    s.mesh.position.add(huongBay.multiplyScalar(s.speed));
-                } else {
-                    s.mesh.translateZ(s.speed);
-                }
-
-                if (s.isMeteor && huongBay) {
-                    if (!s.noRotate && s.mesh.children.length > 0) s.mesh.children[0].rotateZ(0.2); 
-                    
-                    let dirNguoc = huongBay.clone().negate(); 
-                    taoDuoiLuaAk(s.mesh.position, dirNguoc, s.speed, s.upVector);
-                    
-                    if (s.isUltimate) { s.speed *= 1.03; if (s.speed > 8.0) s.speed = 8.0; } 
-                    else { s.speed *= 1.08; if (s.speed > 15.0) s.speed = 15.0; }
-                }
-
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
-                    if (s.isRemote === false) gaySatThuongAk(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof s.isRemote === 'number' && s.isRemote > 0) {
-                        if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
-                    }
-                    taoHieuUngNoAk(s.targetPos, s.isUltimate, s.upVector);
-                    s.life = 0;
-                }
-            }
-
             if (s.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh);
                 else {
