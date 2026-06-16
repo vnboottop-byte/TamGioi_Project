@@ -596,3 +596,12 @@
         window.HePhaiHienTai.khoiTao();
     }
 })();
+
+
+
+// ==========================================
+// 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ CHO BOSS AI (CHỮA BỆNH CÂM NÍN)
+// ==========================================
+window.tungComboboa = window.tungComboBoa;
+window.tungCombohancock = window.tungComboBoa;
+window.tungComboboahancock = window.tungComboBoa; // Trừ hao Sếp đặt tên class kiểu gì nó cũng nhận!
