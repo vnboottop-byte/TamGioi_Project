@@ -306,45 +306,35 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                 }
             }
         });
-
         // 4. Báo cho hệ thống đánh nhau bỏ qua cục thịt này
         if (laTrangTri) quai.userData = { ignore: true };
-
         if (typeof scene !== 'undefined') scene.add(quai);
-
-
-
-
-
         const mixer = new THREE.AnimationMixer(quai);
         const anims = {};
         if (gltfAnimations) { gltfAnimations.forEach(clip => { anims[clip.name.toUpperCase()] = mixer.clipAction(clip); }); }
 
-
-
-
-
         const tag = document.createElement('div');
         const mauHienTai = (hpCurrent !== null) ? hpCurrent : hpMax;
-        
         // 🌟 BẢN VÁ: Cảm biến tự động thu nhỏ font chữ và thanh máu
         let sizeChu = window.isMobile ? "9px" : "12px";
         let widthMau = window.isMobile ? "40px" : "60px";
-        
+        // 👑 ĐẶC QUYỀN ADMIN: Mắt thần soi ID Boss
+        let chuoiIDAdmin = "";
+        let roleAuth = (window.ROLE || "").toLowerCase();
+        let nameAuth = (window.ADMIN_NAME || window.myUsername || "").toLowerCase();
+        if (roleAuth === "admin" || nameAuth === "admin") {
+            chuoiIDAdmin = `<div style="color:#00ffcc; font-size:10px; margin-bottom:2px; text-shadow:1px 1px 0 #000;">[ID: ${id}]</div>`;
+        }
         tag.innerHTML = `
             <div style="color:#ff0000; font-weight:bold; font-size:${sizeChu}; text-shadow:1px 1px 0 #000; text-align:center; white-space:nowrap;">
+                ${chuoiIDAdmin}
                 <span style="color:#f1c40f;">[Lv.${level}]</span> 👑 ${tenQuai}
             </div>
             <div style="width:${widthMau}; height:4px; background:rgba(0,0,0,0.5); border:1px solid #fff; border-radius:2px; margin:2px auto 0 auto;">
                 <div class="hp-bar" style="width:${(mauHienTai / hpMax) * 100}%; height:100%; background:#2ecc71; transition: width 0.2s;"></div>
             </div>`;
-            
         tag.style.cssText = 'position:absolute; pointer-events:none; z-index:10; transform:translate(-50%, -100%); display:none;';
         document.body.appendChild(tag);
-
-
-
-
 
         const info = {
             id: id, classCode: classCode, level: level, isBoss: isBoss, mesh: quai, mixer: mixer, anims: anims, tagEl: tag,
@@ -364,17 +354,10 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                 }
                 else {
                     tenTrungKhop = danhSachTenGoc.find(n => n === theLoaiCanTim);
-
-
-
                     // ==========================================
                     // 🌟 BẢN VÁ AAA: MA TRẬN DỰ PHÒNG (FALLBACK) CHO QUÁI VẬT NHÀ NGHÈO
                     // ==========================================
                     if (!tenTrungKhop) {
-
-
-
-                        
                         // 1. 🌟 MÁY QUÉT MỚI: GOM VÀO RỔ VÀ BỐC THĂM RANDOM ĐỂ ĐA DẠNG CHIÊU THỨC
                         let animChayBay = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move|jump|fall/i.test(n));
                         let animChet = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
@@ -386,9 +369,6 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                         // Gom tất cả hoạt ảnh TẤN CÔNG (từ 1 đến 10) vào rổ rồi bốc thăm
                         let roDanh = danhSachTenGoc.filter(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
                         let animDanh = roDanh.length > 0 ? roDanh[Math.floor(Math.random() * roDanh.length)] : null;
-
-
-
 
                         // 2. Thuật toán bù trừ chéo (Thay thế mấy cái index cứng ngắc [1], [2] dễ gây Crash)
                         if (theLoaiCanTim === 'IDLE' || theLoaiCanTim === 'NHANROI') {
@@ -409,7 +389,6 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                             tenTrungKhop = danhSachTenGoc[0]; // Cứu cánh cuối cùng, nhét đại cái đầu tiên vào chống Crash
                         }
                     }
-
 
                     if (!tenTrungKhop) {
                         if (theLoaiCanTim === 'IDLE' || theLoaiCanTim === 'NHANROI') tenTrungKhop = danhSachTenGoc[0];
@@ -526,21 +505,14 @@ window.xuLyQuaiLuiBinh = function (quai, targetPos, delta) {
     return true;
 };
 
-
 // ========================================================
 // 🧠 TRÍ TUỆ NHÂN TẠO AI BOSS TOÀN VŨ TRỤ (BẢN VÁ LIỀN TRỤC CHUẨN)
 // ========================================================
 window.capNhatAIQuaiVat = function (delta) {
     if (!window.danhSachQuaiVat || !playerModel) return;
-
-
-
-
     window.danhSachQuaiVat.forEach(quai => {
             if (!quai || !quai.mesh) return;
-
             if (quai.mixer) quai.mixer.update(delta);
-
             // ==========================================
             // 🛡️ 1. HỆ THỐNG QUẢN LÝ BẢNG TÊN (VÁ LỖI KẸT & NHẤP NHÁY)
             // ==========================================
@@ -551,8 +523,7 @@ window.capNhatAIQuaiVat = function (delta) {
                 } else {
                     const worldPos = new THREE.Vector3(); 
                     quai.mesh.getWorldPosition(worldPos);
-                    let khoangCach = worldPos.distanceTo(playerModel.position);
-                    
+                    let khoangCach = worldPos.distanceTo(playerModel.position);                  
                     if (khoangCach > (window.isMobile ? 1500 : 2500)) { 
                         quai.tagEl.style.display = 'none'; 
                     } else {
@@ -595,7 +566,6 @@ window.capNhatAIQuaiVat = function (delta) {
                 }
                 return; // Thoát ngang an toàn
             }
-
         // Tự động tính toán hệ số to lớn và lõi thịt của Boss
         if (!quai.heSoToLon) {
             quai.mesh.updateMatrixWorld(true);
@@ -611,7 +581,6 @@ window.capNhatAIQuaiVat = function (delta) {
             quai.heSoToLon = worldSize / 25;
             if (quai.heSoToLon < 0.5) quai.heSoToLon = 0.5;
         }
-
         // 🌟 BẢN VÁ AAA: BỌC THÉP TRỤC TRỌNG LỰC QUÁI VẬT
         // Chỉ bẻ cong nếu đang ở Map Cầu. Map Phẳng thì 100% đứng thẳng!
         if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
@@ -619,7 +588,6 @@ window.capNhatAIQuaiVat = function (delta) {
         } else {
             quai.upVector = new THREE.Vector3(0, 1, 0);
         }
-
         // Radar quét cao độ mặt đất của quái
         if (quai.frameQuetDat === undefined) quai.frameQuetDat = Math.floor(Math.random() * 30);
         quai.frameQuetDat++;
@@ -636,7 +604,6 @@ window.capNhatAIQuaiVat = function (delta) {
                 if (vaCham.length > 0) quai.mucTieuY = vaCham[0].point;
             }
         }
-
         // ========================================================
         // 🐋 AI ĐỘC QUYỀN: SINH VẬT TRANG TRÍ (QUỸ ĐẠO BÁM VỎ TRÁI ĐẤT & BẦU TRỜI)
         // ========================================================
