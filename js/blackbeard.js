@@ -602,7 +602,7 @@
                 kyNangBB.splice(i, 1);
             }
         }
-
+    };
     if (window.idVongLapCombatBB) clearInterval(window.idVongLapCombatBB);
     window.idVongLapCombatBB = setInterval(window.updateCombatBB, 30);
 
