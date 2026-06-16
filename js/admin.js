@@ -257,7 +257,7 @@
 
     };
 
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('canchien')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('admin')) {
 
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
