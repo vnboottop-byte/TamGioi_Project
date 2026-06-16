@@ -95,9 +95,11 @@
 
     window.thoiDiemNoCuoiCungZR = window.thoiDiemNoCuoiCungZR || 0;
 
-    function taoVuNoKiemQuangZR(pos, isRemote = false, luongDame = 100, banKinh = 12) {
+    // 🌟 BẢN VÁ: XÓA KHIÊN NUMBER & ÉP HẠT NỔ ÔM THEO TRỤC TRÁI ĐẤT
+    function taoVuNoKiemQuangZR(pos, isRemote = false, luongDame = 100, banKinh = 12, upVector = new THREE.Vector3(0,1,0)) {
         if (isRemote === false && luongDame > 0) gaySatThuongZR(pos, luongDame, banKinh);
-        else if (typeof isRemote === 'number' && isRemote > 0) {
+        else if (isRemote) { 
+            // 🌟 LỖI ĐẠN CAO SU: Boss chém trúng Sếp là mất máu sòng phẳng!
             if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(pos, luongDame, banKinh);
         }
 
@@ -109,9 +111,14 @@
         const geo = new THREE.BufferGeometry();
         const posArr = new Float32Array(soLuong * 3); const vels = [];
 
+        // 🌟 LỖI TRỤC CẦU 3D: Ép hướng văng của hạt nổ tản ra dọc theo mặt đất
+        let qNolo = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), upVector);
+
         for (let i = 0; i < soLuong; i++) {
             posArr[i * 3] = pos.x; posArr[i * 3 + 1] = pos.y; posArr[i * 3 + 2] = pos.z;
-            vels.push(new THREE.Vector3((Math.random() - 0.5) * 12, (Math.random() - 0.5) * 6, (Math.random() - 0.5) * 12));
+            let vLocal = new THREE.Vector3((Math.random() - 0.5) * 12, Math.random() * 6, (Math.random() - 0.5) * 12);
+            vLocal.applyQuaternion(qNolo); // Định tuyến lực văng
+            vels.push(vLocal);
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
@@ -131,9 +138,8 @@
         });
 
         const pts = new THREE.Points(geo, mat); scene.add(pts);
-        hieuUngZoro.push({ system: pts, velocities: vels, life: 25 });
+        hieuUngZoro.push({ system: pts, velocities: vels, life: 25, upVector: upVector.clone() });
         
-        // Âm thanh 3D eSports nếu Sếp có cấy Howler.js
         if (typeof window.phatAmThanh3D === 'function') window.phatAmThanh3D('CHEM_KIEM', pos);
     }
 
@@ -175,47 +181,66 @@
     // ==========================================
     window.tungComboZoro = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-        if (isRemote && casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
-            nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
+        
+        // 🌟 LỖI ẢO TƯỞNG: Cấp đúng thể xác cho Boss AI
+        if (isRemote && casterId) {
+            if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
+                nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
+            } else if (typeof window.danhSachQuaiVat !== 'undefined') {
+                let boss = window.danhSachQuaiVat.find(q => q.id == casterId || q.id === casterId);
+                if (boss && boss.mesh) nvc = boss.mesh;
+            }
         }
         if (!nvc) return;
 
+        let randomAttackClip = bocAnimChemNgauNhien();
+
+        // 🌟 LỖI HOẠT HÌNH: Ép người chơi múa, và ép Boss AI tự múa riêng biệt
         if (isRemote === false) {
             window.dangMuaChieu = true;
             window.currentAnimName = ''; 
-
-            let randomAttackClip = bocAnimChemNgauNhien();
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(randomAttackClip);
-
-            // Múa cực nhanh, tự nhả khóa chân sau 500ms để spam cho mượt
             if (window.henGioTatMuaZR) clearTimeout(window.henGioTatMuaZR);
             window.henGioTatMuaZR = setTimeout(() => { window.dangMuaChieu = false; }, 500); 
+        } else {
+            if (nvc.userData && nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[randomAttackClip]) {
+                nvc.userData.animationsMap[randomAttackClip].reset().fadeIn(0.2).play();
+            }
         }
 
-        let viTriGocToTam = new THREE.Vector3();
-        let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
+        // 🌟 LỖI TRỤC CẦU 3D
+        let upVector = new THREE.Vector3(0, 1, 0);
+        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+            upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+        } else if (nvc.up) {
+            upVector = nvc.up.clone().normalize();
+        }
         
         let huongMat = new THREE.Vector3(); 
-        nvc.getWorldDirection(huongMat); 
-        // 🌟 BẢN VÁ: Ép phẳng vector hướng nhìn, chống đâm xuống đất khi lộn nhào
-        huongMat.projectOnPlane(upVector).normalize();
-        if (huongMat.lengthSq() < 0.001) { 
-            huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize();
+        if (typeof camera !== 'undefined' && !isRemote) {
+            camera.getWorldDirection(huongMat);
+            huongMat.projectOnPlane(upVector).normalize();
+            if (huongMat.lengthSq() < 0.001) { nvc.getWorldDirection(huongMat); huongMat.projectOnPlane(upVector).normalize(); }
+        } else {
+            nvc.getWorldDirection(huongMat);
+            huongMat.projectOnPlane(upVector).normalize();
         }
+        if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
 
+        let viTriGocToTam = new THREE.Vector3();
         let mucTieu = null;
 
         if (isRemote) {
             viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
-            upVector = viTriGocToTam.clone().normalize();
             mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
         } else {
             viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
             let targetRadar = window.layMucTieuGanNhatZR(viTriGocToTam);
 
+            // 🌟 LỖI CRASH HITBOX: Bọc thép an toàn tuyệt đối
             if (targetRadar && targetRadar.mesh) {
-                let hit = window.layHitbox(targetRadar.mesh);
-                mucTieu = hit.tamNguc.clone();
+                let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
+                mucTieu = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
             } else {
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
@@ -326,12 +351,16 @@
             let h = hieuUngZoro[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             
+            // 🌟 LỖI TRỤC CẦU: Ép các hạt bụi xanh rớt xuống bề mặt cong hành tinh
+            let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.4) : new THREE.Vector3(0, -0.4, 0);
+
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x;
                 posArr[j * 3 + 1] += h.velocities[j].y;
                 posArr[j * 3 + 2] += h.velocities[j].z;
-                h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92;
-                h.velocities[j].y -= 0.4; 
+                
+                h.velocities[j].x *= 0.92; h.velocities[j].z *= 0.92; h.velocities[j].y *= 0.92;
+                h.velocities[j].add(fallVec); 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = h.life / 25;
