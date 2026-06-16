@@ -223,6 +223,37 @@
         });
         return xuong;
     }
+
+    window.taoVetNutBangCodeBB = function (pos, curUp) {
+        const soTia = 15 + Math.floor(Math.random() * 10); 
+        const material = new THREE.LineBasicMaterial({
+            color: 0x110022, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending
+        });
+
+        const points = [];
+        for (let i = 0; i < soTia; i++) {
+            let angle = (i / soTia) * Math.PI * 2 + (Math.random() - 0.5);
+            let d1 = 5 + Math.random() * 5;
+            let px1 = Math.cos(angle) * d1, py1 = Math.sin(angle) * d1, pz1 = (Math.random() - 0.5) * d1;
+            points.push(0, 0, 0, px1, py1, pz1); 
+
+            if (Math.random() > 0.2) { 
+                let a2 = angle + (Math.random() - 0.5); let d2 = d1 + 3 + Math.random() * 5;
+                let px2 = Math.cos(a2) * d2, py2 = Math.sin(a2) * d2, pz2 = (Math.random() - 0.5) * d2;
+                points.push(px1, py1, pz1, px2, py2, pz2);
+            }
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        geometry.setDrawRange(0, 0); 
+
+        const line = new THREE.LineSegments(geometry, material);
+        line.position.copy(pos); line.scale.set(4, 4, 4); 
+        if (curUp) line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp);
+        scene.add(line);
+
+        kyNangBB.push({ mesh: line, type: 'VET_NUT_CODE', life: 75, maxDraw: points.length, currentDraw: 0, growth: 8 });
+    }
  
     window.tungComboBlackbeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -590,6 +621,8 @@
                     
                     kyNangBB.push({ mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, currentScale: 30, maxScale: 400, growthRate: 15.0 });
                     if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
+                    if (typeof window.taoVetNutBangCodeBB === 'function') window.taoVetNutBangCodeBB(s.targetPos, s.upVector);
+                    
                     s.life = 0;
                 }
             }
