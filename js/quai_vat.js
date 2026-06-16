@@ -367,7 +367,7 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                         let animDungIm = roDungIm.length > 0 ? roDungIm[Math.floor(Math.random() * roDungIm.length)] : null;
 
                         // Gom tất cả hoạt ảnh TẤN CÔNG (từ 1 đến 10) vào rổ rồi bốc thăm
-                        let roDanh = danhSachTenGoc.filter(n => /attack|bite|breath|fire|hit|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
+                        let roDanh = danhSachTenGoc.filter(n => /attack|bite|breath|fire|strike|magic|skill|cạp|đánh|phun|chieuq|chieue|chieur|chieuf|tancong/i.test(n));
                         let animDanh = roDanh.length > 0 ? roDanh[Math.floor(Math.random() * roDanh.length)] : null;
 
                         // 2. Thuật toán bù trừ chéo (Thay thế mấy cái index cứng ngắc [1], [2] dễ gây Crash)
