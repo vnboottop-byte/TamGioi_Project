@@ -197,7 +197,7 @@
     }
 
     // ==========================================
-    // 🏹 TUNG CHIÊU ACE (ĐÃ BỌC THÉP ẢO TƯỞNG & NGÔN NGỮ AI)
+    // 🏹 TUNG CHIÊU ACE (BẢN VÁ HOÀN HẢO 100%)
     // ==========================================
     window.tungComboAce = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -213,7 +213,7 @@
         }
         if (!nvc) return;
 
-        // 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ AI (CHỮA CÂM NÍN)
+        // 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ AI 
         let loaiChieu = phim;
         let animCanMua = 'ATTACK1';
         if (typeof phim === 'string') {
@@ -280,13 +280,6 @@
             } else {
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
-
-            if (window.room && window.room.localParticipant) {
-                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
-                    type: 'TUNG_CHIEU', skillType: phim, className: 'Ace',
-                    origin: { x: viTriGocToTam.x, y: viTriGocToTam.y, z: viTriGocToTam.z }, target: { x: mucTieu.x, y: mucTieu.y, z: mucTieu.z }, dir: { x: huongMat.x, y: huongMat.y, z: huongMat.z }, weaponUrl: ""
-                })), { reliable: false });
-            }
         }
 
         let dameGoc = window.DAME_CUA_TOI || 100;
@@ -295,19 +288,27 @@
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) dameGoc = window.remotePlayers[casterId].damage || 100;
         }
 
-        let diemChanMucTieu = mucTieu.clone(); 
-
-        if (loaiChieu === 'Q') {
+        // ===============================================
+        // 🔥 CHIÊU Q: MŨI KHOAN TỐC ĐỘ CAO
+        // ===============================================
+        if (loaiChieu === 'Q') { // 🌟 SỬA THÀNH LOAICHIEU CHỮA CÂM NÍN
             let soVien = 10;
             for (let i = 0; i < soVien; i++) {
                 setTimeout(() => {
-                    let curNvc = nvc; // 🌟 BẢN VÁ: KHÓA ẢO TƯỞNG CỤC BỘ
+                    let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
                     if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
 
-                    let tayBan = timXuong(curNvc, (i % 2 === 0) ? ['RHand_Palm_015', 'Object_20'] : ['LHand_Palm_011', 'Object_16']);
+                    // 🌟 TRẢ LẠI 100% CODE TÌM TAY ZIN CỦA SẾP!
+                    let xuongPhai = null; let xuongTrai = null;
+                    curNvc.traverse(c => {
+                        if (c.name === 'RHand_Palm_015' || c.name === 'Object_20') xuongPhai = c;
+                        if (c.name === 'LHand_Palm_011' || c.name === 'Object_16') xuongTrai = c;
+                    });
+                    
+                    let tayBan = (i % 2 === 0) ? xuongPhai : xuongTrai;
                     let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
                     if (tayBan) tayBan.getWorldPosition(diemBan);
 
@@ -329,6 +330,9 @@
                 }, 150 + (i * 100)); 
             }
         }
+        // ===============================================
+        // 🔥 CHIÊU E: HỎA ĐẠN NÉM THẲNG 
+        // ===============================================
         else if (loaiChieu === 'E') {
             setTimeout(() => {
                 let curNvc = nvc; 
@@ -338,7 +342,10 @@
                 if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
 
                 let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
-                let xuongPhai = timXuong(curNvc, ['RHand_Palm_015', 'Object_20']);
+                
+                // 🌟 TRẢ LẠI TÌM TAY ZIN
+                let xuongPhai = null;
+                curNvc.traverse(c => { if (c.name === 'RHand_Palm_015' || c.name === 'Object_20') xuongPhai = c; });
                 if (xuongPhai) xuongPhai.getWorldPosition(diemBan);
 
                 const lua = taoLuaFile('fire2', 25);
@@ -354,6 +361,9 @@
                 });
             }, 500); 
         }
+        // ===============================================
+        // 🔥 CHIÊU R: THIÊN THẠCH VIÊM ĐẾ (ĐÂM XUỐNG CẦU)
+        // ===============================================
         else if (loaiChieu === 'R') {
             setTimeout(() => {
                 let curNvc = nvc; 
@@ -362,7 +372,7 @@
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
 
                 let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(15.0)); 
-                let tBay = diemChanMucTieu ? diemChanMucTieu.clone() : curNvc.position.clone().add(curDir.clone().multiplyScalar(100));
+                let tBay = mucTieu ? mucTieu.clone() : curNvc.position.clone().add(curDir.clone().multiplyScalar(100));
 
                 const lua = taoLuaFile('fire3', 45);
                 lua.position.copy(diemBan);
@@ -375,6 +385,9 @@
                 });
             }, 800); 
         }
+        // ===============================================
+        // 🔥 CHIÊU F: HỎA TRỤ (Xoay tròn & Phình to ra 50m)
+        // ===============================================
         else if (loaiChieu === 'F') {
             setTimeout(() => {
                 let curNvc = nvc; 
@@ -382,7 +395,7 @@
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
 
-                let diemNo = diemChanMucTieu ? diemChanMucTieu.clone() : curNvc.position.clone().add(curDir.clone().multiplyScalar(20));
+                let diemNo = mucTieu ? mucTieu.clone() : curNvc.position.clone().add(curDir.clone().multiplyScalar(20));
 
                 const lua = taoLuaFile('fire4', 5);
                 lua.position.copy(diemNo);
@@ -406,6 +419,9 @@
         }
     };
 
+    // ==========================================
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU ACE
+    // ==========================================
     window.updateCombatAce = function () {
         for (let i = kyNangAce.length - 1; i >= 0; i--) {
             let s = kyNangAce[i]; s.life--;
