@@ -223,6 +223,38 @@
         });
         return xuong;
     }
+
+    // 🌟 KỸ XẢO COPIED TỪ BỐ GIÀ: TẠO VẾT NỨT KHÔNG GIAN BẰNG CODE
+    window.taoVetNutBangCodeBB = function (pos, curUp) {
+        const soTia = 15 + Math.floor(Math.random() * 10); 
+        const material = new THREE.LineBasicMaterial({
+            color: 0x110022, transparent: true, opacity: 1.0, blending: THREE.AdditiveBlending
+        });
+
+        const points = [];
+        for (let i = 0; i < soTia; i++) {
+            let angle = (i / soTia) * Math.PI * 2 + (Math.random() - 0.5);
+            let d1 = 5 + Math.random() * 5;
+            let px1 = Math.cos(angle) * d1, py1 = Math.sin(angle) * d1, pz1 = (Math.random() - 0.5) * d1;
+            points.push(0, 0, 0, px1, py1, pz1); 
+
+            if (Math.random() > 0.2) { 
+                let a2 = angle + (Math.random() - 0.5); let d2 = d1 + 3 + Math.random() * 5;
+                let px2 = Math.cos(a2) * d2, py2 = Math.sin(a2) * d2, pz2 = (Math.random() - 0.5) * d2;
+                points.push(px1, py1, pz1, px2, py2, pz2);
+            }
+        }
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+        geometry.setDrawRange(0, 0); 
+
+        const line = new THREE.LineSegments(geometry, material);
+        line.position.copy(pos); line.scale.set(4, 4, 4); 
+        if (curUp) line.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), curUp);
+        scene.add(line);
+
+        kyNangBB.push({ mesh: line, type: 'VET_NUT_CODE', life: 75, maxDraw: points.length, currentDraw: 0, growth: 8 });
+    }
  
     // ==========================================
     // ⚔️ HÀM TUNG COMBO BỌC THÉP HOẠT HÌNH CHUẨN ENGINE
@@ -230,7 +262,7 @@
     window.tungComboBlackbeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
-        // 🌟 BẢN VÁ ĐIỀU RĂN 1: CẤP THỂ XÁC CHO BOSS (Tránh nhận vơ cơ thể Sếp)
+        // 🌟 LỖI ẢO TƯỞNG: CẤP THỂ XÁC CHUẨN CHO BOSS
         if (isRemote && casterId) {
             if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
                 nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -241,7 +273,6 @@
         }
         if (!nvc) return;
 
-        // 🌟 CHUẨN HÓA NHẬN DIỆN CHIÊU THỨC CHO BOSS AI 
         let animCanMua = phim;
         if (typeof phim === 'string') {
             let pUp = phim.toUpperCase();
@@ -249,27 +280,17 @@
             else if (pUp.includes('ATTACK3') || pUp === 'E') animCanMua = 'ATTACK3';
             else if (pUp.includes('ATTACK1') || pUp === 'R') animCanMua = 'ATTACK1';
             else if (pUp.includes('ATTACK2') || pUp === 'F') animCanMua = 'ATTACK2';
-            else if (pUp.includes('ATTACK') || pUp.includes('SKILL')) {
-                let arr = ['ATTACK4', 'ATTACK3', 'ATTACK1', 'ATTACK2'];
-                animCanMua = arr[Math.floor(Math.random() * arr.length)];
-            }
         }
 
-        // 🌟 BẢN VÁ: TRẢ LẠI HÀM HOẠT HÌNH CHÍNH CHỦ CHO NGƯỜI CHƠI MÚA CHIÊU
+        // 🌟 LỖI KẸT HOẠT HÌNH: CHỈ KHÓA TRẠNG THÁI TRÊN NGƯỜI CHƠI THỰC TẾ
         if (isRemote === false) {
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
-            else if (typeof window.playAnim === 'function') window.playAnim(animCanMua);
-            
             if (window.henGioTatMuaBB) clearTimeout(window.henGioTatMuaBB);
             window.henGioTatMuaBB = setTimeout(() => { window.dangMuaChieu = false; }, 600);
-        } else {
-            // Đối với Boss: Ép chạy trực tiếp trên Mixer riêng biệt của nó, tuyệt đối không chạm vào người chơi
-            if (nvc.userData && nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[animCanMua]) {
-                nvc.userData.animationsMap[animCanMua].reset().fadeIn(0.2).play();
-            }
         }
 
+        // 🌟 LỖI TRỤC CẦU 3D: LẤY TRỤC LỰC HÚT ĐỊA CẦU
         let upVector = new THREE.Vector3(0, 1, 0);
         if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
             upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -332,7 +353,6 @@
                 if (tayTraiQ) tayTraiQ.getWorldPosition(diemBan);
 
                 let targetBay = mucTieu ? mucTieu.clone() : diemBan.clone().add(curDir.clone().multiplyScalar(150));
-                
                 if (!isRemote) {
                     let objMoi = window.layMucTieuGanNhatBB(diemBan);
                     if (objMoi && objMoi.mesh) {
@@ -378,7 +398,7 @@
             let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
             if (tayPhaiR) tayPhaiR.getWorldPosition(diemBan);
 
-            // 🌟 BẢN VÁ: CHỈ NGƯỜI CHƠI THỰC TẾ MỚI ĐƯỢC PHÉP CHẶN HOẠT HÌNH TOÀN CỤC CHƠI CHIÊU R
+            // Khóa gồng chiêu R cục bộ an toàn chống kẹt hoạt hình chạy bộ
             if (isRemote === false) {
                 window.dangGongChieuR_BB = true;
                 if (!window.playAnimGocBB) window.playAnimGocBB = window.playAnim || window.epNhanVatMua;
@@ -386,11 +406,6 @@
                     if (window.dangGongChieuR_BB && (name.includes('NHANROI') || name.includes('IDLE'))) return; 
                     if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB(name);
                 };
-            } else {
-                // Nếu là Boss: Ép hoạt hình gồng trên mixer riêng của nó
-                if (curNvc.userData && curNvc.userData.animationsMap && curNvc.userData.animationsMap['ATTACK1']) {
-                    curNvc.userData.animationsMap['ATTACK1'].reset().play();
-                }
             }
 
             const blackHole = taoVatTheBB('blackenergy', 2.0, true); 
@@ -407,7 +422,6 @@
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                
                 let targetBay = mucTieu ? mucTieu.clone() : curNvc.position.clone().add(huongMat.clone().multiplyScalar(150));
                 
                 if (!isRemote) {
@@ -428,15 +442,10 @@
                 blackHole.up.copy(cUp); 
                 blackHole.lookAt(targetBay);
 
-                // 🌟 KẾT THÚC GỒM: NHẢ KHÓA HOẠT HÌNH SÒNG PHẲNG
                 if (isRemote === false) {
                     window.dangMuaChieu = false;
                     window.dangGongChieuR_BB = false;
                     if (typeof window.playAnimGocBB === 'function') window.playAnimGocBB('NHANROI');
-                } else {
-                    if (curNvc.userData && curNvc.userData.animationsMap && curNvc.userData.animationsMap['NHANROI']) {
-                        curNvc.userData.animationsMap['NHANROI'].reset().play();
-                    }
                 }
             }, 2000); 
         }
@@ -564,6 +573,7 @@
                     if (s.isRemote === false) {
                         gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
                     } else {
+                        // LỖI ĐẠN CAO SU: Boss đánh trúng Sếp vẫn trừ máu chuẩn dame gốc
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
@@ -578,7 +588,13 @@
                     scene.add(vfx);
                     
                     kyNangBB.push({ mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, currentScale: 30, maxScale: 400, growthRate: 15.0 });
+                    
+                    // 🌟 KỸ XẢO TỪ BỐ GIÀ 1: KÍCH HOẠT RUNG MÀN HÌNH ĐỘNG ĐẤT 
                     if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
+                    
+                    // 🌟 KỸ XẢO TỪ BỐ GIÀ 2: KÍCH HOẠT TRIỆU HỒI VẾT NỨT KHÔNG GIAN BẰNG CODE
+                    if (typeof window.taoVetNutBangCodeBB === 'function') window.taoVetNutBangCodeBB(s.targetPos, s.upVector);
+                    
                     s.life = 0;
                 }
             }
