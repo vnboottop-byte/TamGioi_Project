@@ -141,12 +141,11 @@
     }
 
     // ==========================================
-    // 🌊 TUNG CHIÊU JIMBEI (BỌC THÉP VÔ TRÙNG 100%)
+    // 🌊 TUNG CHIÊU JIMBEI (VÁ LỖI MẤT TẦM NHIỆT RADAR)
     // ==========================================
     window.tungComboJimbei = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
-        // 🌟 BẢN VÁ: TÌM CHÍNH XÁC XƯƠNG BOSS CHỐNG ẢO TƯỞNG
         if (isRemote && casterId) {
             if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
                 nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -157,7 +156,6 @@
         }
         if (!nvc && !isRemote) return;
 
-        // 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ AI SANG CHIÊU THỨC
         let loaiChieu = phim;
         let tenAnimMua = 'PL_JINBE_ORIG01_COMBO_A';
         if (typeof phim === 'string') {
@@ -176,7 +174,6 @@
             }
         }
 
-        // 🌟 BẢN VÁ: BẢO VỆ HOẠT HÌNH CHO BOSS VÀ PLAYER
         if (isRemote === false) {
             window.currentAnimName = '';
             window.dangMuaChieu = true;
@@ -206,7 +203,6 @@
 
         let mucTieu = null;
 
-        // 🌟 BẢN VÁ: CHỐNG SẬP GAME DO NULL POINTER
         if (isRemote) {
             if (remoteGoc) {
                 viTriGocToTam.set(remoteGoc.x, remoteGoc.y, remoteGoc.z);
@@ -220,9 +216,10 @@
         } else {
             viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(4.0)); 
             let targetRadar = window.layMucTieuGanNhatJB(viTriGocToTam);
-            if (targetRadar && targetRadar.mesh) {
-                let hit = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
-                mucTieu = (hit && hit.tamNguc) ? hit.tamNguc.clone() : targetRadar.mesh.position.clone();
+            
+            // 🌟 BẢN VÁ TẦM NHIỆT 1: Radar của Jimbei trả về thẳng Vector3, KHÔNG PHẢI MESH!
+            if (targetRadar) {
+                mucTieu = targetRadar.clone(); // Khóa dính mục tiêu
             } else {
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
@@ -246,7 +243,6 @@
         let thoiGianSqueeze = (loaiChieu === 'Q' || loaiChieu === 'E') ? 200 : 400;
 
         setTimeout(() => {
-            // 🌟 BẢN VÁ: GHIM CHẶT ẢO TƯỞNG CỤC BỘ TRONG TIMEOUT
             let curNvc = nvc; 
             if (!curNvc) return;
             let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
@@ -322,7 +318,7 @@
     };
 
     // ==========================================
-    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU (JIMBEI)
+    // ⚙️ VÒNG LẶP VẬT LÝ TOÀN CẦU (BỌC THÉP TẦM NHIỆT SLERP CHO 4 CHIÊU)
     // ==========================================
     window.updateCombatJimbei = function () {
         for (let i = kyNangJimbei.length - 1; i >= 0; i--) {
@@ -330,6 +326,15 @@
 
             if (s.type === 'Q') {
                 s.mesh.translateZ(s.speed);
+                // 🌟 BẢN VÁ TẦM NHIỆT 2: Bơm thêm hệ thống Slerp đuổi mục tiêu cho chiêu Q
+                if (s.targetPos) {
+                    if (!s.isRemote) {
+                        const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
+                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
+                    }
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.up.copy(s.upVector); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.1);
+                }
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
                     taoVuNoNuocJB(s.targetPos, s.isRemote, s.damage, 10, s.upVector);
                     s.life = 0;
@@ -342,10 +347,7 @@
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
                         if (mucTieuMoi) s.targetPos = mucTieuMoi;
                     }
-                    const dummy = new THREE.Object3D();
-                    dummy.position.copy(s.mesh.position);
-                    dummy.up.copy(s.upVector); 
-                    dummy.lookAt(s.targetPos);
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.up.copy(s.upVector); dummy.lookAt(s.targetPos);
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.1);
                 }
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5 || s.life < 5) {
@@ -364,10 +366,7 @@
                         const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
                         if (mucTieuMoi) s.targetPos = mucTieuMoi;
                     }
-                    const dummy = new THREE.Object3D();
-                    dummy.position.copy(s.mesh.position);
-                    dummy.up.copy(s.upVector); 
-                    dummy.lookAt(s.targetPos);
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.up.copy(s.upVector); dummy.lookAt(s.targetPos);
                     s.mesh.quaternion.slerp(dummy.quaternion, 0.03);
                 }
 
@@ -380,6 +379,17 @@
                 s.mesh.translateZ(s.speed);
                 s.mesh.scale.addScalar(0.04);
                 if (s.life % 2 === 0) taoVuNoNuocJB(s.mesh.position, s.isRemote, 0, 0, s.upVector);
+                
+                // 🌟 BẢN VÁ TẦM NHIỆT 2: Bơm thêm hệ thống Slerp đuổi mục tiêu cho Buraikan (F)
+                if (s.targetPos) {
+                    if (!s.isRemote) {
+                        const mucTieuMoi = window.layMucTieuGanNhatJB(s.mesh.position);
+                        if (mucTieuMoi) s.targetPos = mucTieuMoi;
+                    }
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); dummy.up.copy(s.upVector); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.08);
+                }
+
                 if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 10 || s.life < 5) {
                     taoVuNoNuocJB(s.targetPos, s.isRemote, s.damage, 50, s.upVector);
                     s.life = 0;
@@ -397,7 +407,6 @@
             let h = hieuUngJimbei[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             
-            // Lấy lực hút tâm Trái Đất (0.5 m/s)
             let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.5) : new THREE.Vector3(0, -0.5, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
@@ -420,12 +429,18 @@
 
         for (let i = danhSachSoBayJB.length - 1; i >= 0; i--) {
             let it = danhSachSoBayJB[i]; it.offsetY += 0.05; it.life--;
-            const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
-            if (p.z < 1) {
-                it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`;
-                it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
-            } else { it.el.style.display = 'none'; }
-            if (it.life <= 0) { it.el.remove(); danhSachSoBayJB.splice(i, 1); window.tongSoChuNoi_JB--; }
+            if (typeof camera !== 'undefined' && it.pos) {
+                const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
+                if (p.z < 1) {
+                    it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`;
+                    it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+                } else { it.el.style.display = 'none'; }
+            } else it.el.style.display = 'none';
+
+            if (it.life <= 0) { 
+                if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el);
+                danhSachSoBayJB.splice(i, 1); window.tongSoChuNoi_JB--; 
+            }
         }
     };
 
