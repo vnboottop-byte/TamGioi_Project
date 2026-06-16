@@ -258,6 +258,23 @@
         kyNangBB.push({ mesh: line, type: 'VET_NUT_CODE', life: 75, maxDraw: points.length, currentDraw: 0, growth: 8 });
     };
 
+    // 🌟 KỸ XẢO: RUNG LẮC MÀN HÌNH CỦA RÂU ĐEN
+    window.kichHoatDongDatBB = function (intensity = 25, duration = 1500) {
+        if (typeof window.kichHoatDongDat === 'function') {
+            window.kichHoatDongDat(intensity, duration); return; // Nếu có hàm gốc thì xài
+        }
+        if (typeof camera === 'undefined') return;
+        let start = Date.now();
+        let idShake = setInterval(() => {
+            let elapsed = Date.now() - start;
+            if (elapsed > duration) { clearInterval(idShake); return; }
+            let heSo = 1.0 - (elapsed / duration); // Giảm dần độ rung
+            camera.position.x += (Math.random() - 0.5) * (intensity / 10) * heSo;
+            camera.position.y += (Math.random() - 0.5) * (intensity / 10) * heSo;
+            camera.position.z += (Math.random() - 0.5) * (intensity / 10) * heSo;
+        }, 30);
+    };
+
     // ==========================================
     // 🌟 2. HÀM TUNG COMBO (ĐÃ DỌN SẠCH RÁC HOẠT HÌNH)
     // ==========================================
@@ -560,7 +577,7 @@
                     kyNangBB.push({ mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, currentScale: 30, maxScale: 400, growthRate: 15.0 });
                     
                     // KÍCH HOẠT ĐỘNG ĐẤT & VẾT NỨT BỐ GIÀ TẠI ĐÂY
-                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
+                    if (typeof window.kichHoatDongDatBB === 'function') window.kichHoatDongDatBB(25, 1500);
                     if (typeof window.taoVetNutBangCodeBB === 'function') window.taoVetNutBangCodeBB(s.targetPos, s.upVector);
                     
                     s.life = 0;
@@ -601,8 +618,44 @@
                 if (typeof window.donRac3D === 'function') window.donRac3D(s.mesh); else scene.remove(s.mesh);
                 kyNangBB.splice(i, 1);
             }
+        } 
+
+        // 🌟 TRẢ LẠI VÒNG LẶP RENDER KHÓI ĐEN (CẬP NHẬT VÀ XÓA RÁC)
+        for (let i = hieuUngBB.length - 1; i >= 0; i--) {
+            let h = hieuUngBB[i]; h.life--;
+            let posArr = h.system.geometry.attributes.position.array;
+            let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.1) : new THREE.Vector3(0, -0.1, 0);
+
+            for (let j = 0; j < posArr.length / 3; j++) {
+                posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
+                h.velocities[j].x *= 0.95; h.velocities[j].z *= 0.95; h.velocities[j].add(fallVec);
+            }
+            h.system.geometry.attributes.position.needsUpdate = true;
+            h.system.material.opacity = (h.life / 40) * 0.8;
+
+            if (h.life <= 0) {
+                if (typeof scene !== 'undefined') scene.remove(h.system);
+                if (h.system.geometry) h.system.geometry.dispose();
+                if (h.system.material) h.system.material.dispose();
+                hieuUngBB.splice(i, 1);
+            }
         }
-    };
+
+        // 🌟 TRẢ LẠI VÒNG LẶP BAY CHỮ SỐ SÁT THƯƠNG
+        for (let i = danhSachSoBayBB.length - 1; i >= 0; i--) {
+            let it = danhSachSoBayBB[i]; it.offsetY += 0.05; it.life--;
+            if (typeof camera !== 'undefined' && it.pos) {
+                const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
+                if (p.z < 1) {
+                    it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+                } else it.el.style.display = 'none';
+            }
+            if (it.life <= 0) {
+                if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el);
+                danhSachSoBayBB.splice(i, 1); window.tongSoChuNoi_BB--;
+            }
+        }
+    }; // <--- ĐÂY LÀ KẾT THÚC CỦA HÀM UPDATECOMBATBB
     if (window.idVongLapCombatBB) clearInterval(window.idVongLapCombatBB);
     window.idVongLapCombatBB = setInterval(window.updateCombatBB, 30);
 
