@@ -389,21 +389,15 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex, upVector = new THR
         }
     };
 
-
-
-
     // ==========================================
     // 🚀 VÒNG LẶP VẬT LÝ TOÀN CẦU (ĐÃ THOÁT KHỎI LỒNG)
     // ==========================================
     window.updateCombatPhapSu = function () {
-
         if (typeof window.taiHoacNhanBanAsset !== 'function') return;
-  
         let phaiHienTai = (window.SCRIPT_PHAI_CUA_TOI || "").toLowerCase();
         if (phaiHienTai.includes('phapsu')) {
             if (window.WEAPON2_URL !== window.oldWeapon2URL_PS) {
-                window.oldWeapon2URL_PS = window.WEAPON2_URL;
-                
+                window.oldWeapon2URL_PS = window.WEAPON2_URL;          
                 let linkTruong = window.WEAPON2_URL;
                 // Quy tắc A & B: Nếu rỗng thì tự động nạp Trượng mặc định làm Hộ thể
                 if (!linkTruong || linkTruong.trim() === '') linkTruong = 'uploads/anims/truong_phep.glb';
@@ -417,7 +411,6 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex, upVector = new THR
                     window.truongHoThe = null;
                 }
                 isTruongPhepSetup = false;
-
                 // Tải cây trượng mới vào vòng xoay hộ thể
                 if (linkTruong !== "") {
                     window.taiHoacNhanBanAsset(linkTruong, (truongGoc) => {
@@ -426,16 +419,13 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex, upVector = new THR
                             window.truongHoThe = null;
                         }
                         window.truongHoThe = truongGoc;
-
                         truongGoc.updateMatrixWorld(true);
                         const box = new THREE.Box3().setFromObject(truongGoc);
                         const size = box.getSize(new THREE.Vector3());
                         const maxDim = Math.max(size.x, size.y, size.z) || 1;
                         let tiLeChuan = 1.8 / maxDim; // Ép chuẩn dài 1.8m
                         truongGoc.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
-
                         if (typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(truongGoc, window.WEAPON_LEVEL || 0);
-
                         scene.add(truongGoc);
                         window.gocXoayTruong = 0; window.gocTuXoayTruong = 0;
                         isTruongPhepSetup = true;
@@ -466,8 +456,7 @@ function taoVuNoPS(pos, isRemote, luongDame, banKinh, mauHex, upVector = new THR
             else if (s.type === 'R') {
                 s.ticks += 0.05; // Tốc độ di chuyển giữa 2 vòng
                 s.mesh.children.forEach(c => c.rotation.y += 0.2);
-                s.meshBot.children.forEach(c => c.rotation.y -= 0.2);
-                
+                s.meshBot.children.forEach(c => c.rotation.y -= 0.2);          
                 // 🌟 LOGIC TẦM NHIỆT: Liên tục dò tìm mục tiêu và bám theo!
                 if (!s.isRemote) {
                     // Lấy vị trí tâm bão hiện tại làm gốc để quét radar
