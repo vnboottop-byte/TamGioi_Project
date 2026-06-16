@@ -204,12 +204,12 @@
     }
 
     // ==========================================
-    // 🏹 TUNG CHIÊU FUJITORA (BỌC THÉP CHUẨN 100%)
+    // 🏹 TUNG CHIÊU FUJITORA (GIỮ NGUYÊN TRỤC GỐC CỦA SẾP 100%)
     // ==========================================
     window.tungComboFujitora = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
-        // 🌟 BẢN VÁ 1: CẤP THỂ XÁC CHUẨN CHO BOSS AI (Tránh lấy thân xác Sếp)
+        // 🌟 BẢN VÁ: CẤP THỂ XÁC CHUẨN (Diệt lỗi Ảo tưởng)
         if (isRemote && casterId) {
             if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
                 nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -220,7 +220,7 @@
         }
         if (!nvc) return;
 
-        // 🌟 BẢN VÁ 2: THÔNG NÃO NGÔN NGỮ AI (CHỮA CÂM NÍN)
+        // 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ AI (Diệt bệnh Câm nín)
         let loaiChieu = phim;
         let animCanMua = 'ATTACK1';
         if (typeof phim === 'string') {
@@ -239,7 +239,7 @@
             }
         }
 
-        // 🌟 BẢN VÁ 3: BẢO VỆ HOẠT HÌNH
+        // 🌟 BẢN VÁ: BẢO VỆ HOẠT HÌNH
         if (isRemote === false) {
             window.dangMuaChieu = true;
             window.currentAnimName = '';
@@ -254,14 +254,11 @@
             }
         }
 
-        let upVector = new THREE.Vector3(0, 1, 0);
-        if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
-            upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
-        } else if (nvc.up) {
-            upVector = nvc.up.clone().normalize();
-        }
-
+        // 👑 GIỮ NGUYÊN 100% TRỤC VECTOR GỐC CỦA SẾP
+        let viTriGocToTam = new THREE.Vector3();
+        let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3(); 
+        
         if (typeof camera !== 'undefined' && !isRemote) {
             camera.getWorldDirection(huongMat);
             huongMat.projectOnPlane(upVector).normalize();
@@ -272,18 +269,20 @@
         }
         if (huongMat.lengthSq() < 0.001) { huongMat.set(0, 0, 1).applyQuaternion(nvc.quaternion).projectOnPlane(upVector).normalize(); }
 
-        let viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
-
         let mucTieu = null;
+
         if (isRemote) {
-            if (remoteDich) mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
-            else mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
+            viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
+            upVector = viTriGocToTam.clone().normalize();
+            mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
         } else {
+            viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
             let targetRadar = window.layMucTieuGanNhatFuji(viTriGocToTam);
+            
+            // 🌟 BẢN VÁ: BẢO VỆ HITBOX CHỐNG CRASH
             if (targetRadar && targetRadar.mesh) {
-                // 🌟 BẢN VÁ 4: BỌC THÉP CRASH HITBOX
                 let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
-                mucTieu = (hitBox && hitBox.tamNguc && typeof hitBox.tamNguc.clone === 'function') ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
+                mucTieu = (hitBox && hitBox.tamNguc) ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
             } else {
                 mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
             }
@@ -309,8 +308,7 @@
         // 🔮 CHIÊU Q: KIẾM KHÍ TRỌNG LỰC
         if (loaiChieu === 'Q') {
             setTimeout(() => {
-                // 🌟 BẢN VÁ 5: KHÓA CHẶT ẢO TƯỞNG CỤC BỘ TRONG TIMEOUT
-                let curNvc = nvc; 
+                let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -328,7 +326,7 @@
                 
                 kyNangFuji.push({
                     mesh: kq, type: 'BAY_THANG', speed: 12.0, life: 80, isKiem: true,
-                    targetPos: targetBay, damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 12, upVector: curUp.clone()
+                    targetPos: targetBay, damage: dameGoc * 0.4, isRemote: isRemote, noBanKinh: 12
                 });
             }, 150); 
         }
@@ -336,7 +334,7 @@
         else if (loaiChieu === 'E') {
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
-                    let curNvc = nvc; 
+                    let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -349,8 +347,8 @@
                     posDap.add(curDir.clone().multiplyScalar((Math.random() - 0.5) * 20));
 
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.add(curUp.clone().multiplyScalar(100)); 
-                    posXuatPhat.sub(curDir.clone().multiplyScalar(50)); 
+                    posXuatPhat.add(curUp.clone().multiplyScalar(100)); // Rơi từ độ cao 100m chuẩn Map cầu
+                    posXuatPhat.sub(curDir.clone().multiplyScalar(50)); // Kéo lùi tạo góc xéo
 
                     thienThach.position.copy(posXuatPhat);
                     thienThach.up.copy(curUp); 
@@ -359,7 +357,7 @@
 
                     kyNangFuji.push({
                         mesh: thienThach, type: 'BAY_THANG', speed: 3.5, life: 150, isMeteor: true,
-                        targetPos: posDap, damage: dameGoc * 0.2, isRemote: isRemote, noBanKinh: 25, upVector: curUp.clone()
+                        targetPos: posDap, damage: dameGoc * 0.2, isRemote: isRemote, noBanKinh: 25
                     });
                 }, 400 + i * 250); 
             }
@@ -367,7 +365,7 @@
         // 🔥 CHIÊU R: 1 THIÊN THẠCH KHỔNG LỒ RƠI XÉO CHẬM
         else if (loaiChieu === 'R') {
             setTimeout(() => {
-                let curNvc = nvc; 
+                let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -376,8 +374,8 @@
 
                 let posDap = diemChanMucTieu.clone();
                 let posXuatPhat = posDap.clone();
-                posXuatPhat.add(curUp.clone().multiplyScalar(140)); 
-                posXuatPhat.sub(curDir.clone().multiplyScalar(70)); 
+                posXuatPhat.add(curUp.clone().multiplyScalar(140)); // 140m chuẩn Map cầu
+                posXuatPhat.sub(curDir.clone().multiplyScalar(70)); // Góc xéo cực gắt
 
                 thienThach.position.copy(posXuatPhat);
                 thienThach.up.copy(curUp); 
@@ -386,7 +384,7 @@
 
                 kyNangFuji.push({
                     mesh: thienThach, type: 'BAY_THANG', speed: 1.5, life: 250, isMeteor: true, isUltimate: true,
-                    targetPos: posDap, damage: dameGoc * 0.5, isRemote: isRemote, noBanKinh: 40, upVector: curUp.clone()
+                    targetPos: posDap, damage: dameGoc * 0.5, isRemote: isRemote, noBanKinh: 40
                 });
             }, 600); 
         }
@@ -398,7 +396,7 @@
 
             for (let i = 0; i < soLuongMua; i++) {
                 setTimeout(() => {
-                    let curNvc = nvc; 
+                    let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -421,13 +419,16 @@
 
                     kyNangFuji.push({
                         mesh: thienThach, type: 'BAY_THANG', speed: 4.0, life: 150, isMeteor: true,
-                        targetPos: posDap, damage: dameGoc * 0.066, isRemote: isRemote, noBanKinh: 25, upVector: curUp.clone()
+                        targetPos: posDap, damage: dameGoc * 0.066, isRemote: isRemote, noBanKinh: 25
                     });
                 }, 300 + i * delayPerMeteor);
             }
         }
     };
 
+    // ==========================================
+    // 🌪️ VÒNG LẶP RENDER VẬT LÝ TOÀN CẦU FUJITORA
+    // ==========================================
     window.updateCombatFuji = function () {
         for (let i = kyNangFuji.length - 1; i >= 0; i--) {
             let s = kyNangFuji[i]; s.life--;
@@ -436,7 +437,7 @@
                 let huongBay = null;
                 if (s.targetPos) {
                     huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    // 🌟 BẢN VÁ 6: CHỐNG VECTOR NaN LÀM ĐÓNG BĂNG ĐẠN TẠI CHỖ
+                    // 🌟 BẢN VÁ: CHỐNG VECTOR NaN ĐÓNG BĂNG ĐẠN
                     if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                 } else {
                     s.mesh.translateZ(s.speed);
@@ -458,7 +459,7 @@
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     if (s.isRemote === false) gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh, s.isKiem);
                     else {
-                        // 🌟 BẢN VÁ 7: ĐẬP BỎ KHIÊN typeof === 'number' 
+                        // 🌟 BẢN VÁ: PHÁ BỎ KHIÊN NUMBER, SÒNG PHẲNG HP
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
@@ -478,7 +479,6 @@
             }
         }
 
-        // 🌟 BẢN VÁ 8: ĐỒNG BỘ TRỌNG LỰC MAP CẦU CHO HIỆU ỨNG NỔ VÀ BỤI TÍM
         for (let i = hieuUngFuji.length - 1; i >= 0; i--) {
             let h = hieuUngFuji[i]; h.life--;
 
@@ -493,13 +493,9 @@
                 h.system.material.size *= 0.95;
             } else {
                 let posArr = h.system.geometry.attributes.position.array;
-                // Bụi thiên thạch rớt xuống theo trục hành tinh
-                let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.05) : new THREE.Vector3(0, -0.05, 0);
-
                 for (let j = 0; j < posArr.length / 3; j++) {
                     posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                    h.velocities[j].multiplyScalar(0.9); 
-                    h.velocities[j].add(fallVec); 
+                    h.velocities[j].multiplyScalar(0.9); h.velocities[j].y += 0.05;
                 }
                 h.system.geometry.attributes.position.needsUpdate = true;
                 h.system.material.opacity = h.life / 30;
@@ -602,7 +598,7 @@
 })();
 
 // =========================================================================
-// 🌟 BẢN VÁ 9: ÁNH XẠ CHỮA CÂM NÍN 100% CHO AI BOSS
+// 🌟 BẢN VÁ: ÁNH XẠ CHỮA CÂM NÍN 100% CHO AI BOSS
 // =========================================================================
 window.tungComboFuji     = window.tungComboFujitora;
 window.tungCombofujitora = window.tungComboFujitora;
