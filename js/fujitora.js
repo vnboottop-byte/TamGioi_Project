@@ -204,12 +204,11 @@
     }
 
     // ==========================================
-    // 🏹 TUNG CHIÊU FUJITORA (GIỮ NGUYÊN TRỤC GỐC CỦA SẾP 100%)
+    // 🏹 TUNG CHIÊU FUJITORA (BỌC THÉP CHỐNG SẬP GAME 100%)
     // ==========================================
     window.tungComboFujitora = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
-        // 🌟 BẢN VÁ: CẤP THỂ XÁC CHUẨN (Diệt lỗi Ảo tưởng)
         if (isRemote && casterId) {
             if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
                 nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -220,7 +219,6 @@
         }
         if (!nvc) return;
 
-        // 🌟 BẢN VÁ: THÔNG NÃO NGÔN NGỮ AI (Diệt bệnh Câm nín)
         let loaiChieu = phim;
         let animCanMua = 'ATTACK1';
         if (typeof phim === 'string') {
@@ -239,7 +237,6 @@
             }
         }
 
-        // 🌟 BẢN VÁ: BẢO VỆ HOẠT HÌNH
         if (isRemote === false) {
             window.dangMuaChieu = true;
             window.currentAnimName = '';
@@ -254,7 +251,6 @@
             }
         }
 
-        // 👑 GIỮ NGUYÊN 100% TRỤC VECTOR GỐC CỦA SẾP
         let viTriGocToTam = new THREE.Vector3();
         let upVector = nvc.up ? nvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
         let huongMat = new THREE.Vector3(); 
@@ -271,15 +267,24 @@
 
         let mucTieu = null;
 
+        // 🌟 BẢN VÁ KIM CƯƠNG: CHỐNG SẬP GAME DO NULL POINTER & CHỐNG TỌA ĐỘ NaN
         if (isRemote) {
-            viTriGocToTam = new THREE.Vector3(remoteGoc.x, remoteGoc.y, remoteGoc.z);
-            upVector = viTriGocToTam.clone().normalize();
-            mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
+            if (remoteGoc) {
+                viTriGocToTam.set(remoteGoc.x, remoteGoc.y, remoteGoc.z);
+                if (viTriGocToTam.lengthSq() > 0.001) upVector.copy(viTriGocToTam).normalize();
+            } else {
+                viTriGocToTam.copy(nvc.position).add(upVector.clone().multiplyScalar(3.5));
+            }
+            
+            if (remoteDich) {
+                mucTieu = new THREE.Vector3(remoteDich.x, remoteDich.y, remoteDich.z);
+            } else {
+                mucTieu = viTriGocToTam.clone().add(huongMat.clone().multiplyScalar(150));
+            }
         } else {
             viTriGocToTam = nvc.position.clone().add(upVector.clone().multiplyScalar(3.5));
             let targetRadar = window.layMucTieuGanNhatFuji(viTriGocToTam);
             
-            // 🌟 BẢN VÁ: BẢO VỆ HITBOX CHỐNG CRASH
             if (targetRadar && targetRadar.mesh) {
                 let hitBox = typeof window.layHitbox === 'function' ? window.layHitbox(targetRadar.mesh) : null;
                 mucTieu = (hitBox && hitBox.tamNguc) ? hitBox.tamNguc.clone() : targetRadar.mesh.position.clone();
@@ -308,7 +313,7 @@
         // 🔮 CHIÊU Q: KIẾM KHÍ TRỌNG LỰC
         if (loaiChieu === 'Q') {
             setTimeout(() => {
-                let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
+                let curNvc = nvc; 
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -334,7 +339,7 @@
         else if (loaiChieu === 'E') {
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
-                    let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
+                    let curNvc = nvc; 
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -347,8 +352,8 @@
                     posDap.add(curDir.clone().multiplyScalar((Math.random() - 0.5) * 20));
 
                     let posXuatPhat = posDap.clone();
-                    posXuatPhat.add(curUp.clone().multiplyScalar(100)); // Rơi từ độ cao 100m chuẩn Map cầu
-                    posXuatPhat.sub(curDir.clone().multiplyScalar(50)); // Kéo lùi tạo góc xéo
+                    posXuatPhat.add(curUp.clone().multiplyScalar(100)); 
+                    posXuatPhat.sub(curDir.clone().multiplyScalar(50)); 
 
                     thienThach.position.copy(posXuatPhat);
                     thienThach.up.copy(curUp); 
@@ -365,7 +370,7 @@
         // 🔥 CHIÊU R: 1 THIÊN THẠCH KHỔNG LỒ RƠI XÉO CHẬM
         else if (loaiChieu === 'R') {
             setTimeout(() => {
-                let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
+                let curNvc = nvc; 
                 if (!curNvc) return;
                 let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                 let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -374,8 +379,8 @@
 
                 let posDap = diemChanMucTieu.clone();
                 let posXuatPhat = posDap.clone();
-                posXuatPhat.add(curUp.clone().multiplyScalar(140)); // 140m chuẩn Map cầu
-                posXuatPhat.sub(curDir.clone().multiplyScalar(70)); // Góc xéo cực gắt
+                posXuatPhat.add(curUp.clone().multiplyScalar(140)); 
+                posXuatPhat.sub(curDir.clone().multiplyScalar(70)); 
 
                 thienThach.position.copy(posXuatPhat);
                 thienThach.up.copy(curUp); 
@@ -396,7 +401,7 @@
 
             for (let i = 0; i < soLuongMua; i++) {
                 setTimeout(() => {
-                    let curNvc = nvc; // 🌟 KHÓA ẢO TƯỞNG CỤC BỘ
+                    let curNvc = nvc; 
                     if (!curNvc) return;
                     let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
                     let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
@@ -437,7 +442,6 @@
                 let huongBay = null;
                 if (s.targetPos) {
                     huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    // 🌟 BẢN VÁ: CHỐNG VECTOR NaN ĐÓNG BĂNG ĐẠN
                     if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                 } else {
                     s.mesh.translateZ(s.speed);
@@ -459,7 +463,6 @@
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
                     if (s.isRemote === false) gaySatThuongFuji(s.targetPos, s.damage, s.noBanKinh, s.isKiem);
                     else {
-                        // 🌟 BẢN VÁ: PHÁ BỎ KHIÊN NUMBER, SÒNG PHẲNG HP
                         if (typeof window.gaySatThuongBossToPlayer === 'function') {
                             window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                         }
@@ -511,13 +514,17 @@
 
         for (let i = danhSachSoBayFuji.length - 1; i >= 0; i--) {
             let it = danhSachSoBayFuji[i]; it.offsetY += 0.05; it.life--;
-            const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
-            if (p.z < 1) {
-                it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
-            } else it.el.style.display = 'none';
+            // 🌟 BẢN VÁ KIM CƯƠNG: CHỐNG LỖI CAMERA UNDEFINED KHI HIỂN THỊ DAME
+            if (typeof camera !== 'undefined' && it.pos) {
+                const p = it.pos.clone(); p.y += it.offsetY; p.project(camera);
+                if (p.z < 1) {
+                    it.el.style.left = `${(p.x * 0.5 + 0.5) * window.innerWidth}px`; 
+                    it.el.style.top = `${(p.y * -0.5 + 0.5) * window.innerHeight}px`;
+                } else it.el.style.display = 'none';
+            } else { it.el.style.display = 'none'; }
 
             if (it.life <= 0) {
-                it.el.remove(); 
+                if (it.el && it.el.parentNode) it.el.parentNode.removeChild(it.el); 
                 danhSachSoBayFuji.splice(i, 1);
                 window.tongSoChuNoi_Fuji--;
             }
