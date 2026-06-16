@@ -1,14 +1,9 @@
 // ==========================================
 // ⚔️ HỆ THỐNG KỸ NĂNG: TU TIÊN GIẢ (BẢN FULL FIX RÁC 1000%)
 // =========================================
-
 const kyNangTuTien = []; 
 const hieuUngTuTien = [];
 let isCuoiKiemSetup = false; 
-
-
-
-
 
 window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
     let targetPos = null; let minD = 80;
@@ -33,7 +28,6 @@ window.layMucTieuGanNhatTT = function(viTriGoc, huongMat) {
     return viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
 }
 
-
 function taoKiemChuan(scaleSize, weaponUrl, auraLevel = 0) { // Thêm tham số auraLevel
     const stdSword = new THREE.Group();
     let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL;
@@ -41,7 +35,6 @@ function taoKiemChuan(scaleSize, weaponUrl, auraLevel = 0) { // Thêm tham số 
     if (!urlCanTai || urlCanTai.trim() === '') {
         urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
     }
-   
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
             vuKhi.updateMatrixWorld(true);
@@ -65,14 +58,11 @@ function taoKiemChuan(scaleSize, weaponUrl, auraLevel = 0) { // Thêm tham số 
     stdSword.scale.set(scaleSize, scaleSize, scaleSize);
     return stdSword;
 }
-
 // ==========================================
 // 🏹 TUNG CHIÊU TU TIÊN (BỌC THÉP VÔ TRÙNG 100%)
 // ==========================================
 window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
     let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
-    
-    // 🌟 BẢN VÁ: CẤP ĐÚNG THỂ XÁC CHO BOSS AI CHỐNG ẢO TƯỞNG
     if (isRemote && casterId) {
         if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
             nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -376,15 +366,10 @@ window.updateCombatTuTien = function () {
                 if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
                 skill.delay--; 
                 continue; 
-            }
-            
+            }      
             skill.life--;
-
             if (skill.type === 'kiem_q' || skill.type === 'kiem_r') {
                 if (skill.type === 'kiem_q') skill.mesh.rotateZ(0.4); 
-
-
-
                 // 🌟 BẢN VÁ AAA: TẦM NHIỆT ĐÃ ĐƯỢC CHỮA BỆNH ĐẠN ĐUỔI!
                 if (skill.targetPos) {
                     if (skill.isRemote === false) { 
@@ -393,13 +378,9 @@ window.updateCombatTuTien = function () {
                         if (mucTieuMoi) skill.targetPos = mucTieuMoi;
                     } 
                     // 🛑 ĐÃ XÓA LỆNH ÉP ĐẠN TÌM SẾP Ở ĐÂY. Đạn mạng sẽ bay thẳng tắp tới đích ban đầu!
-
                     const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                     skill.mesh.quaternion.slerp(dummy.quaternion, 0.15); 
                 }
-
-
-
                 skill.mesh.translateZ(skill.speed);
                 const realDir = new THREE.Vector3(); skill.mesh.getWorldDirection(realDir);
                 if (typeof window.taoSaoBangTuTien === 'function') window.taoSaoBangTuTien(skill.mesh.position, realDir.negate());
@@ -418,9 +399,6 @@ window.updateCombatTuTien = function () {
                     if (skill.swordMesh && skill.swordMesh.rotation.x >= 0) { skill.swordMesh.rotation.x = 0; skill.state = 'BAY_DI'; }
                 }
                 else if (skill.state === 'BAY_DI') {
-
-
-
                     if (skill.targetPos) {
                         if (skill.isRemote === false) {
                             const fwd = new THREE.Vector3(); skill.mesh.getWorldDirection(fwd);
@@ -428,16 +406,12 @@ window.updateCombatTuTien = function () {
                             if (mucTieuMoi) skill.targetPos = mucTieuMoi;
                         } 
                         // 🛑 ĐÃ XÓA LỆNH ÉP ĐẠN TÌM SẾP
-
                         const dummy = new THREE.Object3D(); dummy.position.copy(skill.mesh.position); dummy.lookAt(skill.targetPos);
                         skill.mesh.quaternion.slerp(dummy.quaternion, 0.2);
                     }
-
-
                     const khoangCachTam = skill.mesh.position.distanceTo(skill.targetPos);
                     if (khoangCachTam < 40 && skill.swordMesh) { const tyLe = Math.max(0, khoangCachTam / 40); skill.swordMesh.position.y = 10.0 * tyLe; }
                     skill.mesh.rotateZ(-0.3); skill.mesh.translateZ(skill.speed);
-
                     if (skill.swordMesh) {
                         const toaDoThucTe = new THREE.Vector3(); skill.swordMesh.getWorldPosition(toaDoThucTe);
                         const realDir = new THREE.Vector3(); skill.mesh.getWorldDirection(realDir);
@@ -459,13 +433,11 @@ window.updateCombatTuTien = function () {
                     }
                 }
             }
-
             if (skill.life <= 0) {
                 if (typeof window.donRac3D === 'function') window.donRac3D(skill.mesh);
                 kyNangTuTien.splice(i, 1);
             }
         }
-
         for (let i = hieuUngTuTien.length - 1; i >= 0; i--) {
             let trail = hieuUngTuTien[i];
             let posTrail = trail.system.geometry.attributes.position.array;
@@ -482,7 +454,6 @@ window.updateCombatTuTien = function () {
                 hieuUngTuTien.splice(i, 1);
             }
         }
-
         if (typeof danhSachSoBay !== 'undefined') {
             for (let i = danhSachSoBay.length - 1; i >= 0; i--) {
                 let item = danhSachSoBay[i]; item.offsetY += 0.05; item.life--;
@@ -498,7 +469,6 @@ window.updateCombatTuTien = function () {
 };
 // 🌟 BẬT CHẠY NGẦM LIÊN TỤC CHO MỌI NGƯỜI ĐỂ QUÉT RÁC MẠNG
 setInterval(window.updateCombatTuTien, 30);
-
 // ==========================================
 // CÁC HÀM TIỆN ÍCH CỦA SẾP (GIỮ NGUYÊN)
 // ==========================================
@@ -509,7 +479,6 @@ window.taoSaoBangTuTien = function (pos, dir) {
     const mat = new THREE.PointsMaterial({ color: 0xffaa00, size: 0.3, transparent: true, opacity: 1 });
     const pts = new THREE.Points(geo, mat); scene.add(pts); hieuUngTuTien.push({ system: pts, velocities: [new THREE.Vector3(dir.x * 0.1, dir.y * 0.1, dir.z * 0.1)], life: 15 });
 };
-
 let textureLuaTuTien = null;
 window.layTextureLua = function () {
     if (textureLuaTuTien) return textureLuaTuTien;
@@ -518,7 +487,6 @@ window.layTextureLua = function () {
     grd.addColorStop(0, 'rgba(255, 255, 255, 1)'); grd.addColorStop(0.2, 'rgba(255, 200, 0, 1)'); grd.addColorStop(0.4, 'rgba(255, 50, 0, 0.8)'); grd.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grd; ctx.fillRect(0, 0, 64, 64); textureLuaTuTien = new THREE.CanvasTexture(canvas); return textureLuaTuTien;
 };
-
 window.phatAmThanhNo = function () {
     const amThanh = new Audio('https://actions.google.com/sounds/v1/weapons/big_explosion_distant.ogg'); amThanh.volume = 1.0; amThanh.play().catch(e => { });
 };
