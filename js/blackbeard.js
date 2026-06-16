@@ -225,7 +225,7 @@
     }
 
     // ==========================================
-    // 🌟 1. HÀM TẠO VẾT NỨT (MƯỢN TỪ BỐ GIÀ)
+    // 🌟 1. HÀM TẠO VẾT NỨT KHÔNG GIAN BẰNG CODE
     // ==========================================
     window.taoVetNutBangCodeBB = function (pos, curUp) {
         const soTia = 15 + Math.floor(Math.random() * 10); 
@@ -258,30 +258,29 @@
         kyNangBB.push({ mesh: line, type: 'VET_NUT_CODE', life: 75, maxDraw: points.length, currentDraw: 0, growth: 8 });
     };
 
-    // 🌟 KỸ XẢO: RUNG LẮC MÀN HÌNH CỦA RÂU ĐEN
-    window.kichHoatDongDatBB = function (intensity = 25, duration = 1500) {
-        if (typeof window.kichHoatDongDat === 'function') {
-            window.kichHoatDongDat(intensity, duration); return; // Nếu có hàm gốc thì xài
-        }
-        if (typeof camera === 'undefined') return;
-        let start = Date.now();
-        let idShake = setInterval(() => {
-            let elapsed = Date.now() - start;
-            if (elapsed > duration) { clearInterval(idShake); return; }
-            let heSo = 1.0 - (elapsed / duration); // Giảm dần độ rung
-            camera.position.x += (Math.random() - 0.5) * (intensity / 10) * heSo;
-            camera.position.y += (Math.random() - 0.5) * (intensity / 10) * heSo;
-            camera.position.z += (Math.random() - 0.5) * (intensity / 10) * heSo;
+    // ==========================================
+    // 🌟 2. HÀM ĐỘNG ĐẤT COPIED 100% TỪ WHITEBEARD
+    // ==========================================
+    window.kichHoatDongDat = function (cuongDo, thoiGian) {
+        let canvas = document.querySelector('canvas');
+        if (!canvas) return;
+        let thoiGianConLai = thoiGian; let cuongDoHienTai = cuongDo;
+        if (window.vongLapDongDat) clearInterval(window.vongLapDongDat);
+        window.vongLapDongDat = setInterval(() => {
+            if (thoiGianConLai <= 0) {
+                clearInterval(window.vongLapDongDat); canvas.style.transform = 'translate(0px, 0px)'; return;
+            }
+            canvas.style.transform = `translate(${(Math.random() - 0.5) * cuongDoHienTai}px, ${(Math.random() - 0.5) * cuongDoHienTai}px)`;
+            thoiGianConLai -= 30; cuongDoHienTai *= 0.95;
         }, 30);
     };
 
     // ==========================================
-    // 🌟 2. HÀM TUNG COMBO (ĐÃ DỌN SẠCH RÁC HOẠT HÌNH)
+    // 🌟 3. HÀM TUNG COMBO CHUẨN ENGINE
     // ==========================================
     window.tungComboBlackbeard = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
         
-        // Cấp thể xác chuẩn
         if (isRemote && casterId) {
             if (typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) {
                 nvc = window.remotePlayers[casterId].meshChar || window.remotePlayers[casterId].mesh;
@@ -301,7 +300,6 @@
             else if (pUp.includes('ATTACK2') || pUp === 'F') animCanMua = 'ATTACK2';
         }
 
-        // KÍCH HOẠT HOẠT HÌNH CHUẨN ENGINE (Không dùng userData rác)
         if (isRemote === false) {
             window.dangMuaChieu = true;
             if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
@@ -309,7 +307,6 @@
             window.henGioTatMuaBB = setTimeout(() => { window.dangMuaChieu = false; }, 600);
         }
 
-        // Trục Cầu
         let upVector = new THREE.Vector3(0, 1, 0);
         if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
             upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
@@ -403,7 +400,6 @@
             let diemBan = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
             if (tayPhaiR) tayPhaiR.getWorldPosition(diemBan);
 
-            // BẢO VỆ HOẠT HÌNH: Chỉ người chơi mới bị chặn IDLE khi gồng
             if (isRemote === false) {
                 window.dangGongChieuR_BB = true;
                 if (!window.playAnimGocBB) window.playAnimGocBB = window.playAnim || window.epNhanVatMua;
@@ -427,7 +423,6 @@
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                
                 let targetBay = mucTieu ? mucTieu.clone() : curNvc.position.clone().add(huongMat.clone().multiplyScalar(150));
                 
                 if (!isRemote) {
@@ -448,7 +443,6 @@
                 blackHole.up.copy(cUp); 
                 blackHole.lookAt(targetBay);
 
-                // NHẢ KHÓA HOẠT HÌNH
                 if (isRemote === false) {
                     window.dangMuaChieu = false;
                     window.dangGongChieuR_BB = false;
@@ -484,10 +478,9 @@
     };
 
     // ==========================================
-    // 🌟 3. VÒNG LẶP VẬT LÝ VÀ KÍCH HOẠT NỨT KHÔNG GIAN
+    // 🌟 4. VÒNG LẶP VẬT LÝ VÀ ĐIỀU KHIỂN HẠT KHÓI
     // ==========================================
     window.updateCombatBB = function () {
-
         let nvc = window.nhanVatChinh;
         if (nvc && !nvc.daGanVuKhiBB && window.HePhaiHienTai && window.HePhaiHienTai.tenPhai === "Tứ Hoàng Râu Đen") {
             let tayPhai = timXuong(nvc, ['RHand_Palm_049', 'RHand']);
@@ -510,7 +503,6 @@
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
-                
                 if (s.targetPos) {
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                     if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
@@ -519,12 +511,10 @@
                 if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
                     if (s.isRemote === false) gaySatThuongBB(s.targetPos, s.damage, s.noBanKinh);
                     else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
-                    
                     taoHieuUngNoDenBB(s.targetPos, false, false, s.upVector);
                     s.life = 0;
                 }
             }
-
             else if (s.type === 'HOA_TRU_DEN') {
                 if (s.mesh.createHologramDone === undefined && s.mesh.children.length > 0) {
                     s.mesh.children[0].rotateY(0.3);
@@ -539,7 +529,6 @@
                     taoHieuUngNoDenBB(s.targetPos, false, true, s.upVector);
                 }
             }
-
             else if (s.type === 'DANG_TU_LUC') {
                 s.life--; 
                 if (s.boneAttach) {
@@ -551,13 +540,11 @@
                 s.mesh.scale.set(scalePulse, scalePulse, scalePulse);
                 if (s.life <= 0) s.life = 0;
             }
-
             else if (s.type === 'BAY_CHAM_PHINH_TO_R') {
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
-                
                 if (s.targetPos) {
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                     if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
@@ -570,20 +557,18 @@
                     const vfx = taoVatTheBB('vfxenergy', 30);
                     vfx.position.copy(s.targetPos); 
                     if (s.upVector) {
-                        vfx.up.copy(s.upVector);
-                        vfx.lookAt(s.targetPos.clone().add(s.upVector));
+                        vfx.up.copy(s.upVector); vfx.lookAt(s.targetPos.clone().add(s.upVector));
                     }
                     scene.add(vfx);
                     kyNangBB.push({ mesh: vfx, type: 'NO_CHUNG_DONG_VFX', life: 100, currentScale: 30, maxScale: 400, growthRate: 15.0 });
                     
-                    // KÍCH HOẠT ĐỘNG ĐẤT & VẾT NỨT BỐ GIÀ TẠI ĐÂY
-                    if (typeof window.kichHoatDongDatBB === 'function') window.kichHoatDongDatBB(25, 1500);
+                    // 🧔 GỌI ĐỘNG ĐẤT NATIVE 100% NHƯ BỐ GIÀ WHITEBEARD
+                    if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(25, 1500);
                     if (typeof window.taoVetNutBangCodeBB === 'function') window.taoVetNutBangCodeBB(s.targetPos, s.upVector);
                     
                     s.life = 0;
                 }
             }
-
             else if (s.type === 'AOE_LUA_DEN') {
                 if (s.mesh.children[1] && s.mesh.children[1].children.length > 0) s.mesh.children[1].children[0].rotateY(-0.1);
                 if (s.life % 5 === 0) taoThamLuaDenBB(s.targetPos, s.noBanKinh, s.upVector);
@@ -595,15 +580,12 @@
                     if (s.mesh.children[0]) s.mesh.children[0].material.opacity = (s.life / 20) * 0.8;
                 }
             }
-
             else if (s.type === 'NO_CHUNG_DONG_VFX') {
                 if (s.currentScale < s.maxScale) {
                     s.currentScale += s.growthRate;
                     s.mesh.scale.set(s.currentScale, s.currentScale, s.currentScale);
                 }
             }
-
-            // VẼ VẾT NỨT TỪ TỪ RA KHÔNG GIAN
             else if (s.type === 'VET_NUT_CODE') {
                 if (s.currentDraw < s.maxDraw) {
                     s.currentDraw += s.growth; 
@@ -620,34 +602,38 @@
             }
         } 
 
-        // 🌟 BẢN VÁ: BƠM KHÍ NÓNG CHO KHÓI ĐEN BỐC CAO LÊN TRỜI
+        // 🌪️ VÒNG LẶP RENDER VÀ XÓA SẠCH RÁC KHÓI ĐEN (CÂN BẰNG LẠI MA TRẬN ĐỘNG LỰC)
         for (let i = hieuUngBB.length - 1; i >= 0; i--) {
             let h = hieuUngBB[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             
-            // 🌟 Đổi từ (-0.1) thành (+0.08) để khói nổ bốc ngược lên theo trục hành tinh!
-            let riseVec = h.upVector ? h.upVector.clone().multiplyScalar(0.08) : new THREE.Vector3(0, 0.08, 0);
+            // Khí nóng bốc lên nhẹ nhàng dọc theo trục upVector của địa hình cầu
+            let riseVec = h.upVector ? h.upVector.clone().multiplyScalar(0.06) : new THREE.Vector3(0, 0.06, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x; 
                 posArr[j * 3 + 1] += h.velocities[j].y; 
                 posArr[j * 3 + 2] += h.velocities[j].z;
                 
-                h.velocities[j].x *= 0.95; h.velocities[j].z *= 0.95; 
-                h.velocities[j].add(riseVec); // Bốc lên liên tục
+                // 🌟 FIX CHÍ MẠNG: Damping ma sát mượt mà cả 3 trục (X, Y, Z) để khói bốc lên cao cuộn trào tự nhiên
+                h.velocities[j].x *= 0.95; 
+                h.velocities[j].y *= 0.95; 
+                h.velocities[j].z *= 0.95; 
+                
+                h.velocities[j].add(riseVec);
             }
             h.system.geometry.attributes.position.needsUpdate = true;
-            h.system.material.opacity = (h.life / 40) * 0.8;
+            h.system.material.opacity = (h.life / 45) * 0.8;
 
             if (h.life <= 0) {
                 if (typeof scene !== 'undefined') scene.remove(h.system);
                 if (h.system.geometry) h.system.geometry.dispose();
                 if (h.system.material) h.system.material.dispose();
-                hieuUngBB.splice(i, 1);
+                hieuUngBB.splice(i, 1); // Xóa gốc rác, giải phóng RAM
             }
         }
 
-        // 🌟 TRẢ LẠI VÒNG LẶP BAY CHỮ SỐ SÁT THƯƠNG
+        // Vòng lặp số sát thương
         for (let i = danhSachSoBayBB.length - 1; i >= 0; i--) {
             let it = danhSachSoBayBB[i]; it.offsetY += 0.05; it.life--;
             if (typeof camera !== 'undefined' && it.pos) {
@@ -661,7 +647,9 @@
                 danhSachSoBayBB.splice(i, 1); window.tongSoChuNoi_BB--;
             }
         }
-    }; // <--- ĐÂY LÀ KẾT THÚC CỦA HÀM UPDATECOMBATBB
+    };
+
+
     if (window.idVongLapCombatBB) clearInterval(window.idVongLapCombatBB);
     window.idVongLapCombatBB = setInterval(window.updateCombatBB, 30);
 
