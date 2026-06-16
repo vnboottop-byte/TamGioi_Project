@@ -204,7 +204,7 @@
     }
 
     // ==========================================
-    // 🏹 TUNG CHIÊU FUJITORA (BỌC THÉP CHỐNG SẬP GAME 100%)
+    // 🏹 TUNG CHIÊU FUJITORA (BẢN FIX BẺ TRỤC BOSS)
     // ==========================================
     window.tungComboFujitora = function (phim, isRemote = false, remoteGoc = null, remoteDich = null, remoteHuong = null, casterId = null, weaponUrl = null) {
         let nvc = (typeof playerModel !== 'undefined' && playerModel) ? playerModel : window.nhanVatChinh;
@@ -267,12 +267,12 @@
 
         let mucTieu = null;
 
-        // 🌟 BẢN VÁ KIM CƯƠNG: CHỐNG SẬP GAME DO NULL POINTER & CHỐNG TỌA ĐỘ NaN
         if (isRemote) {
             if (remoteGoc) {
                 viTriGocToTam.set(remoteGoc.x, remoteGoc.y, remoteGoc.z);
-                if (viTriGocToTam.lengthSq() > 0.001) upVector.copy(viTriGocToTam).normalize();
+                if (viTriGocToTam.lengthSq() > 0.001) upVector.copy(viTriGocToTam).normalize(); // 🌟 Ép trục chuẩn hành tinh cho Boss
             } else {
+                if (nvc.position.lengthSq() > 0.001) upVector.copy(nvc.position).normalize();
                 viTriGocToTam.copy(nvc.position).add(upVector.clone().multiplyScalar(3.5));
             }
             
@@ -315,11 +315,17 @@
             setTimeout(() => {
                 let curNvc = nvc; 
                 if (!curNvc) return;
-                let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
-                if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
-                let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
+                
+                // 🌟 BẢN VÁ: Boss xài Trục Tâm Địa Cầu, Sếp xài Trục Động curNvc.up
+                let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
+                let curDir = new THREE.Vector3(); 
+                if (isRemote) curDir.copy(huongMat);
+                else {
+                    curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                    if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+                }
 
+                let curPos = curNvc.position.clone().add(curUp.clone().multiplyScalar(3.5));
                 let soNgauNhien = Math.floor(Math.random() * 6) + 1;
                 const kq = taoVatTheFuji('KIEMQUANG' + soNgauNhien, 40, false, true);
                 kq.position.copy(curPos).add(curDir.clone().multiplyScalar(2.5));
@@ -341,8 +347,14 @@
                 setTimeout(() => {
                     let curNvc = nvc; 
                     if (!curNvc) return;
-                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                    
+                    let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
+                    let curDir = new THREE.Vector3(); 
+                    if (isRemote) curDir.copy(huongMat);
+                    else {
+                        curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                        if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+                    }
                     let rightVec = new THREE.Vector3().crossVectors(curDir, curUp).normalize();
 
                     const thienThach = taoVatTheFuji('THIENTHACH', 25, true);
@@ -372,8 +384,14 @@
             setTimeout(() => {
                 let curNvc = nvc; 
                 if (!curNvc) return;
-                let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                
+                let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
+                let curDir = new THREE.Vector3(); 
+                if (isRemote) curDir.copy(huongMat);
+                else {
+                    curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                    if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+                }
 
                 const thienThach = taoVatTheFuji('THIENTHACH', 60, true);
 
@@ -403,8 +421,14 @@
                 setTimeout(() => {
                     let curNvc = nvc; 
                     if (!curNvc) return;
-                    let curUp = curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-                    let curDir = new THREE.Vector3(); curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                    
+                    let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
+                    let curDir = new THREE.Vector3(); 
+                    if (isRemote) curDir.copy(huongMat);
+                    else {
+                        curNvc.getWorldDirection(curDir); curDir.projectOnPlane(curUp).normalize();
+                        if (curDir.lengthSq() < 0.001) curDir.set(0, 0, 1).applyQuaternion(curNvc.quaternion).projectOnPlane(curUp).normalize();
+                    }
                     let rightVec = new THREE.Vector3().crossVectors(curDir, curUp).normalize();
 
                     const thienThach = taoVatTheFuji('THIENTHACH', 32, true);
