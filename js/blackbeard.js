@@ -620,15 +620,21 @@
             }
         } 
 
-        // 🌟 TRẢ LẠI VÒNG LẶP RENDER KHÓI ĐEN (CẬP NHẬT VÀ XÓA RÁC)
+        // 🌟 BẢN VÁ: BƠM KHÍ NÓNG CHO KHÓI ĐEN BỐC CAO LÊN TRỜI
         for (let i = hieuUngBB.length - 1; i >= 0; i--) {
             let h = hieuUngBB[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
-            let fallVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.1) : new THREE.Vector3(0, -0.1, 0);
+            
+            // 🌟 Đổi từ (-0.1) thành (+0.08) để khói nổ bốc ngược lên theo trục hành tinh!
+            let riseVec = h.upVector ? h.upVector.clone().multiplyScalar(0.08) : new THREE.Vector3(0, 0.08, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
-                posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                h.velocities[j].x *= 0.95; h.velocities[j].z *= 0.95; h.velocities[j].add(fallVec);
+                posArr[j * 3] += h.velocities[j].x; 
+                posArr[j * 3 + 1] += h.velocities[j].y; 
+                posArr[j * 3 + 2] += h.velocities[j].z;
+                
+                h.velocities[j].x *= 0.95; h.velocities[j].z *= 0.95; 
+                h.velocities[j].add(riseVec); // Bốc lên liên tục
             }
             h.system.geometry.attributes.position.needsUpdate = true;
             h.system.material.opacity = (h.life / 40) * 0.8;
