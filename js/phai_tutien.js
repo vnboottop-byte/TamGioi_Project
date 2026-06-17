@@ -33,7 +33,7 @@ function taoKiemChuan(scaleSize, weaponUrl, auraLevel = 0) { // Thêm tham số 
     let urlCanTai = weaponUrl || window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL;
 
     if (!urlCanTai || urlCanTai.trim() === '') {
-        urlCanTai = 'uploads/anims/PHIKIEM_sword.glb';
+        urlCanTai = 'uploads/anims/1781733774_kaisaKIEM.glb';
     }
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(urlCanTai, (vuKhi) => {
