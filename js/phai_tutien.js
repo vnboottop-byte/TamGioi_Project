@@ -143,7 +143,7 @@ window.tungComboTuTien = function(phim, isRemote = false, remoteGoc = null, remo
     }
 
     let vuKhiThucTe = weaponUrl;
-    if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || 'uploads/anims/PHIKIEM_sword.glb';
+    if (!isRemote && !vuKhiThucTe) vuKhiThucTe = window.VUKHI_HIEN_TAI_CUA_TUTIEN || window.WEAPON_URL || 'uploads/anims/1781733774_kaisaKIEM.glb';
     
     let upVector = new THREE.Vector3(0, 1, 0);
 
@@ -274,7 +274,7 @@ window.updateCombatTuTien = function () {
 
             // 🌟 QUY TẮC A & B: Có link thì xài đồ Sếp mặc, rỗng thì xài đồ Mặc định của Phái!
             if (!linkKiem || linkKiem.trim() === '') {
-                linkKiem = 'uploads/anims/PHIKIEM_sword.glb';
+                linkKiem = 'uploads/anims/1781733774_kaisaKIEM.glb';
             }
 
             // Cập nhật ngược lại biến Toàn Cục để hàm tung chiêu ở trên có đạn mà bắn!
