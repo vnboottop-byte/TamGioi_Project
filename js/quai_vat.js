@@ -1610,7 +1610,8 @@ setInterval(() => {
     // Tìm xem xung quanh có thằng Phantom nào đang bay không
     let botGanToi = 0;
     if (window.danhSachQuaiVat) {
-        botGanToi = window.danhSachQuaiVat.filter(q => q.id && q.id.includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 5000).length;
+        // 👇 SỬA DÒNG NÀY: Ép String(q.id) để không bị lỗi với Boss SQL
+        botGanToi = window.danhSachQuaiVat.filter(q => q.id && String(q.id).includes("PHANTOM") && !q.isDead && q.mesh && q.mesh.position.distanceTo(window.playerModel.position) < 5000).length;
     }
 
     // Nếu vắng bóng Phantom (dưới 1 con) thì chắc chắn 100% đẻ ra 1 con!
