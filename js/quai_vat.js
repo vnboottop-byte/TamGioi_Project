@@ -359,7 +359,7 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
                     // ==========================================
                     if (!tenTrungKhop) {
                         // 1. 🌟 MÁY QUÉT MỚI: GOM VÀO RỔ VÀ BỐC THĂM RANDOM ĐỂ ĐA DẠNG CHIÊU THỨC
-                        let animChayBay = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move|jump|fall/i.test(n));
+                        let animChayBay = danhSachTenGoc.find(n => /move f|swim|fly|run|chaybo|walk|chase|circling|bay|chạy|dibo|move|fall/i.test(n));
                         let animChet = danhSachTenGoc.find(n => /death|die|dead|drop|chet/i.test(n));
 
                         // Gom tất cả hoạt ảnh NGHỈ NGƠI vào rổ rồi bốc thăm
