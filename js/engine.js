@@ -2052,6 +2052,23 @@ function playAnim(animName) {
     currentAnimName = finalAnimName;
 }
 
+
+// 🛡️ HÀM CỤC BỘ: CHỐNG SPAM VÀ ĐÈ LỆNH KHI ĐANG MÚA
+function kichHoatKhiencAnimation(thoiGianTheoAnim) {
+    window.dangMuaChieu = true;
+    window.thoiDiemBatDauMua = Date.now();
+
+    let thoiGianKhoa = thoiGianTheoAnim || 1500;
+    if (thoiGianKhoa < 500) thoiGianKhoa = 500;
+    if (thoiGianKhoa > 2000) thoiGianKhoa = 1500;
+
+    if (window.khoaAnimTimeout) clearTimeout(window.khoaAnimTimeout);
+    window.khoaAnimTimeout = setTimeout(() => {
+        window.dangMuaChieu = false;
+    }, thoiGianKhoa);
+}
+// ĐÃ HOÀN THIỆN KHÔNG SỬA CHỮA NỮA KẾT THÚC !
+
 window.epNhanVatMua = playAnim;
 
 function playIdle() {
