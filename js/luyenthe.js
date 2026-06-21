@@ -257,7 +257,7 @@
 
     };
 
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('phai_luyenthe')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.includes('luyenthe')) {
 
         window.HePhaiHienTai = {
             tenPhai: "Luyện Thể",
