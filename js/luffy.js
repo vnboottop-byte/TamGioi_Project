@@ -509,7 +509,7 @@
                         let k = key.toUpperCase();
                         if (k.includes('NHANROI') || k.includes('IDLE')) animNhanRoi = window.animationsMap[key];
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) window.animationsMap['CHAYBO'] = window.animationsMap[key];
-                        if (k.includes('BAY') || k.includes('FLY')) window.animationsMap['BAY'] = window.animationsMap[key];
+                        if (k.includes('BAY') || k.includes('FLY')) window.animationsMap['CHAYBO'] = window.animationsMap[key];
                     }
                     if (animNhanRoi) { window.animationsMap['NHANROI'] = animNhanRoi; if (window.animationsMapChar) window.animationsMapChar['NHANROI'] = animNhanRoi; }
                 }
