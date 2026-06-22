@@ -715,11 +715,11 @@ let isAdmin = (tenCuaToi === "admin" || tenCuaToi === "kidlo" || window.ROLE ===
 if (isAdmin) {
     // 👑 ADMIN: Tầm nhìn của vị thần
     controls.maxDistance = 1500; // Cho phép lăn chuột ra xa tít mù tắp để nhìn cả bản đồ
-    controls.minDistance = 2;    // Không cho zoom quá gần để tránh chui vào trong bụng Titan
+    controls.minDistance = 5;    // Không cho zoom quá gần để tránh chui vào trong bụng Titan
 } else {
     // 👤 NGƯỜI THƯỜNG: Giữ nguyên như cũ
     controls.maxDistance = 5;   // Chỉ cho phép nhìn quanh quẩn nhân vật
-    controls.minDistance = 2;     // Có thể nhìn sát mặt nhân vật
+    controls.minDistance = 5;     // Có thể nhìn sát mặt nhân vật
 }
 
 camera.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 1, TOA_DO_SPAWN.z + 85);
