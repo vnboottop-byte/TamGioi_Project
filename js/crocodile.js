@@ -264,7 +264,19 @@
         }
 
         if (isRemote === false) {
-            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(animCanMua);
+            // 🌟 BẢN VÁ: BẬT CỜ KẾT NỐI VỚI RỔ COMBO LIÊN HOÀN CỦA ENGINE
+            window.dangMuaChieu = true;
+            
+            let tenAnimation = animCanMua; 
+            // Ưu tiên bốc ngẫu nhiên từ rổ Tấn Công nếu có
+            if (window.KHO_ANIM_TANCONG && window.KHO_ANIM_TANCONG.length > 0) {
+                tenAnimation = window.KHO_ANIM_TANCONG[Math.floor(Math.random() * window.KHO_ANIM_TANCONG.length)];
+            }
+            
+            if (typeof window.epNhanVatMua === 'function') window.epNhanVatMua(tenAnimation);
+            
+            if (window.henGioTatMuaCroc) clearTimeout(window.henGioTatMuaCroc);
+            window.henGioTatMuaCroc = setTimeout(() => { window.dangMuaChieu = false; }, 1500);
         } else {
             if (nvc.userData && nvc.userData.mixer && nvc.userData.animationsMap && nvc.userData.animationsMap[animCanMua]) {
                 nvc.userData.animationsMap[animCanMua].reset().fadeIn(0.2).play();
