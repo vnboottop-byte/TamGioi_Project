@@ -139,6 +139,28 @@
         hieuUngCrocodile.push({ system: pts, velocities: vels, life: 35, upVector: upVector.clone() }); 
     }
 
+    // 🌟 BẢN VÁ BỔ SUNG: TẠO VỆT ĐUÔI CÁT CHO NẮM ĐẤM & MÓC CÂU BAY
+    function taoDuoiCat(pos, dirNguoc, speed) {
+        if (Math.random() > 0.6) return; // Tối ưu hóa: Không spawn quá dày gây lag mobile
+        const soLuong = 3;
+        const geo = new THREE.BufferGeometry();
+        const posArr = new Float32Array(soLuong * 3); const vels = [];
+        for (let i = 0; i < soLuong; i++) {
+            posArr[i * 3] = pos.x + (Math.random() - 0.5) * 2;
+            posArr[i * 3 + 1] = pos.y + (Math.random() - 0.5) * 2;
+            posArr[i * 3 + 2] = pos.z + (Math.random() - 0.5) * 2;
+            // Cát văng ngược lại hướng bay
+            vels.push(dirNguoc.clone().multiplyScalar(Math.random() * speed * 0.3));
+        }
+        geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+        const mat = new THREE.PointsMaterial({
+            color: 0xd2b48c, size: window.isMobile ? 3.0 : 6.0, map: window.textureCat,
+            transparent: true, opacity: 0.5, blending: THREE.NormalBlending, depthWrite: false
+        });
+        const pts = new THREE.Points(geo, mat); scene.add(pts);
+        hieuUngCrocodile.push({ system: pts, velocities: vels, life: 15, upVector: new THREE.Vector3(0, 1, 0) });
+    }
+
     function taoVatTheCrocodile(tenFile, scaleSize) {
         const group = new THREE.Group();
         let urlCanTai = 'uploads/anims/' + tenFile + '.glb';
@@ -368,51 +390,52 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU R: Bão Cát Nhỏ (Cao 10m, Rộng 20m)
+        // 🔥 CHIÊU R: Bão Cát Nhỏ (Cao 12m, Rộng 20m) - DỪNG TẠI CHỖ 3 GIÂY
         // =====================================
         else if (loaiChieu === 'R') {
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
                 let cDir = new THREE.Vector3(); if (isRemote) cDir.copy(huongMat); else { curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize(); }
-                
+
                 let tayPhai = timXuong(curNvc, ['RHand_Palm_042', 'RHand', 'mixamorigRightHand']);
                 let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(2.0));
                 if (tayPhai) tayPhai.getWorldPosition(diemBan);
 
-                const locXoayR = taoLocXoayCat(10, 12); // Rộng 20m (Bán kính 10), Cao 12m
+                const locXoayR = taoLocXoayCat(10, 12);
                 locXoayR.position.copy(diemBan);
                 locXoayR.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cUp);
                 scene.add(locXoayR);
-                
+
                 kyNangCrocodile.push({
-                    mesh: locXoayR, type: 'TORNADO', speed: 4.0, life: 150, 
+                    mesh: locXoayR, type: 'TORNADO', speed: 4.0, life: 150, state: 'BAY_DI', isGiant: false,
                     targetPos: mucTieu.clone(), damage: dameGoc * 0.5, isRemote: isRemote, noBanKinh: 20, upVector: cUp.clone()
                 });
             }, 400);
         }
 
         // =====================================
-        // 🔥 CHIÊU F: Đại Lốc Xoáy Sa Mạc (Cao 50m, Rộng 50m)
+        // 🔥 CHIÊU F: ĐẠI LỐC XOÁY SA MẠC (Cao 100m, Rộng 100m) - DỪNG TẠI CHỖ 5 GIÂY
         // =====================================
         else if (loaiChieu === 'F') {
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
                 let cDir = new THREE.Vector3(); if (isRemote) cDir.copy(huongMat); else { curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize(); }
-                
+
                 let tayPhai = timXuong(curNvc, ['RHand_Palm_042', 'RHand', 'mixamorigRightHand']);
                 let diemBan = curNvc.position.clone();
                 if (tayPhai) tayPhai.getWorldPosition(diemBan);
 
-                const locXoayF = taoLocXoayCat(25, 50); // Rộng 50m (Bán kính 25), Cao 50m
+                // 🌟 BẢN VÁ: TO GẤP ĐÔI CŨ! Bán kính 50 (Rộng 100m), Cao 100m
+                const locXoayF = taoLocXoayCat(50, 100);
                 locXoayF.position.copy(diemBan);
                 locXoayF.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cUp);
                 scene.add(locXoayF);
-                
+
                 kyNangCrocodile.push({
-                    mesh: locXoayF, type: 'TORNADO', speed: 5.5, life: 250, 
-                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 40, upVector: cUp.clone()
+                    mesh: locXoayF, type: 'TORNADO', speed: 5.5, life: 250, state: 'BAY_DI', isGiant: true,
+                    targetPos: mucTieu.clone(), damage: dameGoc * 1.0, isRemote: isRemote, noBanKinh: 50, upVector: cUp.clone()
                 });
             }, 500);
         }
@@ -436,12 +459,16 @@
                             if (hitBox && hitBox.tamNguc) s.targetPos = hitBox.tamNguc.clone();
                         }
                     }
-                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position); 
-                    dummy.up.copy(s.upVector || new THREE.Vector3(0,1,0)); dummy.lookAt(s.targetPos);
-                    s.mesh.quaternion.slerp(dummy.quaternion, 0.2); 
-                    
+                    const dummy = new THREE.Object3D(); dummy.position.copy(s.mesh.position);
+                    dummy.up.copy(s.upVector || new THREE.Vector3(0, 1, 0)); dummy.lookAt(s.targetPos);
+                    s.mesh.quaternion.slerp(dummy.quaternion, 0.2);
+
                     let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                    if (!isNaN(huongBay.x)) {
+                        s.mesh.position.add(huongBay.multiplyScalar(s.speed));
+                        // 🌟 XẢ HIỆU ỨNG ĐUÔI CÁT KHI ĐẠN BAY
+                        if (typeof taoDuoiCat === 'function') taoDuoiCat(s.mesh.position, huongBay.clone().negate(), s.speed);
+                    }
                 } else {
                     s.mesh.translateZ(s.speed);
                 }
@@ -450,21 +477,29 @@
                     let diemNo = (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) ? s.targetPos : s.mesh.position;
                     if (s.isRemote === false) gaySatThuongCrocodile(diemNo, s.damage, s.noBanKinh);
                     else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(diemNo, s.damage, s.noBanKinh);
-                    
+
                     taoHieuUngNoCat(diemNo, false, s.upVector);
                     s.life = 0;
                 }
             }
             else if (s.type === 'TORNADO') {
-                // Xoay lốc xoáy cho nó cuộn cát
-                if (s.mesh.children[0]) s.mesh.children[0].rotateY(0.15);
+                // Xoay lốc xoáy cho nó cuộn cát (Lốc khổng lồ F xoay nhanh hơn)
+                if (s.mesh.children[0]) s.mesh.children[0].rotateY(s.isGiant ? 0.3 : 0.2);
 
-                if (s.targetPos) {
-                    let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
-                    if (!isNaN(huongBay.x)) {
-                        // Trượt trên mặt đất thay vì bay lên trời
-                        let truotVec = huongBay.projectOnPlane(s.upVector).normalize();
-                        s.mesh.position.add(truotVec.multiplyScalar(s.speed));
+                if (s.state === 'BAY_DI') {
+                    if (s.targetPos) {
+                        let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
+                        if (!isNaN(huongBay.x)) {
+                            let truotVec = huongBay.projectOnPlane(s.upVector).normalize();
+                            s.mesh.position.add(truotVec.multiplyScalar(s.speed));
+                        }
+
+                        // 🌟 BẢN VÁ: ĐẾN MỤC TIÊU LÀ CẮM CỌC ĐỨNG YÊN
+                        if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 4) {
+                            s.state = 'DUNG_YEN';
+                            // 3 giây (100 frame) cho chiêu R, 5 giây (166 frame) cho chiêu F
+                            s.life = s.isGiant ? 166 : 100;
+                        }
                     }
                 }
 
@@ -476,11 +511,11 @@
                     taoHieuUngNoCat(s.mesh.position, false, s.upVector);
                 }
 
-                if (s.targetPos && s.mesh.position.distanceTo(s.targetPos) < s.speed + 4 || s.life <= 0) {
-                    // Nổ sát thương bồi cuối cùng
-                    if (s.isRemote === false) gaySatThuongCrocodile(s.targetPos, s.damage * 0.5, s.noBanKinh);
-                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage * 0.5, s.noBanKinh);
-                    taoHieuUngNoCat(s.targetPos, true, s.upVector);
+                if (s.life <= 0) {
+                    // Hết thời gian đứng yên -> Nổ phát cuối cùng rồi biến mất
+                    if (s.isRemote === false) gaySatThuongCrocodile(s.mesh.position, s.damage * 0.5, s.noBanKinh);
+                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.mesh.position, s.damage * 0.5, s.noBanKinh);
+                    taoHieuUngNoCat(s.mesh.position, true, s.upVector);
                     s.life = 0;
                 }
             }
