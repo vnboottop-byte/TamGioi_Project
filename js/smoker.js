@@ -1,6 +1,6 @@
 // ==========================================
 // ⚔️ MÔN PHÁI: THỢ SĂN TRẮNG SMOKER (MOKU MOKU NO MI)
-// 👑 CÔNG NGHỆ: KHÓI TRẮNG TORNADO + ĐẠI VŨ KHÍ KATAKURI + BONE TRACKING
+// 👑 CÔNG NGHỆ: KHÓI TRẮNG TORNADO + ĐẠI VŨ KHÍ RƠI THẲNG ĐỨNG TỪ TRÊN TRỜI
 // ==========================================
 
 (function () {
@@ -330,7 +330,6 @@
         // 🔥 CHIÊU Q: Bắn Bàn Tay Smoker (Trái) -> Bắn Vũ Khí (Phải)
         // =====================================
         if (loaiChieu === 'Q') {
-            // Nòng 1: Tay Trái (LHand_Palm_053)
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
@@ -350,7 +349,6 @@
                 });
             }, 100);
 
-            // Nòng 2: Tay Phải (RHand_Weapon_066, RHand_Palm_064, RHand_Palm_068)
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
@@ -372,7 +370,7 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU E: ĐẠI VŨ KHÍ BỔ CỦI (Copy y chang F Katakuri)
+        // 🔥 CHIÊU E: ĐẠI VŨ KHÍ BỔ CỦI (CÁN TRÊN ĐẦU MỤC TIÊU - CHÉM THẲNG ĐỨNG)
         // =====================================
         else if (loaiChieu === 'E') {
             setTimeout(() => {
@@ -381,12 +379,17 @@
                 let curUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
 
                 const pivotGroup = new THREE.Group(); 
-                pivotGroup.position.copy(curNvc.position).add(curUp.clone().multiplyScalar(50)); 
-                pivotGroup.up.copy(curUp); 
-                pivotGroup.lookAt(mucTieu);
                 
-                const vuKhiGiga = taoVatTheSmoker('vukhismoker', 13.0); 
-                vuKhiGiga.rotateX(-Math.PI * 0.8); 
+                // 🌟 BẢN VÁ: Dời trục xoay (cán vũ khí) lên ngay trên đỉnh đầu MỤC TIÊU (cao 50m)
+                pivotGroup.position.copy(mucTieu).add(curUp.clone().multiplyScalar(50)); 
+                pivotGroup.up.copy(curUp); 
+                pivotGroup.lookAt(mucTieu); // Nhìn thẳng góc 90 độ xuống đất
+                
+                // 🌟 BẢN VÁ: Phóng to vũ khí cho đủ dài chạm đất (Khoảng cách từ Cán đến Đích + bù hao 5m cắm đất)
+                let khoangCachToTarget = pivotGroup.position.distanceTo(mucTieu);
+                const vuKhiGiga = taoVatTheSmoker('vukhismoker', khoangCachToTarget + 5); 
+                
+                vuKhiGiga.rotateX(-Math.PI * 0.8); // Giơ ngược ra sau lấy đà
                 pivotGroup.add(vuKhiGiga); scene.add(pivotGroup);
 
                 kyNangSmoker.push({ 
@@ -397,7 +400,7 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU R: Bão Khói Nhỏ (Cao 12m, Rộng 20m) - DỪNG TẠI CHỖ 3 GIÂY
+        // 🔥 CHIÊU R: Bão Khói Nhỏ (Cao 12m, Rộng 20m)
         // =====================================
         else if (loaiChieu === 'R') {
             setTimeout(() => {
@@ -422,7 +425,7 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU F: ĐẠI LỐC XOÁY KHÓI TRẮNG (Cao 100m, Rộng 100m) - DỪNG TẠI CHỖ 5 GIÂY
+        // 🔥 CHIÊU F: ĐẠI LỐC XOÁY KHÓI TRẮNG (Cao 100m, Rộng 100m)
         // =====================================
         else if (loaiChieu === 'F') {
             setTimeout(() => {
@@ -545,7 +548,6 @@
             let h = hieuUngSmoker[i]; h.life--;
             let posArr = h.system.geometry.attributes.position.array;
             
-            // Khói thường nhẹ hơn cát nên rơi rất chậm hoặc bồng bềnh
             let driftVec = h.upVector ? h.upVector.clone().multiplyScalar(-0.02) : new THREE.Vector3(0, -0.02, 0);
 
             for (let j = 0; j < posArr.length / 3; j++) {
