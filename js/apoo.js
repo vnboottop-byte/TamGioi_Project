@@ -1,6 +1,6 @@
 // ==========================================
 // ⚔️ MÔN PHÁI: HẢI MINH APOO (OTO ITO NO MI - SÓNG ÂM)
-// 👑 CÔNG NGHỆ: TUBE GEOMETRY LĂNG QUĂNG + CỘT ÂM THANH + AOE KHÔNG GIAN
+// 👑 CÔNG NGHỆ: TUBE GEOMETRY + VISUAL 300M + BÁN KÍNH DAME ĐỘC LẬP
 // ==========================================
 
 (function () {
@@ -28,7 +28,6 @@
         danhSachSoBayApoo.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    // Hàm sát thương ĐẶC BIỆT cho Sóng Âm (Gây sát thương toàn bộ mục tiêu trong Bán Kính)
     function gaySatThuongAoEApoo(tamNo, luongSatThuong, banKinh) {
         let mucTieuDaXyLy = new Set();
         if (typeof remotePlayers !== 'undefined') {
@@ -72,23 +71,19 @@
     }
 
     // ==========================================
-    // 2. KHO VŨ KHÍ SÓNG ÂM (TỰ VẼ BẰNG THREE.JS CỰC NHẸ)
+    // 2. KHO VŨ KHÍ SÓNG ÂM
     // ==========================================
-    
-    // Vòng Sóng Âm Phẳng (Dùng cho Q và E)
     function taoVongSongAm(mauSac) {
         const geo = new THREE.TorusGeometry(1, 0.15, 8, 32); 
-        geo.rotateX(Math.PI / 2); // Nằm ngang trên mặt đất
+        geo.rotateX(Math.PI / 2); 
         const mat = new THREE.MeshBasicMaterial({ color: mauSac, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
         return new THREE.Mesh(geo, mat);
     }
 
-    // Vòng Sóng Âm "Lăng Quăng" (Dùng thuật toán uốn éo Curve cho chiêu R và F)
     function taoVongLangQuang(mauSac) {
         class WavyCurve extends THREE.Curve {
             getPoint(t, optionalTarget = new THREE.Vector3()) {
                 let theta = t * Math.PI * 2;
-                // Tạo 10 gợn sóng nhấp nhô lăng quăng
                 let r = 1 + Math.sin(theta * 10) * 0.15; 
                 return optionalTarget.set(Math.cos(theta) * r, 0, Math.sin(theta) * r);
             }
@@ -99,17 +94,14 @@
         return new THREE.Mesh(geo, mat);
     }
 
-    // Cột sóng âm nhảy tung tăng đâm từ dưới đất lên
     function taoCotAmThanh(mauSac, chieuCao) {
         const group = new THREE.Group();
         const m = new THREE.MeshBasicMaterial({ color: mauSac, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
         
-        // Thân cột
         const g1 = new THREE.CylinderGeometry(0.8, 0.1, chieuCao, 8); 
-        g1.translate(0, chieuCao / 2, 0); // Đẩy gốc xuống chạm mặt đất
+        g1.translate(0, chieuCao / 2, 0); 
         const c1 = new THREE.Mesh(g1, m);
         
-        // Nốt nhạc bọc bên ngoài (Vòng tròn nhỏ bao quanh cột)
         const g2 = new THREE.TorusGeometry(1.2, 0.1, 8, 16);
         g2.rotateX(Math.PI / 2);
         g2.translate(0, chieuCao * 0.8, 0);
@@ -119,7 +111,6 @@
         return group;
     }
 
-    // Bụi lấp lánh nổ nhẹ khi đâm lên
     function taoBuiAmThanh(pos, upVector, mauSac) {
         const soLuong = 10;
         const geo = new THREE.BufferGeometry();
@@ -201,9 +192,8 @@
                 upVector = nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
             } else if (nvc.up) { upVector = nvc.up.clone().normalize(); }
 
-            viTriGocToTam = nvc.position.clone(); // Lấy trực tiếp dưới chân người chơi
+            viTriGocToTam = nvc.position.clone(); 
 
-            // Publish dữ liệu qua mạng (Không cần remoteDich vì đây là đòn AoE tỏa ra từ tâm)
             if (window.room && window.room.localParticipant) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'TUNG_CHIEU', skillType: phim, className: 'Apoo', 
@@ -218,16 +208,16 @@
             else if (casterId && typeof window.remotePlayers !== 'undefined' && window.remotePlayers[casterId]) dameGoc = window.remotePlayers[casterId].damage || 100;
         }
 
-        let mauSacAmThanh = [0xff00ff, 0x00ffff, 0xffff00, 0x00ff00, 0xffaa00]; // Tím, Lục, Vàng, Xanh Lá, Cam
+        let mauSacAmThanh = [0xff00ff, 0x00ffff, 0xffff00, 0x00ff00, 0xffaa00]; 
 
         // =====================================
-        // 🔥 CHIÊU Q: 1 Vòng Sóng Âm
+        // 🔥 CHIÊU Q: 1 Vòng Sóng Âm (Lan xa 200m, Sát thương 15m)
         // =====================================
         if (loaiChieu === 'Q') {
             setTimeout(() => {
                 let curNvc = nvc; if (!curNvc) return;
                 let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
-                let tamPhat = curNvc.position.clone().add(cUp.clone().multiplyScalar(0.5)); // Dưới chân
+                let tamPhat = curNvc.position.clone().add(cUp.clone().multiplyScalar(0.5)); 
 
                 const vong = taoVongSongAm(mauSacAmThanh[1]); 
                 vong.position.copy(tamPhat);
@@ -235,15 +225,16 @@
                 vong.scale.set(0.1, 0.1, 0.1);
                 scene.add(vong);
                 
+                // 🌟 Tách Visual (200m) và Damage Radius (15m)
                 kyNangApoo.push({
-                    mesh: vong, type: 'VONG_TOA_RA', speed: 1.5, life: 100, progress: 0.1,
-                    maxScale: 15, damage: dameGoc * 0.4, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
+                    mesh: vong, type: 'VONG_TOA_RA', speed: 4.5, life: 150, progress: 0.1,
+                    visualMaxScale: 200, damageRadius: 15, damage: dameGoc * 0.4, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
                 });
             }, 100);
         }
 
         // =====================================
-        // 🔥 CHIÊU E: 3 Vòng Sóng Âm Cắt Ngang
+        // 🔥 CHIÊU E: 3 Vòng Sóng Âm (Lan xa 250m, Sát thương 20m)
         // =====================================
         else if (loaiChieu === 'E') {
             for(let i=0; i<3; i++) {
@@ -259,18 +250,17 @@
                     scene.add(vong);
                     
                     kyNangApoo.push({
-                        mesh: vong, type: 'VONG_TOA_RA', speed: 2.0, life: 100, progress: 0.1,
-                        maxScale: 20, damage: dameGoc * 0.2, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
+                        mesh: vong, type: 'VONG_TOA_RA', speed: 5.0, life: 150, progress: 0.1,
+                        visualMaxScale: 250, damageRadius: 20, damage: dameGoc * 0.2, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
                     });
                 }, i * 200); 
             }
         }
 
         // =====================================
-        // 🔥 CHIÊU R: 5 Vòng Lăng Quăng + Cột Nhảy Tung Tăng
+        // 🔥 CHIÊU R: 5 Vòng Lăng Quăng (Lan xa 300m, Sát thương 30m)
         // =====================================
         else if (loaiChieu === 'R') {
-            // 5 Vòng lăng quăng
             for(let i=0; i<5; i++) {
                 setTimeout(() => {
                     let curNvc = nvc; if (!curNvc) return;
@@ -284,13 +274,12 @@
                     scene.add(vongLQ);
                     
                     kyNangApoo.push({
-                        mesh: vongLQ, type: 'VONG_TOA_RA', speed: 1.8, life: 100, progress: 0.1,
-                        maxScale: 30, damage: dameGoc * 0.15, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
+                        mesh: vongLQ, type: 'VONG_TOA_RA', speed: 5.5, life: 150, progress: 0.1,
+                        visualMaxScale: 300, damageRadius: 30, damage: dameGoc * 0.15, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
                     });
                 }, i * 150); 
             }
 
-            // Mọc 10 cột âm thanh nhảy tung tăng xung quanh (Bán kính 30)
             for(let k=0; k<10; k++) {
                 setTimeout(() => {
                     let curNvc = nvc; if (!curNvc) return;
@@ -306,7 +295,7 @@
                     const cot = taoCotAmThanh(mauSacAmThanh[Math.floor(Math.random()*mauSacAmThanh.length)], 15);
                     cot.position.copy(diemBan);
                     cot.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), cUp);
-                    cot.scale.set(1, 0.01, 1); // Ẩn dưới đất
+                    cot.scale.set(1, 0.01, 1); 
                     scene.add(cot);
 
                     kyNangApoo.push({
@@ -318,10 +307,9 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU F: 10 Vòng Lăng Quăng + 30 Cột Nhảy Tung Tăng Dữ Dội
+        // 🔥 CHIÊU F: 10 Vòng Lăng Quăng (Lan xa 400m, Sát thương 60m)
         // =====================================
         else if (loaiChieu === 'F') {
-            // 10 Vòng lăng quăng siêu bự
             for(let i=0; i<10; i++) {
                 setTimeout(() => {
                     let curNvc = nvc; if (!curNvc) return;
@@ -335,13 +323,12 @@
                     scene.add(vongLQ);
                     
                     kyNangApoo.push({
-                        mesh: vongLQ, type: 'VONG_TOA_RA', speed: 2.5, life: 100, progress: 0.1,
-                        maxScale: 60, damage: dameGoc * 0.2, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
+                        mesh: vongLQ, type: 'VONG_TOA_RA', speed: 7.0, life: 150, progress: 0.1,
+                        visualMaxScale: 400, damageRadius: 60, damage: dameGoc * 0.2, isRemote: isRemote, upVector: cUp.clone(), tamNo: tamPhat
                     });
                 }, i * 100); 
             }
 
-            // Mọc 30 cột âm thanh bùng nổ khắp map (Bán kính 60)
             for(let k=0; k<30; k++) {
                 setTimeout(() => {
                     let curNvc = nvc; if (!curNvc) return;
@@ -377,32 +364,26 @@
             let s = kyNangApoo[i]; s.life--;
 
             // =========================
-            // LÕI VÒNG TỎA RA (Q, E, R, F)
-            // =========================
-            // =========================
-            // LÕI VÒNG TỎA RA (Q, E, R, F)
+            // LÕI VÒNG TỎA RA (Q, E, R, F) - VISUAL RIÊNG, SÁT THƯƠNG RIÊNG
             // =========================
             if (s.type === 'VONG_TOA_RA') {
                 s.progress += s.speed;
                 s.mesh.scale.set(s.progress, s.progress, s.progress);
                 
-                // Mờ dần theo độ lan tỏa
-                let tileOpacity = 1 - (s.progress / s.maxScale);
+                // Mờ dần theo độ lan tỏa CỦA HÌNH ẢNH (200m - 400m)
+                let tileOpacity = 1 - (s.progress / s.visualMaxScale);
                 s.mesh.material.opacity = Math.max(0, tileOpacity);
-                
-                // 🌟 BẢN VÁ TRỤC CẦU: Xoay quanh trục Y (Local Normal) để vòng sóng âm nằm bẹp trên mặt đất cong, không bị nghiêng lật vẹo méo xệch nữa!
                 s.mesh.rotateY(0.1); 
 
-                // Chốt sát thương khi vòng lan ra được 50% kích thước
-                if (Math.abs(s.progress - (s.maxScale / 2)) < s.speed) {
-                    if (s.isRemote === false) gaySatThuongAoEApoo(s.tamNo, s.damage, s.maxScale);
+                // 🌟 CHỐT SÁT THƯƠNG KHI VÒNG ÂM CHẠM NGƯỠNG "TẦM ĐÁNH" GỐC
+                if (Math.abs(s.progress - s.damageRadius) < s.speed) {
+                    if (s.isRemote === false) gaySatThuongAoEApoo(s.tamNo, s.damage, s.damageRadius);
                     else if (typeof window.gaySatThuongBossToPlayer === 'function') {
-                        // Boss nổ AOE -> Kéo máu Sếp
-                        window.gaySatThuongBossToPlayer(s.tamNo, s.damage, s.maxScale);
+                        window.gaySatThuongBossToPlayer(s.tamNo, s.damage, s.damageRadius);
                     }
                 }
 
-                if (s.progress >= s.maxScale) s.life = 0;
+                if (s.progress >= s.visualMaxScale) s.life = 0;
             }
             
             // =========================
@@ -416,7 +397,7 @@
                     s.mesh.scale.set(1 + s.progress*0.5, s.progress, 1 + s.progress*0.5);
                 }
 
-                // 🌟 BẢN VÁ TRỤC CẦU: Cột nốt nhạc cũng phải xoay quanh trục Y để không bị méo lệch
+                // Cột nốt nhạc cũng phải xoay quanh trục Y để không bị méo lệch
                 if (s.mesh.children[1]) s.mesh.children[1].rotateY(0.2);
 
                 if (s.life === 30) {
