@@ -1,6 +1,6 @@
 // ==========================================
 // ⚔️ MÔN PHÁI: BẠO CHÚA BARTHOLOMEW KUMA (NIKYU NIKYU NO MI)
-// 👑 CÔNG NGHỆ: NHỊP ĐẬP TỤ LỰC (PULSE) TRÊN KHÔNG + MODEL KHỔNG LỒ
+// 👑 CÔNG NGHỆ: NHỊP ĐẬP TỤ LỰC + NẮN TRỤC CẦU TỐI THƯỢNG CHỐNG NGHIÊNG
 // ==========================================
 
 (function () {
@@ -147,7 +147,6 @@
                 v.traverse(c => {
                     if (c.isMesh && c.material) {
                         let dsMat = Array.isArray(c.material) ? c.material : [c.material];
-                        // Vật liệu mờ hơi phát sáng
                         dsMat.forEach(m => { m.transparent = true; m.opacity = 0.9; m.emissive = new THREE.Color(0x3388ff); m.emissiveIntensity = 0.5; });
                     }
                 });
@@ -163,7 +162,7 @@
                 let tiLeChuan = scaleSize / maxDim;
                 v.scale.set(tiLeChuan, tiLeChuan, tiLeChuan);
                 
-                v.rotateX(Math.PI / 2);
+                v.rotateX(Math.PI / 2); // Trục đệm mô hình ngửa lòng bàn tay
                 group.add(v);
             });
         }
@@ -296,9 +295,9 @@
                 let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
                 if (tayPhai) tayPhai.getWorldPosition(diemBan);
 
-                // 🌟 Tăng size Q: 1.5 -> 2.5
                 const tayGau = taoVatTheKuma('taygau', 2.5); 
                 tayGau.position.copy(diemBan).add(cDir.clone().multiplyScalar(1.0));
+                // 🌟 VÁ TRỤC: Khởi tạo góc nhìn không bị lệch
                 tayGau.up.copy(cUp); tayGau.lookAt(mucTieu); scene.add(tayGau);
                 
                 kyNangKuma.push({
@@ -325,7 +324,6 @@
 
                     diemBan.add(rightVec.multiplyScalar((Math.random() - 0.5) * 3)).add(cUp.clone().multiplyScalar((Math.random() - 0.5) * 3));
 
-                    // 🌟 Tăng size E: 1.2 -> 2.0
                     const tayGau = taoVatTheKuma('taygau', 2.0); 
                     tayGau.position.copy(diemBan).add(cDir.clone().multiplyScalar(1.0));
                     tayGau.up.copy(cUp); tayGau.lookAt(mucTieu); scene.add(tayGau);
@@ -349,16 +347,12 @@
                     let cDir = new THREE.Vector3(); if (isRemote) cDir.copy(huongMat); else { curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize(); }
                     
                     let rightVec = new THREE.Vector3().crossVectors(cDir, cUp).normalize();
-                    
-                    let tayChon = (i % 2 === 0) 
-                        ? timXuong(curNvc, ['RHand_Palm_021', 'RHand']) 
-                        : timXuong(curNvc, ['LHand_Palm_017', 'LHand']);
+                    let tayChon = (i % 2 === 0) ? timXuong(curNvc, ['RHand_Palm_021', 'RHand']) : timXuong(curNvc, ['LHand_Palm_017', 'LHand']);
                     
                     let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
                     if (tayChon) tayChon.getWorldPosition(diemBan);
                     else diemBan.add(rightVec.multiplyScalar((i % 2 === 0 ? 1 : -1) * 1.5));
 
-                    // 🌟 Tăng size R: 1.0 -> 1.5, maxScale 4.5 -> 6.0
                     const tayGau = taoVatTheKuma('taygau', 1.5); 
                     tayGau.position.copy(diemBan);
                     tayGau.up.copy(cUp); tayGau.lookAt(mucTieu); scene.add(tayGau);
@@ -379,18 +373,19 @@
             let curNvc = nvc; if (!curNvc) return;
             let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
             
-            // Bắt đầu trên đầu cao hơn một chút (tránh lấp mặt)
             let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(8.0));
             
-            // 🌟 Tăng baseScale: 2.0 -> 3.0, maxScale: 12.0 -> 18.0
             const tayGauUrsus = taoVatTheKuma('taygau', 3.0); 
             tayGauUrsus.position.copy(diemBan);
+            // 🌟 VÁ TRỤC CẦU TỐI THƯỢNG: Chỉ định góc nhìn, dẹp bỏ mọi sự nghiêng ngả vớ vẩn
+            tayGauUrsus.up.copy(cUp);
+            tayGauUrsus.lookAt(mucTieu); 
             scene.add(tayGauUrsus);
             
             kyNangKuma.push({
-                mesh: tayGauUrsus, type: 'URSUS_SHOCK', speed: 8.0, life: 300, // Speed chậm lại: 12 -> 8
+                mesh: tayGauUrsus, type: 'URSUS_SHOCK', speed: 8.0, life: 300, 
                 nvc: curNvc, startTime: Date.now(), baseScale: 3.0, maxScale: 18.0, growthRate: 0.3,
-                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, isRemote: isRemote, noBanKinh: 50, upVector: cUp.clone() // Tăng AoE lên 50
+                targetPos: mucTieu.clone(), damage: dameGoc * 1.5, isRemote: isRemote, noBanKinh: 50, upVector: cUp.clone() 
             });
         }
     };
@@ -413,6 +408,11 @@
                 }
 
                 if (s.targetPos) {
+                    // 🌟 LIÊN TỤC NẮN TRỤC KHI BAY QUA MAP CẦU
+                    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                        s.upVector = s.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                    }
+
                     if (!s.isRemote) {
                         let objMoi = window.layMucTieuGanNhatKuma(s.mesh.position);
                         if (objMoi && objMoi.mesh) {
@@ -439,21 +439,31 @@
                     s.life = 0;
                 }
             }
-            // 🌟 NHỊP ĐẬP TỤ LỰC TRÊN ĐẦU RỒI ĐẨY ĐI
+            // 🌟 NHỊP ĐẬP TỤ LỰC KHÔNG XOAY, CHỈ CO BÓP
             else if (s.type === 'URSUS_SHOCK') {
                 let thoiGianNen = Date.now() - s.startTime;
                 
-                // Nhịp đập Pulse co bóp (Không xoay)
                 let pulseAmplitude = s.baseScale * 0.25; 
                 let pulse = s.baseScale + Math.sin(thoiGianNen * 0.015) * pulseAmplitude;
                 s.mesh.scale.set(pulse, pulse, pulse);
 
+                // 🌟 NẮN TRỤC THEO MỌI THẾ ĐỨNG CỦA NGƯỜI CHƠI
+                if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+                    s.upVector = s.mesh.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize();
+                }
+
                 // Giai đoạn 1: Lơ lửng trên đỉnh đầu tích tụ năng lượng (1.5 giây)
                 if (thoiGianNen < 1500) {
                     if (s.nvc) {
-                        let curUp = s.nvc.up ? s.nvc.up.clone().normalize() : new THREE.Vector3(0,1,0);
-                        // Cố định cao hơn đầu 8m
+                        let curUp = s.nvc.up ? s.nvc.up.clone().normalize() : (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI ? s.nvc.position.clone().sub(window.TAM_HANH_TINH_HIEN_TAI).normalize() : new THREE.Vector3(0,1,0));
                         s.mesh.position.copy(s.nvc.position).add(curUp.multiplyScalar(8.0));
+                        
+                        // Khóa góc độ siêu cứng: Không slerp, không nghiêng ngả rườm rà
+                        const dummy = new THREE.Object3D(); 
+                        dummy.position.copy(s.mesh.position);
+                        dummy.up.copy(curUp); 
+                        dummy.lookAt(s.targetPos);
+                        s.mesh.quaternion.copy(dummy.quaternion); 
                     }
                 } 
                 // Giai đoạn 2: Bắn đi chậm rãi, bóp nát mục tiêu
@@ -475,14 +485,11 @@
                         let huongBay = new THREE.Vector3().subVectors(s.targetPos, s.mesh.position).normalize();
                         if (!isNaN(huongBay.x)) s.mesh.position.add(huongBay.multiplyScalar(s.speed));
                         
-                        // Nổ khi chạm đích (với speed chậm lại để nhìn rõ hơn)
                         if (s.mesh.position.distanceTo(s.targetPos) < s.speed + 5) {
                             if (s.isRemote === false) gaySatThuongKuma(s.targetPos, s.damage, s.noBanKinh);
                             else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                             
-                            // Hạt nổ Big size
                             taoHieuUngNoKuma(s.targetPos, true, s.upVector);
-                            
                             if (typeof window.kichHoatDongDat === 'function') window.kichHoatDongDat(15, 800);
                             s.life = 0;
                         }
@@ -503,7 +510,6 @@
             
             for (let j = 0; j < posArr.length / 3; j++) {
                 posArr[j * 3] += h.velocities[j].x; posArr[j * 3 + 1] += h.velocities[j].y; posArr[j * 3 + 2] += h.velocities[j].z;
-                // Tan vào không khí siêu nhanh
                 h.velocities[j].multiplyScalar(0.9); 
             }
             h.system.geometry.attributes.position.needsUpdate = true;
