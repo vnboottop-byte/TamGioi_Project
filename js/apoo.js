@@ -1,6 +1,6 @@
 // ==========================================
 // ⚔️ MÔN PHÁI: HẢI MINH APOO (OTO ITO NO MI - SÓNG ÂM)
-// 👑 CÔNG NGHỆ: TUBE GEOMETRY + VISUAL 400M + HITBOX CẦU NỞ RỘNG (EXPANDING SPHERE)
+// 👑 CÔNG NGHỆ: CỘT TRỤ SÁT THƯƠNG XUYÊN TRỜI 200M + MÃ ĐỊNH DANH UUID TỐI THƯỢNG
 // ==========================================
 
 (function () {
@@ -28,45 +28,78 @@
         danhSachSoBayApoo.push({ el: div, pos: pos3D.clone(), life: 60, offsetY: 0 });
     }
 
-    // Hàm sát thương chuẩn dành riêng cho các Cột Âm Thanh nổ tại chỗ
-    function gaySatThuongApooChuan(tamNo, luongSatThuong, banKinh) {
+    // 🌟 BẢN VÁ: HITBOX CỘT TRỤ XUYÊN KHÔNG GIAN (Sử dụng uuid chống tịt ngòi)
+    window.gaySatThuongHinhTruApoo = function(tamNo, upVector, banKinh, luongSatThuong, mucTieuDaDanh) {
+        let kiemTraVaDanh = function(mesh, hpThucThe, isNguoiChoi, isBoss, id, tagEl, playAnim) {
+            if (!mesh || mucTieuDaDanh.has(mesh.uuid)) return;
+            
+            let hit = window.layHitbox(mesh);
+            if (!hit || !hit.tamNguc) return;
+            
+            // Tính toán khoảng cách theo Trục Trụ (Bỏ qua chênh lệch độ cao để sóng phẳng vẫn đánh trúng mục tiêu bay)
+            let vecToTarget = new THREE.Vector3().subVectors(hit.tamNguc, tamNo);
+            let docY = vecToTarget.dot(upVector); 
+            let vecNgang = vecToTarget.clone().sub(upVector.clone().multiplyScalar(docY));
+            let khoangCachNgang = vecNgang.length();
+
+            // Sát thương Cột Trụ: Lọt vào bán kính ngang VÀ Cao/Thấp không quá 200m
+            if (khoangCachNgang <= (banKinh + hit.banKinh) && Math.abs(docY) <= 200) {
+                mucTieuDaDanh.add(mesh.uuid);
+                
+                if (isNguoiChoi) {
+                    let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
+                    taoSoSatThuongApoo(posHienSo, luongSatThuong, '#00ffff');
+                    if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
+                } else if (isBoss) {
+                    taoSoSatThuongApoo(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
+                    if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(id, luongSatThuong);
+                } else {
+                    hpThucThe.hp -= luongSatThuong; 
+                    taoSoSatThuongApoo(hit.tamNguc.clone(), luongSatThuong);
+                    
+                    // 🌟 CẬP NHẬT THANH MÁU CHUẨN XÁC KẺO SẾP TƯỞNG ĐÁNH TRƯỢT
+                    if (tagEl) { 
+                        let bar = tagEl.querySelector('div[style*="background"]') || tagEl.querySelector('.hp-bar');
+                        if (bar) bar.style.width = Math.max(0, (hpThucThe.hp / (hpThucThe.maxHp || 4000)) * 100) + '%'; 
+                    }
+
+                    if (hpThucThe.hp <= 0) {
+                        hpThucThe.isDead = true; 
+                        if (typeof playAnim === 'function') playAnim('DIE'); else mesh.visible = false;
+                        if (tagEl) tagEl.style.display = 'none';
+                        if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(500);
+                        setTimeout(() => { 
+                            hpThucThe.hp = hpThucThe.maxHp || 4000; hpThucThe.isDead = false; 
+                            if (typeof playAnim === 'function') playAnim('IDLE'); else mesh.visible = true; 
+                            if (tagEl) { 
+                                let bar = tagEl.querySelector('div[style*="background"]') || tagEl.querySelector('.hp-bar');
+                                if (bar) bar.style.width = '100%'; tagEl.style.display = 'block'; 
+                            } 
+                        }, 5000);
+                    } else { 
+                        if (typeof playAnim === 'function') playAnim('HIT'); 
+                    }
+                }
+            }
+        };
+
         if (typeof remotePlayers !== 'undefined') {
             for (let id in remotePlayers) {
                 let rp = remotePlayers[id];
-                let laBoss = window.danhSachQuaiVat && window.danhSachQuaiVat.some(q => String(q.id) === String(id) || "PLAYER_" + q.id === String(id) || "BOSS_" + q.id === String(id));
+                let laBoss = window.danhSachQuaiVat && window.danhSachQuaiVat.some(q => String(q.id) === String(id) || "PLAYER_" + q.id === String(id));
                 if (rp.status === 'ready' && rp.mesh && !laBoss) {
-                    let hit = window.layHitbox(rp.mesh);
-                    if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
-                        let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                        taoSoSatThuongApoo(posHienSo, luongSatThuong, '#00ffff');
-                        if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, luongSatThuong, posHienSo);
-                    }
+                    kiemTraVaDanh(rp.mesh, rp, true, false, id, null, null);
                 }
             }
         }
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (!quai.isDead && quai.mesh && quai.classCode !== 'TRANG_TRI') {
-                    let hit = window.layHitbox(quai.mesh);
-                    if (tamNo.distanceTo(hit.tamNguc) <= (banKinh + hit.banKinh)) {
-                        if (quai.isBoss) {
-                            taoSoSatThuongApoo(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), luongSatThuong, '#ff00ff');
-                            if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, luongSatThuong);
-                        } else {
-                            quai.hp -= luongSatThuong; taoSoSatThuongApoo(hit.tamNguc.clone(), luongSatThuong);
-                            if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
-                            if (quai.hp <= 0) {
-                                quai.isDead = true; if (typeof quai.playAnim === 'function') quai.playAnim('DIE'); else quai.mesh.visible = false;
-                                if (quai.tagEl) quai.tagEl.style.display = 'none';
-                                if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(500);
-                                setTimeout(() => { quai.hp = quai.maxHp || 4000; quai.isDead = false; if (typeof quai.playAnim === 'function') quai.playAnim('IDLE'); else quai.mesh.visible = true; if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = '100%'; quai.tagEl.style.display = 'block'; } }, 5000);
-                            } else { if (typeof quai.playAnim === 'function') quai.playAnim('HIT'); }
-                        }
-                    }
+                    kiemTraVaDanh(quai.mesh, quai, false, quai.isBoss, quai.id, quai.tagEl, quai.playAnim);
                 }
             });
         }
-    }
+    };
 
     // ==========================================
     // 2. KHO VŨ KHÍ SÓNG ÂM
@@ -209,7 +242,7 @@
         let mauSacAmThanh = [0xff00ff, 0x00ffff, 0xffff00, 0x00ff00, 0xffaa00]; 
 
         // =====================================
-        // 🔥 CHIÊU Q: 1 Vòng Sóng Âm
+        // 🔥 XẢ SKILL SÓNG ÂM
         // =====================================
         if (loaiChieu === 'Q') {
             setTimeout(() => {
@@ -362,60 +395,22 @@
                 s.mesh.material.opacity = Math.max(0, tileOpacity);
                 s.mesh.rotateY(0.1); 
 
-                // 🌟 HITBOX CẦU NỞ RỘNG (EXPANDING SPHERE): Trạm quét chuẩn nhất 3D
-                if (s.progress <= s.damageRadius) {
-                    if (!s.mucTieuDaDanh) s.mucTieuDaDanh = new Set();
+                // 🌟 QUYỀN LỰC SÁT THƯƠNG: Cứ nằm trong vòng Visual là bị kiểm tra!
+                if (!s.mucTieuDaDanh) s.mucTieuDaDanh = new Set();
+                let checkRadius = Math.min(s.progress, s.damageRadius); // Khóa sát thương tối đa không vượt quá 60m dù hình loang ra 400m
 
-                    // 1. Quét Quái & Boss
-                    if (!s.isRemote && typeof window.danhSachQuaiVat !== 'undefined') {
-                        window.danhSachQuaiVat.forEach(quai => {
-                            if (!quai.isDead && quai.mesh && quai.classCode !== 'TRANG_TRI' && !s.mucTieuDaDanh.has(quai.id)) {
-                                let hit = window.layHitbox(quai.mesh);
-                                // Quả cầu nổ nở ra chạm trúng ngực mục tiêu (Tự khớp cả trên không)
-                                if (s.tamNo.distanceTo(hit.tamNguc) <= (s.progress + hit.banKinh)) {
-                                    s.mucTieuDaDanh.add(quai.id);
-                                    if (quai.isBoss) {
-                                        taoSoSatThuongApoo(hit.tamNguc.clone().add(new THREE.Vector3(0, 5, 0)), s.damage, '#ff00ff');
-                                        if (typeof window.chemTrungBoss === 'function') window.chemTrungBoss(quai.id, s.damage);
-                                    } else {
-                                        quai.hp -= s.damage; taoSoSatThuongApoo(hit.tamNguc.clone(), s.damage);
-                                        if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = Math.max(0, (quai.hp / (quai.maxHp || 4000)) * 100) + '%'; }
-                                        if (quai.hp <= 0) {
-                                            quai.isDead = true; if (typeof quai.playAnim === 'function') quai.playAnim('DIE'); else quai.mesh.visible = false;
-                                            if (quai.tagEl) quai.tagEl.style.display = 'none';
-                                            if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(500);
-                                            setTimeout(() => { quai.hp = quai.maxHp || 4000; quai.isDead = false; if (typeof quai.playAnim === 'function') quai.playAnim('IDLE'); else quai.mesh.visible = true; if (quai.tagEl) { let bar = quai.tagEl.querySelector('.hp-bar'); if (bar) bar.style.width = '100%'; quai.tagEl.style.display = 'block'; } }, 5000);
-                                        } else { if (typeof quai.playAnim === 'function') quai.playAnim('HIT'); }
-                                    }
-                                }
-                            }
-                        });
-                    }
-
-                    // 2. Quét Người chơi khác (PVP)
-                    if (!s.isRemote && typeof remotePlayers !== 'undefined') {
-                        for (let id in remotePlayers) {
-                            let rp = remotePlayers[id];
-                            let laBoss = window.danhSachQuaiVat && window.danhSachQuaiVat.some(q => String(q.id) === String(id));
-                            if (rp.status === 'ready' && rp.mesh && !laBoss && !s.mucTieuDaDanh.has(id)) {
-                                let hit = window.layHitbox(rp.mesh);
-                                if (s.tamNo.distanceTo(hit.tamNguc) <= (s.progress + hit.banKinh)) {
-                                    s.mucTieuDaDanh.add(id);
-                                    let posHienSo = hit.tamNguc.clone(); posHienSo.y += (hit.chieuCao / 2);
-                                    taoSoSatThuongApoo(posHienSo, s.damage, '#00ffff');
-                                    if (typeof window.chemTrungNguoiChoi === 'function') window.chemTrungNguoiChoi(id, s.damage, posHienSo);
-                                }
-                            }
-                        }
-                    }
-
-                    // 3. Boss nổ trúng Sếp
-                    if (s.isRemote && typeof window.gaySatThuongBossToPlayer === 'function' && !s.mucTieuDaDanh.has('LOCAL')) {
+                if (!s.isRemote) {
+                    window.gaySatThuongHinhTruApoo(s.tamNo, s.upVector, checkRadius, s.damage, s.mucTieuDaDanh);
+                } else {
+                    if (!s.mucTieuDaDanh.has('LOCAL') && typeof window.gaySatThuongBossToPlayer === 'function') {
                         let nvc = window.nhanVatChinh || (typeof playerModel !== 'undefined' ? playerModel : null);
                         if (nvc) {
                             let hit = window.layHitbox(nvc);
                             if (hit && hit.tamNguc) {
-                                if (s.tamNo.distanceTo(hit.tamNguc) <= (s.progress + hit.banKinh)) {
+                                let vecToTarget = new THREE.Vector3().subVectors(hit.tamNguc, s.tamNo);
+                                let docY = vecToTarget.dot(s.upVector);
+                                let vecNgang = vecToTarget.clone().sub(s.upVector.clone().multiplyScalar(docY));
+                                if (vecNgang.length() <= (checkRadius + hit.banKinh) && Math.abs(docY) <= 200) {
                                     s.mucTieuDaDanh.add('LOCAL');
                                     window.gaySatThuongBossToPlayer(nvc.position, s.damage, 15);
                                 }
@@ -440,8 +435,9 @@
                 if (s.mesh.children[1]) s.mesh.children[1].rotateY(0.2);
 
                 if (s.life === 30) {
-                    if (s.isRemote === false) gaySatThuongApooChuan(s.tamNo, s.damage, 5);
-                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.tamNo, s.damage, 5);
+                    let tempSet = new Set();
+                    if (s.isRemote === false) window.gaySatThuongHinhTruApoo(s.tamNo, s.upVector, 6, s.damage, tempSet);
+                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.tamNo, s.damage, 6);
                     taoBuiAmThanh(s.tamNo, s.upVector, s.mauHienTai);
                 }
 
