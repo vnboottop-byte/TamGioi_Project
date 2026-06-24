@@ -1,6 +1,6 @@
 // ==========================================
 // ⚔️ MÔN PHÁI: THIÊN DẠ XOA DOFLAMINGO (ITO ITO NO MI)
-// 👑 CÔNG NGHỆ: 100% CODE VẼ TƠ + TƠ CẮT KHÔNG GIAN + MỌC TƠ GỐC CHUẨN
+// 👑 CÔNG NGHỆ: TƠ CẮT 500M + MÁY XAY SINH TỐ (CHIÊU R) + BONE TRACKING NGÓN TAY
 // ==========================================
 
 (function () {
@@ -101,8 +101,16 @@
     }
 
     // ==========================================
-    // 2. KHO VŨ KHÍ TƠ (TỰ VẼ BẰNG THREE.JS CỰC NHẸ)
+    // 2. KHO VŨ KHÍ TƠ VÀ QUÉT XƯƠNG NGÓN TAY
     // ==========================================
+    function timXuong(nvc, dsTen) {
+        let xuong = null;
+        nvc.traverse(c => {
+            if (c.isBone && dsTen.includes(c.name) && !xuong) xuong = c;
+        });
+        return xuong;
+    }
+
     function taoHieuUngNoTo(pos, isBig = false, upVector = new THREE.Vector3(0, 1, 0)) {
         if (typeof window.playSound3D === 'function') window.playSound3D('no', pos);
 
@@ -120,7 +128,6 @@
         }
         geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
 
-        // Bọc hạt bụi mịn viền hồng nhạt
         if (!window.textureToMin) {
             let canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64; let ctx = canvas.getContext('2d');
             let gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -141,7 +148,7 @@
         hieuUngDoflamingo.push({ system: pts, velocities: vels, life: 25, upVector: upVector.clone() });
     }
 
-    // Tơ đạn (Q & E) - Dựng theo trục Z để khi Scale nó vươn dài
+    // Tơ đạn (Q, E, R) - Dựng theo trục Z để khi Scale nó vươn dài từ TÂM
     function taoToDan(chieuDai) {
         const geo = new THREE.CylinderGeometry(0.15, 0.05, chieuDai, 5);
         geo.rotateX(Math.PI / 2); // Đặt theo trục Z
@@ -149,37 +156,17 @@
         return new THREE.Mesh(geo, mat);
     }
 
-    // 🌟 BẢN VÁ MỚI: Tơ Đầu Nhọn Cong (Chiêu R) - Mọc từ gốc
-    function taoToCongNhon(chieuDai) {
+    function taoNguSacTo() {
         const group = new THREE.Group();
-        const m = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
-
-        // Trục Z là hướng đâm tới. Dời tâm (translate) về 0 để khi Scale nó dài ra từ GỐC.
-        const l1 = chieuDai * 0.4;
-        const g1 = new THREE.CylinderGeometry(0.8, 1.4, l1, 8);
-        g1.rotateX(Math.PI / 2); g1.translate(0, 0, l1 / 2);
-        const c1 = new THREE.Mesh(g1, m);
-
-        const l2 = chieuDai * 0.4;
-        const g2 = new THREE.CylinderGeometry(0.3, 0.8, l2, 8);
-        g2.rotateX(Math.PI / 2); g2.translate(0, 0, l2 / 2);
-        const c2 = new THREE.Mesh(g2, m);
-        c2.position.set(0, 0, l1);
-        c2.rotation.x = -0.15; // Bẻ gập cong như quả chuối
-
-        const l3 = chieuDai * 0.2;
-        const g3 = new THREE.ConeGeometry(0.3, l3, 8);
-        g3.rotateX(Math.PI / 2); g3.translate(0, 0, l3 / 2);
-        const c3 = new THREE.Mesh(g3, m);
-        c3.position.set(0, 0, l2);
-        c3.rotation.x = -0.15; // Bẻ gập mũi nhọn thêm chút nữa
-
-        c2.add(c3); c1.add(c2);
-        group.add(c1);
+        const khoangCach = 1.5;
+        for (let i = -2; i <= 2; i++) {
+            const soiTo = taoToDan(20);
+            soiTo.position.set(i * khoangCach, 0, 0);
+            group.add(soiTo);
+        }
         return group;
     }
 
-    // Lồng Chim (Birdcage)
     function taoLongChim(banKinh) {
         const geo = new THREE.SphereGeometry(banKinh, 32, 32);
         const mat = new THREE.MeshBasicMaterial({ color: 0xffdddd, wireframe: true, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
@@ -286,7 +273,7 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU Q: ĐẠN TƠ XEN KẼ TRÁI - PHẢI
+        // 🔥 CHIÊU Q: ĐẠN TƠ BẮN TỪ NGÓN TAY XEN KẼ TRÁI - PHẢI
         // =====================================
         if (loaiChieu === 'Q') {
             const soLuong = 8;
@@ -296,11 +283,21 @@
                     let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
                     let cDir = new THREE.Vector3(); if (isRemote) cDir.copy(huongMat); else { curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize(); }
 
-                    let rightVec = new THREE.Vector3().crossVectors(cDir, cUp).normalize();
-                    // Xen kẽ trái (-1) và phải (+1)
-                    let doLechNgang = (i % 2 === 0 ? 1 : -1) * (1.5 + Math.random());
-
-                    let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5)).add(rightVec.multiplyScalar(doLechNgang));
+                    // 🌟 BẢN VÁ: Tìm đúng xương ngón tay bắn tơ
+                    let tayTrai = timXuong(curNvc, ['Bip001 L Finger12_079', 'Bip001_L_Finger1', 'mixamorigLeftHandIndex4', 'LHand_Palm', 'LHand']);
+                    let tayPhai = timXuong(curNvc, ['Bip001 R Finger12_0110', 'Bip001_R_Finger1', 'mixamorigRightHandIndex4', 'RHand_Palm', 'RHand']);
+                    
+                    let ngonDung = (i % 2 === 0) ? tayTrai : tayPhai; // Nhịp chẵn mọc tay trái, lẻ tay phải
+                    let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(3.5));
+                    
+                    if (ngonDung) {
+                        ngonDung.getWorldPosition(diemBan);
+                    } else {
+                        // Dự phòng nếu Model mất xương thì nã từ 2 bên hông
+                        let rightVec = new THREE.Vector3().crossVectors(cDir, cUp).normalize();
+                        let doLechNgang = (i % 2 === 0 ? 1 : -1) * 2;
+                        diemBan.add(rightVec.multiplyScalar(doLechNgang));
+                    }
 
                     const danTo = taoToDan(12);
                     danTo.position.copy(diemBan);
@@ -315,7 +312,7 @@
         }
 
         // =====================================
-        // 🔥 CHIÊU E: LƯỚI TƠ CẮT KHÔNG GIAN (Xuất hiện chém đứt xung quanh mục tiêu)
+        // 🔥 CHIÊU E: LƯỚI TƠ CẮT KHÔNG GIAN DÀI 500M
         // =====================================
         else if (loaiChieu === 'E') {
             const soLuong = 6;
@@ -324,60 +321,55 @@
                     let curNvc = nvc; if (!curNvc) return;
                     let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
 
-                    // Lấy Tâm Ngực mục tiêu làm lõi để chém
                     let center = mucTieu.clone().add(cUp.clone().multiplyScalar(2));
 
-                    // Điểm bắt đầu và kết thúc của sợi tơ vắt ngang qua không gian
-                    let startPos = center.clone().add(new THREE.Vector3((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20));
-                    let endPos = center.clone().add(new THREE.Vector3((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20, (Math.random() - 0.5) * 20));
+                    // 🌟 BẢN VÁ: Tơ dài 500m xé nát không gian
+                    let chieuDai = 500;
+                    let dirCat = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+                    let endPos = center.clone().add(dirCat); 
 
-                    let chieuDai = startPos.distanceTo(endPos);
                     const toCat = taoToDan(chieuDai);
-                    toCat.position.copy(startPos.clone().lerp(endPos, 0.5)); // Đặt ở giữa
+                    toCat.position.copy(center); // Tâm tại ngay ngực địch
                     toCat.up.copy(cUp); toCat.lookAt(endPos);
-                    toCat.scale.set(1, 1, 0.01); // Ban đầu là 1 chấm, sẽ kéo dài ra
+                    toCat.scale.set(1, 1, 0.01); // Thu lại thành điểm rồi giãn ra 500m
                     scene.add(toCat);
 
                     kyNangDoflamingo.push({
                         mesh: toCat, type: 'TO_CAT', speed: 0.15, life: 30,
                         targetPos: center, damage: dameGoc * 0.2, isRemote: isRemote, noBanKinh: 15, upVector: cUp.clone()
                     });
-                }, i * 150); // Xuất hiện lần lượt cắt nát không gian
+                }, i * 150); 
             }
         }
 
         // =====================================
-        // 🔥 CHIÊU R: MƯA TƠ THỨC TỈNH (Gốc đứng yên, mũi nhọn đâm tới)
+        // 🔥 CHIÊU R: MÁY XAY SINH TỐ (Cắt không gian giữ nguyên 3s)
         // =====================================
         else if (loaiChieu === 'R') {
-            const soLuong = 8;
+            const soLuong = 10; // 10 lưỡi dao tơ
             for (let i = 0; i < soLuong; i++) {
                 setTimeout(() => {
                     let curNvc = nvc; if (!curNvc) return;
                     let cUp = isRemote ? upVector.clone() : (curNvc.up ? curNvc.up.clone().normalize() : new THREE.Vector3(0, 1, 0));
-                    let cDir = new THREE.Vector3(); if (isRemote) cDir.copy(huongMat); else { curNvc.getWorldDirection(cDir); cDir.projectOnPlane(cUp).normalize(); }
+                    
+                    let center = mucTieu.clone().add(cUp.clone().multiplyScalar(2));
 
-                    let rightVec = new THREE.Vector3().crossVectors(cDir, cUp).normalize();
+                    // 🌟 BẢN VÁ: Tơ xoay dài 300m cày nát mục tiêu
+                    let chieuDai = 300;
+                    let dirCat = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+                    let endPos = center.clone().add(dirCat); 
 
-                    // Gốc mọc xung quanh Player
-                    let diemBan = curNvc.position.clone().add(cUp.clone().multiplyScalar(0.5))
-                        .add(rightVec.multiplyScalar((Math.random() - 0.5) * 20))
-                        .add(cDir.clone().multiplyScalar((Math.random() - 0.5) * 10));
-
-                    let chieuDai = diemBan.distanceTo(mucTieu) + 15; // Dài vượt qua đích
-                    const toCong = taoToCongNhon(chieuDai);
-                    toCong.position.copy(diemBan);
-                    toCong.up.copy(cUp); toCong.lookAt(mucTieu);
-                    toCong.rotateZ(Math.random() * Math.PI * 2); // Xoay vòng quanh trục đâm để mũi nhọn vây ráp mục tiêu từ nhiều hướng
-
-                    toCong.scale.set(0.01, 0.01, 0.01); // Ban đầu thu nhỏ ẩn dưới đất
-                    scene.add(toCong);
+                    const toCatXoay = taoToDan(chieuDai);
+                    toCatXoay.position.copy(center); 
+                    toCatXoay.up.copy(cUp); toCatXoay.lookAt(endPos);
+                    toCatXoay.scale.set(1, 1, 0.01); 
+                    scene.add(toCatXoay);
 
                     kyNangDoflamingo.push({
-                        mesh: toCong, type: 'TO_DAM', speed: 0.08, life: 60, progress: 0,
-                        targetPos: mucTieu.clone(), damage: dameGoc * 0.15, isRemote: isRemote, noBanKinh: 15, upVector: cUp.clone()
+                        mesh: toCatXoay, type: 'TO_CAT_XOAY', speed: 0.1, life: 100, // Tồn tại 3 giây (100 frames)
+                        targetPos: center, damage: dameGoc * 0.15, isRemote: isRemote, noBanKinh: 30, upVector: cUp.clone()
                     });
-                }, i * 100);
+                }, i * 50); // Bung ra siêu nhanh
             }
         }
 
@@ -439,36 +431,39 @@
                     s.life = 0;
                 }
             }
-            // TƠ CẮT KHÔNG GIAN (Chiêu E)
+            // 🌟 TƠ CẮT KHÔNG GIAN DÀI 500M (Chiêu E)
             else if (s.type === 'TO_CAT') {
                 if (s.mesh.scale.z < 1) {
-                    s.mesh.scale.z += s.speed; // Xé không gian kéo dài tơ ra
+                    s.mesh.scale.z += s.speed; 
                 }
-                if (s.life === 15) { // Sát thương khi tơ vừa cắt xong
+                if (s.life === 15) { 
                     if (s.isRemote === false) gaySatThuongDoflamingo(s.targetPos, s.damage, s.noBanKinh);
                     else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
                     taoHieuUngNoTo(s.mesh.position, false, s.upVector);
                 }
             }
-            // TƠ ĐÂM TỪ GỐC (Chiêu R)
-            else if (s.type === 'TO_DAM') {
-                if (s.progress < 1) {
-                    s.progress += s.speed;
-                    if (s.progress > 1) s.progress = 1;
-                    // Phóng to kích thước từ gốc vút ra
-                    s.mesh.scale.set(s.progress, s.progress, s.progress);
+            // 🌟 MÁY XAY SINH TỐ XOAY 3 GIÂY (Chiêu R)
+            else if (s.type === 'TO_CAT_XOAY') {
+                if (s.mesh.scale.z < 1) {
+                    s.mesh.scale.z += s.speed;
+                } else {
+                    // Xoay điên cuồng cày nát mục tiêu
+                    s.mesh.rotateZ(0.2);
+                    s.mesh.rotateY(0.3);
+                    s.mesh.rotateX(0.1);
                 }
 
-                if (s.life === 30) { // Khi vừa đâm tới thì giật sát thương
-                    if (s.isRemote === false) gaySatThuongDoflamingo(s.targetPos, s.damage, s.noBanKinh);
-                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                // Sát thương rải thảm liên tục khi đang xoay
+                if (s.life % 10 === 0 && s.mesh.scale.z >= 1) {
+                    if (s.isRemote === false) gaySatThuongDoflamingo(s.targetPos, s.damage * 0.5, s.noBanKinh);
+                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage * 0.5, s.noBanKinh);
                     taoHieuUngNoTo(s.targetPos, false, s.upVector);
                 }
 
-                if (s.life < 10) {
-                    // Cắm xong thì rút tơ về nhanh chóng
-                    let tile = Math.max(0, s.life / 10);
-                    s.mesh.scale.set(tile, tile, tile);
+                if (s.life <= 0) {
+                    if (s.isRemote === false) gaySatThuongDoflamingo(s.targetPos, s.damage, s.noBanKinh);
+                    else if (typeof window.gaySatThuongBossToPlayer === 'function') window.gaySatThuongBossToPlayer(s.targetPos, s.damage, s.noBanKinh);
+                    taoHieuUngNoTo(s.targetPos, true, s.upVector);
                 }
             }
             // LỒNG CHIM (Chiêu F)
@@ -562,7 +557,6 @@
                         if (tuKhoaCam.some(tuCam => k.includes(tuCam.toUpperCase()))) continue;
 
                         if (k.includes('NHANROI') || k.includes('IDLE') || k.includes('WAIT')) window.KHO_ANIM_NHANROI.push(key);
-                        // 🌟 TỰ ĐỘNG GOM SẠCH 32 CHIÊU ATTACK VÀO RỔ
                         if (k.includes('ATTACK') || k.includes('SKILL')) window.KHO_ANIM_TANCONG.push(key);
                         if (k.includes('BAY') || k.includes('FLY')) { coBay = true; animBay = clip; window.animationsMap['BAY'] = animBay; }
                         if (k.includes('CHAYBO') || k.includes('RUN') || k.includes('WALK')) { coChay = true; animChay = clip; window.animationsMap['CHAYBO'] = animChay; }
