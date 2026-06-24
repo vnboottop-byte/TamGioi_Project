@@ -379,6 +379,9 @@
             // =========================
             // LÕI VÒNG TỎA RA (Q, E, R, F)
             // =========================
+            // =========================
+            // LÕI VÒNG TỎA RA (Q, E, R, F)
+            // =========================
             if (s.type === 'VONG_TOA_RA') {
                 s.progress += s.speed;
                 s.mesh.scale.set(s.progress, s.progress, s.progress);
@@ -386,7 +389,9 @@
                 // Mờ dần theo độ lan tỏa
                 let tileOpacity = 1 - (s.progress / s.maxScale);
                 s.mesh.material.opacity = Math.max(0, tileOpacity);
-                s.mesh.rotateZ(0.1); // Xoay nhẹ vòng để tạo cảm giác xoáy lăng quăng
+                
+                // 🌟 BẢN VÁ TRỤC CẦU: Xoay quanh trục Y (Local Normal) để vòng sóng âm nằm bẹp trên mặt đất cong, không bị nghiêng lật vẹo méo xệch nữa!
+                s.mesh.rotateY(0.1); 
 
                 // Chốt sát thương khi vòng lan ra được 50% kích thước
                 if (Math.abs(s.progress - (s.maxScale / 2)) < s.speed) {
@@ -411,8 +416,8 @@
                     s.mesh.scale.set(1 + s.progress*0.5, s.progress, 1 + s.progress*0.5);
                 }
 
-                // Xoay nốt nhạc trên đỉnh
-                if (s.mesh.children[1]) s.mesh.children[1].rotateZ(0.2);
+                // 🌟 BẢN VÁ TRỤC CẦU: Cột nốt nhạc cũng phải xoay quanh trục Y để không bị méo lệch
+                if (s.mesh.children[1]) s.mesh.children[1].rotateY(0.2);
 
                 if (s.life === 30) {
                     // Cột đâm trúng -> Nổ sát thương AOE nhỏ tại chân cột
