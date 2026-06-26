@@ -525,11 +525,11 @@
     // ==========================================
     // 🌟 KHỞI TẠO HỆ PHÁI
     // ==========================================
-    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('spyro')) {
+    if (window.SCRIPT_PHAI_CUA_TOI && window.SCRIPT_PHAI_CUA_TOI.toLowerCase().includes('rong')) {
         window.HePhaiHienTai = {
-            tenPhai: "spyro",
+            tenPhai: "rong",
             khoiTao: function () {
-                console.log("🔥 spyro (Mở Khóa SPAM 100% - Trục Cầu Chuẩn - Sát thương to)!");
+                console.log("🔥 rong (Mở Khóa SPAM 100% - Trục Cầu Chuẩn - Sát thương to)!");
 
                 // 🌟 BẢN VÁ: PRELOAD RAM TẢI TRƯỚC VŨ KHÍ 
                 if (typeof window.taiHoacNhanBanAsset === 'function') {
