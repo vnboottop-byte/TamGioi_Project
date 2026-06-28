@@ -2174,7 +2174,7 @@ function animate() {
             var viTriCu = playerModel.position.clone();
 
             // ==========================================
-            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHẶN TRẦN TRỜI & TRƯỢT VÁCH MÊ CUNG)
+            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHẶN TRẦN TRỜI & TRƯỢT VÁCH MÊ CUNG KÉP)
             // ==========================================
             function kiemTraVaChamKetGioi(huongDi, khoangCachBuffer) {
                 if (!window.danhSachBauTroi || window.danhSachBauTroi.length === 0) return false;
@@ -2185,7 +2185,7 @@ function animate() {
 
                 let huongLen = playerModel.up.clone().normalize();
 
-                // 🌟 VÁ LỖI 1: Bắn tia radar từ ngang hông (1.0m) thay vì đỉnh đầu (1.5m) để luồn lách qua mê cung mượt hơn
+                // 🌟 BẢN VÁ 1: Bắn tia radar từ ngang rốn (1.0m) thay vì đỉnh đầu (1.5m) để không bị vướng trần mê cung
                 let diemBan = playerModel.position.clone().add(huongLen.clone().multiplyScalar(1.0));
 
                 window.radarBauTroi.set(diemBan, huongDi);
@@ -2196,49 +2196,50 @@ function animate() {
                     let laVachTuong = false;
                     let worldNormal = new THREE.Vector3(0, 1, 0);
 
-                    // 🌟 VÁ LỖI 2: Phân biệt mặt phẳng đụng phải là Bầu trời hay Vách tường Mê Cung
+                    // 🌟 BẢN VÁ 2: Phân biệt mặt phẳng đụng phải là Bầu trời (Trần ngang) hay Vách Mê Cung (Đứng thẳng)
                     if (diemCham.face && diemCham.face.normal) {
-                        // Tính góc 3D bề mặt
-                        worldNormal = diemCham.face.normal.clone().transformDirection(diemCham.object.matrixWorld).normalize();
+                        // Ép đổi trục Normal từ hệ tọa độ của bức tường ra ngoài Vũ trụ
+                        let normalMatrix = new THREE.Matrix3().getNormalMatrix(diemCham.object.matrixWorld);
+                        worldNormal = diemCham.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+
+                        // Nếu góc của mặt phẳng song song với trục đứng -> Nó là bức tường thẳng của Mê Cung!
                         let gocDot = Math.abs(worldNormal.dot(huongLen));
-                        // Nếu bề mặt vuông góc với trục đứng -> Đó là bức tường thẳng của Mê Cung!
                         if (gocDot < 0.5) laVachTuong = true;
                     }
 
-                    // 🌟 VÁ LỖI 3: Gỡ bỏ lớp giáp tàng hình 2.5m! 
-                    // Vách Mê Cung ép Hitbox nhỏ lại chỉ 0.6m để lách lọt khe hẹp dễ dàng.
                     let tocDoChay = khoangCachBuffer - 2.0;
-                    let bufferThucTe = laVachTuong ? Math.max(0.6, tocDoChay + 0.6) : khoangCachBuffer;
+                    // 🌟 BẢN VÁ 3: Vách mê cung bóp Hitbox lại còn 0.4m (Lách qua hành lang 3m dư sức). Mây trời giữ nguyên Hitbox khổng lồ.
+                    let bufferThucTe = laVachTuong ? (tocDoChay + 0.4) : khoangCachBuffer;
 
                     if (diemCham.distance < bufferThucTe) {
                         if (laVachTuong) {
-                            // 🌟 VÁ LỖI 4: KỸ THUẬT WALL-SLIDING (TRƯỢT TƯỜNG CỦA GAME AAA)
+                            // 🌟 BẢN VÁ 4: KỸ THUẬT TRƯỢT TƯỜNG KÉP (DOUBLE-CHECK SLIDING)
                             let huongTruot = huongDi.clone().projectOnPlane(worldNormal).normalize();
 
-                            // Nếu húc vuông góc 90 độ thẳng mặt vào tường -> Dừng lại
+                            // Nếu húc vuông góc 90 độ thẳng mặt vào tường (hết đường trượt) -> Khóa chết đứng im
                             if (huongTruot.lengthSq() < 0.01) return true;
 
-                            // Ép hướng di chuyển của nhân vật bẻ cong, trượt men theo mặt vách tường
-                            huongDi.copy(huongTruot);
+                            // 🕵️ Bắn Radar lần 2 theo Hướng Trượt để check xem có kẹt góc kẹt hẻm không!
+                            window.radarBauTroi.set(diemBan, huongTruot);
+                            let chamTruot = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
 
-                            // Chống lún (Clip): Đẩy nhẹ nhân vật ra khỏi tường vừa đủ chạm Hitbox
-                            let doLun = bufferThucTe - diemCham.distance;
-                            if (doLun > 0) {
-                                playerModel.position.add(worldNormal.multiplyScalar(doLun));
+                            if (chamTruot.length > 0 && chamTruot[0].distance < (tocDoChay + 0.4)) {
+                                // Phía trước là góc chữ V kẹt rồi -> Báo va chạm và Stop hoàn toàn chống lọt Map!
+                                return true;
                             }
 
-                            // 🌟 Quan trọng: Trả về FALSE để hệ thống CỨ TƯỞNG là không đụng tường, 
-                            // và cho phép nhân vật lướt bộ theo hướng MỚI (đã bẻ cong men theo tường)!
+                            // Kênh trượt an toàn -> Cập nhật hướng đi thành hướng trượt dọc theo bức tường và cho đi tiếp!
+                            huongDi.copy(huongTruot);
                             return false;
                         } else {
-                            // Nếu là Bầu Trời (Mây ngang trần) thì bị dội ngược xuống đất
-                            playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
+                            // Nếu là Bầu Trời thì dội ngược cực nhẹ 0.05m để không lọt vũ trụ
+                            playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.05));
                             if (!window.dangBaoBauTroi) {
                                 window.dangBaoBauTroi = true;
                                 if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
                                 setTimeout(() => window.dangBaoBauTroi = false, 2000);
                             }
-                            return true; // Khóa lệnh di chuyển
+                            return true; // Khóa lệnh
                         }
                     }
                 }
