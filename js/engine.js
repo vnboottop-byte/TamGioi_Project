@@ -2174,7 +2174,7 @@ function animate() {
             var viTriCu = playerModel.position.clone();
 
             // ==========================================
-            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHỈ CHẶN TRẦN TRỜI - KHÔNG CHẶN VÁCH)
+            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHỈ CHẶN TRẦN TRỜI VÀ TRƯỢT VÁCH MÊ CUNG)
             // ==========================================
             function kiemTraVaChamKetGioi(huongDi, khoangCachBuffer) {
                 if (!window.danhSachBauTroi || window.danhSachBauTroi.length === 0) return false;
@@ -2184,31 +2184,53 @@ function animate() {
                 }
 
                 let huongLen = playerModel.up.clone().normalize();
-                let diemBan = playerModel.position.clone().add(huongLen.clone().multiplyScalar(1.5));
+
+                // 🌟 BẢN VÁ AAA: Bắn tia radar từ ngang thắt lưng (1.0m) thay vì đỉnh đầu (1.5m) để luồn lách qua vách mê cung chuẩn xác hơn!
+                let diemBan = playerModel.position.clone().add(huongLen.clone().multiplyScalar(1.0));
 
                 window.radarBauTroi.set(diemBan, huongDi);
                 let chamBauTroi = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
 
+                if (chamBauTroi.length > 0) {
+                    let diemCham = chamBauTroi[0];
 
+                    // 🌟 TÌM RA THỦ PHẠM: Phân biệt Bầu Trời (Ngang) và Vách Mê Cung (Đứng thẳng)
+                    let isVachNgang = false;
+                    let worldNormal = new THREE.Vector3(0, 1, 0);
 
-
-
-
-                if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
-                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.1m để chống lọt do lag phím!
-                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
-                    if (!window.dangBaoBauTroi) {
-                        window.dangBaoBauTroi = true;
-                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("😈", "#3498db");
-                        setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                    if (diemCham.face && diemCham.face.normal) {
+                        // Tính toán pháp tuyến 3D thực tế của bề mặt vừa đụng
+                        worldNormal = diemCham.face.normal.clone().transformDirection(diemCham.object.matrixWorld).normalize();
+                        // Nếu góc của bức tường vuông góc với trục Trái đất -> Nó là bức tường thẳng đứng!
+                        let gocDot = Math.abs(worldNormal.dot(huongLen));
+                        if (gocDot < 0.5) isVachNgang = true;
                     }
-                    return true;
+
+                    // 🌟 ÉP HITBOX: Vách mê cung thì bóp lớp giáp nhỏ lại (0.5m để đi lọt khe). Mây thì giữ nguyên Buffer khổng lồ.
+                    let bufferThucTe = isVachNgang ? 0.5 : khoangCachBuffer;
+
+                    if (diemCham.distance < bufferThucTe) {
+                        if (isVachNgang) {
+                            // 🌟 KỸ THUẬT GAME AAA (WALL SLIDING): Trượt men theo bức tường thay vì đứng khựng lại!
+                            let lucTruot = huongDi.clone().projectOnPlane(worldNormal).normalize();
+                            // Bơm một lực nhẹ để đẩy nhân vật trượt đi qua khúc cua
+                            playerModel.position.add(lucTruot.multiplyScalar(0.05));
+                        } else {
+                            // Đụng đầu vào trần Bầu Trời -> Đẩy dội ngược lại xuống đất
+                            playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
+                        }
+
+                        if (!window.dangBaoBauTroi) {
+                            window.dangBaoBauTroi = true;
+                            // Hiện thông báo riêng cho Mê Cung và Bầu Trời
+                            if (typeof window.hienThongBaoBoGoc === 'function') {
+                                window.hienThongBaoBoGoc(isVachNgang ? "🧱 Đang ép sát vách Mê cung!" : "☁️ Cảnh báo: Chạm trần Bầu Trời!", "#3498db");
+                            }
+                            setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                        }
+                        return true;
+                    }
                 }
-
-
-
-
-                
                 return false;
             }
 
