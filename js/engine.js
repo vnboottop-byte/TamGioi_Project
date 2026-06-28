@@ -2194,7 +2194,7 @@ function animate() {
                     playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.5));
                     if (!window.dangBaoBauTroi) {
                         window.dangBaoBauTroi = true;
-                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
+                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("😈", "#3498db");
                         setTimeout(() => window.dangBaoBauTroi = false, 2000);
                     }
                     return true;
