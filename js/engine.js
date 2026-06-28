@@ -2190,8 +2190,8 @@ function animate() {
                 let chamBauTroi = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
 
                 if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
-                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.5m để chống lọt do lag phím!
-                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.5));
+                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.001m để chống lọt do lag phím!
+                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.001));
                     if (!window.dangBaoBauTroi) {
                         window.dangBaoBauTroi = true;
                         if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("😈", "#3498db");
