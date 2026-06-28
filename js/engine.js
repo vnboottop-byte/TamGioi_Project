@@ -2192,6 +2192,22 @@ function animate() {
 
 
 
+
+
+                if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
+                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.1m để chống lọt do lag phím!
+                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
+                    if (!window.dangBaoBauTroi) {
+                        window.dangBaoBauTroi = true;
+                        if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("😈", "#3498db");
+                        setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                    }
+                    return true;
+                }
+
+
+
+
                 
                 return false;
             }
