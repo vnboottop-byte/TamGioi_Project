@@ -2190,12 +2190,12 @@ function animate() {
                 let chamBauTroi = window.radarBauTroi.intersectObjects(window.danhSachBauTroi, true);
 
                 if (chamBauTroi.length > 0 && chamBauTroi[0].distance < khoangCachBuffer) {
-                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.001m để chống lọt do lag phím!
-                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.001));
+                    // 🌟 TỐI HẬU THUẬT: Dội ngược Sếp lại 0.000m để chống lọt do lag phím!
+                    playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.000));
                     if (!window.dangBaoBauTroi) {
                         window.dangBaoBauTroi = true;
                         if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("😈", "#3498db");
-                        setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                        setTimeout(() => window.dangBaoBauTroi = false, 1000);
                     }
                     return true;
                 }
