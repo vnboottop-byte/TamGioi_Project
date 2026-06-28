@@ -2174,7 +2174,7 @@ function animate() {
             var viTriCu = playerModel.position.clone();
 
             // ==========================================
-            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHỈ CHẶN TRẦN TRỜI VÀ TRƯỢT VÁCH MÊ CUNG)
+            // ⚡ LƯỚI ĐIỆN KHÔNG GIAN (CHẶN TRẦN TRỜI & TRƯỢT VÁCH MÊ CUNG)
             // ==========================================
             function kiemTraVaChamKetGioi(huongDi, khoangCachBuffer) {
                 if (!window.danhSachBauTroi || window.danhSachBauTroi.length === 0) return false;
@@ -2185,7 +2185,7 @@ function animate() {
 
                 let huongLen = playerModel.up.clone().normalize();
 
-                // 🌟 BẢN VÁ AAA: Bắn tia radar từ ngang thắt lưng (1.0m) thay vì đỉnh đầu (1.5m) để luồn lách qua vách mê cung chuẩn xác hơn!
+                // 🌟 VÁ LỖI 1: Bắn tia radar từ ngang hông (1.0m) thay vì đỉnh đầu (1.5m) để luồn lách qua mê cung mượt hơn
                 let diemBan = playerModel.position.clone().add(huongLen.clone().multiplyScalar(1.0));
 
                 window.radarBauTroi.set(diemBan, huongDi);
@@ -2193,42 +2193,53 @@ function animate() {
 
                 if (chamBauTroi.length > 0) {
                     let diemCham = chamBauTroi[0];
-
-                    // 🌟 TÌM RA THỦ PHẠM: Phân biệt Bầu Trời (Ngang) và Vách Mê Cung (Đứng thẳng)
-                    let isVachNgang = false;
+                    let laVachTuong = false;
                     let worldNormal = new THREE.Vector3(0, 1, 0);
 
+                    // 🌟 VÁ LỖI 2: Phân biệt mặt phẳng đụng phải là Bầu trời hay Vách tường Mê Cung
                     if (diemCham.face && diemCham.face.normal) {
-                        // Tính toán pháp tuyến 3D thực tế của bề mặt vừa đụng
+                        // Tính góc 3D bề mặt
                         worldNormal = diemCham.face.normal.clone().transformDirection(diemCham.object.matrixWorld).normalize();
-                        // Nếu góc của bức tường vuông góc với trục Trái đất -> Nó là bức tường thẳng đứng!
                         let gocDot = Math.abs(worldNormal.dot(huongLen));
-                        if (gocDot < 0.5) isVachNgang = true;
+                        // Nếu bề mặt vuông góc với trục đứng -> Đó là bức tường thẳng của Mê Cung!
+                        if (gocDot < 0.5) laVachTuong = true;
                     }
 
-                    // 🌟 ÉP HITBOX: Vách mê cung thì bóp lớp giáp nhỏ lại (0.5m để đi lọt khe). Mây thì giữ nguyên Buffer khổng lồ.
-                    let bufferThucTe = isVachNgang ? 0.5 : khoangCachBuffer;
+                    // 🌟 VÁ LỖI 3: Gỡ bỏ lớp giáp tàng hình 2.5m! 
+                    // Vách Mê Cung ép Hitbox nhỏ lại chỉ 0.6m để lách lọt khe hẹp dễ dàng.
+                    let tocDoChay = khoangCachBuffer - 2.0;
+                    let bufferThucTe = laVachTuong ? Math.max(0.6, tocDoChay + 0.6) : khoangCachBuffer;
 
                     if (diemCham.distance < bufferThucTe) {
-                        if (isVachNgang) {
-                            // 🌟 KỸ THUẬT GAME AAA (WALL SLIDING): Trượt men theo bức tường thay vì đứng khựng lại!
-                            let lucTruot = huongDi.clone().projectOnPlane(worldNormal).normalize();
-                            // Bơm một lực nhẹ để đẩy nhân vật trượt đi qua khúc cua
-                            playerModel.position.add(lucTruot.multiplyScalar(0.05));
-                        } else {
-                            // Đụng đầu vào trần Bầu Trời -> Đẩy dội ngược lại xuống đất
-                            playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
-                        }
+                        if (laVachTuong) {
+                            // 🌟 VÁ LỖI 4: KỸ THUẬT WALL-SLIDING (TRƯỢT TƯỜNG CỦA GAME AAA)
+                            let huongTruot = huongDi.clone().projectOnPlane(worldNormal).normalize();
 
-                        if (!window.dangBaoBauTroi) {
-                            window.dangBaoBauTroi = true;
-                            // Hiện thông báo riêng cho Mê Cung và Bầu Trời
-                            if (typeof window.hienThongBaoBoGoc === 'function') {
-                                window.hienThongBaoBoGoc(isVachNgang ? "🧱 Đang ép sát vách Mê cung!" : "☁️ Cảnh báo: Chạm trần Bầu Trời!", "#3498db");
+                            // Nếu húc vuông góc 90 độ thẳng mặt vào tường -> Dừng lại
+                            if (huongTruot.lengthSq() < 0.01) return true;
+
+                            // Ép hướng di chuyển của nhân vật bẻ cong, trượt men theo mặt vách tường
+                            huongDi.copy(huongTruot);
+
+                            // Chống lún (Clip): Đẩy nhẹ nhân vật ra khỏi tường vừa đủ chạm Hitbox
+                            let doLun = bufferThucTe - diemCham.distance;
+                            if (doLun > 0) {
+                                playerModel.position.add(worldNormal.multiplyScalar(doLun));
                             }
-                            setTimeout(() => window.dangBaoBauTroi = false, 2000);
+
+                            // 🌟 Quan trọng: Trả về FALSE để hệ thống CỨ TƯỞNG là không đụng tường, 
+                            // và cho phép nhân vật lướt bộ theo hướng MỚI (đã bẻ cong men theo tường)!
+                            return false;
+                        } else {
+                            // Nếu là Bầu Trời (Mây ngang trần) thì bị dội ngược xuống đất
+                            playerModel.position.add(huongDi.clone().negate().multiplyScalar(0.1));
+                            if (!window.dangBaoBauTroi) {
+                                window.dangBaoBauTroi = true;
+                                if (typeof window.hienThongBaoBoGoc === 'function') window.hienThongBaoBoGoc("☁️ Cảnh báo: Chạm giới hạn Bầu Trời!", "#3498db");
+                                setTimeout(() => window.dangBaoBauTroi = false, 2000);
+                            }
+                            return true; // Khóa lệnh di chuyển
                         }
-                        return true;
                     }
                 }
                 return false;
