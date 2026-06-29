@@ -3291,7 +3291,7 @@ setInterval(() => {
 
         let rLoad = window.isMobile ? 2000 : 4000;    // Cách 4km nạp Đất
         let rBoss = window.isMobile ? 1500 : 3000;    // Cách 3km nạp Boss
-        let rUnload = window.isMobile ? 3000 : 6000;  // Xa 6km là đốt rác Map
+        let rUnload = window.isMobile ? 2500 : 5000;  // Xa 6km là đốt rác Map
 
         // ==========================================
         // 🟢 TẦNG 1: LOAD ĐẤT ĐAI
