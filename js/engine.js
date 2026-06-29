@@ -2804,6 +2804,12 @@ window.loadTatCaMapTuSQL = function (zoneId = window.ZONE_ID) {
 
     // 🛑 LÁ CHẮN 2: Bơm thuốc nổ CHỐNG CACHE LITESPEED (v=Date.now)
     fetch('api/get_maps.php?zone=' + zoneId + '&v=' + Date.now()).then(res => res.json()).then(data => {
+
+        if (window.ZONE_ID !== zoneId) {
+            window.daNhanDanhSachMap = true;
+            return;
+        }
+
         if (data.status === 'success' && data.data) {
             window.THONG_TIN_CAC_MAP = data.data.map(m => ({
                 ...m, isLoaded: false, isLoading: false, mesh3D: null, mixer: null, matDatMeshes: []
@@ -3544,6 +3550,13 @@ window.kiemTraSafeZone = function (pos) {
 window.DANH_SACH_CONG = [];
 window.dangDichChuyen = false;
 
+
+
+
+
+
+
+
 // 1. Hàm vẽ bảng tên Neon lơ lửng trên Cổng
 window.taoBienTenCong = function (name, x, y, z) {
     let canvas = document.createElement('canvas');
@@ -3563,14 +3576,13 @@ window.taoBienTenCong = function (name, x, y, z) {
     sprite.position.copy(pos).add(pos.clone().sub(tam).normalize().multiplyScalar(10));
     sprite.scale.set(40, 10, 1);
     scene.add(sprite);
+
+    return sprite; // 🌟 BẢN VÁ: Bắt buộc trả về để Cỗ máy Dọn Rác nhận diện được!
 };
 
 // 2. Hàm giả lập nhét Cổng vào Map
 window.khoiTaoMotCong = function (data) {
     // Sếp dùng GLTFLoader để load data.model_url giống như load Map
-    // Sau khi load xong, nhét lưới (Mesh) vào mảng:
-    // window.DANH_SACH_CONG.push({ mesh: gltf.scene, dest: new THREE.Vector3(data.dest_x, data.dest_y, data.dest_z), name: data.ten_dich_den });
-    // Và gọi: window.taoBienTenCong(data.ten_dich_den, data.pos_x, data.pos_y, data.pos_z);
 };
 
 // 3. Hàm Xé Rách Hư Không (Dịch Chuyển) - BẢN VÁ BẤT TỬ V4 (CHỐNG CRASH NULL)
@@ -3597,7 +3609,7 @@ window.thucHienTruyenTong = function (congData) {
 
     let manHinhDichChuyen = document.getElementById('manHinhDichChuyen');
     if (manHinhDichChuyen) {
-        manHinhDichChuyen.style.display = 'block'; // Block hoặc flex đều được
+        manHinhDichChuyen.style.display = 'block';
     }
 
     setTimeout(() => {
@@ -3605,27 +3617,22 @@ window.thucHienTruyenTong = function (congData) {
         let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
         let huongLenTroiMoi = congData.dest.clone().sub(tam);
 
-        // 🌟 LÁ CHẮN TOÁN HỌC: Nếu đích đến là 0,0,0 thì Vector sẽ bị rỗng. Phải ép nó đứng thẳng lên!
         if (huongLenTroiMoi.lengthSq() < 0.001) {
-            huongLenTroiMoi.set(0, 1, 0); // Mặc định hướng lên trời là trục Y
+            huongLenTroiMoi.set(0, 1, 0);
         } else {
             huongLenTroiMoi.normalize();
         }
 
-        // Thả rơi từ độ cao 15 mét
         let viTriAnToan = congData.dest.clone().add(huongLenTroiMoi.clone().multiplyScalar(15.0));
         playerModel.position.copy(viTriAnToan);
 
-        // Nắn xương an toàn
         playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
         playerModel.up.copy(huongLenTroiMoi);
         window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
 
-        // 🌟 KHÓA VẬN TỐC CHỐNG VĂNG
         window.isMoving = false;
         window.isKeyboardMoving = false;
 
-        // 🌟 BÍ THUẬT ĐÓNG BĂNG KHÔNG GIAN: Ép tạm thời thành Không Trọng Lực để chống văng tọa độ khi tải Map!
         window.KIEU_TRONG_LUC = 'PHANG';
         window.toaDoMatDat = viTriAnToan.y;
         if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
@@ -3638,56 +3645,42 @@ window.thucHienTruyenTong = function (congData) {
                 if (typeof window.xuLyXoaMapChunk === 'function') window.xuLyXoaMapChunk(mapData);
             });
         }
-        window.THONG_TIN_CAC_MAP = []; // Xóa trắng data Radar Đất
+        window.THONG_TIN_CAC_MAP = [];
 
         if (window.danhSachQuaiVat) {
             for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
                 let quai = window.danhSachQuaiVat[i];
                 if (quai.tagEl) quai.tagEl.remove();
-                if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh); // Quái thì được quyền đốt
+                if (typeof window.donRac3D === 'function') window.donRac3D(quai.mesh);
             }
-            window.danhSachQuaiVat = []; // Xóa trắng data Quái vật
+            window.danhSachQuaiVat = [];
         }
 
-        // 🌟 DÁN THÊM ĐOẠN NÀY VÀO: GỠ SẠCH NGƯỜI CHƠI MAP CŨ KHI CHUI CỔNG
         if (window.remotePlayers) {
             for (let id in window.remotePlayers) {
                 let rp = window.remotePlayers[id];
-
-                // 🛑 LÁ CHẮN BẢO TOÀN MODEL: Chỉ gỡ khỏi Scene, tuyệt đối cấm dùng donRac3D()
                 if (rp.mesh) {
                     if (rp.mesh.parent) rp.mesh.parent.remove(rp.mesh);
                     scene.remove(rp.mesh);
                 }
                 if (rp.tag) rp.tag.remove();
             }
-            window.remotePlayers = {}; // Xóa trắng sổ Nam Tào
+            window.remotePlayers = {};
         }
 
-        // ========================================================
-        // 🌍 CẬP NHẬT KHU VỰC VÀ NẮN XƯƠNG SƠ BỘ
-        // ========================================================
         window.ZONE_ID = congData.zone_dich_den || 'TRUNG_CHAU';
 
-        // Xoay xương sống sơ bộ theo hướng rớt xuống (Chống lật hình nếu Map đích là Tròn)
         playerModel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongLenTroiMoi);
         playerModel.up.copy(huongLenTroiMoi);
         window.mucTieuBanKinhDat = tam.distanceTo(congData.dest);
 
-
-
-        // ========================================================
-        // 📥 NẠP THẾ GIỚI MỚI (Sẽ tự động kích hoạt lại Công tắc Trọng Lực)
-        // ========================================================
         window.loadTatCaMapTuSQL(window.ZONE_ID);
-        window.loadSafeZonesVaTeleports(); // Nạp lại cửa của thế giới mới
+        window.loadSafeZonesVaTeleports();
 
-        // 🌟 BẢN VÁ AAA: CHỜ ĐÚC XONG MAP 100% MỚI CHO MỞ MẮT
         let thoiGianCho = 0;
         let vongLapChoMap = setInterval(() => {
             thoiGianCho += 500;
 
-            // 1. ÉP BẮT ĐẦU ĐÚC MAP LẬP TỨC (Bỏ qua chu kỳ 2s lề mề của Radar)
             if (window.daNhanDanhSachMap && typeof playerModel !== 'undefined') {
                 window.THONG_TIN_CAC_MAP.forEach(mapData => {
                     let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
@@ -3700,23 +3693,13 @@ window.thucHienTruyenTong = function (congData) {
             let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
             let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
 
-
-
-
-
-
-
-            // 2. ĐIỀU KIỆN MỞ MẮT THÔNG MINH:
-            // - Đã kéo xong Data + Đã đúc xong ít nhất 1 Map + Không còn Map nào dang dở.
-            // - HOẶC Bí Cảnh rỗng hoàn toàn (Chưa có Map nào).
-            // - HOẶC quá 10 giây bị kẹt mạng (Fallback an toàn).
             if ((window.daNhanDanhSachMap && !coMapDangLoad && coMapDaLoad) ||
                 (window.daNhanDanhSachMap && window.THONG_TIN_CAC_MAP.length === 0) ||
                 thoiGianCho >= 30000) {
 
                 clearInterval(vongLapChoMap);
-                if (manHinhDichChuyen) manHinhDichChuyen.style.display = 'none'; // Thu hồi lỗ giun
-                window.dangDichChuyen = false; // Mở khóa di chuyển
+                if (manHinhDichChuyen) manHinhDichChuyen.style.display = 'none';
+                window.dangDichChuyen = false;
                 console.log("👁️ ĐÃ MỞ MẮT: Toàn bộ Map khu vực đã đúc xong, sãn sàng chiến đấu!");
             }
         }, 500);
@@ -3725,42 +3708,51 @@ window.thucHienTruyenTong = function (congData) {
 };
 
 // =======================================================
-// 🌟 HÀM KHỞI ĐỘNG TẢI DỮ LIỆU TỪ SQL VÀO GAME
+// 🌟 HÀM TẢI CỔNG DỊCH CHUYỂN VÀ SAFE ZONE
 // =======================================================
 window.hienThongBaoBoGoc = function (msg, mauSac) {
     let div = document.createElement('div'); div.innerText = msg; div.style.position = 'fixed'; div.style.top = '120px'; div.style.left = '50%'; div.style.transform = 'translateX(-50%)'; div.style.background = 'rgba(0,0,0,0.8)'; div.style.color = mauSac || '#fff'; div.style.padding = '10px 20px'; div.style.borderRadius = '5px'; div.style.border = '1px solid ' + (mauSac || '#fff'); div.style.zIndex = '999999'; div.style.fontWeight = 'bold'; document.body.appendChild(div);
     setTimeout(() => { div.remove(); }, 2000);
 };
 
-
-
-
 window.loadSafeZonesVaTeleports = function () {
     let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
 
-    // 🌟 1. Xóa sạch Cổng và SafeZone cũ để nạp cái mới
+    // 🌟 1. DỌN SẠCH TÀN DƯ BẢNG TÊN NEON VÀ CỔNG MAP CŨ
     if (window.vongTronSafeZone) window.vongTronSafeZone.visible = false;
     window.DANH_SACH_SAFE_ZONE = [];
+
+    if (window.DANH_SACH_BIEN_SAFE_ZONE) {
+        window.DANH_SACH_BIEN_SAFE_ZONE.forEach(s => { if (typeof window.donRac3D === 'function') window.donRac3D(s); else scene.remove(s); });
+        window.DANH_SACH_BIEN_SAFE_ZONE = [];
+    }
+
     if (window.DANH_SACH_CONG) {
-        window.DANH_SACH_CONG.forEach(c => { if (typeof window.donRac3D === 'function') window.donRac3D(c.mesh); else scene.remove(c.mesh); });
+        window.DANH_SACH_CONG.forEach(c => {
+            if (typeof window.donRac3D === 'function') window.donRac3D(c.mesh); else scene.remove(c.mesh);
+            // Tiêu diệt Bảng Tên Neon lơ lửng
+            if (c.sprite) { if (typeof window.donRac3D === 'function') window.donRac3D(c.sprite); else scene.remove(c.sprite); }
+        });
     }
     window.DANH_SACH_CONG = [];
 
-    // 🌟 2. BÍ THUẬT CHỐNG CACHE: Gắn thêm Date.now() vào cuối URL
-    // Tải Safe Zones
+    // 🌟 2. BÍ THUẬT CHỐNG CHỒNG MAP MẠNG CHẬM
     fetch('api/get_safezones.php?zone=' + currentZone + '&v=' + Date.now()).then(res => res.json()).then(data => {
+        // LÁ CHẮN: Nếu mạng lag trả data về chậm mà Sếp đã bay sang Map khác rồi thì VỨT!
+        if (window.ZONE_ID !== currentZone) return;
+
         if (data.status === 'success' && data.data) {
             window.DANH_SACH_SAFE_ZONE = data.data.map(sz => ({ x: parseFloat(sz.pos_x), y: parseFloat(sz.pos_y), z: parseFloat(sz.pos_z), radius: parseFloat(sz.radius) }));
             window.DANH_SACH_SAFE_ZONE.forEach(sz => { if (typeof window.taoBienNeonSafeZone === 'function') window.taoBienNeonSafeZone(sz.x, sz.y, sz.z); });
         }
     });
 
-    // 🌟 3. Tải Cổng Dịch Chuyển (Kèm chống Cache)
     fetch('api/get_teleports.php?zone=' + currentZone + '&v=' + Date.now()).then(res => res.json()).then(data => {
+        // LÁ CHẮN: Chống chồng Map Cổng
+        if (window.ZONE_ID !== currentZone) return;
+
         if (data.status === 'success' && data.data) {
             data.data.forEach(tp => {
-
-                // 🛑 LÁ CHẮN THÉP CHỐNG LỖI ĐỎ MÀN HÌNH (Cannot read property undefined)
                 if (!tp.model_url || tp.model_url.trim() === '') return;
 
                 let dest = new THREE.Vector3(parseFloat(tp.dest_x), parseFloat(tp.dest_y), parseFloat(tp.dest_z));
@@ -3768,6 +3760,13 @@ window.loadSafeZonesVaTeleports = function () {
 
                 if (window.loaderSieuToc) {
                     window.loaderSieuToc.load(tp.model_url, function (gltf) {
+
+                        // 🛑 KIỂM TRA LẦN CUỐI: Khi Model 3D tải xong, Sếp còn ở Map này không?
+                        if (window.ZONE_ID !== currentZone) {
+                            if (typeof window.donRac3D === 'function') window.donRac3D(gltf.scene);
+                            return; // Xóa sổ ngay lập tức, từ chối đưa ra Map!
+                        }
+
                         let congGroup = new THREE.Group();
                         congGroup.position.copy(pos);
                         let upDir = new THREE.Vector3(0, 1, 0);
@@ -3782,9 +3781,7 @@ window.loadSafeZonesVaTeleports = function () {
                         mesh.scale.set(scale, scale, scale);
                         mesh.rotation.x = -Math.PI / 2;
 
-                        // 🌟 CHỐNG TÀNG HÌNH DO LỖI CULLING CỦA THREE.JS
                         mesh.traverse(c => { if (c.isMesh) c.frustumCulled = false; });
-
                         congGroup.add(mesh);
                         scene.add(congGroup);
 
@@ -3795,15 +3792,56 @@ window.loadSafeZonesVaTeleports = function () {
                             window.TELEPORT_MIXERS.push(mixer);
                         }
 
-                        // 🌟 Lưu lại Mã Vùng Đích Đến
-                        window.DANH_SACH_CONG.push({ mesh: congGroup, dest: dest, name: tp.ten_dich_den, zone_dich_den: tp.zone_dich_den });
-                        if (typeof window.taoBienTenCong === 'function') window.taoBienTenCong(tp.ten_dich_den, pos.x, pos.y, pos.z);
+                        // 🌟 Lưu lại Sprite (Bảng Tên Neon) vào mảng để sau này có cái mà đốt rác!
+                        let tenSprite = null;
+                        if (typeof window.taoBienTenCong === 'function') {
+                            tenSprite = window.taoBienTenCong(tp.ten_dich_den, pos.x, pos.y, pos.z);
+                        }
+                        window.DANH_SACH_CONG.push({ mesh: congGroup, sprite: tenSprite, dest: dest, name: tp.ten_dich_den, zone_dich_den: tp.zone_dich_den });
                     });
                 }
             });
         }
     });
 };
+
+window.taoBienNeonSafeZone = function (x, y, z) {
+    let canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 512;
+    let ctx = canvas.getContext('2d');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowBlur = 30; ctx.shadowColor = '#00ffcc'; ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 120px sans-serif'; ctx.fillText('SAFE ZONE', 512, 180);
+    ctx.shadowColor = '#ffcc00'; ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 180px sans-serif'; ctx.fillText('⬇', 512, 350);
+
+    let tex = new THREE.CanvasTexture(canvas);
+    let mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+    let sprite = new THREE.Sprite(mat);
+
+    let pos = new THREE.Vector3(x, y, z);
+    let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
+    let groundDir = new THREE.Vector3(0, 1, 0);
+    if (window.KIEU_TRONG_LUC !== 'PHANG') {
+        groundDir = pos.clone().sub(tam);
+        if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); else groundDir.normalize();
+    }
+    sprite.position.copy(pos).add(groundDir.multiplyScalar(300));
+    sprite.scale.set(800, 400, 1);
+    scene.add(sprite);
+
+    // 🌟 Đưa vào sổ Nam Tào dọn rác
+    if (!window.DANH_SACH_BIEN_SAFE_ZONE) window.DANH_SACH_BIEN_SAFE_ZONE = [];
+    window.DANH_SACH_BIEN_SAFE_ZONE.push(sprite);
+};
+
+
+
+
+
+
+
+
 
 // ==========================================
 // 🌟 MÁY ĐỒNG BỘ & TỰ ĐỘNG HỒI SINH BOSS TỪ SERVER (HEARTBEAT 10s)
