@@ -776,6 +776,7 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
     // 🌟 LƯU LẠI BẢN GỐC ĐỂ TẮT/MỞ KHI XUYÊN KHÔNG
     window.HANH_TINH_GOC = mapHanhTinh;
     window.matDatHanhTinhGoc = [];
+    window.mayHanhTinhGoc = []; // 🌟 BẢN VÁ: Lưu lại Mây gốc để dọn rác
 
     if (gltf.animations && gltf.animations.length > 0) {
         window.mixerTraiDat = new THREE.AnimationMixer(mapHanhTinh);
@@ -889,18 +890,26 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
     window.kiemSoatHanhTinhGoc = function () {
         if (!window.HANH_TINH_GOC) return;
 
-        // 🌟 BẢN VÁ AAA: CHỈ ĐƯỢC HIỆN TRÁI ĐẤT GỐC KHI ĐANG Ở ĐÚNG TRUNG_CHAU!
-        // Dù là Map Cầu hay Phẳng, hễ đi khỏi Trung Châu là Trái Đất gốc phải Tàng hình!
         if (window.ZONE_ID !== 'TRUNG_CHAU') {
             window.HANH_TINH_GOC.visible = false;
             if (window.danhSachMap && window.matDatHanhTinhGoc) {
                 window.danhSachMap = window.danhSachMap.filter(m => !window.matDatHanhTinhGoc.includes(m));
+            }
+            // 🌟 RÚT ĐIỆN ĐÁM MÂY GỐC: Chống kẹt tàng hình khi sang Bí Cảnh
+            if (window.danhSachBauTroi && window.mayHanhTinhGoc) {
+                window.danhSachBauTroi = window.danhSachBauTroi.filter(m => !window.mayHanhTinhGoc.includes(m));
             }
         } else {
             window.HANH_TINH_GOC.visible = true;
             if (window.danhSachMap && window.matDatHanhTinhGoc) {
                 window.matDatHanhTinhGoc.forEach(m => {
                     if (!window.danhSachMap.includes(m)) window.danhSachMap.push(m);
+                });
+            }
+            // 🌟 NẠP LẠI ĐÁM MÂY GỐC KHI VỀ TRUNG CHÂU
+            if (window.danhSachBauTroi && window.mayHanhTinhGoc) {
+                window.mayHanhTinhGoc.forEach(m => {
+                    if (!window.danhSachBauTroi.includes(m)) window.danhSachBauTroi.push(m);
                 });
             }
         }
