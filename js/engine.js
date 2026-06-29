@@ -3247,13 +3247,14 @@ window.xuLyXoaMapChunk = function (mapData) {
 
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM ĐỘC LẬP (UNLOAD BOSS)
 window.xuLyXoaBossOxa = function () {
-    // 🌟 BẢN VÁ AAA: Bóp ngắn tầm xóa Boss để máy nhẹ hơn hẳn! (Cách 4500m là xóa sổ)
-    let maxDistToKeep = window.isMobile ? 1500 : 2000;
+    // 🌟 BẢN VÁ AAA: Bóp cực ngắn tầm xóa Boss theo chỉ thị của Sếp!
+    // Vượt ngưỡng này là thiêu rụi ngay lập tức để cứu RAM.
+    let maxDistToKeep = window.isMobile ? 1800 : 2500;
 
     for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
         let quai = window.danhSachQuaiVat[i];
         if (!quai || !quai.mesh) continue;
-
+        
         let khoangCach = playerModel.position.distanceTo(quai.mesh.position);
 
         if (khoangCach > maxDistToKeep) {
@@ -3276,7 +3277,7 @@ window.xuLyXoaBossOxa = function () {
 setInterval(() => {
     if (typeof playerModel === 'undefined' || !playerModel) return;
 
-    // 🌟 1. CHẠY LÒ ĐỐT RÁC BOSS ĐỘC LẬP TẠI ĐÂY! (Không phụ thuộc vào Map nữa)
+    // 🌟 1. CHẠY LÒ ĐỐT RÁC BOSS ĐỘC LẬP TẠI ĐÂY!
     if (window.danhSachQuaiVat && window.danhSachQuaiVat.length > 0) {
         window.xuLyXoaBossOxa();
     }
@@ -3288,10 +3289,16 @@ setInterval(() => {
     window.THONG_TIN_CAC_MAP.forEach(mapData => {
         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
         let khoangCach = pPos.distanceTo(mPos);
-
-        let rLoad = window.isMobile ? 2000 : 4000;    // Cách 4km nạp Đất
-        let rBoss = window.isMobile ? 1500 : 3000;    // Cách 3km nạp Boss
-        let rUnload = window.isMobile ? 2500 : 5000;  // Xa 6km là đốt rác Map
+        
+        // 🌟 ĐỒNG BỘ THƯỚC ĐO CHỐNG NẤC CỤT (TẢI/XÓA LIÊN TỤC)
+        // Ranh giới Load Boss MỚI (Phải nhỏ hơn tầm Xóa Boss ở trên 500m để có khoảng đệm an toàn)
+        let rBoss = window.isMobile ? 1200 : 2000;    
+        
+        // Nạp Đất (Map) thì vẫn phải nhìn xa hơn Boss một chút
+        let rLoad = window.isMobile ? 2000 : 3500;    
+        
+        // Đốt rác Map (Thu hẹp lại cho nhẹ gánh)
+        let rUnload = window.isMobile ? 3000 : 5000;  
 
         // ==========================================
         // 🟢 TẦNG 1: LOAD ĐẤT ĐAI
@@ -3315,12 +3322,10 @@ setInterval(() => {
         // ==========================================
         if (khoangCach > rUnload && mapData.isLoaded) {
             window.xuLyXoaMapChunk(mapData);
-            // Đã chuyển Lò đốt Boss ra ngoài độc lập, ở đây chỉ cần tắt cờ
-            mapData.daLoadBoss = false;
+            mapData.daLoadBoss = false; 
         }
     });
 }, 2000);
-
 
 
 
