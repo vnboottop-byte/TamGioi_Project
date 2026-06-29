@@ -833,6 +833,9 @@ loader.load('uploads/anims/map_san_dinh.glb', function (gltf) {
                     child.material = newMats.length === 1 ? newMats[0] : newMats;
                 }
                 child.userData.isCloud = true;
+                if (!window.danhSachBauTroi) window.danhSachBauTroi = [];
+                window.danhSachBauTroi.push(child);
+                window.mayHanhTinhGoc.push(child);
 
             } else {
                 // 🌟 XỬ LÝ MẶT ĐẤT & BIỂN (TRÁI ĐẤT NGUYÊN KHỐI)
@@ -3203,12 +3206,17 @@ window.xuLyLoadMapChunk = function (mapData) {
 window.xuLyXoaMapChunk = function (mapData) {
     if (!mapData || !mapData.isLoaded) return;
 
-    // 1. Gỡ bỏ các tấm lưới của Map này khỏi danh sách Radar (Không làm ảnh hưởng Map gốc)
+    // 1. Gỡ bỏ các tấm lưới của Map này khỏi danh sách Radar
     if (window.danhSachMap && mapData.matDatMeshes) {
         window.danhSachMap = window.danhSachMap.filter(m => !mapData.matDatMeshes.includes(m));
     }
+    
+    // 🌟 BẢN VÁ AAA: NHỔ CỎ TẬN GỐC VÁCH NGĂN VÀ MÂY BÍ CẢNH CŨ (Chống lồng ghép Trường Lực Tàng Hình)
+    if (window.danhSachBauTroi && mapData.mayMeshes) {
+        window.danhSachBauTroi = window.danhSachBauTroi.filter(m => !mapData.mayMeshes.includes(m));
+    }
 
-    // 2. Dọn dẹp Animation của Map (Ví dụ cối xay gió, suối chảy...)
+    // 2. Dọn dẹp Animation của Map
     if (mapData.mixer && window.MAP_MIXERS) {
         window.MAP_MIXERS = window.MAP_MIXERS.filter(mixer => mixer !== mapData.mixer);
     }
@@ -3223,6 +3231,7 @@ window.xuLyXoaMapChunk = function (mapData) {
     mapData.isLoaded = false;
     mapData.mesh3D = null;
     mapData.matDatMeshes = [];
+    mapData.mayMeshes = [];
     mapData.mixer = null;
     console.log(`🔴 THẾ GIỚI MỞ: Đã giải phóng RAM khu vực [${mapData.name || mapData.id}]!`);
 };
