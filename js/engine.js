@@ -3244,17 +3244,18 @@ window.xuLyXoaMapChunk = function (mapData) {
 
 
 
-
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM ĐỘC LẬP (UNLOAD BOSS)
 window.xuLyXoaBossOxa = function () {
-    // 🌟 BẢN VÁ AAA: Bóp cực ngắn tầm xóa Boss theo chỉ thị của Sếp!
-    // Vượt ngưỡng này là thiêu rụi ngay lập tức để cứu RAM.
     let maxDistToKeep = window.isMobile ? 1800 : 2500;
 
     for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
         let quai = window.danhSachQuaiVat[i];
         if (!quai || !quai.mesh) continue;
         
+        // 🌟 BẢN VÁ AAA 1: MIỄN TỬ KIM BÀI CHO SINH VẬT CẢNH
+        // Bọn TRANG_TRI bay lượn toàn vũ trụ, không được phép xóa dựa trên cự ly! 
+        if (quai.classCode === 'TRANG_TRI') continue;
+
         let khoangCach = playerModel.position.distanceTo(quai.mesh.position);
 
         if (khoangCach > maxDistToKeep) {
@@ -3854,8 +3855,6 @@ window.taoBienNeonSafeZone = function (x, y, z) {
 
 
 
-
-
 // ==========================================
 // 🌟 MÁY ĐỒNG BỘ & TỰ ĐỘNG HỒI SINH BOSS TỪ SERVER (HEARTBEAT 10s)
 // ==========================================
@@ -3863,7 +3862,6 @@ setInterval(() => {
     // Nếu chưa load xong nhân vật hoặc đang bay màu thì tạm nghỉ
     if (!window.playerModel || typeof window.danhSachQuaiVat === 'undefined') return;
 
-    // "Gõ cửa" API để Server chạy thuật toán 600s hồi sinh ngầm (BẢN VÁ: Chỉ xin data của Vũ trụ hiện tại)
     let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
     fetch('api/get_bosses.php?zone=' + currentZone + '&v=' + Date.now())
         .then(res => res.json())
@@ -3871,30 +3869,25 @@ setInterval(() => {
             if (data.status === 'success' && data.data) {
 
                 data.data.forEach(bossServer => {
-                    // 1. Chỉ quan tâm những con Boss đang sống trên Server (hp > 0)
                     if (bossServer.hp > 0) {
-
-                        // 🌟 BẢN VÁ AAA 1: CHỐNG LỒNG GHÉP XUYÊN KHÔNG GIAN
-                        // Nếu Boss không thuộc về Vũ Trụ hiện tại -> Bơ nó đi, cấm gọi ra!
+                        
+                        // Chống lồng ghép xuyên không gian
                         if (bossServer.zone_id && bossServer.zone_id !== window.ZONE_ID) return;
 
-                        // 2. Tìm xem con Boss này có đang hiển thị trên màn hình Sếp không?
                         let tonTaiTrenClient = window.danhSachQuaiVat.find(q => q.id == bossServer.id);
 
-                        // 3. Nếu Client KHÔNG CÓ -> CHỨNG TỎ NÓ VỪA ĐƯỢC SERVER HỒI SINH!
                         if (!tonTaiTrenClient) {
-
-                            // 4. Đo khoảng cách
                             let bossPos = new THREE.Vector3(parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
                             let khoangCach = window.playerModel.position.distanceTo(bossPos);
 
-                            // 🌟 BẢN VÁ AAA 2: ĐỒNG BỘ THƯỚC ĐO VỚI ENGINE.JS (CHỐNG NẤC CỤT)
-                            // Ranh giới Hồi sinh (1200/2000) phải BẰNG CHÍNH XÁC ranh giới Load Boss (rBoss) trong engine.js!
-                            // Tuyệt đối không được lớn hơn ngưỡng Xóa (1800/2500) của Lò đốt rác!
                             let maxDistRespawn = window.isMobile ? 1200 : 2000;
-
-                            if (khoangCach < maxDistRespawn) {
-                                console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hồi sinh!`);
+                            
+                            // 🌟 BẢN VÁ AAA 2: ĐẶC QUYỀN TRANG TRÍ (SPAWN TOÀN CẦU)
+                            // Đã là Sinh vật cảnh thì Sếp đứng ở cực Bắc nó vẫn phải được load để bay ngang qua đầu Sếp!
+                            let laSinhVatCanh = (bossServer.class_code === 'TRANG_TRI');
+                            
+                            if (khoangCach < maxDistRespawn || laSinhVatCanh) {
+                                console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hiện thế!`);
                                 if (typeof window.sinhRaQuaiVat === 'function') {
                                     window.sinhRaQuaiVat(
                                         parseFloat(bossServer.pos_x),
@@ -3918,10 +3911,11 @@ setInterval(() => {
                 });
 
             }
-        }).catch(err => {
-            // Rớt mạng mili-giây thì bỏ qua, 10s sau tự làm lại
-        });
+        }).catch(err => {});
 }, 10000);
+
+
+
 
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
