@@ -235,10 +235,30 @@ window.chemTrungBoss = function (bossId, dame) {
 window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, isBoss = true, bossId = null, modelUrl = null, hpCurrent = null, respawnInSec = 0, classCode = 'TU_TIEN') {
     const id = bossId || ('B_' + Date.now());
 
-    
-
     if (window.danhSachQuaiVatDangTai[id]) return;
     if (window.danhSachQuaiVat.find(q => q.id == id)) return;
+
+    // ========================================================
+    // 🌟 BẢN VÁ AAA: LÁ CHẮN TIÊN TRI - TỪ CHỐI TẢI RÁC 3D VÀO RAM
+    // ========================================================
+    // 1. Tính toán Y chuẩn ngay từ đầu để làm mốc đo lường
+    const BAN_KINH_ONG = 20000;
+    let anToanX = Math.max(-BAN_KINH_ONG + 1, Math.min(BAN_KINH_ONG - 1, x));
+    let yChuan = posY || -Math.sqrt(BAN_KINH_ONG * BAN_KINH_ONG - anToanX * anToanX);
+
+    // 2. Dùng thuật toán Tiên Tri xem hiện tại Sinh vật cảnh đang bơi ở đâu?
+    if (classCode === 'TRANG_TRI' && typeof window.duDoanToaDoTrangTri === 'function' && typeof playerModel !== 'undefined' && playerModel) {
+        let viTriThucTe = window.duDoanToaDoTrangTri(id, x, yChuan, z);
+        let khoangCach = playerModel.position.distanceTo(viTriThucTe);
+        let nguongHienThi = window.isMobile ? 1800 : 2500; // Khớp với Lò Đốt Rác
+        
+        if (khoangCach > nguongHienThi) {
+            // 🛑 Tọa độ thực tế lúc này đang ở quá xa Sếp -> HỦY LỆNH LOAD MODEL TỪ TRONG TRỨNG!
+            return;
+        }
+    }
+    // ========================================================
+
     window.danhSachQuaiVatDangTai[id] = true;
 
     const modelFile = modelUrl || 'uploads/anims/mimi_3d.glb';
@@ -248,9 +268,6 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
         delete window.danhSachQuaiVatDangTai[id];
         if (window.danhSachQuaiVat.find(q => q.id == id)) return;
 
-
-
-
         // 🌟 BẢN VÁ AAA: Ép quái vật dùng thước đo tàng hình của Engine để chống bệnh Khổng Lồ!
         if (typeof window.chuanHoaKichThuoc === 'function') {
             window.chuanHoaKichThuoc(quai, scaleSize);
@@ -258,18 +275,11 @@ window.sinhRaQuaiVat = function (x, z, tenQuai, level, hpMax, scaleSize, posY, i
             quai.scale.set(scaleSize, scaleSize, scaleSize);
         }
 
-
-
-
-        const BAN_KINH_ONG = 20000;
-        let anToanX = Math.max(-BAN_KINH_ONG + 1, Math.min(BAN_KINH_ONG - 1, x));
-        let yChuan = posY || -Math.sqrt(BAN_KINH_ONG * BAN_KINH_ONG - anToanX * anToanX);
-
-
-
-
-
+        // Tọa độ đã được tính toán từ trước lá chắn, giờ chỉ việc lấy xài
         quai.position.set(x, yChuan, z);
+
+
+
         
         // 🌟 BẢN VÁ AAA: TỐI ƯU HÓA TÀI NGUYÊN CHO SINH VẬT CẢNH
         let laTrangTri = (classCode === 'TRANG_TRI');
