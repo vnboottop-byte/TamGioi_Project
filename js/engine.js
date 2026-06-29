@@ -3244,6 +3244,8 @@ window.xuLyXoaMapChunk = function (mapData) {
 
 
 
+
+
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM ĐỘC LẬP (UNLOAD BOSS)
 window.xuLyXoaBossOxa = function () {
     let maxDistToKeep = window.isMobile ? 1800 : 2500;
@@ -3252,10 +3254,7 @@ window.xuLyXoaBossOxa = function () {
         let quai = window.danhSachQuaiVat[i];
         if (!quai || !quai.mesh) continue;
         
-        // 🌟 BẢN VÁ AAA 1: MIỄN TỬ KIM BÀI CHO SINH VẬT CẢNH
-        // Bọn TRANG_TRI bay lượn toàn vũ trụ, không được phép xóa dựa trên cự ly! 
-        if (quai.classCode === 'TRANG_TRI') continue;
-
+        // Cứ vượt quá 2500m là thiêu rụi hết để giải phóng RAM, không tha 1 ai!
         let khoangCach = playerModel.position.distanceTo(quai.mesh.position);
 
         if (khoangCach > maxDistToKeep) {
@@ -3269,7 +3268,6 @@ window.xuLyXoaBossOxa = function () {
                 else scene.remove(quai.mesh);
             }
             window.danhSachQuaiVat.splice(i, 1);
-            console.log(`🔴 Đã dọn dẹp Boss [${quai.id}] ở xa để giải phóng RAM!`);
         }
     }
 };
@@ -3278,7 +3276,6 @@ window.xuLyXoaBossOxa = function () {
 setInterval(() => {
     if (typeof playerModel === 'undefined' || !playerModel) return;
 
-    // 🌟 1. CHẠY LÒ ĐỐT RÁC BOSS ĐỘC LẬP TẠI ĐÂY!
     if (window.danhSachQuaiVat && window.danhSachQuaiVat.length > 0) {
         window.xuLyXoaBossOxa();
     }
@@ -3291,42 +3288,26 @@ setInterval(() => {
         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
         let khoangCach = pPos.distanceTo(mPos);
         
-        // 🌟 ĐỒNG BỘ THƯỚC ĐO CHỐNG NẤC CỤT (TẢI/XÓA LIÊN TỤC)
-        // Ranh giới Load Boss MỚI (Phải nhỏ hơn tầm Xóa Boss ở trên 500m để có khoảng đệm an toàn)
         let rBoss = window.isMobile ? 1200 : 2000;    
-        
-        // Nạp Đất (Map) thì vẫn phải nhìn xa hơn Boss một chút
         let rLoad = window.isMobile ? 2000 : 3500;    
-        
-        // Đốt rác Map (Thu hẹp lại cho nhẹ gánh)
         let rUnload = window.isMobile ? 3000 : 5000;  
 
-        // ==========================================
-        // 🟢 TẦNG 1: LOAD ĐẤT ĐAI
-        // ==========================================
         if (khoangCach < rLoad && !mapData.isLoaded && !mapData.isLoading) {
             window.xuLyLoadMapChunk(mapData);
         }
-
-        // ==========================================
-        // 🟢 TẦNG 2: LOAD SINH THÁI & BOSS CỦA MAP MỚI VÀO TẦM
-        // ==========================================
         if (khoangCach < rBoss && mapData.isLoaded && !mapData.daLoadBoss) {
             if (typeof window.taiBossTheoMap === 'function') {
                 window.taiBossTheoMap(mapData.id);
                 mapData.daLoadBoss = true;
             }
         }
-
-        // ==========================================
-        // 🔴 TẦNG 3: LÒ ĐỐT RÁC VRAM MAP
-        // ==========================================
         if (khoangCach > rUnload && mapData.isLoaded) {
             window.xuLyXoaMapChunk(mapData);
             mapData.daLoadBoss = false; 
         }
     });
 }, 2000);
+
 
 
 
