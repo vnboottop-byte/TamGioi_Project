@@ -3244,8 +3244,6 @@ window.xuLyXoaMapChunk = function (mapData) {
 
 
 
-
-
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM ĐỘC LẬP (UNLOAD BOSS)
 window.xuLyXoaBossOxa = function () {
     let maxDistToKeep = window.isMobile ? 1800 : 2500;
@@ -3268,6 +3266,7 @@ window.xuLyXoaBossOxa = function () {
                 else scene.remove(quai.mesh);
             }
             window.danhSachQuaiVat.splice(i, 1);
+            console.log(`🔴 Đã dọn dẹp Boss [${quai.id}] ở xa để giải phóng RAM!`);
         }
     }
 };
@@ -3276,6 +3275,7 @@ window.xuLyXoaBossOxa = function () {
 setInterval(() => {
     if (typeof playerModel === 'undefined' || !playerModel) return;
 
+    // 🌟 1. CHẠY LÒ ĐỐT RÁC BOSS ĐỘC LẬP MỖI 2S
     if (window.danhSachQuaiVat && window.danhSachQuaiVat.length > 0) {
         window.xuLyXoaBossOxa();
     }
@@ -3288,6 +3288,7 @@ setInterval(() => {
         let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
         let khoangCach = pPos.distanceTo(mPos);
         
+        // 🌟 ĐỒNG BỘ THƯỚC ĐO: Load Boss ở 2000m, Xóa ở 2500m (Chống nấc cụt)
         let rBoss = window.isMobile ? 1200 : 2000;    
         let rLoad = window.isMobile ? 2000 : 3500;    
         let rUnload = window.isMobile ? 3000 : 5000;  
@@ -3836,11 +3837,54 @@ window.taoBienNeonSafeZone = function (x, y, z) {
 
 
 
+
+
 // ==========================================
 // 🌟 MÁY ĐỒNG BỘ & TỰ ĐỘNG HỒI SINH BOSS TỪ SERVER (HEARTBEAT 10s)
 // ==========================================
+
+// 🌟 BỘ NÃO TIÊN TRI: TÍNH TRƯỚC TỌA ĐỘ VỆ TINH TOÁN HỌC (TRANG_TRI) DÙ CHƯA RENDER
+window.duDoanToaDoTrangTri = function(bossId, spawnX, spawnY, spawnZ) {
+    let spawnPos = new THREE.Vector3(spawnX, spawnY, spawnZ);
+    let hash = 0; let strId = String(bossId);
+    for (let i = 0; i < strId.length; i++) hash = Math.imul(31, hash) + strId.charCodeAt(i) | 0;
+    let seedToanHoc = (Math.abs(hash) % 10000) / 10000; 
+    
+    let banKinhBay = 3000 + (seedToanHoc * 3000); 
+    let tocDoGoc = 0.005 + (seedToanHoc * 0.01); 
+    let chieuThuan = (seedToanHoc > 0.5) ? 1 : -1; 
+    let doCaoNhaoLon = 50 + (seedToanHoc * 250); 
+    
+    let tChung = Date.now() / 1000;
+    let goc = (tChung * tocDoGoc * chieuThuan) + (seedToanHoc * Math.PI * 2);
+    let kq = new THREE.Vector3();
+    
+    if (window.KIEU_TRONG_LUC === 'CAU' && window.TAM_HANH_TINH_HIEN_TAI) {
+        let tam = window.TAM_HANH_TINH_HIEN_TAI;
+        let R_matDat = spawnPos.distanceTo(tam); 
+        let vUp = spawnPos.clone().sub(tam).normalize();
+        
+        let right = new THREE.Vector3(1, 0, 0).cross(vUp).normalize();
+        if (right.lengthSq() < 0.001) right.set(0, 0, 1).cross(vUp).normalize();
+        let forward = new THREE.Vector3().crossVectors(right, vUp).normalize();
+        
+        let qX = new THREE.Quaternion().setFromAxisAngle(forward, goc);
+        let qZ = new THREE.Quaternion().setFromAxisAngle(right, -(goc * 0.8));
+        
+        let finalDir = vUp.clone().applyQuaternion(qX).applyQuaternion(qZ).normalize();
+        let heightOffset = Math.abs(Math.sin(goc * 1.5)) * doCaoNhaoLon;
+        kq.copy(tam).add(finalDir.multiplyScalar(R_matDat + heightOffset));
+    } else {
+        let maxFlat = 4000; 
+        let dx = Math.sin(goc) * Math.min(banKinhBay, maxFlat);
+        let dz = Math.cos(goc * 0.8) * Math.min(banKinhBay, maxFlat);
+        let dy = Math.abs(Math.sin(goc * 1.5)) * doCaoNhaoLon;
+        kq.set(spawnPos.x + dx, spawnPos.y + dy, spawnPos.z + dz);
+    }
+    return kq;
+};
+
 setInterval(() => {
-    // Nếu chưa load xong nhân vật hoặc đang bay màu thì tạm nghỉ
     if (!window.playerModel || typeof window.danhSachQuaiVat === 'undefined') return;
 
     let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
@@ -3851,27 +3895,30 @@ setInterval(() => {
 
                 data.data.forEach(bossServer => {
                     if (bossServer.hp > 0) {
-                        
-                        // Chống lồng ghép xuyên không gian
+                        // Lá chắn xuyên không gian
                         if (bossServer.zone_id && bossServer.zone_id !== window.ZONE_ID) return;
-
+                        
                         let tonTaiTrenClient = window.danhSachQuaiVat.find(q => q.id == bossServer.id);
 
                         if (!tonTaiTrenClient) {
-                            let bossPos = new THREE.Vector3(parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
-                            let khoangCach = window.playerModel.position.distanceTo(bossPos);
+                            
+                            // 🌟 BẢN VÁ AAA: DÙNG TRẠM DỰ ĐOÁN ĐỂ TÍNH VỊ TRÍ "THỰC TẾ" CỦA CÁ VOI LÚC NÀY
+                            let bossPos;
+                            if (bossServer.class_code === 'TRANG_TRI') {
+                                bossPos = window.duDoanToaDoTrangTri(bossServer.id, parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
+                            } else {
+                                bossPos = new THREE.Vector3(parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
+                            }
 
-                            let maxDistRespawn = window.isMobile ? 1200 : 2000;
+                            let khoangCach = window.playerModel.position.distanceTo(bossPos);
+                            let maxDistRespawn = window.isMobile ? 1200 : 2000; // Load ở 2000m (Khớp với rBoss)
                             
-                            // 🌟 BẢN VÁ AAA 2: ĐẶC QUYỀN TRANG TRÍ (SPAWN TOÀN CẦU)
-                            // Đã là Sinh vật cảnh thì Sếp đứng ở cực Bắc nó vẫn phải được load để bay ngang qua đầu Sếp!
-                            let laSinhVatCanh = (bossServer.class_code === 'TRANG_TRI');
-                            
-                            if (khoangCach < maxDistRespawn || laSinhVatCanh) {
-                                console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hiện thế!`);
+                            // 🌟 KẾT QUẢ ĐỈNH CAO: Chỉ gọi ra khi con cá voi thực sự đang bơi vào tầm 2000m của Sếp!
+                            if (khoangCach < maxDistRespawn) {
+                                console.log(`✨ Cảnh vật xuất hiện! [${bossServer.name}] đã lọt vào tầm nhìn!`);
                                 if (typeof window.sinhRaQuaiVat === 'function') {
                                     window.sinhRaQuaiVat(
-                                        parseFloat(bossServer.pos_x),
+                                        parseFloat(bossServer.pos_x), // Vẫn đưa tọa độ Gốc vào để quỹ đạo cá voi chạy chuẩn!
                                         parseFloat(bossServer.pos_z),
                                         bossServer.name,
                                         parseInt(bossServer.level),
@@ -3894,7 +3941,6 @@ setInterval(() => {
             }
         }).catch(err => {});
 }, 10000);
-
 
 
 
