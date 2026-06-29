@@ -3248,7 +3248,7 @@ window.xuLyXoaMapChunk = function (mapData) {
 // 3.B HÀM THIÊU RỤI BOSS KHỎI RAM ĐỘC LẬP (UNLOAD BOSS)
 window.xuLyXoaBossOxa = function () {
     // 🌟 BẢN VÁ AAA: Bóp ngắn tầm xóa Boss để máy nhẹ hơn hẳn! (Cách 4500m là xóa sổ)
-    let maxDistToKeep = window.isMobile ? 2000 : 3000;
+    let maxDistToKeep = window.isMobile ? 1500 : 2000;
 
     for (let i = window.danhSachQuaiVat.length - 1; i >= 0; i--) {
         let quai = window.danhSachQuaiVat[i];
