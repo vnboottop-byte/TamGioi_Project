@@ -3856,9 +3856,6 @@ window.taoBienNeonSafeZone = function (x, y, z) {
 
 
 
-
-
-
 // ==========================================
 // 🌟 MÁY ĐỒNG BỘ & TỰ ĐỘNG HỒI SINH BOSS TỪ SERVER (HEARTBEAT 10s)
 // ==========================================
@@ -3866,8 +3863,9 @@ setInterval(() => {
     // Nếu chưa load xong nhân vật hoặc đang bay màu thì tạm nghỉ
     if (!window.playerModel || typeof window.danhSachQuaiVat === 'undefined') return;
 
-    // "Gõ cửa" API để Server chạy thuật toán 600s hồi sinh ngầm
-    fetch('api/get_bosses.php?v=' + Date.now())
+    // "Gõ cửa" API để Server chạy thuật toán 600s hồi sinh ngầm (BẢN VÁ: Chỉ xin data của Vũ trụ hiện tại)
+    let currentZone = window.ZONE_ID || 'TRUNG_CHAU';
+    fetch('api/get_bosses.php?zone=' + currentZone + '&v=' + Date.now())
         .then(res => res.json())
         .then(data => {
             if (data.status === 'success' && data.data) {
@@ -3876,19 +3874,25 @@ setInterval(() => {
                     // 1. Chỉ quan tâm những con Boss đang sống trên Server (hp > 0)
                     if (bossServer.hp > 0) {
 
+                        // 🌟 BẢN VÁ AAA 1: CHỐNG LỒNG GHÉP XUYÊN KHÔNG GIAN
+                        // Nếu Boss không thuộc về Vũ Trụ hiện tại -> Bơ nó đi, cấm gọi ra!
+                        if (bossServer.zone_id && bossServer.zone_id !== window.ZONE_ID) return;
+
                         // 2. Tìm xem con Boss này có đang hiển thị trên màn hình Sếp không?
                         let tonTaiTrenClient = window.danhSachQuaiVat.find(q => q.id == bossServer.id);
 
-                        // 3. Nếu Client KHÔNG CÓ (do lúc nãy chết đã bị dọn xác xóa khỏi mảng) 
-                        // -> CHỨNG TỎ NÓ VỪA ĐƯỢC SERVER HỒI SINH!
+                        // 3. Nếu Client KHÔNG CÓ -> CHỨNG TỎ NÓ VỪA ĐƯỢC SERVER HỒI SINH!
                         if (!tonTaiTrenClient) {
 
-                            // 4. Đo khoảng cách, nếu Sếp đang đứng gần nó (< 6000m) thì triệu hồi nó ra ngay!
+                            // 4. Đo khoảng cách
                             let bossPos = new THREE.Vector3(parseFloat(bossServer.pos_x), parseFloat(bossServer.pos_y), parseFloat(bossServer.pos_z));
                             let khoangCach = window.playerModel.position.distanceTo(bossPos);
 
-                            // 🌟 KHỚP CỰ LY HỒI SINH
-                            let maxDistRespawn = window.isMobile ? 1500 : 3000;
+                            // 🌟 BẢN VÁ AAA 2: ĐỒNG BỘ THƯỚC ĐO VỚI ENGINE.JS (CHỐNG NẤC CỤT)
+                            // Ranh giới Hồi sinh (1200/2000) phải BẰNG CHÍNH XÁC ranh giới Load Boss (rBoss) trong engine.js!
+                            // Tuyệt đối không được lớn hơn ngưỡng Xóa (1800/2500) của Lò đốt rác!
+                            let maxDistRespawn = window.isMobile ? 1200 : 2000;
+
                             if (khoangCach < maxDistRespawn) {
                                 console.log(`✨ Ánh sáng giáng xuống! Boss [${bossServer.name}] đã hồi sinh!`);
                                 if (typeof window.sinhRaQuaiVat === 'function') {
@@ -3915,9 +3919,9 @@ setInterval(() => {
 
             }
         }).catch(err => {
-            // Lỗi mạng lặt vặt (rớt mạng vài mili-giây) thì bỏ qua, 10s sau nó tự làm lại
+            // Rớt mạng mili-giây thì bỏ qua, 10s sau tự làm lại
         });
-}, 10000); // 10000 ms = Cứ 10 giây chạy 1 lần
+}, 10000);
 
 // =================================================================
 // 🤖 AUTO HUNT V17: ĐA MÔN PHÁI (TẦM XA & CẬN CHIẾN)
