@@ -192,6 +192,20 @@ window.taoThuNho3D = function(url, loaiDo, imgId, capDo = 0) {
 
 window.xuLyHangDoiChupAnh = function() {
     if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
+
+    // 🛑 CHỐT CHẶN VÀNG: NẾU UI ĐÃ ĐÓNG THÌ DỪNG CHỤP ẢNH ĐỂ CỨU FPS!
+    let tuiDo = document.getElementById('inventoryModal');
+    let cuaHang = document.getElementById('shopModal3D'); 
+    let loRen = document.getElementById('forgeModal');
+    
+    let isUIShowing = (tuiDo && tuiDo.style.display !== 'none') || 
+                      (cuaHang && cuaHang.style.display !== 'none') || 
+                      (loRen && loRen.style.display !== 'none');
+                      
+    if (!isUIShowing) {
+        return; // Đóng băng hàng đợi. Lần sau mở UI nó sẽ tự chạy tiếp!
+    }
+
     window.thumb3D.isProcessing = true;
 
     let task = window.thumb3D.queue.shift();
