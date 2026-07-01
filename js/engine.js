@@ -2095,8 +2095,13 @@ bayHud.id = 'bay-hud'; bayHud.style.cssText = 'position:fixed; bottom:20px; righ
 document.body.appendChild(bayHud);
 
 window.lastFrameTime = performance.now();
+window.mainGameLoopId = null; // 🛑 BỔ SUNG: Khai báo biến khóa vòng lặp
+
 function animate() {
-    requestAnimationFrame(animate);
+    // 🛑 BỔ SUNG: Hủy vòng lặp cũ trước khi đẻ vòng lặp mới, tuyệt đối không bao giờ bị nhân đôi!
+    if (window.mainGameLoopId) cancelAnimationFrame(window.mainGameLoopId);
+    window.mainGameLoopId = requestAnimationFrame(animate);
+
     // 🌟 BỘ KHÓA KHUNG HÌNH (FPS THROTTLE) DÀNH RIÊNG CHO MOBILE
     if (window.isMobile) {
         let now = performance.now();
