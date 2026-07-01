@@ -3734,6 +3734,7 @@ window.loadSafeZonesVaTeleports = function () {
         });
     }
     window.DANH_SACH_CONG = [];
+    window.TELEPORT_MIXERS = [];
 
     // 🌟 2. BÍ THUẬT CHỐNG CHỒNG MAP MẠNG CHẬM
     fetch('api/get_safezones.php?zone=' + currentZone + '&v=' + Date.now()).then(res => res.json()).then(data => {
