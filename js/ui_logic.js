@@ -154,25 +154,32 @@ window.dongTuiDoVIP = function() {
 
 
 
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (BẢN V18 - BẮT SÁNG HÀO QUANG)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE TRÌNH DUYỆT (BẢN V19 - HARDCORE STORAGE)
 // ==========================================
 window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
-window.THUMBNAIL_CACHE = window.THUMBNAIL_CACHE || {};
 
-window.taoThuNho3D = function(url, loaiDo, imgId, capDo = 0) {
+// 🌟 BẢN VÁ 1: Khởi tạo bộ nhớ từ LocalStorage của trình duyệt (Nếu có sẵn thì hốt xài luôn, cấm load lại)
+try {
+    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem('TAM_GIOI_THUMB_CACHE')) || {};
+} catch (e) {
+    window.THUMBNAIL_CACHE = {};
+}
+
+window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
     if (!url) return;
     function anEmojiHienAnh(srcData) {
-        let imgEl = document.getElementById(imgId);
+        let imgEl = document.createElement('img'); // Dự phòng kiểm tra dữ liệu lỗi
+        let imgReal = document.getElementById(imgId);
         let emj = document.getElementById('emoji_' + imgId);
-        if(imgEl) { imgEl.src = srcData; imgEl.style.opacity = 1; }
-        if(emj) emj.style.opacity = 0;
+        if (imgEl) { imgEl.src = srcData; }
+        if (imgEl) { imgEl.src = srcData; imgEl.style.opacity = 1; }
+        if (emj) emj.style.opacity = 0;
     }
 
-    // 🌟 KHÓA BỘ NHỚ KÉP: Tách biệt ảnh của đồ +0 và đồ +15
     let cacheKey = url + "_+" + capDo;
 
+    // Nếu đã có trong ổ cứng máy khách -> lôi ra xài ngay lập tức trong 0.001 giây!
     if (window.THUMBNAIL_CACHE[cacheKey] && window.THUMBNAIL_CACHE[cacheKey] !== 'LOADING') {
         anEmojiHienAnh(window.THUMBNAIL_CACHE[cacheKey]); return;
     }
@@ -184,29 +191,23 @@ window.taoThuNho3D = function(url, loaiDo, imgId, capDo = 0) {
     }, 100);
 
     if (!window.THUMBNAIL_CACHE[cacheKey]) {
-        window.THUMBNAIL_CACHE[cacheKey] = 'LOADING'; 
+        window.THUMBNAIL_CACHE[cacheKey] = 'LOADING';
         window.thumb3D.queue.push({ url: url, loaiDo: loaiDo, capDo: capDo, cacheKey: cacheKey });
         window.xuLyHangDoiChupAnh();
     }
 };
 
-window.xuLyHangDoiChupAnh = function() {
+window.xuLyHangDoiChupAnh = function () {
     if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
 
-    // 🛑 CHỐT CHẶN VÀNG: NẾU UI ĐÃ ĐÓNG THÌ DỪNG CHỤP ẢNH ĐỂ CỨU FPS!
+    // 🛡️ CHỐT CHẶN AN TOÀN (LỖI SỐ 1): UI đóng thì ngừng chụp ảnh lập tức để cứu FPS
     let tuiDo = document.getElementById('inventoryModal');
-    let cuaHang = document.getElementById('shopModal3D'); 
+    let cuaHang = document.getElementById('shopModal3D');
     let loRen = document.getElementById('forgeModal');
-    
-    let isUIShowing = (tuiDo && tuiDo.style.display !== 'none') || 
-                      (cuaHang && cuaHang.style.display !== 'none') || 
-                      (loRen && loRen.style.display !== 'none');
-                      
-    if (!isUIShowing) {
-        return; // Đóng băng hàng đợi. Lần sau mở UI nó sẽ tự chạy tiếp!
-    }
-
-    window.thumb3D.isProcessing = true;
+    let isUIShowing = (tuiDo && tuiDo.style.display !== 'none') ||
+        (cuaHang && cuaHang.style.display !== 'none') ||
+        (loRen && loRen.style.display !== 'none');
+    if (!isUIShowing) { window.thumb3D.isProcessing = false; return; }
 
     let task = window.thumb3D.queue.shift();
     let { url, loaiDo, capDo, cacheKey } = task;
@@ -214,9 +215,12 @@ window.xuLyHangDoiChupAnh = function() {
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
-        window.thumb3D.renderer.setSize(256, 256); 
+
+        // 🌟 BẢN VÁ 2: Thay vì kích thước 256x256 cực nặng, hạ xuống 128x128 vừa khít ô Slot.
+        // Giảm dung lượng chuỗi base64 xuống 4 lần, giúp LocalStorage chứa được hàng ngàn vật phẩm không lo bị tràn (Limit 5MB)!
+        window.thumb3D.renderer.setSize(128, 128);
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
-        
+
         window.thumb3D.scene = new THREE.Scene();
         window.thumb3D.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
         let dLight = new THREE.DirectionalLight(0xffffff, 1.5); dLight.position.set(10, 20, 15);
@@ -226,18 +230,10 @@ window.xuLyHangDoiChupAnh = function() {
         window.thumb3D.cam.position.set(0, 0, 15); window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
-
-
-
-
-
-
     if (typeof window.taiHoacNhanBanAsset === 'function') {
-        // 🌟 BẢN VÁ: Hứng thêm biến animations từ kho Asset
         window.taiHoacNhanBanAsset(url, (model, animations) => {
             let pivot = new THREE.Group(); window.thumb3D.scene.add(pivot); pivot.add(model);
 
-            // 🌟 ÉP XƯƠNG VỀ DÁNG NHÀN RỖI TRƯỚC KHI CHỤP ẢNH CHỐNG LỖI T-POSE
             if (animations && animations.length > 0) {
                 let tempMixer = new THREE.AnimationMixer(model);
                 let clipChon = animations[0];
@@ -248,23 +244,21 @@ window.xuLyHangDoiChupAnh = function() {
                     }
                 }
                 tempMixer.clipAction(clipChon).play();
-                tempMixer.update(0.1); // Nhích thời gian 0.1s để xương khớp vào đúng nếp
+                tempMixer.update(0.1);
             }
 
-            // 🌟 GỌI CẢM BIẾN TỶ LỆ CHO THUMBNAIL (Studio chụp ảnh)
             let targetSize = 8.5;
             if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 11.5;
-            else if (loaiDo === 'mount') targetSize = 6.5; // Thú cưỡi bóp nhỏ khung chụp ảnh lại
-            else if (loaiDo === 'model') targetSize = 8.5; 
-            
+            else if (loaiDo === 'mount') targetSize = 6.5;
+            else if (loaiDo === 'model') targetSize = 8.5;
+
             if (typeof window.canBangModelUI === 'function') {
                 window.canBangModelUI(model, targetSize);
             }
 
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6); 
-            else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0); 
+            if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6);
+            else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0);
 
-            // 🌟 ĐIỂM ĂN TIỀN: GỌI HÀM PHÁT SÁNG CHO MÁY ẢNH
             if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
                 window.bocHaoQuang3D(model, capDo);
             }
@@ -272,22 +266,25 @@ window.xuLyHangDoiChupAnh = function() {
             setTimeout(() => {
                 window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
                 let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
-                window.THUMBNAIL_CACHE[cacheKey] = dataURL; 
-                window.thumb3D.scene.remove(pivot); 
+                window.THUMBNAIL_CACHE[cacheKey] = dataURL;
+
+                // 🌟 BẢN VÁ 3: Đóng dấu ghi nhớ vĩnh viễn vào ổ cứng Web Data máy khách
+                try {
+                    localStorage.setItem('TAMGIOI_THUMB_CACHE', JSON.stringify(window.THUMBNAIL_CACHE));
+                } catch (e) {
+                    console.warn("⚠️ Bộ nhớ LocalStorage đầy, ảnh mới sẽ lưu tạm trên RAM.");
+                }
+
+                window.thumb3D.scene.remove(pivot);
                 window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
-            }, 100); 
+            }, 50); // Đẩy tốc độ chụp lên gấp đôi (50ms)
         });
     } else {
         window.THUMBNAIL_CACHE[cacheKey] = 'ERROR'; window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
     }
-
-
-
-
-
-
-    
 };
+
+
 
 
 
