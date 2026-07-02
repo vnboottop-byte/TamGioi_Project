@@ -154,16 +154,15 @@ window.dongTuiDoVIP = function() {
 
 
 
-
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE TRÌNH DUYỆT (BẢN FIX ĐEN THUI)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE VÀ CHỐNG CHỒNG ẢNH (BẢN V20 - TUYỆT ĐỐI AN TOÀN)
 // ==========================================
 window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
 
-// 🌟 BẢN VÁ: Khởi tạo bộ nhớ từ LocalStorage của trình duyệt
+// 🌟 BẢN VÁ 1: Đổi tên Key LocalStorage để xóa sạch bộ nhớ ảnh bị lỗi chồng chéo cũ của Sếp!
+const CACHE_KEY_NAME = 'TAMGIOI_THUMB_CACHE_V3';
 try {
-    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem('TAMGIOI_THUMB_CACHE')) || {};
+    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem(CACHE_KEY_NAME)) || {};
 } catch (e) {
     window.THUMBNAIL_CACHE = {};
 }
@@ -172,7 +171,6 @@ window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
     if (!url) return;
 
     function anEmojiHienAnh(srcData) {
-        // 🛑 ĐÃ TRẢ LẠI LỆNH TÌM ĐÚNG ID ẢNH TRÊN UI CỦA SẾP!
         let imgEl = document.getElementById(imgId);
         let emj = document.getElementById('emoji_' + imgId);
         if (imgEl) { imgEl.src = srcData; imgEl.style.opacity = 1; }
@@ -181,7 +179,6 @@ window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
 
     let cacheKey = url + "_+" + capDo;
 
-    // Nếu đã có trong ổ cứng máy khách -> lôi ra xài ngay lập tức trong 0.001 giây!
     if (window.THUMBNAIL_CACHE[cacheKey] && window.THUMBNAIL_CACHE[cacheKey] !== 'LOADING') {
         anEmojiHienAnh(window.THUMBNAIL_CACHE[cacheKey]); return;
     }
@@ -212,14 +209,16 @@ window.xuLyHangDoiChupAnh = function () {
 
     if (!isUIShowing) { window.thumb3D.isProcessing = false; return; }
 
+    window.thumb3D.isProcessing = true;
     let task = window.thumb3D.queue.shift();
     let { url, loaiDo, capDo, cacheKey } = task;
 
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
-        window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
+        // 🌟 BẢN VÁ 2: GỠ BỎ `preserveDrawingBuffer: true` ĐỂ CHỐNG LỖI BÓNG MA CHỒNG ẢNH TRÊN WEBGL
+        window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
 
-        // Hạ size để tiết kiệm dung lượng LocalStorage (Load sẽ siêu tốc độ)
+        // Hạ Size ảnh xuống 128x128 để nhẹ file, tiết kiệm 75% không gian ổ đĩa trình duyệt
         window.thumb3D.renderer.setSize(128, 128);
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -232,60 +231,78 @@ window.xuLyHangDoiChupAnh = function () {
         window.thumb3D.cam.position.set(0, 0, 15); window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
+    // 🌟 BẢN VÁ 3: DỌN RÁC SẠCH SẼ PHÒNG STUDIO TRƯỚC KHI CHO MÓN MỚI VÀO CHỤP (CHỐNG LỖI KẸT HÌNH)
+    for (let i = window.thumb3D.scene.children.length - 1; i >= 0; i--) {
+        let child = window.thumb3D.scene.children[i];
+        if (child.type === 'Group') {
+            window.thumb3D.scene.remove(child);
+        }
+    }
+
     if (typeof window.taiHoacNhanBanAsset === 'function') {
         window.taiHoacNhanBanAsset(url, (model, animations) => {
-            let pivot = new THREE.Group(); window.thumb3D.scene.add(pivot); pivot.add(model);
+            let pivot = new THREE.Group();
+            window.thumb3D.scene.add(pivot);
+            pivot.add(model);
 
-            if (animations && animations.length > 0) {
-                let tempMixer = new THREE.AnimationMixer(model);
-                let clipChon = animations[0];
-                for (let clip of animations) {
-                    let ten = clip.name.toUpperCase();
-                    if (ten.includes('IDLE') || ten.includes('NHANROI') || ten.includes('WAIT') || ten.includes('STAND')) {
-                        clipChon = clip; break;
+            try {
+                if (animations && animations.length > 0) {
+                    let tempMixer = new THREE.AnimationMixer(model);
+                    let clipChon = animations[0];
+                    for (let clip of animations) {
+                        let ten = clip.name.toUpperCase();
+                        if (ten.includes('IDLE') || ten.includes('NHANROI') || ten.includes('WAIT') || ten.includes('STAND')) {
+                            clipChon = clip; break;
+                        }
                     }
+                    tempMixer.clipAction(clipChon).play();
+                    tempMixer.update(0.1);
                 }
-                tempMixer.clipAction(clipChon).play();
-                tempMixer.update(0.1);
-            }
 
-            let targetSize = 8.5;
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 11.5;
-            else if (loaiDo === 'mount') targetSize = 6.5;
-            else if (loaiDo === 'model') targetSize = 8.5;
+                let targetSize = 8.5;
+                if (loaiDo === 'weapon' || loaiDo === 'weapon2') targetSize = 11.5;
+                else if (loaiDo === 'mount') targetSize = 6.5;
+                else if (loaiDo === 'model') targetSize = 8.5;
 
-            if (typeof window.canBangModelUI === 'function') {
-                window.canBangModelUI(model, targetSize);
-            }
+                if (typeof window.canBangModelUI === 'function') {
+                    window.canBangModelUI(model, targetSize);
+                }
 
-            if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6);
-            else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0);
+                if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6);
+                else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0);
 
-            if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
-                window.bocHaoQuang3D(model, capDo);
+                if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
+                    window.bocHaoQuang3D(model, capDo);
+                }
+            } catch (e) {
+                console.error("Lỗi setup model trong Studio:", e);
             }
 
             setTimeout(() => {
-                window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
-                let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
-                window.THUMBNAIL_CACHE[cacheKey] = dataURL;
-
-                // 🌟 Đóng dấu ghi nhớ vĩnh viễn vào ổ cứng trình duyệt
                 try {
-                    localStorage.setItem('TAMGIOI_THUMB_CACHE', JSON.stringify(window.THUMBNAIL_CACHE));
-                } catch (e) {
-                    console.warn("⚠️ Bộ nhớ LocalStorage đầy, ảnh mới sẽ lưu tạm trên RAM.");
-                }
+                    // 🌟 Ép xóa màu nền WebGL bằng tay trước khi nháy Flash chụp!
+                    window.thumb3D.renderer.clear();
+                    window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
+                    let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
+                    window.THUMBNAIL_CACHE[cacheKey] = dataURL;
 
-                window.thumb3D.scene.remove(pivot);
-                window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
-            }, 50); // Tốc độ rặn ảnh đã đẩy nhanh gấp đôi
+                    localStorage.setItem(CACHE_KEY_NAME, JSON.stringify(window.THUMBNAIL_CACHE));
+                } catch (e) {
+                    console.warn("Lưu ảnh LocalStorage thất bại:", e);
+                } finally {
+                    // 🌟 BẢN VÁ 4: FINALLY - Dù trời sập cũng phải mở khóa cho món tiếp theo chụp ảnh
+                    window.thumb3D.scene.remove(pivot);
+                    window.thumb3D.isProcessing = false;
+                    window.xuLyHangDoiChupAnh();
+                }
+            }, 50); // Tốc độ chụp ép xuống 50ms cho lẹ
         });
     } else {
-        window.THUMBNAIL_CACHE[cacheKey] = 'ERROR'; window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
+        window.THUMBNAIL_CACHE[cacheKey] = 'ERROR';
+        window.thumb3D.isProcessing = false;
+        window.xuLyHangDoiChupAnh();
     }
 };
-
 
 
 
