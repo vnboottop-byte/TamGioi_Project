@@ -154,25 +154,27 @@ window.dongTuiDoVIP = function() {
 
 
 
+
+
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE TRÌNH DUYỆT (BẢN V19 - HARDCORE STORAGE)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE TRÌNH DUYỆT (BẢN FIX ĐEN THUI)
 // ==========================================
 window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
 
-// 🌟 BẢN VÁ 1: Khởi tạo bộ nhớ từ LocalStorage của trình duyệt (Nếu có sẵn thì hốt xài luôn, cấm load lại)
+// 🌟 BẢN VÁ: Khởi tạo bộ nhớ từ LocalStorage của trình duyệt
 try {
-    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem('TAM_GIOI_THUMB_CACHE')) || {};
+    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem('TAMGIOI_THUMB_CACHE')) || {};
 } catch (e) {
     window.THUMBNAIL_CACHE = {};
 }
 
 window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
     if (!url) return;
+
     function anEmojiHienAnh(srcData) {
-        let imgEl = document.createElement('img'); // Dự phòng kiểm tra dữ liệu lỗi
-        let imgReal = document.getElementById(imgId);
+        // 🛑 ĐÃ TRẢ LẠI LỆNH TÌM ĐÚNG ID ẢNH TRÊN UI CỦA SẾP!
+        let imgEl = document.getElementById(imgId);
         let emj = document.getElementById('emoji_' + imgId);
-        if (imgEl) { imgEl.src = srcData; }
         if (imgEl) { imgEl.src = srcData; imgEl.style.opacity = 1; }
         if (emj) emj.style.opacity = 0;
     }
@@ -200,13 +202,14 @@ window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
 window.xuLyHangDoiChupAnh = function () {
     if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
 
-    // 🛡️ CHỐT CHẶN AN TOÀN (LỖI SỐ 1): UI đóng thì ngừng chụp ảnh lập tức để cứu FPS
+    // 🛡️ CHỐT CHẶN AN TOÀN: UI đóng thì ngừng chụp ảnh lập tức để cứu FPS
     let tuiDo = document.getElementById('inventoryModal');
     let cuaHang = document.getElementById('shopModal3D');
     let loRen = document.getElementById('forgeModal');
     let isUIShowing = (tuiDo && tuiDo.style.display !== 'none') ||
         (cuaHang && cuaHang.style.display !== 'none') ||
         (loRen && loRen.style.display !== 'none');
+
     if (!isUIShowing) { window.thumb3D.isProcessing = false; return; }
 
     let task = window.thumb3D.queue.shift();
@@ -216,9 +219,8 @@ window.xuLyHangDoiChupAnh = function () {
         let canvas = document.createElement('canvas');
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true });
 
-        // 🌟 BẢN VÁ 2: Thay vì kích thước 256x256 cực nặng, hạ xuống 128x128 vừa khít ô Slot.
-        // Giảm dung lượng chuỗi base64 xuống 4 lần, giúp LocalStorage chứa được hàng ngàn vật phẩm không lo bị tràn (Limit 5MB)!
-        window.thumb3D.renderer.setSize(256, 256);
+        // Hạ size để tiết kiệm dung lượng LocalStorage (Load sẽ siêu tốc độ)
+        window.thumb3D.renderer.setSize(128, 128);
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
 
         window.thumb3D.scene = new THREE.Scene();
@@ -268,7 +270,7 @@ window.xuLyHangDoiChupAnh = function () {
                 let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
                 window.THUMBNAIL_CACHE[cacheKey] = dataURL;
 
-                // 🌟 BẢN VÁ 3: Đóng dấu ghi nhớ vĩnh viễn vào ổ cứng Web Data máy khách
+                // 🌟 Đóng dấu ghi nhớ vĩnh viễn vào ổ cứng trình duyệt
                 try {
                     localStorage.setItem('TAMGIOI_THUMB_CACHE', JSON.stringify(window.THUMBNAIL_CACHE));
                 } catch (e) {
@@ -277,13 +279,12 @@ window.xuLyHangDoiChupAnh = function () {
 
                 window.thumb3D.scene.remove(pivot);
                 window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
-            }, 50); // Đẩy tốc độ chụp lên gấp đôi (50ms)
+            }, 50); // Tốc độ rặn ảnh đã đẩy nhanh gấp đôi
         });
     } else {
         window.THUMBNAIL_CACHE[cacheKey] = 'ERROR'; window.thumb3D.isProcessing = false; window.xuLyHangDoiChupAnh();
     }
 };
-
 
 
 
