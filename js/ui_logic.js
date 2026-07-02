@@ -218,7 +218,7 @@ window.xuLyHangDoiChupAnh = function () {
 
         // 🌟 BẢN VÁ 2: Thay vì kích thước 256x256 cực nặng, hạ xuống 128x128 vừa khít ô Slot.
         // Giảm dung lượng chuỗi base64 xuống 4 lần, giúp LocalStorage chứa được hàng ngàn vật phẩm không lo bị tràn (Limit 5MB)!
-        window.thumb3D.renderer.setSize(128, 128);
+        window.thumb3D.renderer.setSize(256, 256);
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
 
         window.thumb3D.scene = new THREE.Scene();
