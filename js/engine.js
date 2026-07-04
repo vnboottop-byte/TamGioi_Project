@@ -1145,9 +1145,14 @@ function tienHanhTaiNhanVat() {
             },
             undefined,
             function (error) {
-                // 🛡️ LÁ CHẮN BẤT TỬ: Nếu Sếp lỡ tay xóa mất Model Nhân vật (mimi_3d.glb)
+                // 🌟 MỞ KHÓA MẮT THẦN: In thẳng nguyên nhân cái chết của Three.js ra màn hình!
+                console.error("🚨 THREE.JS BÁO LỖI NỘI TẠI:", error);
+
+                // 🛡️ LÁ CHẮN BẤT TỬ
                 console.error("❌ LỖI: Mất file Nhân vật chính " + window.CURRENT_MODEL_URL + " !");
                 alert("Cảnh báo: Không tìm thấy ngoại hình nhân vật! Game sẽ load một khối vuông tạm thời.");
+
+                // ... (Phần code nặn cục gạch đỏ bên dưới Sếp giữ nguyên)
 
                 // Nặn tạm 1 cục gạch đỏ cho Sếp vào game chạy bộ
                 let geoFallback = new THREE.BoxGeometry(1, 2.5, 1);
