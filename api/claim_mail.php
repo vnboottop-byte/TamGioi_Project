@@ -16,14 +16,12 @@ if (!$mail) { echo json_encode(['status' => 'error', 'msg' => 'Thư không tồn
 
 $conn->begin_transaction();
 try {
-    // 1. Nhận xong Xóa luôn thư
     $stmt_del = $conn->prepare("DELETE FROM user_mailbox WHERE id = ?");
     $stmt_del->bind_param("i", $mail_id);
     $stmt_del->execute();
 
     $msg = "Đã xóa thư!";
     
-    // 2. Chuyển Đồ vào Túi Không Gian
     if ($mail['item_id'] > 0) {
         $stmt_item = $conn->prepare("SELECT name FROM shop_items WHERE id = ?");
         $stmt_item->bind_param("i", $mail['item_id']);
@@ -38,10 +36,10 @@ try {
         }
     }
 
-    // 3. Chuyển Linh Thạch dự phòng
-    if ($mail['gold'] > 0) {
-        $conn->query("UPDATE users SET balance = balance + " . $mail['gold'] . " WHERE username = '$username'");
-        $msg = "Đã cất " . number_format($mail['gold']) . " Linh thạch vào ví!";
+    // 🌟 ĐÃ SỬA THÀNH 'game_gold'
+    if (isset($mail['game_gold']) && $mail['game_gold'] > 0) {
+        $conn->query("UPDATE users SET balance = balance + " . $mail['game_gold'] . " WHERE username = '$username'");
+        $msg = "Đã cất " . number_format($mail['game_gold']) . " Linh thạch vào ví!";
     }
 
     $conn->commit();
