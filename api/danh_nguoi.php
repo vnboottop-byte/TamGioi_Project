@@ -36,9 +36,51 @@ try {
     $new_hp = max(0, $vic_data['hp_current'] - $real_damage);
     $stmt_update = $conn->prepare("UPDATE game_characters SET hp_current = ? WHERE username = ?");
     $stmt_update->bind_param("is", $new_hp, $victim);
+
+
+
     $stmt_update->execute();
     
+    // ==========================================
+    // ☠️ SỰ KIỆN LOẠN CHIẾN MARINEFORD (CHỦ NHẬT 18H-21H)
+    // ==========================================
+    if ($new_hp === 0) { // CHỈ TÍNH KHI ĐÁNH CHẾT (MÁU = 0)
+        $current_day = (int)date('w'); // 0 = Chủ Nhật
+        $current_hour = (int)date('H'); // Lấy giờ hiện tại (0-23)
+
+        // Kiểm tra xem có đúng khung giờ Vàng không?
+        if ($current_day === 0 && $current_hour >= 18 && $current_hour <= 20) {
+            
+            // Lấy thông tin Khu vực và Thành tích của Sát thủ
+            $stmt_zone = $conn->prepare("SELECT zone_id, event_kills, last_event_date FROM game_characters WHERE username = ?");
+            $stmt_zone->bind_param("s", $attacker);
+            $stmt_zone->execute();
+            $att_info = $stmt_zone->get_result()->fetch_assoc();
+            
+            // Nếu kẻ sát nhân đúng là đang ở MARINE_FORD
+            if ($att_info && $att_info['zone_id'] === 'MARINE_FORD') {
+                $today = date('Y-m-d');
+                
+                if ($att_info['last_event_date'] !== $today) {
+                    // Nếu mạng cuối cùng không phải hôm nay -> Tự động Reset về 1 mạng cho tuần mới
+                    $stmt_ev = $conn->prepare("UPDATE game_characters SET event_kills = 1, last_event_date = ? WHERE username = ?");
+                    $stmt_ev->bind_param("ss", $today, $attacker);
+                    $stmt_ev->execute();
+                } else {
+                    // Nếu vẫn là hôm nay -> Cộng dồn mạng
+                    $stmt_ev = $conn->prepare("UPDATE game_characters SET event_kills = event_kills + 1 WHERE username = ?");
+                    $stmt_ev->bind_param("s", $attacker);
+                    $stmt_ev->execute();
+                }
+            }
+        }
+    }
+    // ==========================================
+
     $conn->commit();
+    
+
+
     echo json_encode(['status' => 'success', 'new_hp' => $new_hp, 'is_dead' => ($new_hp === 0)]);
 } catch (Exception $e) {
     $conn->rollback();
