@@ -4913,7 +4913,7 @@ window.capNhatNhiemVu = function() {
                 box.style.borderColor = isDone ? '#2ecc71' : '#d35400';
                 
                 box.innerHTML = `
-                    <h4 style="margin:0; color:#e67e22; text-transform:uppercase; border-bottom:1px solid #e67e22; padding-bottom:5px; font-size:14px;">📜 VÒNG LIÊN HOÀN (${q.quest_index}/30)</h4>
+                    <h4 style="margin:0; color:#e67e22; text-transform:uppercase; border-bottom:1px solid #e67e22; padding-bottom:5px; font-size:14px;">📜 NHIỆM VỤ NGÀY (${q.quest_index}/30)</h4>
                     <div style="font-size:13px; margin-top:8px; font-weight:bold; color:${isDone ? '#2ecc71' : '#fff'};">
                         ${strAction}: <span style="color:${color}">${q.target_name}</span>
                     </div>
