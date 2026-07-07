@@ -152,22 +152,55 @@ window.dongTuiDoVIP = function() {
 
 
 
-
-
 // ==========================================
-// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG CHỐNG CACHE VÀ CHỐNG CHỒNG ẢNH (BẢN V20 - TUYỆT ĐỐI AN TOÀN)
+// 📸 STUDIO CHỤP ẢNH TỰ ĐỘNG (BẢN V21 - TÚI CÀN KHÔN INDEXEDDB CHỐNG TRÀN BỘ NHỚ)
 // ==========================================
-window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
 
-// 🌟 BẢN VÁ 1: Đổi tên Key LocalStorage để xóa sạch bộ nhớ ảnh bị lỗi chồng chéo cũ của Sếp!
-const CACHE_KEY_NAME = 'TAMGIOI_THUMB_CACHE_V3';
-try {
-    window.THUMBNAIL_CACHE = JSON.parse(localStorage.getItem(CACHE_KEY_NAME)) || {};
-} catch (e) {
-    window.THUMBNAIL_CACHE = {};
+// 📦 ĐỘNG CƠ TÚI CÀN KHÔN (INDEXEDDB)
+const DB_NAME = "TamGioiDB";
+const STORE_NAME = "ThumbCache";
+
+function khoiTaoTuiCanKhon() {
+    return new Promise((resolve, reject) => {
+        let request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = function(event) {
+            let db = event.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+                db.createObjectStore(STORE_NAME);
+            }
+        };
+        request.onsuccess = function(event) { resolve(event.target.result); };
+        request.onerror = function(event) { reject("Lỗi túi Càn Khôn!"); };
+    });
 }
 
-window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
+async function luuAnhVaoTui(idMonDo, base64Data) {
+    try {
+        let db = await khoiTaoTuiCanKhon();
+        let transaction = db.transaction(STORE_NAME, "readwrite");
+        let store = transaction.objectStore(STORE_NAME);
+        store.put(base64Data, idMonDo);
+    } catch (e) { console.error("Lỗi cất ảnh:", e); }
+}
+
+function layAnhTuTui(idMonDo) {
+    return new Promise(async (resolve) => {
+        try {
+            let db = await khoiTaoTuiCanKhon();
+            let transaction = db.transaction(STORE_NAME, "readonly");
+            let store = transaction.objectStore(STORE_NAME);
+            let request = store.get(idMonDo);
+            request.onsuccess = () => resolve(request.result); 
+            request.onerror = () => resolve(null);
+        } catch (e) { resolve(null); }
+    });
+}
+
+// 📸 LOGIC STUDIO CHỤP ẢNH GẮN VỚI TÚI CÀN KHÔN
+window.thumb3D = window.thumb3D || { queue: [], isProcessing: false, scene: null, cam: null, renderer: null };
+window.THUMBNAIL_CACHE = window.THUMBNAIL_CACHE || {};
+
+window.taoThuNho3D = async function (url, loaiDo, imgId, capDo = 0) {
     if (!url) return;
 
     function anEmojiHienAnh(srcData) {
@@ -178,6 +211,13 @@ window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
     }
 
     let cacheKey = url + "_+" + capDo;
+
+    // 🌟 1. KIỂM TRA TRONG TÚI CÀN KHÔN (INDEXEDDB) TRƯỚC KHI TẢI
+    let anhTuTui = await layAnhTuTui(cacheKey);
+    if (anhTuTui && anhTuTui !== 'ERROR') {
+        anEmojiHienAnh(anhTuTui); 
+        return; // Đã có ảnh trong Ổ cứng -> Lấy ra dùng ngay, khỏi bật máy chụp 3D!
+    }
 
     if (window.THUMBNAIL_CACHE[cacheKey] && window.THUMBNAIL_CACHE[cacheKey] !== 'LOADING') {
         anEmojiHienAnh(window.THUMBNAIL_CACHE[cacheKey]); return;
@@ -199,7 +239,6 @@ window.taoThuNho3D = function (url, loaiDo, imgId, capDo = 0) {
 window.xuLyHangDoiChupAnh = function () {
     if (window.thumb3D.isProcessing || window.thumb3D.queue.length === 0) return;
 
-    // 🛡️ CHỐT CHẶN AN TOÀN: UI đóng thì ngừng chụp ảnh lập tức để cứu FPS
     let tuiDo = document.getElementById('inventoryModal');
     let cuaHang = document.getElementById('shopModal3D');
     let loRen = document.getElementById('forgeModal');
@@ -215,10 +254,7 @@ window.xuLyHangDoiChupAnh = function () {
 
     if (!window.thumb3D.renderer) {
         let canvas = document.createElement('canvas');
-        // 🌟 BẢN VÁ 2: GỠ BỎ `preserveDrawingBuffer: true` ĐỂ CHỐNG LỖI BÓNG MA CHỒNG ẢNH TRÊN WEBGL
         window.thumb3D.renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-
-        // Hạ Size ảnh xuống 128x128 để nhẹ file, tiết kiệm 75% không gian ổ đĩa trình duyệt
         window.thumb3D.renderer.setSize(128, 128);
         window.thumb3D.renderer.outputEncoding = THREE.sRGBEncoding;
 
@@ -231,12 +267,9 @@ window.xuLyHangDoiChupAnh = function () {
         window.thumb3D.cam.position.set(0, 0, 15); window.thumb3D.cam.lookAt(0, 0, 0);
     }
 
-    // 🌟 BẢN VÁ 3: DỌN RÁC SẠCH SẼ PHÒNG STUDIO TRƯỚC KHI CHO MÓN MỚI VÀO CHỤP (CHỐNG LỖI KẸT HÌNH)
     for (let i = window.thumb3D.scene.children.length - 1; i >= 0; i--) {
         let child = window.thumb3D.scene.children[i];
-        if (child.type === 'Group') {
-            window.thumb3D.scene.remove(child);
-        }
+        if (child.type === 'Group') { window.thumb3D.scene.remove(child); }
     }
 
     if (typeof window.taiHoacNhanBanAsset === 'function') {
@@ -264,38 +297,33 @@ window.xuLyHangDoiChupAnh = function () {
                 else if (loaiDo === 'mount') targetSize = 6.5;
                 else if (loaiDo === 'model') targetSize = 8.5;
 
-                if (typeof window.canBangModelUI === 'function') {
-                    window.canBangModelUI(model, targetSize);
-                }
+                if (typeof window.canBangModelUI === 'function') window.canBangModelUI(model, targetSize);
 
                 if (loaiDo === 'weapon' || loaiDo === 'weapon2') pivot.rotation.set(Math.PI / 4, 0, Math.PI / 6);
                 else if (loaiDo === 'mount' || loaiDo === 'model') pivot.rotation.set(0, -Math.PI / 6, 0);
 
-                if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') {
-                    window.bocHaoQuang3D(model, capDo);
-                }
-            } catch (e) {
-                console.error("Lỗi setup model trong Studio:", e);
-            }
+                if (capDo > 0 && typeof window.bocHaoQuang3D === 'function') window.bocHaoQuang3D(model, capDo);
+            } catch (e) {}
 
             setTimeout(() => {
                 try {
-                    // 🌟 Ép xóa màu nền WebGL bằng tay trước khi nháy Flash chụp!
                     window.thumb3D.renderer.clear();
                     window.thumb3D.renderer.render(window.thumb3D.scene, window.thumb3D.cam);
                     let dataURL = window.thumb3D.renderer.domElement.toDataURL('image/png');
+                    
                     window.THUMBNAIL_CACHE[cacheKey] = dataURL;
 
-                    localStorage.setItem(CACHE_KEY_NAME, JSON.stringify(window.THUMBNAIL_CACHE));
+                    // 🌟 CẤT ẢNH VÀO TÚI CÀN KHÔN (CHỐNG LỖI ĐẦY BỘ NHỚ!)
+                    luuAnhVaoTui(cacheKey, dataURL);
+
                 } catch (e) {
-                    console.warn("Lưu ảnh LocalStorage thất bại:", e);
+                    console.warn("Lưu ảnh thất bại:", e);
                 } finally {
-                    // 🌟 BẢN VÁ 4: FINALLY - Dù trời sập cũng phải mở khóa cho món tiếp theo chụp ảnh
                     window.thumb3D.scene.remove(pivot);
                     window.thumb3D.isProcessing = false;
                     window.xuLyHangDoiChupAnh();
                 }
-            }, 50); // Tốc độ chụp ép xuống 50ms cho lẹ
+            }, 50);
         });
     } else {
         window.THUMBNAIL_CACHE[cacheKey] = 'ERROR';
@@ -303,7 +331,6 @@ window.xuLyHangDoiChupAnh = function () {
         window.xuLyHangDoiChupAnh();
     }
 };
-
 
 
 
