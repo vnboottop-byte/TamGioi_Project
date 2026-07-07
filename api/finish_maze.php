@@ -41,7 +41,7 @@ try {
     }
 
     $min_price = 0; $max_price = 0;
-    if ($level_vua_qua == 1) { $min_price = 10000; $max_price = 60000; }     
+    if ($level_vua_qua == 1) { $min_price = 50000; $max_price = 50000; }     
     elseif ($level_vua_qua == 2) { $min_price = 60000; $max_price = 120000; } 
     elseif ($level_vua_qua == 3) { $min_price = 120000; $max_price = 170000;} 
     elseif ($level_vua_qua == 4) { $min_price = 170000; $max_price = 220000;} 
