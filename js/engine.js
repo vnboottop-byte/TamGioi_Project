@@ -3602,21 +3602,28 @@ window.thucHienTruyenTong = function (congData) {
 
 
     // ==========================================
-    // 🏆 CẢM BIẾN VƯỢT ẢI MÊ CUNG CHUẨN AAA
+    // 🏆 CẢM BIẾN VƯỢT ẢI MÊ CUNG CHUẨN AAA (BẢN VÁ QUÉT XUYÊN RÁC)
     // ==========================================
-    let mapHienTai = window.ZONE_ID || '';
-    let mapDichDen = congData.zone_dich_den || '';
+    let mapHienTai = String(window.ZONE_ID || '');
+    let mapDichDen = String(congData.zone_dich_den || '');
 
-    // Dùng Regex để tự động trích xuất con số từ chữ "LV1", "LV2"...
-    let matchHienTai = mapHienTai.trim().match(/^LV(\d+)$/i);
-    let matchDichDen = mapDichDen.trim().match(/^LV(\d+)$/i);
+    // In ra F12 để theo dõi xem Cảm biến có bị mù không
+    console.log(`🧭 [HẢI QUAN MÊ CUNG] Đang xét duyệt: [${mapHienTai}] -> [${mapDichDen}]`);
+
+    // Dùng Regex siêu nới lỏng: Bắt mọi chữ có chứa "LV" và số đằng sau bất chấp khoảng trắng
+    let matchHienTai = mapHienTai.match(/LV\s*(\d+)/i);
+    let matchDichDen = mapDichDen.match(/LV\s*(\d+)/i);
 
     if (matchHienTai && matchDichDen) {
         let lvHienTai = parseInt(matchHienTai[1]);
         let lvDichDen = parseInt(matchDichDen[1]);
 
+        console.log(`🎯 [HẢI QUAN MÊ CUNG] Nhận diện: Đang ở Ải ${lvHienTai}, Muốn sang Ải ${lvDichDen}`);
+
         // Nếu đi ĐÚNG TIẾN TRÌNH (Từ 1 sang 2, 2 sang 3...)
         if (lvDichDen === lvHienTai + 1) {
+            console.log(`✅ [HẢI QUAN MÊ CUNG] Hợp lệ! Đang xin chỉ thị phát quà từ Server...`);
+            
             let fd = new FormData();
             fd.append('level_vua_qua', lvHienTai);
 
@@ -3624,12 +3631,12 @@ window.thucHienTruyenTong = function (congData) {
             fetch('api/finish_maze.php', { method: 'POST', body: fd })
                 .then(res => res.json())
                 .then(data => {
+                    console.log(`💌 [BƯU ĐIỆN] Server trả lời:`, data);
+                    
                     if (data.status === 'success') {
                         // Bắn pháo hoa rực rỡ ăn mừng vượt ải!
                         if (typeof window.taoChuNoiGacha === 'function') {
                             window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "🎉 VƯỢT ẢI " + lvHienTai + " THÀNH CÔNG!", "#f1c40f");
-                            
-                            // 🌟 Rớt hộp thư báo hiệu
                             setTimeout(() => window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), "📮 CÓ THƯ MỚI!", "#00ffcc"), 300);
                         }
                         
@@ -3637,15 +3644,19 @@ window.thucHienTruyenTong = function (congData) {
                         let badge = document.getElementById('mailBadgeUI');
                         if (badge) { badge.style.display = 'block'; badge.innerText = "!"; }
                     } else {
-                        // 🌟 HIỆN RÕ LÝ DO NẾU BỊ TỪ CHỐI TẶNG QUÀ (Ví dụ: Đã nhận trong tháng)
+                        // 🌟 HIỆN RÕ LÝ DO NẾU BỊ TỪ CHỐI TẶNG QUÀ
                         if(typeof window.hienThongBaoBoGoc === 'function') {
                             window.hienThongBaoBoGoc("⚠️ " + data.msg, "#e74c3c");
                         } else {
-                            console.warn("⚠️ TỪ CHỐI QUA ẢI: " + data.msg);
+                            alert("⚠️ TỪ CHỐI QUA ẢI: " + data.msg);
                         }
                     }
-                }).catch(e => console.error("Lỗi báo cáo vượt ải:", e));
+                }).catch(e => console.error("❌ [LỖI HẢI QUAN]: Báo cáo vượt ải thất bại", e));
+        } else {
+            console.log(`❌ [HẢI QUAN MÊ CUNG] Nhảy cóc hoặc đi lùi, từ chối phát quà!`);
         }
+    } else {
+        console.log(`ℹ️ [HẢI QUAN MÊ CUNG] Không phải cổng Mê cung, đi bình thường.`);
     }
     // ==========================================
 
