@@ -1,0 +1,54 @@
+<?php
+session_start();
+require_once '../db.php';
+header('Content-Type: application/json');
+
+if (!isset($_SESSION['user']) || !isset($_POST['mail_id'])) { echo json_encode(['status' => 'error']); exit; }
+$username = $_SESSION['user'];
+$mail_id = (int)$_POST['mail_id'];
+
+$stmt = $conn->prepare("SELECT * FROM user_mailbox WHERE id = ? AND username = ? AND is_claimed = 0");
+$stmt->bind_param("is", $mail_id, $username);
+$stmt->execute();
+$mail = $stmt->get_result()->fetch_assoc();
+
+if (!$mail) { echo json_encode(['status' => 'error', 'msg' => 'Thư không tồn tại hoặc đã bị xóa!']); exit; }
+
+$conn->begin_transaction();
+try {
+    // 1. Nhận xong Xóa luôn thư
+    $stmt_del = $conn->prepare("DELETE FROM user_mailbox WHERE id = ?");
+    $stmt_del->bind_param("i", $mail_id);
+    $stmt_del->execute();
+
+    $msg = "Đã xóa thư!";
+    
+    // 2. Chuyển Đồ vào Túi Không Gian
+    if ($mail['item_id'] > 0) {
+        $stmt_item = $conn->prepare("SELECT name FROM shop_items WHERE id = ?");
+        $stmt_item->bind_param("i", $mail['item_id']);
+        $stmt_item->execute();
+        $item = $stmt_item->get_result()->fetch_assoc();
+
+        if ($item) {
+            $stmt_inv = $conn->prepare("INSERT INTO user_inventory (username, item_id) VALUES (?, ?)");
+            $stmt_inv->bind_param("si", $username, $mail['item_id']);
+            $stmt_inv->execute();
+            $msg = "Thu thập thành công: " . $item['name'];
+        }
+    }
+
+    // 3. Chuyển Linh Thạch dự phòng
+    if ($mail['gold'] > 0) {
+        $conn->query("UPDATE users SET balance = balance + " . $mail['gold'] . " WHERE username = '$username'");
+        $msg = "Đã cất " . number_format($mail['gold']) . " Linh thạch vào ví!";
+    }
+
+    $conn->commit();
+    echo json_encode(['status' => 'success', 'msg' => $msg]);
+
+} catch (Exception $e) {
+    $conn->rollback();
+    echo json_encode(['status' => 'error', 'msg' => 'Lỗi hệ thống!']);
+}
+?>
