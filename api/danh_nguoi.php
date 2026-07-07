@@ -45,6 +45,60 @@ try {
     // ☠️ SỰ KIỆN LOẠN CHIẾN MARINEFORD (CHỦ NHẬT 18H-21H)
     // ==========================================
     if ($new_hp === 0) { // CHỈ TÍNH KHI ĐÁNH CHẾT (MÁU = 0)
+       
+
+
+       // ==========================================
+    // 📜 CẢM BIẾN NHIỆM VỤ HÀNG NGÀY (ĐỒ SÁT PK)
+    // ==========================================
+    $today_q = date('Y-m-d');
+    $stmt_q = $conn->prepare("SELECT * FROM user_quests WHERE username = ? AND quest_date = ? AND status = 'ACTIVE' ORDER BY quest_index ASC LIMIT 1");
+    $stmt_q->bind_param("ss", $attacker, $today_q);
+    $stmt_q->execute();
+    $quest = $stmt_q->get_result()->fetch_assoc();
+
+    // Kiểm tra xem Nhiệm vụ có phải là GIẾT NGƯỜI CHƠI KHÁC không?
+    if ($quest && $quest['quest_type'] === 'KILL_PLAYER') {
+        $quest_id = $quest['id'];
+        $new_amount = $quest['current_amount'] + 1;
+        
+        if ($new_amount >= $quest['required_amount']) {
+            // HOÀN THÀNH -> PHÁT THƯỞNG
+            $conn->query("UPDATE user_quests SET current_amount = required_amount, status = 'REWARDED' WHERE id = $quest_id");
+
+            $price_col = 'price'; 
+            $col_check = $conn->query("SHOW COLUMNS FROM shop_items");
+            if ($col_check) { while ($c = $col_check->fetch_assoc()) { if ($c['Field'] === 'price_balance') $price_col = 'price_balance'; } }
+
+            // Bốc quà từ 20k đến 40k
+            $sql_random = "SELECT id, name FROM shop_items WHERE $price_col BETWEEN 20000 AND 40000 ORDER BY RAND() LIMIT 1";
+            $res_random = $conn->query($sql_random);
+            $shop_item_id = 0;
+            
+            if ($res_random && $row_item = $res_random->fetch_assoc()) {
+                $shop_item_id = $row_item['id'];
+                $item_name = $row_item['name'];
+                $content = "Hảo thủ đoạn! Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Hệ thống gửi tặng bạn [ $item_name ] và 5.000 Vàng.";
+            } else {
+                $content = "Hảo thủ đoạn! Chúc mừng đạo hữu hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Kho đồ hiện trống, gửi đền bù 5.000 Vàng.";
+            }
+
+            $title = "🎁 Thưởng Nhiệm Vụ Vòng " . $quest['quest_index'];
+            $game_gold_reward = 5000; // 🌟 5K VÀNG CÀY CUỐC
+            
+            $stmt_mail = $conn->prepare("INSERT INTO user_mailbox (username, title, content, item_id, game_gold) VALUES (?, ?, ?, ?, ?)");
+            $stmt_mail->bind_param("sssii", $attacker, $title, $content, $shop_item_id, $game_gold_reward);
+            $stmt_mail->execute();
+        } else {
+            // CHƯA XONG -> CHỈ TĂNG TIẾN ĐỘ
+            $conn->query("UPDATE user_quests SET current_amount = $new_amount WHERE id = $quest_id");
+        }
+    }
+    // ==========================================
+
+
+
+
         $current_day = (int)date('w'); // 0 = Chủ Nhật
         $current_hour = (int)date('H'); // Lấy giờ hiện tại (0-23)
 
