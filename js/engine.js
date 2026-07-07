@@ -4868,3 +4868,65 @@ window.canBangModelUI = function (model, kichThuocKhung = 4) {
     model.position.y = -center.y * tyLe;
     model.position.z = -center.z * tyLe;
 };
+
+
+
+
+
+
+// ==========================================
+// 📜 HỆ THỐNG RADAR THEO DÕI NHIỆM VỤ HÀNG NGÀY
+// ==========================================
+window.taoUITrackerNhiemVu = function() {
+    let box = document.getElementById('questTrackerUI');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'questTrackerUI';
+        // Nằm bên trái, dưới cái bảng GM Monitor một chút
+        box.style.cssText = 'position:fixed; top:280px; left:20px; background:rgba(0,0,0,0.8); border:2px solid #d35400; padding:10px 15px; border-radius:8px; color:#fff; font-family:monospace; z-index:9998; box-shadow: 0 0 10px rgba(211, 84, 0, 0.5); pointer-events:none; min-width: 220px; backdrop-filter: blur(5px); transition: 0.3s;';
+        document.body.appendChild(box);
+    }
+};
+
+window.capNhatNhiemVu = function() {
+    fetch('api/daily_quests.php')
+    .then(res => res.json())
+    .then(data => {
+        window.taoUITrackerNhiemVu();
+        let box = document.getElementById('questTrackerUI');
+        
+        if (data.status === 'success') {
+            if (data.completed_all) {
+                box.style.borderColor = '#2ecc71';
+                box.style.boxShadow = '0 0 10px rgba(46, 204, 113, 0.5)';
+                box.innerHTML = `
+                    <h4 style="margin:0; color:#2ecc71; text-transform:uppercase; font-size:14px; text-shadow: 0 0 5px #2ecc71;">📜 Nhiệm Vụ Vòng</h4>
+                    <div style="font-size:12px; margin-top:5px; color:#aaa;">Đã hoàn thành 30/30!</div>
+                `;
+            } else {
+                let q = data.quest;
+                let isDone = (q.status === 'COMPLETED' || parseInt(q.current_amount) >= parseInt(q.required_amount));
+                
+                let color = isDone ? '#2ecc71' : '#f1c40f';
+                let strAction = q.quest_type === 'KILL_PLAYER' ? '🔪 Đồ sát' : '⚔️ Săn lùng';
+                
+                box.style.borderColor = isDone ? '#2ecc71' : '#d35400';
+                
+                box.innerHTML = `
+                    <h4 style="margin:0; color:#e67e22; text-transform:uppercase; border-bottom:1px solid #e67e22; padding-bottom:5px; font-size:14px;">📜 VÒNG LIÊN HOÀN (${q.quest_index}/30)</h4>
+                    <div style="font-size:13px; margin-top:8px; font-weight:bold; color:${isDone ? '#2ecc71' : '#fff'};">
+                        ${strAction}: <span style="color:${color}">${q.target_name}</span>
+                    </div>
+                    <div style="font-size:14px; margin-top:5px; text-align:right; font-weight:900; color:${color}; text-shadow: 0 0 5px ${color};">
+                        Tiến độ: ${q.current_amount} / ${q.required_amount}
+                    </div>
+                    ${isDone ? `<div style="font-size:10px; color:#2ecc71; text-align:right; margin-top:5px; animation: nhipTho 1s infinite;">(Đang báo cáo bưu điện...)</div>` : ''}
+                `;
+            }
+        }
+    }).catch(e => {});
+};
+
+// Cứ 5 giây Radar sẽ quét một lần để cập nhật số lượng lên màn hình
+setInterval(window.capNhatNhiemVu, 5000);
+setTimeout(window.capNhatNhiemVu, 2000); // Khởi động ban đầu
