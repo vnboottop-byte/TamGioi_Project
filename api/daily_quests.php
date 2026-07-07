@@ -17,6 +17,10 @@ $res_check = $conn->query($check_sql);
 
 if ($res_check->num_rows == 0) {
     // 🌟 CHƯA CÓ -> TẠO MỚI NGẪU NHIÊN 30 VÒNG
+    // 🌟 BẢN VÁ AAA: THÊM LỆNH THIÊU RỤI TẤT CẢ NHIỆM VỤ CỦA NHỮNG NGÀY TRƯỚC ĐÓ ĐỂ CHỐNG NỔ DATABASE
+    $conn->query("DELETE FROM user_quests WHERE username = '$username' AND quest_date < '$today'");
+
+    // TẠO MỚI NGẪU NHIÊN 30 VÒNG CHO HÔM NAY
     $bosses = [];
     // Chỉ bốc những Boss không phải hệ TRANG_TRI
     $res_boss = $conn->query("SELECT name FROM map_monsters WHERE class_code != 'TRANG_TRI' GROUP BY name");
