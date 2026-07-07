@@ -3607,34 +3607,36 @@ window.thucHienTruyenTong = function (congData) {
     let mapHienTai = window.ZONE_ID || '';
     let mapDichDen = congData.zone_dich_den || '';
 
-    // Dùng Regex để tự động trích xuất con số từ chữ "LV1", "LV2"...
     let matchHienTai = mapHienTai.match(/^LV(\d+)$/);
     let matchDichDen = mapDichDen.match(/^LV(\d+)$/);
 
-    // Nếu Sếp đi từ một Map LV này sang một Map LV khác
     if (matchHienTai && matchDichDen) {
         let lvHienTai = parseInt(matchHienTai[1]);
         let lvDichDen = parseInt(matchDichDen[1]);
 
-        // Nếu đi ĐÚNG TIẾN TRÌNH (Từ 1 sang 2, 2 sang 3...)
         if (lvDichDen === lvHienTai + 1) {
             let fd = new FormData();
-            fd.append('level_vua_qua', lvHienTai);
-
-            // Bắn tín hiệu lên Server để lưu Kỷ Lục và Phát Thưởng!
+            fd.append('level_vua_qua', lvHienTai); 
+            
             fetch('api/finish_maze.php', { method: 'POST', body: fd })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        // Bắn pháo hoa rực rỡ ăn mừng vượt ải!
-                        if (typeof window.taoChuNoiGacha === 'function') {
-                            window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "🎉 VƯỢT ẢI " + lvHienTai + " THÀNH CÔNG!", "#f1c40f");
-                            if (data.thuong_linh_thach) {
-                                setTimeout(() => window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), "+" + data.thuong_linh_thach + " LINH THẠCH", "#00ffcc"), 300);
-                            }
-                        }
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    if(typeof window.taoChuNoiGacha === 'function') {
+                        window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), "🎉 VƯỢT ẢI " + lvHienTai + " THÀNH CÔNG!", "#f1c40f");
+                        // Rớt hộp thư báo hiệu
+                        setTimeout(() => window.taoChuNoiGacha(playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), "📮 CÓ THƯ MỚI!", "#00ffcc"), 300);
                     }
-                }).catch(e => console.error("Lỗi báo cáo vượt ải:", e));
+                    // Tự động bật Chấm đỏ (Badge) của Hộp thư lên ngay lập tức!
+                    let badge = document.getElementById('mailBadgeUI');
+                    if (badge) { badge.style.display = 'block'; badge.innerText = "!"; }
+                } else {
+                    // 🌟 BẢN VÁ MỚI: HIỆN RÕ LÝ DO NẾU BỊ TỪ CHỐI TẶNG QUÀ
+                    if(typeof window.hienThongBaoBoGoc === 'function') {
+                        window.hienThongBaoBoGoc("⚠️ " + data.msg, "#e74c3c");
+                    }
+                }
+            }).catch(e => console.error("Lỗi báo cáo vượt ải:", e));
         }
     }
     // ==========================================
