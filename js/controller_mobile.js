@@ -72,12 +72,14 @@
     const mJoyStick = document.getElementById('mJoyStick');
     const mZoneCam = document.getElementById('mZoneCam');
     
-    // 1. JOYSTICK DI CHUYỂN
+    // 1. JOYSTICK DI CHUYỂN (BẢN VÁ: CHỐNG TÀNG HÌNH & CHỐNG KẸT ZOOM CAMERA)
     let joyId = null; let joyCenter = { x: 0, y: 0 }; let joyR = 50; 
 
     if (mZoneLeft && mJoyBase) {
         mZoneLeft.addEventListener('touchstart', (e) => {
             e.preventDefault(); 
+            e.stopPropagation(); // 🌟 LÁ CHẮN 1: Giấu ngón tay trái đi để Camera không bị nhầm là Zoom!
+            
             let t = e.changedTouches[0]; joyId = t.identifier; joyCenter = { x: t.clientX, y: t.clientY };
             mJoyBase.style.left = joyCenter.x + 'px'; 
             mJoyBase.style.top = joyCenter.y + 'px'; 
@@ -86,7 +88,10 @@
         }, {passive: false});
 
         mZoneLeft.addEventListener('touchmove', (e) => {
-            e.preventDefault(); if (joyId === null) return;
+            e.preventDefault(); 
+            e.stopPropagation(); // 🌟 LÁ CHẮN 2: Ngăn lỗi Zoom khi đang vừa chạy vừa liếc Camera
+            
+            if (joyId === null) return;
             let t = Array.from(e.touches).find(x => x.identifier === joyId); if (!t) return;
             
             let dx = t.clientX - joyCenter.x; let dy = t.clientY - joyCenter.y; let dist = Math.hypot(dx, dy);
@@ -99,13 +104,27 @@
         }, {passive: false});
 
         function resetJoy(e) {
+            e.stopPropagation(); // 🌟 LÁ CHẮN 3
             if (Array.from(e.changedTouches).some(t => t.identifier === joyId) || e.type === 'touchcancel') {
-                joyId = null; mJoyBase.style.opacity = '0';
+                joyId = null; 
+                
+                // 🌟 BẢN VÁ: Trả Joystick về tọa độ gốc và độ mờ 50% (Không gán bằng 0 nữa)
+                mJoyBase.style.left = '80px'; 
+                mJoyBase.style.top = 'auto'; 
+                mJoyBase.style.bottom = '60px';
+                mJoyBase.style.opacity = '0.5'; 
+                mJoyStick.style.transform = `translate(-50%, -50%)`;
+                
                 window.keys.w = window.keys.s = window.keys.a = window.keys.d = false; window.isKeyboardMoving = false;
             }
         }
         mZoneLeft.addEventListener('touchend', resetJoy); mZoneLeft.addEventListener('touchcancel', resetJoy);
     }
+
+
+
+
+
 
     // 2. XOAY CAMERA BẰNG CÁCH VUỐT VÙNG TRỐNG BÊN PHẢI
     let camId = null; let lastCamX = 0;
