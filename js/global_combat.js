@@ -1,5 +1,5 @@
 // ==========================================
-// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V3 - BỌC THÉP CHỐNG CRASH)
+// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V4 - FIX LỖI TỰ ĐÁNH MÌNH)
 // ==========================================
 console.log("🚀 Khởi động Bộ Não Quản Lý Toàn Cục...");
 
@@ -77,22 +77,17 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG (CHỐNG CRASH TẦNG SÂU)
+// 📡 MÁY QUÉT X-QUANG 
 // ==========================================
 window.layHitbox = function (mesh) {
-    // 1. Chặn đối tượng rỗng
     if (!mesh || !mesh.position) return { tamNguc: new THREE.Vector3(0,0,0), banKinh: 2.0, chieuCao: 2.5 };
 
-    // 2. NHẬN DIỆN VẬT THỂ GIẢ (MOCK OBJECT)
-    // Tự động vô hiệu hóa máy quét Box3 nếu phát hiện mesh là đồ giả do multiplayer.js bơm vào
     let isMockObject = !(typeof mesh.traverse === 'function' && mesh.isObject3D);
-
     let footPos = typeof mesh.position.clone === 'function' ? mesh.position.clone() : new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z);
     let upV = (mesh.up && typeof mesh.up.clone === 'function') ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
     let chieuCao = 2.5; let chieuRong = 4.0;
 
-    // Chỉ tính toán quét 3D nếu đây là nhân vật thật
     if (!isMockObject) {
         let isMount = false;
         mesh.traverse(c => { if (c.name && c.name.toUpperCase().includes('YENNGUA')) isMount = true; });
@@ -110,15 +105,14 @@ window.layHitbox = function (mesh) {
                     mesh.chieuCaoCache = 2.5; mesh.chieuRongCache = 4.0;
                 }
             }
-            chieuCao = mesh.chieuCaoCache;
-            chieuRong = mesh.chieuRongCache;
+            chieuCao = mesh.chieuCaoCache; chieuRong = mesh.chieuRongCache;
         }
         if (isMount) chieuCao = Math.max(chieuCao, 4.5);
     }
 
     let tamNguc = footPos.add(upV.multiplyScalar(chieuCao / 2));
 
-    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX
+    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX ĐỒNG ĐỘI CHỐNG AUTO-AIM
     if (mesh.userData && mesh.userData.isAlly) {
         tamNguc.set(999999, 999999, 999999);
     }
@@ -168,7 +162,7 @@ window.batDauHoiChieuUI = function(phim) {
     }, 50); 
 };
 
-// 🛡️ CHẶN HIỂN THỊ SỐ -0 (Sát thương đạn đồng đội)
+// 🛡️ CHẶN HIỂN THỊ SỐ -0 
 setInterval(() => {
     if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
         const oldTaoSo = window.taoSoSatThuong;
@@ -181,7 +175,7 @@ setInterval(() => {
 }, 1000);
 
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI TỰ ĐÁNH MÌNH)
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     let targetPos = null; 
@@ -189,15 +183,27 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
 
     function checkHopLe(hit) {
         if (!hit) return false;
-        let dXZ = Math.hypot(viTriGoc.x - hit.tamNguc.x, viTriGoc.z - hit.tamNguc.z);
         let d = viTriGoc.distanceTo(hit.tamNguc);
-        // 🌟 BẢO MẬT: Khoảng cách phải LỚN HƠN 0.5m để không tự khóa vào chính ngực mình!
-        if (dXZ > 0.5 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
-        return false;
+        
+        // Cự ly không được nhỏ hơn 0.1m để tránh lỗi chia cho 0
+        if (d < 0.1 || d > minD) return false;
+
+        // 🌟 NÂNG CẤP: RADAR HÌNH NÓN
+        // Bắt buộc mục tiêu phải nằm ở "Phía trước mặt" (Góc quét 144 độ)
+        if (huongMat && huongMat.lengthSq() > 0.1) {
+            let dirToTarget = hit.tamNguc.clone().sub(viTriGoc).normalize();
+            let angle = huongMat.angleTo(dirToTarget);
+            // Nếu kẻ địch nằm ở phía sau lưng (Góc lớn hơn 72 độ x 2) -> Bỏ qua!
+            if (angle > Math.PI / 2.5) return false; 
+        }
+
+        minD = d; targetPos = hit.tamNguc; return true;
     }
 
-    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) checkHopLe(window.layHitbox(window.playerModel));
-
+    // 🛑 QUAN TRỌNG: TUYỆT ĐỐI KHÔNG QUÉT BẢN THÂN VÀO ĐÂY!
+    // Sếp tung chiêu thì cấm tự đưa Sếp vào danh sách mục tiêu!
+    
+    // 1. Quét người chơi khác (PVP - Đã lọc anh em PT)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
@@ -206,11 +212,13 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
         }
     }
 
+    // 2. Quét Quái/Boss (PVE)
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
             if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
         });
     }
+
     return targetPos;
 };
 
