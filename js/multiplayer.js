@@ -847,6 +847,9 @@ setInterval(window.radarDongBoThucTe, 3000);
 
 
 
+
+
+
 window.traLoiPT = function (nguoiMoi, isAccept) {
     document.getElementById('ptInviteBox').style.display = 'none'; // Tắt bảng
 
@@ -867,4 +870,75 @@ window.traLoiPT = function (nguoiMoi, isAccept) {
         let data = { type: 'PT_REPLY', sender: window.myUsername, target: nguoiMoi, accept: false };
         window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
     }
+};
+
+
+
+
+
+
+
+// ==========================================
+// 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN
+// ==========================================
+window.danhSachDongDoi = [];
+window.MY_PARTY_ID = 0;
+window.MY_GUILD_ID = 0;
+
+// 1. Máy quét đồng đội chạy ngầm (3s/lần)
+window.quetDongDoi = function() {
+    fetch('api/get_allies.php').then(r=>r.json()).then(data => {
+        if(data.status === 'success') {
+            window.danhSachDongDoi = data.allies || [];
+            window.MY_PARTY_ID = data.party_id;
+            window.MY_GUILD_ID = data.guild_id;
+        }
+    }).catch(e=>{});
+};
+setInterval(window.quetDongDoi, 3000);
+setTimeout(window.quetDongDoi, 1000);
+
+// 2. Gắn Lá Chắn vào Lưỡi Kiếm (Chặn sát thương lên anh em)
+if (!window.daBocThepChemNguoi) {
+    const oldChemTrung = window.chemTrungNguoiChoi;
+    window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
+        // NẾU NẠN NHÂN LÀ ANH EM -> MIỄN SÁT THƯƠNG TUYỆT ĐỐI!
+        if (window.danhSachDongDoi.includes(victimId)) {
+            if (typeof taoSoSatThuong === 'function' && hitPos && Math.random() < 0.1) {
+                taoSoSatThuong(hitPos, "Đồng đội", '#2ecc71'); // Văng chữ Xanh lá
+            }
+            return; 
+        }
+        // NẾU LÀ KẺ THÙ -> CHÉM BÌNH THƯỜNG
+        if (oldChemTrung) oldChemTrung(victimId, dame, hitPos);
+    };
+    window.daBocThepChemNguoi = true;
+}
+
+// 3. Đổi màu Bảng Tên để dễ nhận diện (Xanh lá = Bạn, Đỏ = Địch)
+setInterval(() => {
+    if (typeof window.remotePlayers !== 'undefined') {
+        for (let id in window.remotePlayers) {
+            let rp = window.remotePlayers[id];
+            if (rp && rp.tag) {
+                let nameDiv = rp.tag.querySelector('div:first-child');
+                if (nameDiv) {
+                    if (window.danhSachDongDoi.includes(id)) {
+                        nameDiv.style.color = '#2ecc71'; 
+                        nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000';
+                    } else {
+                        nameDiv.style.color = '#e74c3c'; 
+                        nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000';
+                    }
+                }
+            }
+        }
+    }
+}, 1000);
+
+// 4. API DÀNH CHO HỆ THỐNG KHÓA MỤC TIÊU 
+window.laKeDich = function(id) {
+    if (!id || id === window.myUsername) return false;
+    if (window.danhSachDongDoi.includes(id)) return false; // Thấy đồng đội -> Báo False
+    return true; // Thấy kẻ thù -> Báo True (Được phép khóa mục tiêu)
 };
