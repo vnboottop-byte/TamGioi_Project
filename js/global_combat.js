@@ -1,5 +1,5 @@
 // ==========================================
-// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V6 - TỐI THƯỢNG AAA)
+// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN FINAL AAA - CỰC MƯỢT)
 // ==========================================
 console.log("🚀 Khởi động Bộ Không Gian & Thời Gian...");
 
@@ -50,7 +50,7 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
     let expCuopDuoc = (victimLevel || 1) * 20;
     if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(expCuopDuoc, victimLevel);
     let fd = new FormData(); fd.append('victim', victimName);
-    fetch('api/update_pk_quest.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {}).catch(err => {});
+    fetch('api/update_pk_quest.php', { method: 'POST', body: fd }).then(res=>res.json()).catch(err=>{});
 
     const killNoti = document.getElementById('killNotification');
     const victimDisplay = document.getElementById('victimNameDisplay');
@@ -77,13 +77,13 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (PHỤC HỒI HOÀN TOÀN BỘ NHỚ)
+// 📡 MÁY QUÉT X-QUANG CHUẨN GỐC (BỌC THÉP LÁ CHẮN TỔ ĐỘI)
 // ==========================================
 window.layHitbox = function (mesh) {
-    // 🛡️ CHỐNG CRASH TẦNG SÂU: Chặn các Object rỗng hoặc Vật thể giả (Mock)
     if (!mesh || !mesh.position) return { tamNguc: new THREE.Vector3(0,0,0), banKinh: 2.0, chieuCao: 2.5 };
+    
+    // Tự động nhận diện đồ giả do hệ thống render thừa
     let isMockObject = !(typeof mesh.traverse === 'function' && mesh.isObject3D);
-
     let footPos = typeof mesh.position.clone === 'function' ? mesh.position.clone() : new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z);
     let upV = (mesh.up && typeof mesh.up.clone === 'function') ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
@@ -102,9 +102,7 @@ window.layHitbox = function (mesh) {
                     let box = new THREE.Box3().setFromObject(mesh);
                     mesh.chieuCaoCache = Math.max(2.5, box.max.y - box.min.y);
                     mesh.chieuRongCache = Math.max(4.0, box.max.x - box.min.x);
-                } catch(e) {
-                    mesh.chieuCaoCache = 2.5; mesh.chieuRongCache = 4.0;
-                }
+                } catch(e) { mesh.chieuCaoCache = 2.5; mesh.chieuRongCache = 4.0; }
             }
             chieuCao = mesh.chieuCaoCache; chieuRong = mesh.chieuRongCache;
         }
@@ -113,35 +111,13 @@ window.layHitbox = function (mesh) {
 
     let tamNguc = footPos.add(upV.multiplyScalar(chieuCao / 2));
 
-    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: Nếu là đồng đội, giấu Hitbox ra ngoài hệ mặt trời
+    // 🛡️ GIẤU HITBOX ĐỒNG ĐỘI RA KHỎI TRÁI ĐẤT
     if (mesh.userData && mesh.userData.isAlly) {
         tamNguc.set(999999, 999999, 999999);
     }
 
     return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
 };
-
-// ==========================================
-// 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE 
-// ==========================================
-if (window.isMobile && !window.daCaiBoLocDOM) {
-    const originalAppendChild = document.body.appendChild;
-    document.body.appendChild = function (element) {
-        if (element.tagName === 'DIV' && element.innerText && element.innerText.startsWith('-') && element.style.textShadow) {
-            let soLuongChuNoi = 0;
-            if (typeof danhSachSoBay !== 'undefined') soLuongChuNoi += danhSachSoBay.length;
-            if (typeof danhSachSoBayBS !== 'undefined') soLuongChuNoi += danhSachSoBayBS.length;
-            if (typeof danhSachSoBayCT !== 'undefined') soLuongChuNoi += danhSachSoBayCT.length;
-            if (typeof danhSachSoBayLZ !== 'undefined') soLuongChuNoi += danhSachSoBayLZ.length;
-            if (typeof danhSachSoBayLT !== 'undefined') soLuongChuNoi += danhSachSoBayLT.length;
-            if (typeof danhSachSoBayPS !== 'undefined') soLuongChuNoi += danhSachSoBayPS.length;
-            if (soLuongChuNoi > 5) return element; 
-            element.style.textShadow = '1px 1px 0px #000';
-        }
-        return originalAppendChild.call(this, element);
-    };
-    window.daCaiBoLocDOM = true;
-}
 
 window.batDauHoiChieuUI = function(phim) {
     const slot = document.getElementById('slot-' + phim);
@@ -166,86 +142,109 @@ window.batDauHoiChieuUI = function(phim) {
     }, 50); 
 };
 
-// 🛡️ CHẶN HIỂN THỊ SỐ -0 (Tàng hình sát thương vi hạt của đồng đội)
-setInterval(() => {
-    if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
-        const oldTaoSo = window.taoSoSatThuong;
-        window.taoSoSatThuong = function(pos3D, satThuong, mauSac) {
-            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return; 
-            oldTaoSo(pos3D, satThuong, mauSac);
-        };
-        window.daBocThepTaoSo = true;
-    }
-}, 1000);
-
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI TỰ ĐÁNH MÌNH)
+// 🧠 AI KHÓA MỤC TIÊU CỰC KHÔN (FIX TỰ ĐÁNH MÌNH VÀ BẮN SÚNG XỊT)
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     let targetPos = null; 
-    let minD = 80;
+    let minD = 80; // Tầm nhìn siêu xa 80 mét
+
+    // 🛡️ KIỂM TRA XEM AI LÀ NGƯỜI TUNG CHIÊU
+    // Nếu viTriGoc phát nổ cách chân Sếp quá gần (< 2m), chứng tỏ Sếp đang đứng ném chiêu!
+    let isLocalCaster = false;
+    if (window.playerModel && typeof viTriGoc.distanceTo === 'function') {
+        if (viTriGoc.distanceTo(window.playerModel.position) < 2.0) {
+            isLocalCaster = true; 
+        }
+    }
 
     function checkHopLe(hit) {
         if (!hit || !hit.tamNguc) return false;
         let d = viTriGoc.distanceTo(hit.tamNguc);
         
-        // 🌟 BẢO HIỂM 1: Cự ly phải > 0.5m để Sếp KHÔNG BAO GIỜ tự khóa vào ngực mình!
-        if (d < 0.5 || d > minD) return false;
+        if (d > minD) return false;
 
-        // 🌟 BẢO HIỂM 2: RADAR HÌNH NÓN (Góc quét 180 độ phía trước mặt)
-        // Kẻ địch đứng sau lưng sẽ bị bỏ qua, chống đạn bay ngược ra đằng sau!
-        if (huongMat && typeof huongMat.clone === 'function') {
+        // 🌟 NÂNG CẤP: RADAR HÌNH NÓN (Góc 240 độ - Mắt siêu sáng)
+        if (huongMat && typeof huongMat.clone === 'function' && huongMat.lengthSq() > 0.01) {
             let dirToTargetXZ = new THREE.Vector3(hit.tamNguc.x - viTriGoc.x, 0, hit.tamNguc.z - viTriGoc.z);
             let huongMatXZ = new THREE.Vector3(huongMat.x, 0, huongMat.z);
-            if (dirToTargetXZ.lengthSq() > 0.01 && huongMatXZ.lengthSq() > 0.01) {
-                dirToTargetXZ.normalize();
-                huongMatXZ.normalize();
+            if (dirToTargetXZ.lengthSq() > 0.01) {
+                dirToTargetXZ.normalize(); huongMatXZ.normalize();
                 let angle = huongMatXZ.angleTo(dirToTargetXZ);
-                if (angle > Math.PI / 2) return false; // Nằm ngoài vùng mặt -> Bỏ qua
+                // Góc 120 độ mỗi bên (240 độ tổng), chỉ bỏ qua đứa nằm tuốt sau lưng!
+                if (angle > Math.PI / 1.5) return false; 
             }
         }
 
-        minD = d; targetPos = hit.tamNguc; return true;
+        minD = d; targetPos = hit.tamNguc.clone(); return true;
     }
 
-    // 1. Quét Địch (Đã bỏ qua anh em PT)
+    // 1. Quét Địch (PVP)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
             let rp = remotePlayers[id];
-            if (rp.status === 'ready' && rp.mesh) checkHopLe(window.layHitbox(rp.mesh));
+            if (rp && rp.status === 'ready' && rp.mesh && rp.mesh.visible) {
+                checkHopLe(window.layHitbox(rp.mesh));
+            }
         }
     }
 
-    // 2. Quét Quái/Boss (Luôn ưu tiên đánh quái trước mặt)
+    // 2. Quét Quái (PVE)
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
-            if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
+            if (!quai.isDead && quai.mesh && quai.mesh.visible) {
+                checkHopLe(window.layHitbox(quai.mesh));
+            }
         });
     }
 
-    // 3. Quét Bản thân Sếp (DÀNH RIÊNG CHO BOSS KHÓA MỤC TIÊU SẾP)
-    // Nếu viTriGoc (điểm tung chiêu của Boss) cách xa Sếp > 0.5m, Sếp hợp lệ để bị cắn!
-    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) {
+    // 3. Quét Bản thân Sếp (Để Boss hoặc Địch khóa mục tiêu Sếp)
+    // Nếu Sếp đang đứng ném chiêu (isLocalCaster = true), CẤM TỰ QUÉT BẢN THÂN (Chống Pháp Sư tự sát)!
+    if (!isLocalCaster && window.playerModel && window.mauBanThan > 0 && !window.isDead) {
         checkHopLe(window.layHitbox(window.playerModel));
     }
 
-    // 🛑 CHÌA KHÓA VÀNG: TUYỆT ĐỐI TRẢ VỀ NULL NẾU KHÔNG CÓ ĐỊCH.
-    // Việc này cho phép phai_bansung.js tự động xử lý bắn thẳng ra vô cực theo Logic nguyên gốc!
     return targetPos; 
 };
 
-// 🦠 BÍ THUẬT KÝ SINH AI THÔNG MINH CHO 100+ PHÁI (CÓ BẢO HIỂM LỖI CODE CŨ)
-setInterval(() => {
-    for (let key in window) {
-        if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
-            window[key] = function(viTriGoc, huongMat) {
-                // 🛡️ CHỐNG CRASH TẦNG SÂU: Kẻ nào gọi hàm lởm thiếu tọa độ gốc thì bị từ chối
-                if (!viTriGoc || typeof viTriGoc.clone !== 'function') return null;
-                
-                // Trả về duy nhất tọa độ chuẩn hoặc Null, Game không bao giờ bị Crash!
-                return window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat); 
-            };
+// 🦠 BÍ THUẬT KÝ SINH GHI ĐÈ 100 PHÁI
+if (!window.daCaiAIKhien) {
+    setInterval(() => {
+        for (let key in window) {
+            if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
+                if (!window[key].isSmartHook) {
+                    window[key] = function(viTriGoc, huongMat) {
+                        if (!viTriGoc || typeof viTriGoc.clone !== 'function') return null;
+                        
+                        let hMat = (huongMat && typeof huongMat.clone === 'function') ? huongMat : new THREE.Vector3(0,0,1);
+                        let t = window.layMucTieuGanNhatThongMinh(viTriGoc, hMat);
+                        
+                        // Nếu AI thấy địch -> Trả về hồng tâm Địch.
+                        // Nếu KHÔNG có địch -> Trả về thẳng đường 50m (Bắn súng bay mượt)!
+                        return t ? t : viTriGoc.clone().add(hMat.clone().multiplyScalar(50));
+                    };
+                    window[key].isSmartHook = true;
+                }
+            }
         }
-    }
-}, 2000);
+    }, 2000);
+    window.daCaiAIKhien = true;
+}
+
+// 🛡️ CHẶN HIỂN THỊ SỐ -0 (Ẩn chữ số đạn đồng đội)
+if (window.isMobile && !window.daCaiBoLocDOM) {
+    const originalAppendChild = document.body.appendChild;
+    document.body.appendChild = function (element) {
+        if (element.tagName === 'DIV' && element.innerText && element.innerText.startsWith('-') && element.style.textShadow) {
+            let soLuongChuNoi = 0;
+            if (typeof danhSachSoBay !== 'undefined') soLuongChuNoi += danhSachSoBay.length;
+            if (typeof danhSachSoBayBS !== 'undefined') soLuongChuNoi += danhSachSoBayBS.length;
+            if (typeof danhSachSoBayCT !== 'undefined') soLuongChuNoi += danhSachSoBayCT.length;
+            if (soLuongChuNoi > 5) return element; 
+            element.style.textShadow = '1px 1px 0px #000';
+        }
+        return originalAppendChild.call(this, element);
+    };
+    window.daCaiBoLocDOM = true;
+}
