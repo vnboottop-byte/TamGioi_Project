@@ -883,12 +883,6 @@ window.traLoiPT = function (nguoiMoi, isAccept) {
     }
 };
 
-
-
-
-
-
-
 // ==========================================
 // 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN
 // ==========================================
@@ -896,75 +890,140 @@ window.danhSachDongDoi = [];
 window.MY_PARTY_ID = 0;
 window.MY_GUILD_ID = 0;
 
-// 1. Máy quét đồng đội chạy ngầm (3s/lần)
+
+
+
+
+
+
+
+// 1. MÁY QUÉT ĐỒNG ĐỘI & BƠM MÃ CHO KHUNG CHAT (SỬA LỖI CHAT)
 window.quetDongDoi = function() {
     fetch('api/get_allies.php').then(r=>r.json()).then(data => {
         if(data.status === 'success') {
             window.danhSachDongDoi = data.allies || [];
             window.MY_PARTY_ID = data.party_id;
             window.MY_GUILD_ID = data.guild_id;
+
+            // 🌟 CHÌA KHÓA FIX CHAT LÀ Ở ĐÂY: Truyền ID Nhóm vào Kênh Chat!
+            if (window.kenhChatHienTai === 'PARTY') window.idKenhHienTai = window.MY_PARTY_ID;
+            if (window.kenhChatHienTai === 'GUILD') window.idKenhHienTai = window.MY_GUILD_ID;
         }
     }).catch(e=>{});
 };
 setInterval(window.quetDongDoi, 3000);
 setTimeout(window.quetDongDoi, 1000);
 
-// 2. Gắn Lá Chắn vào Lưỡi Kiếm (Chặn sát thương lên anh em)
+// 2. GẮN LÁ CHẮN VÀO LƯỠI KIẾM (Chặn sát thương đồng đội)
 if (!window.daBocThepChemNguoi) {
     const oldChemTrung = window.chemTrungNguoiChoi;
     window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
-        // NẾU NẠN NHÂN LÀ ANH EM -> MIỄN SÁT THƯƠNG TUYỆT ĐỐI!
         if (window.danhSachDongDoi.includes(victimId)) {
-            if (typeof taoSoSatThuong === 'function' && hitPos && Math.random() < 0.1) {
-                taoSoSatThuong(hitPos, "Đồng đội", '#2ecc71'); // Văng chữ Xanh lá
-            }
+            if (typeof taoSoSatThuong === 'function' && hitPos && Math.random() < 0.1) taoSoSatThuong(hitPos, "Đồng đội", '#2ecc71');
             return; 
         }
-        // NẾU LÀ KẺ THÙ -> CHÉM BÌNH THƯỜNG
         if (oldChemTrung) oldChemTrung(victimId, dame, hitPos);
     };
     window.daBocThepChemNguoi = true;
 }
 
-// 3. Đổi màu Bảng Tên và CẤY CHIP ĐỒNG ĐỘI CHO MÔ HÌNH 3D
+// 3. ĐỔI MÀU BẢNG TÊN, CẤY CHIP 3D & CẬP NHẬT GIAO DIỆN TỔ ĐỘI VLTK
 setInterval(() => {
+    // A. Cấy Chip 3D
     if (typeof window.remotePlayers !== 'undefined') {
         for (let id in window.remotePlayers) {
             let rp = window.remotePlayers[id];
             if (rp && rp.mesh) {
                 let nameDiv = rp.tag ? rp.tag.querySelector('div:first-child') : null;
-
-                // NẾU LÀ ANH EM -> CẤY CHIP isAlly = true
                 if (window.danhSachDongDoi.includes(id)) {
-                    rp.mesh.userData.isAlly = true; // 🌟 Con chip để Auto-Aim bỏ qua!
-                    if (rp.meshChar) rp.meshChar.userData.isAlly = true;
-                    if (nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
+                    rp.mesh.userData.isAlly = true; 
+                    if(rp.meshChar) rp.meshChar.userData.isAlly = true; 
+                    if(nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
                 } else {
                     rp.mesh.userData.isAlly = false;
-                    if (rp.meshChar) rp.meshChar.userData.isAlly = false;
-                    if (nameDiv) { nameDiv.style.color = '#e74c3c'; nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000'; }
+                    if(rp.meshChar) rp.meshChar.userData.isAlly = false;
+                    if(nameDiv) { nameDiv.style.color = '#e74c3c'; nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000'; }
                 }
             }
         }
     }
-}, 1000);
 
-// 4. Che giấu số "-0" (Do bị sát thương hạt tiêu ở Bước 2 đánh trúng)
-setInterval(() => {
-    if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
-        const oldTaoSo = window.taoSoSatThuong;
-        window.taoSoSatThuong = function (pos3D, satThuong, mauSac) {
-            // NẾU SÁT THƯƠNG QUÁ BÉ -> TÀNG HÌNH SỐ ĐÓ ĐI, KHÔNG IN RA "-0" TRÊN MÀN HÌNH
-            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return;
-            oldTaoSo(pos3D, satThuong, mauSac);
-        };
-        window.daBocThepTaoSo = true;
+    // B. Đổ Dữ Liệu Lên Khung HUD Võ Lâm Bên Trái
+    let hud = document.getElementById('vltkPartyHUD');
+    let list = document.getElementById('vltkPartyList');
+    if (!hud || !list) return;
+
+    if (window.MY_PARTY_ID == 0 || window.danhSachDongDoi.length === 0) {
+        hud.style.display = 'none'; // Giấu đi nếu không có nhóm
+        return;
     }
+
+    hud.style.display = 'flex';
+    let html = '';
+
+    // Bản thân mình (Luôn đứng đầu)
+    let myHpPct = (window.mauBanThan / window.MAU_TOI_DA) * 100;
+    html += `
+    <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid rgba(46,204,113,0.5); cursor:pointer;">
+        <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:#2ecc71; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px; font-weight:bold;">ME</div>
+        <div style="flex:1;">
+            <div class="pt-card-name" style="color:#fff; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${window.myUsername}</div>
+            <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
+                <div style="width:${Math.max(0, myHpPct)}%; height:100%; background:linear-gradient(90deg, #27ae60, #2ecc71); transition:0.2s;"></div>
+            </div>
+        </div>
+    </div>`;
+
+    // Quét dàn Đồng Đội
+    window.danhSachDongDoi.forEach(name => {
+        let rp = window.remotePlayers[name];
+        let hpPct = 100; 
+        let isOffline = true;
+
+        if (rp && rp.status === 'ready') {
+            isOffline = false; // Ở chung Map, hiện sáng lên!
+            // Rút trộm % Máu từ thanh máu trên đầu nhân vật đó
+            let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
+            if (hpBar) hpPct = parseFloat(hpBar.style.width) || 0;
+        }
+
+        let avtColor = isOffline ? '#555' : '#3498db';
+        let barColor = isOffline ? '#555' : 'linear-gradient(90deg, #2980b9, #3498db)';
+        let textColor = isOffline ? '#aaa' : '#fff';
+        let borderColor = isOffline ? 'rgba(85,85,85,0.5)' : 'rgba(52,152,219,0.5)';
+
+        html += `
+        <div class="pt-card-hud" onclick="guiLoiMoiPT('${name}')" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid ${borderColor}; cursor:pointer; opacity:${isOffline ? 0.7 : 1};">
+            <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:${avtColor}; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px;">👤</div>
+            <div style="flex:1;">
+                <div class="pt-card-name" style="color:${textColor}; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${name}</div>
+                <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
+                    <div style="width:${hpPct}%; height:100%; background:${barColor}; transition:0.2s;"></div>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    list.innerHTML = html;
 }, 1000);
 
-// 4. API DÀNH CHO HỆ THỐNG KHÓA MỤC TIÊU 
+// 4. API BÁO ĐỊCH DÀNH CHO AUTO-AIM
 window.laKeDich = function(id) {
     if (!id || id === window.myUsername) return false;
-    if (window.danhSachDongDoi.includes(id)) return false; // Thấy đồng đội -> Báo False
-    return true; // Thấy kẻ thù -> Báo True (Được phép khóa mục tiêu)
+    if (window.danhSachDongDoi.includes(id)) return false; 
+    return true; 
 };
+
+// =======================================================
+// 🚪 HỆ THỐNG AUTO LEAVE CHỐNG KẸT NICK (GHOST PARTY)
+// =======================================================
+// Giải pháp: Gắn kíp nổ vào sự kiện Đóng Trình Duyệt / Tắt Game. 
+// Chỉ cần Sếp tắt Web, game sẽ bắn tia laser ngầm lên Server để gạch tên Sếp khỏi PT ngay lập tức!
+window.addEventListener('beforeunload', () => {
+    if (window.MY_PARTY_ID > 0) {
+        let fd = new FormData(); 
+        fd.append('action', 'leave');
+        // sendBeacon là siêu vũ khí bắn ngầm kể cả khi Tab đã đóng
+        navigator.sendBeacon('api/party.php', fd); 
+    }
+});
