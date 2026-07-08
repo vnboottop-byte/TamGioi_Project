@@ -1,5 +1,5 @@
 // ==========================================
-// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V1 - CORE)
+// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V2 - CHUẨN AAA)
 // ==========================================
 console.log("🚀 Khởi động Bộ Não Quản Lý Toàn Cục...");
 
@@ -35,7 +35,6 @@ function loopQuanLyToanCuc() {
                 if (typeof scene !== 'undefined') scene.remove(item.mesh);
             }
             window.danhSachChieuThucToanMap.splice(i, 1);
-            // console.log("🧹 Đã dọn sạch 1 chiêu thức hết hạn!");
         }
     }
 }
@@ -54,7 +53,7 @@ window.globalHandleBossDeath = function (boss) {
     // Sau 3 giây gục ngã -> Tàng hình xác
     setTimeout(() => { if (boss.mesh) boss.mesh.visible = false; }, 3000);
 
-    // Báo hồi sinh lên Server (Chỉ 1 người báo là đủ, nhưng để chắc chắn ta cứ báo)
+    // Báo hồi sinh lên Server
     setTimeout(() => {
         let fd = new FormData(); fd.append('boss_id', boss.id);
         fetch('api/hoi_sinh_boss.php', { method: 'POST', body: fd })
@@ -74,8 +73,9 @@ window.globalHandleBossDeath = function (boss) {
     }, 30000);
 };
 
+
 // ==========================================
-// 🏆 HỆ THỐNG VINH DANH ĐỒ SÁT (PVP) - BẢN VÁ TÍCH HỢP NHIỆM VỤ
+// 🏆 HỆ THỐNG VINH DANH ĐỒ SÁT (PVP)
 // ==========================================
 window.vinhDanhDoSat = function (victimName, victimLevel) {
     let expCuopDuoc = (victimLevel || 1) * 20;
@@ -85,24 +85,21 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
         window.congKinhNghiem(expCuopDuoc, victimLevel);
     }
 
-    // 🌟 BẢN VÁ: GỬI BÁO CÁO CHIẾN CÔNG ĐỂ TÍNH TIẾN ĐỘ NHIỆM VỤ PK
+    // Gửi báo cáo tiến độ Nhiệm vụ PK
     let fd = new FormData();
     fd.append('victim', victimName);
     fetch('api/update_pk_quest.php', { method: 'POST', body: fd })
         .then(res => res.json())
-        .then(data => {
-            // Nếu hoàn thành nhiệm vụ, hệ thống sẽ tự động gửi thư, ta có thể bỏ qua việc xử lý kết quả ở đây
-            // vì Bảng Radar bên trái màn hình sẽ tự động cập nhật sau 5 giây.
-        }).catch(err => console.error("Lỗi cập nhật nhiệm vụ PK:", err));
+        .then(data => {}).catch(err => console.error("Lỗi cập nhật nhiệm vụ PK:", err));
 
     // 2. Hiển thị UI Vinh Danh
     const killNoti = document.getElementById('killNotification');
     const victimDisplay = document.getElementById('victimNameDisplay');
-    const expDisplay = document.getElementById('killExpDisplay'); // Ô hiện EXP mới
+    const expDisplay = document.getElementById('killExpDisplay');
 
     if (killNoti && victimDisplay && expDisplay) {
         victimDisplay.innerText = victimName;
-        expDisplay.innerText = expCuopDuoc.toLocaleString(); // Hiện số EXP
+        expDisplay.innerText = expCuopDuoc.toLocaleString(); 
 
         killNoti.style.display = 'block';
         killNoti.style.animation = 'none';
@@ -119,12 +116,11 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
 window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     if (!window.playerModel || window.isDead) return;
 
-    // 🛑 LÁ CHẮN BẤT TỬ CỦA SAFE ZONE: Nếu đang ở Vùng An Toàn thì thoát luôn, không trừ máu!
+    // LÁ CHẮN BẤT TỬ CỦA SAFE ZONE
     if (window.IS_IN_SAFE_ZONE) return;
 
     let tamNguc = window.playerModel.position.clone(); tamNguc.y += 5;
     
-    // Nếu chạm vụ nổ thì trừ máu sằng phẳng (Không nể nang Admin nữa!)
     if (tamNo.distanceTo(tamNguc) <= banKinh) {
         window.mauBanThan -= luongDame;
         if (typeof taoSoSatThuong === 'function') taoSoSatThuong(tamNguc, luongDame, '#ff0000');
@@ -143,39 +139,44 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 // ==========================================
 // 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4)
 // ==========================================
+// 🌟 ĐÃ TÍCH HỢP BÊN TRONG: Cấm dùng thủ thuật ghi đè cũ gây đứt gãy
 window.layHitbox = function (mesh) {
-    // 🌟 ĐÃ PHỤC HỒI RUỘT X-QUANG CHUẨN: Lấy chính xác tọa độ thực tế của Quái và Người!
-    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 2.5 };
+    if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 10, chieuCao: 10 };
+    
+    // Tự động tính chieuCao nếu chưa có
+    if (!mesh.chieuCao) {
+        let box = new THREE.Box3().setFromObject(mesh);
+        mesh.chieuCao = (box.max.y - box.min.y);
+        mesh.chieuRong = (box.max.x - box.min.x);
+    }
 
     let footPos = mesh.position.clone();
     let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
-    let chieuCao = 2.5;
-    let chieuRong = 4.0;
-
     let isMount = false;
     mesh.traverse(c => { if (c.name && c.name.toUpperCase().includes('YENNGUA')) isMount = true; });
-    if (isMount) chieuCao = 4.5;
 
-    if (mesh.userData && mesh.userData.chieuCaoThuc) {
-        chieuCao = mesh.userData.chieuCaoThuc;
-        chieuRong = chieuCao * 1.5;
-    }
+    let chieuCaoThuc = mesh.chieuCao;
+    if (isMount) chieuCaoThuc = Math.max(chieuCaoThuc, 4.5);
+    else chieuCaoThuc = Math.max(chieuCaoThuc, 2.5);
 
-    let tamNguc = footPos.clone().add(upV.multiplyScalar(chieuCao / 2));
+    let chieuRongThuc = mesh.chieuRong || 3.0;
+
+    let tamNguc = footPos.clone().add(upV.multiplyScalar(chieuCaoThuc / 2));
 
     // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX CỦA ĐỒNG ĐỘI (CHỐNG AUTO-AIM)
     if (mesh.userData && mesh.userData.isAlly) {
         tamNguc.set(999999, 999999, 999999);
     }
 
-    return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
+    return { tamNguc: tamNguc, banKinh: chieuRongThuc / 2, chieuCao: chieuCaoThuc };
 };
+
 
 // ==========================================
 // 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
 // ==========================================
-if (window.isMobile && !window.daCaiBoLocDOM) {
+if (window.isMobile) {
     const originalAppendChild = document.body.appendChild;
     document.body.appendChild = function (element) {
         if (element.tagName === 'DIV' && element.innerText && element.innerText.startsWith('-') && element.style.textShadow) {
@@ -187,13 +188,15 @@ if (window.isMobile && !window.daCaiBoLocDOM) {
             if (typeof danhSachSoBayLT !== 'undefined') soLuongChuNoi += danhSachSoBayLT.length;
             if (typeof danhSachSoBayPS !== 'undefined') soLuongChuNoi += danhSachSoBayPS.length;
 
-            if (soLuongChuNoi > 5) return element;
+            if (soLuongChuNoi > 5) {
+                return element; 
+            }
             element.style.textShadow = '1px 1px 0px #000';
         }
         return originalAppendChild.call(this, element);
     };
-    window.daCaiBoLocDOM = true;
 }
+
 
 // ==========================================
 // ⏳ HỆ THỐNG ĐỒNG HỒ ĐẾM NGƯỢC SKILL UI
@@ -201,25 +204,31 @@ if (window.isMobile && !window.daCaiBoLocDOM) {
 window.batDauHoiChieuUI = function(phim) {
     const slot = document.getElementById('slot-' + phim);
     if (!slot) return;
+    
     const overlay = slot.querySelector('.cd-overlay');
     if (overlay) { overlay.style.transition = 'none'; overlay.style.height = '100%'; }
+    
     const text = slot.querySelector('.cd-text');
     if (text) text.style.display = 'block';
+    
     let tgHoi = window.thoiGianHoiChieu[phim] || 1500;
     let tgBatDau = Date.now();
+    
     if (slot.cdInterval) clearInterval(slot.cdInterval);
+    
     slot.cdInterval = setInterval(() => {
         let conLai = tgHoi - (Date.now() - tgBatDau);
         if (conLai <= 0) {
-            clearInterval(slot.cdInterval);
-            if (overlay) overlay.style.height = '0%';
+            clearInterval(slot.cdInterval); 
+            if (overlay) overlay.style.height = '0%'; 
             if (text) text.style.display = 'none';
         } else {
             if (overlay) overlay.style.height = (conLai / tgHoi * 100) + '%';
-            if (text) text.innerText = (conLai / 1000).toFixed(1);
+            if (text) text.innerText = (conLai / 1000).toFixed(1); 
         }
-    }, 50);
+    }, 50); 
 };
+
 
 // ==========================================
 // 🛡️ CHẶN HIỂN THỊ SỐ -0 (TÀNG HÌNH SÁT THƯƠNG VI HẠT CỦA ANH EM)
@@ -228,38 +237,45 @@ setInterval(() => {
     if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
         const oldTaoSo = window.taoSoSatThuong;
         window.taoSoSatThuong = function(pos3D, satThuong, mauSac) {
-            // NẾU SÁT THƯƠNG = 0 (Đạn đồng đội) -> Ẩn luôn số!
-            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return;
+            // NẾU SÁT THƯƠNG QUÁ BÉ (Đạn đồng đội = 0.000001) -> Ẩn luôn số!
+            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return; 
             oldTaoSo(pos3D, satThuong, mauSac);
         };
         window.daBocThepTaoSo = true;
     }
 }, 1000);
 
+
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI CHỈ ĐÁNH ĐỊCH VÀ BOSS)
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC 
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
-    let targetPos = null;
+    let targetPos = null; 
     let minD = 80;
 
     function checkHopLe(hit) {
         if (!hit) return false;
+        let dXZ = Math.hypot(viTriGoc.x - hit.tamNguc.x, viTriGoc.z - hit.tamNguc.z);
         let d = viTriGoc.distanceTo(hit.tamNguc);
-        if (d > 0.1 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
+        
+        // 🌟 CỐT LÕI: dXZ > 0.1 để phân biệt "Bản thân người tung chiêu" (Khoảng cách = 0) và "Mục tiêu áp sát"
+        if (dXZ > 0.1 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
         return false;
     }
 
-    // 1. Quét người chơi khác (CHỈ QUÉT ĐỊCH, BỎ QUA ANH EM PT)
+    // A. Quét Bản Thân (Để Boss cắn Sếp)
+    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) checkHopLe(window.layHitbox(window.playerModel));
+
+    // B. Quét người chơi khác (BỎ QUA ĐỒNG ĐỘI NHƯNG GIỮ LẠI ĐỊCH)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
-            if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue;
+            if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
             let rp = remotePlayers[id];
             if (rp.status === 'ready' && rp.mesh) checkHopLe(window.layHitbox(rp.mesh));
         }
     }
 
-    // 2. Quét Quái/Boss
+    // C. Quét Quái/Boss (Luôn ưu tiên đánh quái)
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
             if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
@@ -269,13 +285,13 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     return targetPos;
 };
 
-// Ký sinh tẩy não các hàm khóa mục tiêu của mọi phái
+// 🦠 BÍ THUẬT KÝ SINH: Tự động lây nhiễm và ghi đè TẤT CẢ các hàm khóa mục tiêu của mọi môn phái!
 setInterval(() => {
     for (let key in window) {
         if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
             window[key] = function(viTriGoc, huongMat) {
                 let t = window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat);
-                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
+                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50)); 
             };
         }
     }
