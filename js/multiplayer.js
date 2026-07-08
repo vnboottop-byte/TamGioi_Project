@@ -369,6 +369,45 @@ livekitScript.onload = async () => {
                         // 2. NẾU LÀ ĐỐI TƯỢNG (DATA BOSS, SKILL, PVP)
                         // ==========================================
                         else if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+
+
+
+                            // ==========================================
+                            // 👥 CẢM BIẾN TỔ ĐỘI (PARTY)
+                            // ==========================================
+                            if (data.type === 'PT_INVITE' && data.target === window.myUsername) {
+                                let box = document.getElementById('ptInviteBox');
+                                if (!box) {
+                                    box = document.createElement('div');
+                                    box.id = 'ptInviteBox';
+                                    box.style.cssText = 'position:fixed; top:25%; left:50%; transform:translateX(-50%); background:rgba(10,15,20,0.95); border:2px solid #2ecc71; padding:15px 25px; border-radius:10px; color:white; z-index:999999; text-align:center; box-shadow:0 0 20px rgba(46, 204, 113, 0.6); animation: nhipTho 1s infinite;';
+                                    document.body.appendChild(box);
+                                }
+                                box.innerHTML = `
+                                    <h3 style="margin:0 0 10px 0; color:#2ecc71; text-shadow:0 0 10px #2ecc71;">💌 LỜI MỜI TỔ ĐỘI</h3>
+                                    <div style="font-size:14px; margin-bottom:15px;">Đạo hữu <b style="color:#f1c40f; font-size:18px;">${data.sender}</b> muốn mời bạn vào Đội!</div>
+                                    <div style="display:flex; gap:10px; justify-content:center;">
+                                        <button onclick="traLoiPT('${data.sender}', true)" style="background:linear-gradient(90deg, #2ecc71, #27ae60); border:none; padding:8px 20px; color:black; font-weight:900; border-radius:5px; cursor:pointer;">✅ ĐỒNG Ý</button>
+                                        <button onclick="traLoiPT('${data.sender}', false)" style="background:#e74c3c; border:none; padding:8px 20px; color:white; font-weight:900; border-radius:5px; cursor:pointer;">❌ TỪ CHỐI</button>
+                                    </div>
+                                `;
+                                box.style.display = 'block';
+                                setTimeout(() => { if (box) box.style.display = 'none'; }, 10000); // 10s tự hủy
+                                return;
+                            }
+
+                            else if (data.type === 'PT_REPLY' && data.target === window.myUsername) {
+                                if (data.accept) {
+                                    if (typeof window.hienThongBaoGame === 'function') window.hienThongBaoGame(`🎉 ${data.sender} đã gia nhập Tổ Đội!`, true);
+                                } else {
+                                    if (typeof window.hienThongBaoGame === 'function') window.hienThongBaoGame(`❌ ${data.sender} đã từ chối lời mời PT!`, false);
+                                }
+                                return;
+                            }
+
+
+
+
                             if (data.zone_id && window.ZONE_ID && data.zone_id !== window.ZONE_ID) return; 
 
                             if (data.type === 'BOSS_HIT') {
@@ -804,3 +843,28 @@ setInterval(window.radarDongBoThucTe, 3000);
         }
     });
 })();
+
+
+
+
+window.traLoiPT = function (nguoiMoi, isAccept) {
+    document.getElementById('ptInviteBox').style.display = 'none'; // Tắt bảng
+
+    if (isAccept) {
+        // Gửi thông điệp Đồng ý lại cho Đội trưởng
+        let data = { type: 'PT_REPLY', sender: window.myUsername, target: nguoiMoi, accept: true };
+        window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
+
+        // Gọi lên Server để lưu CSDL Nhóm
+        let fd = new FormData(); fd.append('action', 'join'); fd.append('leader', nguoiMoi);
+        fetch('api/party.php', { method: 'POST', body: fd }).then(r => r.json()).then(res => {
+            if (res.status === 'success') {
+                window.hienThongBaoGame("Đã gia nhập Đội của " + nguoiMoi, true);
+            }
+        });
+    } else {
+        // Gửi thông điệp Từ chối
+        let data = { type: 'PT_REPLY', sender: window.myUsername, target: nguoiMoi, accept: false };
+        window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(data)), { reliable: true });
+    }
+};
