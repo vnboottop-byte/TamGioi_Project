@@ -888,17 +888,17 @@ window.traLoiPT = function (nguoiMoi, isAccept) {
 
 
 // ==========================================
-// 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN (ĐÃ FIX HOA/THƯỜNG)
+// 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN (ĐÃ FIX HOA/THƯỜNG & GIỮ LẠI BẢNG HUD)
 // ==========================================
 window.danhSachDongDoi = [];
 window.MY_PARTY_ID = 0;
 window.MY_GUILD_ID = 0;
 
-// 1. MÁY QUÉT ĐỒNG ĐỘI (Bơm mã vào kênh Chat và ép thành CHỮ THƯỜNG để dễ kiểm tra)
+// 1. MÁY QUÉT ĐỒNG ĐỘI (Bơm mã vào kênh Chat và ép thành CHỮ THƯỜNG)
 window.quetDongDoi = function () {
     fetch('api/get_allies.php').then(r => r.json()).then(data => {
         if (data.status === 'success') {
-            // 🌟 CHÌA KHÓA: Ép tất cả tên anh em thành chữ thường để không bị trượt
+            // 🌟 CHÌA KHÓA 1: Ép tất cả tên anh em thành chữ thường để so sánh không bao giờ trượt
             window.danhSachDongDoi = (data.allies || []).map(name => name.toLowerCase());
             window.MY_PARTY_ID = data.party_id;
             window.MY_GUILD_ID = data.guild_id;
@@ -916,8 +916,7 @@ if (!window.daBocThepChemNguoi) {
     const oldChemTrung = window.chemTrungNguoiChoi;
     window.chemTrungNguoiChoi = function (victimId, dame, hitPos) {
         if (!victimId) return;
-
-        // 🌟 KIỂM TRA BẰNG CHỮ THƯỜNG
+        // 🌟 CHÌA KHÓA 2: Ép tên nạn nhân về chữ thường để kiểm tra
         if (window.danhSachDongDoi.includes(victimId.toLowerCase())) {
             if (typeof taoSoSatThuong === 'function' && hitPos && Math.random() < 0.1) taoSoSatThuong(hitPos, "Đồng đội", '#2ecc71');
             return;
@@ -927,17 +926,18 @@ if (!window.daBocThepChemNguoi) {
     window.daBocThepChemNguoi = true;
 }
 
-// 3. Đổi màu Bảng Tên và Cấy Chip 3D (Địch / Ta)
+// 3. ĐỔI MÀU BẢNG TÊN, CẤY CHIP 3D & CẬP NHẬT GIAO DIỆN TỔ ĐỘI VLTK
 setInterval(() => {
+    // A. Cấy Chip 3D & Đổi màu xanh/đỏ
     if (typeof window.remotePlayers !== 'undefined') {
         for (let id in window.remotePlayers) {
             let rp = window.remotePlayers[id];
             if (rp && rp.mesh) {
                 let nameDiv = rp.tag ? rp.tag.querySelector('div:first-child') : null;
 
-                // 🌟 KIỂM TRA BẰNG CHỮ THƯỜNG
+                // 🌟 CHÌA KHÓA 3: So sánh bằng chữ thường
                 if (id && window.danhSachDongDoi.includes(id.toLowerCase())) {
-                    rp.mesh.userData.isAlly = true;
+                    rp.mesh.userData.isAlly = true; // Bơm chip chặn Auto-Aim
                     if (rp.meshChar) rp.meshChar.userData.isAlly = true;
                     if (nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
                 } else {
@@ -948,23 +948,84 @@ setInterval(() => {
             }
         }
     }
+
+    // B. Đổ Dữ Liệu Lên Khung HUD Võ Lâm Bên Trái (Cái này hồi nãy mình gửi nhầm làm mất của Sếp)
+    let hud = document.getElementById('vltkPartyHUD');
+    let list = document.getElementById('vltkPartyList');
+    if (!hud || !list) return;
+
+    if (window.MY_PARTY_ID == 0 || window.danhSachDongDoi.length === 0) {
+        hud.style.display = 'none'; // Giấu đi nếu không có nhóm
+        return;
+    }
+
+    hud.style.display = 'flex';
+    let html = '';
+
+    // Bản thân mình (Luôn đứng đầu)
+    let myHpPct = (window.mauBanThan / window.MAU_TOI_DA) * 100;
+    html += `
+    <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid rgba(46,204,113,0.5); cursor:pointer;">
+        <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:#2ecc71; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px; font-weight:bold;">ME</div>
+        <div style="flex:1;">
+            <div class="pt-card-name" style="color:#fff; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${window.myUsername}</div>
+            <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
+                <div style="width:${Math.max(0, myHpPct)}%; height:100%; background:linear-gradient(90deg, #27ae60, #2ecc71); transition:0.2s;"></div>
+            </div>
+        </div>
+    </div>`;
+
+    // Quét dàn Đồng Đội
+    window.danhSachDongDoi.forEach(nameLowercase => {
+        let myId = (window.myUsername || "").toLowerCase();
+        if (nameLowercase === myId) return;
+
+        // Truy lục lại tên chuẩn (Có chữ Hoa) từ danh sách remotePlayers để hiển thị cho đẹp
+        let actualName = Object.keys(window.remotePlayers).find(k => k.toLowerCase() === nameLowercase) || nameLowercase;
+        let rp = window.remotePlayers[actualName];
+
+        let hpPct = 100;
+        let isOffline = true;
+
+        if (rp && rp.status === 'ready') {
+            isOffline = false;
+            let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
+            if (hpBar) hpPct = parseFloat(hpBar.style.width) || 0;
+        }
+
+        let avtColor = isOffline ? '#555' : '#3498db';
+        let barColor = isOffline ? '#555' : 'linear-gradient(90deg, #2980b9, #3498db)';
+        let textColor = isOffline ? '#aaa' : '#fff';
+        let borderColor = isOffline ? 'rgba(85,85,85,0.5)' : 'rgba(52,152,219,0.5)';
+
+        html += `
+        <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid ${borderColor}; cursor:pointer; opacity:${isOffline ? 0.7 : 1};">
+            <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:${avtColor}; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px;">👤</div>
+            <div style="flex:1;">
+                <div class="pt-card-name" style="color:${textColor}; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${actualName}</div>
+                <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
+                    <div style="width:${hpPct}%; height:100%; background:${barColor}; transition:0.2s;"></div>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    list.innerHTML = html;
 }, 1000);
 
-// 4. API BÁO ĐỊCH DÀNH CHO AUTO-AIM (Sử dụng bởi global_combat.js)
+// 4. API BÁO ĐỊCH DÀNH CHO AUTO-AIM
 window.laKeDich = function (id) {
     if (!id) return false;
     let targetId = id.toLowerCase();
     let myId = (window.myUsername || "").toLowerCase();
 
-    if (targetId === myId) return false; // Không tự khóa mục tiêu bản thân
+    if (targetId === myId) return false; // Không tự khóa bản thân
+    if (window.danhSachDongDoi.includes(targetId)) return false; // 🌟 Thấy đồng đội -> Báo False ngay
 
-    // 🌟 KẺ NÀY CÓ TRONG DANH SÁCH ANH EM KHÔNG?
-    if (window.danhSachDongDoi.includes(targetId)) return false;
-
-    return true; // Không phải bạn thì chắc chắn là Địch -> KHÓA MỤC TIÊU!
+    return true; // Không phải bạn thì là Địch -> KHÓA MỤC TIÊU!
 };
 
-// Thoát game thì rời nhóm
+// Thoát game thì tự động rời PT
 window.addEventListener('beforeunload', () => {
     if (window.MY_PARTY_ID > 0) {
         let fd = new FormData(); fd.append('action', 'leave');
