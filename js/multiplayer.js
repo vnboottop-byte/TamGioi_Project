@@ -536,61 +536,51 @@ livekitScript.onload = async () => {
 
 
 
-                            // 🌟 BẢN VÁ AAA: LAZY LOAD VÀ BÍ THUẬT LÁ CHẮN TỔ ĐỘI (CHỐNG MẤT MÁU)
+                            // 🌟 BẢN VÁ AAA: LAZY LOAD VÀ BÍ THUẬT LÁ CHẮN TỔ ĐỘI (CHỐNG MẤT MÁU X2)
                             else if (data.type === 'TUNG_CHIEU') {
                                 let tenHam = 'tungCombo' + data.className;
 
                                 // ========================================================
-                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP SÁT THƯƠNG ĐỒNG ĐỘI VỀ 0.000001
+                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP DAME CỦA TẤT CẢ ĐẠN BAY VỀ 0.000001
                                 // ========================================================
                                 function runSkill() {
-                                    let isAlly = window.danhSachDongDoi && window.danhSachDongDoi.includes(senderId);
                                     let origDmg = null;
-                                    
-                                    if (isAlly && window.remotePlayers[senderId]) {
+                                    // Ép sát thương của TẤT CẢ người chơi khác (Địch lẫn Ta) về mức Vi hạt
+                                    // Dame thật sự sẽ chỉ được nhận qua đường truyền 'BI_CHEM'
+                                    if (window.remotePlayers[senderId]) {
                                         origDmg = window.remotePlayers[senderId].damage;
-                                        window.remotePlayers[senderId].damage = 0.000001; // Sát thương vi hạt (Không mất máu)
+                                        window.remotePlayers[senderId].damage = 0.000001;
                                     }
-                                    
+
                                     if (typeof window[tenHam] === 'function') {
                                         window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                     }
-                                    
-                                    if (isAlly && window.remotePlayers[senderId]) {
-                                        window.remotePlayers[senderId].damage = origDmg; // Trả lại sức mạnh ngay lập tức
+
+                                    if (window.remotePlayers[senderId] && origDmg !== null) {
+                                        window.remotePlayers[senderId].damage = origDmg; // Trả lại sức mạnh ngay sau khi xuất chiêu
                                     }
                                 }
 
-                                // 1. Nếu trong não đã có sẵn võ công này thì tung chiêu luôn!
-                                if (typeof window[tenHam] === 'function') {
-                                    runSkill();
-                                }
-                                // 2. NẾU CHƯA BIẾT CHIÊU NÀY -> TỰ ĐỘNG TẢI FILE SÁCH VÕ CÔNG VỀ HỌC NGAY!
+                                if (typeof window[tenHam] === 'function') { runSkill(); }
                                 else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
-                                    if (window.dangTaiVoCong[data.className]) return; 
+                                    if (window.dangTaiVoCong[data.className]) return;
                                     window.dangTaiVoCong[data.className] = true;
 
-                                    let backupHePhai = window.HePhaiHienTai;
-                                    let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : [];
-                                    let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : [];
-                                    let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
+                                    let backupHePhai = window.HePhaiHienTai; let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : []; let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : []; let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
 
                                     let theScript = document.createElement('script');
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now();
 
                                     theScript.onload = function () {
-                                        window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk;
-                                        if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
+                                        window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
                                         runSkill();
                                     };
-
                                     theScript.onerror = function () {
                                         let scriptDuPhong = document.createElement('script');
-                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
+                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now();
                                         scriptDuPhong.onload = function () {
-                                            window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk;
-                                            if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
+                                            window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
                                             runSkill();
                                         };
                                         document.head.appendChild(scriptDuPhong);
@@ -600,17 +590,17 @@ livekitScript.onload = async () => {
                             }
 
                             else if (data.type === 'BI_CHEM') {
-                                // 🛡️ CHỐT CHẶN CỬA CẬN CHIẾN: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI THÌ HỦY BỎ TẤT CẢ
+                                // 🛡️ CHỐT CHẶN CỬA BẢO HỘ: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI THÌ HỦY BỎ TẤT CẢ TÁC ĐỘNG!
                                 if (typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(senderId)) {
-                                    return; 
+                                    return;
                                 }
 
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
                                     window.mauBanThan -= Math.round(data.damage);
                                     if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
-                                    const uiThanhMau = document.getElementById('thanhMauHienTai'); 
+                                    const uiThanhMau = document.getElementById('thanhMauHienTai');
                                     if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-                                    
+
                                     if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
                                 }
                             }
@@ -936,24 +926,39 @@ if (!window.daBocThepChemNguoi) {
     window.daBocThepChemNguoi = true;
 }
 
-// 3. Đổi màu Bảng Tên để dễ nhận diện (Xanh lá = Bạn, Đỏ = Địch)
+// 3. Đổi màu Bảng Tên và CẤY CHIP ĐỒNG ĐỘI CHO MÔ HÌNH 3D
 setInterval(() => {
     if (typeof window.remotePlayers !== 'undefined') {
         for (let id in window.remotePlayers) {
             let rp = window.remotePlayers[id];
-            if (rp && rp.tag) {
-                let nameDiv = rp.tag.querySelector('div:first-child');
-                if (nameDiv) {
-                    if (window.danhSachDongDoi.includes(id)) {
-                        nameDiv.style.color = '#2ecc71'; 
-                        nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000';
-                    } else {
-                        nameDiv.style.color = '#e74c3c'; 
-                        nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000';
-                    }
+            if (rp && rp.mesh) {
+                let nameDiv = rp.tag ? rp.tag.querySelector('div:first-child') : null;
+
+                // NẾU LÀ ANH EM -> CẤY CHIP isAlly = true
+                if (window.danhSachDongDoi.includes(id)) {
+                    rp.mesh.userData.isAlly = true; // 🌟 Con chip để Auto-Aim bỏ qua!
+                    if (rp.meshChar) rp.meshChar.userData.isAlly = true;
+                    if (nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
+                } else {
+                    rp.mesh.userData.isAlly = false;
+                    if (rp.meshChar) rp.meshChar.userData.isAlly = false;
+                    if (nameDiv) { nameDiv.style.color = '#e74c3c'; nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000'; }
                 }
             }
         }
+    }
+}, 1000);
+
+// 4. Che giấu số "-0" (Do bị sát thương hạt tiêu ở Bước 2 đánh trúng)
+setInterval(() => {
+    if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
+        const oldTaoSo = window.taoSoSatThuong;
+        window.taoSoSatThuong = function (pos3D, satThuong, mauSac) {
+            // NẾU SÁT THƯƠNG QUÁ BÉ -> TÀNG HÌNH SỐ ĐÓ ĐI, KHÔNG IN RA "-0" TRÊN MÀN HÌNH
+            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return;
+            oldTaoSo(pos3D, satThuong, mauSac);
+        };
+        window.daBocThepTaoSo = true;
     }
 }, 1000);
 
