@@ -533,83 +533,104 @@ livekitScript.onload = async () => {
 
 
 
-                            // 🌟 BẢN VÁ AAA: LAZY LOAD - TỰ ĐỘNG HỌC LỎM VÕ CÔNG (CHỐNG BUG ĐOẠT XÁ)
+
+
+
+                            // 🌟 BẢN VÁ AAA: LAZY LOAD VÀ BÍ THUẬT LÁ CHẮN TỔ ĐỘI (CHỐNG MẤT MÁU)
                             else if (data.type === 'TUNG_CHIEU') {
                                 let tenHam = 'tungCombo' + data.className;
 
-                                // 1. Nếu trong não đã có sẵn võ công này thì tung chiêu luôn!
-                                if (typeof window[tenHam] === 'function') {
-                                    window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                // ========================================================
+                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP SÁT THƯƠNG ĐỒNG ĐỘI VỀ 0.000001
+                                // ========================================================
+                                function runSkill() {
+                                    let isAlly = window.danhSachDongDoi && window.danhSachDongDoi.includes(senderId);
+                                    let origDmg = null;
+                                    
+                                    if (isAlly && window.remotePlayers[senderId]) {
+                                        origDmg = window.remotePlayers[senderId].damage;
+                                        window.remotePlayers[senderId].damage = 0.000001; // Sát thương vi hạt (Không mất máu)
+                                    }
+                                    
+                                    if (typeof window[tenHam] === 'function') {
+                                        window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                    }
+                                    
+                                    if (isAlly && window.remotePlayers[senderId]) {
+                                        window.remotePlayers[senderId].damage = origDmg; // Trả lại sức mạnh ngay lập tức
+                                    }
                                 }
 
+                                // 1. Nếu trong não đã có sẵn võ công này thì tung chiêu luôn!
+                                if (typeof window[tenHam] === 'function') {
+                                    runSkill();
+                                }
                                 // 2. NẾU CHƯA BIẾT CHIÊU NÀY -> TỰ ĐỘNG TẢI FILE SÁCH VÕ CÔNG VỀ HỌC NGAY!
                                 else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
-                                    if (window.dangTaiVoCong[data.className]) return; // Tránh tải trùng lặp
+                                    if (window.dangTaiVoCong[data.className]) return; 
                                     window.dangTaiVoCong[data.className] = true;
 
-                                    console.log("⏳ Kẻ địch xài chiêu lạ! Đang Auto-Download data của: " + data.className);
-
-                                    // 🛡️ BÍ THUẬT: SAO LƯU LINH HỒN CỦA NGƯỜI CHƠI CHÍNH TRƯỚC KHI TẢI FILE LẠ
                                     let backupHePhai = window.HePhaiHienTai;
                                     let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : [];
                                     let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : [];
                                     let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
 
                                     let theScript = document.createElement('script');
-                                    // MÃ CŨ CỦA SẾP LÀ: theScript.src = 'js/' + data.className.toLowerCase() + '.js';
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
 
                                     theScript.onload = function () {
-
-                                        // 🛡️ BÍ THUẬT: PHỤC HỒI LINH HỒN (ĐÁ VĂNG KẺ ĐOẠT XÁ RA NGOÀI)
-                                        window.HePhaiHienTai = backupHePhai;
-                                        window.KHO_ANIM_NHANROI = backupIdle;
-                                        window.KHO_ANIM_TANCONG = backupAtk;
+                                        window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk;
                                         if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
-
-                                        console.log("✅ Đã học xong võ công của: " + data.className);
-                                        if (typeof window[tenHam] === 'function') {
-                                            window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                        }
+                                        runSkill();
                                     };
 
                                     theScript.onerror = function () {
                                         let scriptDuPhong = document.createElement('script');
-                                        // MÃ CŨ CỦA SẾP LÀ: scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js';
-                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now(); // 🌟 GẮN BÙA VÀO ĐÂY
-
+                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
                                         scriptDuPhong.onload = function () {
-
-                                            // 🛡️ PHỤC HỒI LINH HỒN TẠI FILE DỰ PHÒNG
-                                            window.HePhaiHienTai = backupHePhai;
-                                            window.KHO_ANIM_NHANROI = backupIdle;
-                                            window.KHO_ANIM_TANCONG = backupAtk;
+                                            window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk;
                                             if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
-
-                                            console.log("✅ Đã học xong võ công của: " + data.className);
-                                            if (typeof window[tenHam] === 'function') {
-                                                window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                            }
+                                            runSkill();
                                         };
                                         document.head.appendChild(scriptDuPhong);
                                     };
-
                                     document.head.appendChild(theScript);
                                 }
                             }
 
                             else if (data.type === 'BI_CHEM') {
+                                // 🛡️ CHỐT CHẶN CỬA CẬN CHIẾN: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI THÌ HỦY BỎ TẤT CẢ
+                                if (typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(senderId)) {
+                                    return; 
+                                }
+
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
                                     window.mauBanThan -= Math.round(data.damage);
                                     if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
                                     const uiThanhMau = document.getElementById('thanhMauHienTai'); 
                                     if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
                                     
-                                    // 🌟 TRUYỀN TÊN KẺ GIẾT VÀO HÀM (senderId)
                                     if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
                                 }
                             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            
+
+
+
                             // 🌟 BẢN VÁ: NHẬN THÔNG BÁO "NẠN NHÂN ĐÃ CHẾT, HÚP EXP THÔI!"
                             else if (data.type === 'XAC_NHAN_GUC_NGA') {
                                 if (data.killerId === window.myUsername) {
