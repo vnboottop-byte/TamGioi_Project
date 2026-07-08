@@ -536,31 +536,27 @@ livekitScript.onload = async () => {
 
 
 
-                            // 🌟 BẢN VÁ AAA: TRẢ LẠI LOGIC GỐC CHO CHIÊU THỨC BAY
+                            // 🌟 TRẢ LẠI LOGIC GỐC CHO CHIÊU THỨC BAY
                             else if (data.type === 'TUNG_CHIEU') {
                                 let tenHam = 'tungCombo' + data.className;
 
-                                function runSkill() {
-                                    if (typeof window[tenHam] === 'function') {
-                                        // CỐT LÕI: Phục hồi tham số isRemote = true nguyên thủy của Sếp!
-                                        // Các phái (Súng, Pháp sư) sẽ render hiệu ứng 100% chuẩn xác.
-                                        window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                    }
-                                }
-
-                                if (typeof window[tenHam] === 'function') { runSkill(); }
-                                else {
+                                if (typeof window[tenHam] === 'function') {
+                                    // TRẢ LẠI THAM SỐ TRUE (isRemote) NHƯ BẢN GỐC CỦA SẾP!
+                                    window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                } else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
-                                    if (window.dangTaiVoCong[data.className]) return;
+                                    if (window.dangTaiVoCong[data.className]) return; 
                                     window.dangTaiVoCong[data.className] = true;
 
                                     let backupHePhai = window.HePhaiHienTai; let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : []; let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : []; let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
                                     let theScript = document.createElement('script');
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now();
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
 
                                     theScript.onload = function () {
                                         window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
-                                        runSkill();
+                                        if (typeof window[tenHam] === 'function') {
+                                            window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
+                                        }
                                     };
                                     document.head.appendChild(theScript);
                                 }
@@ -569,15 +565,15 @@ livekitScript.onload = async () => {
                             else if (data.type === 'BI_CHEM') {
                                 // 🛡️ CHỐT CHẶN TỔ ĐỘI: TỪ CHỐI NHẬN MÁU NẾU KẺ ĐÁNH LÀ ANH EM!
                                 if (senderId && typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(String(senderId).toLowerCase())) {
-                                    return;
+                                    return; 
                                 }
 
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
                                     window.mauBanThan -= Math.round(data.damage);
                                     if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
-                                    const uiThanhMau = document.getElementById('thanhMauHienTai');
+                                    const uiThanhMau = document.getElementById('thanhMauHienTai'); 
                                     if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-
+                                    
                                     if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
                                 }
                             }
