@@ -540,69 +540,46 @@ livekitScript.onload = async () => {
                             else if (data.type === 'TUNG_CHIEU') {
                                 let tenHam = 'tungCombo' + data.className;
 
-                                // ========================================================
-                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP DAME ĐỒNG ĐỘI VỀ VI HẠT
-                                // ========================================================
                                 function runSkill() {
-                                    let origDmg = null;
-                                    // 🌟 CHỈ BÓP DAME NẾU NGƯỜI BẮN LÀ ĐỒNG ĐỘI (So sánh chữ thường)
-                                    let isAlly = window.danhSachDongDoi && senderId && window.danhSachDongDoi.includes(senderId.toLowerCase());
-
-                                    if (isAlly && window.remotePlayers[senderId]) {
-                                        origDmg = window.remotePlayers[senderId].damage;
-                                        window.remotePlayers[senderId].damage = 0.000001;
-                                    }
-
                                     if (typeof window[tenHam] === 'function') {
-                                        window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
-                                    }
-
-                                    // Trả lại dame gốc ngay sau khi gọi hàm
-                                    if (origDmg !== null && window.remotePlayers[senderId]) {
-                                        window.remotePlayers[senderId].damage = origDmg;
+                                        // 🌟 CỐT LÕI: Truyền 0.000001 vào biến isRemote (Thay vì true).
+                                        // Mọi viên đạn từ người chơi khác bay trên màn hình của Sếp sẽ có sát thương Vi Hạt.
+                                        // Điều này tạo hiệu ứng nổ đẹp mắt nhưng TUYỆT ĐỐI KHÔNG LÀM MẤT MÁU!
+                                        // Sát thương PVP thực sự sẽ được xử lý độc quyền bằng tín hiệu BI_CHEM!
+                                        window[tenHam](data.skillType, 0.000001, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                     }
                                 }
 
                                 if (typeof window[tenHam] === 'function') { runSkill(); }
                                 else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
-                                    if (window.dangTaiVoCong[data.className]) return;
+                                    if (window.dangTaiVoCong[data.className]) return; 
                                     window.dangTaiVoCong[data.className] = true;
 
                                     let backupHePhai = window.HePhaiHienTai; let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : []; let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : []; let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
-
                                     let theScript = document.createElement('script');
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now();
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
 
                                     theScript.onload = function () {
                                         window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
                                         runSkill();
-                                    };
-                                    theScript.onerror = function () {
-                                        let scriptDuPhong = document.createElement('script');
-                                        scriptDuPhong.src = 'js/phai_' + data.className.toLowerCase() + '.js?v=' + Date.now();
-                                        scriptDuPhong.onload = function () {
-                                            window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
-                                            runSkill();
-                                        };
-                                        document.head.appendChild(scriptDuPhong);
                                     };
                                     document.head.appendChild(theScript);
                                 }
                             }
 
                             else if (data.type === 'BI_CHEM') {
-                                // 🛡️ CHỐT CHẶN CỬA BẢO HỘ: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI (Lọc chữ thường) THÌ HỦY BỎ!
+                                // 🛡️ CHỐT CHẶN CỬA TỬ: NẾU KẺ GỬI LÀ ĐỒNG ĐỘI -> HỦY LỆNH TRỪ MÁU NGAY!
                                 if (senderId && typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(senderId.toLowerCase())) {
-                                    return;
+                                    return; 
                                 }
 
                                 if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
                                     window.mauBanThan -= Math.round(data.damage);
                                     if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
-                                    const uiThanhMau = document.getElementById('thanhMauHienTai');
+                                    const uiThanhMau = document.getElementById('thanhMauHienTai'); 
                                     if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-
+                                    
                                     if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
                                 }
                             }
