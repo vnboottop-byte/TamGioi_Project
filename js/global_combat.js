@@ -236,3 +236,40 @@ window.batDauHoiChieuUI = function(phim) {
         }
     }, 50); 
 };
+
+
+
+
+
+
+
+
+
+
+// ==========================================
+// 🛡️ BÍ THUẬT TẨY NÃO AUTO-AIM & ẨN SÁT THƯƠNG ĐỒNG ĐỘI
+// ==========================================
+// 1. Che mắt Khóa Mục Tiêu (Auto-aim) của 100+ môn phái
+const oldLayHitbox = window.layHitbox;
+window.layHitbox = function (mesh) {
+    let hit = oldLayHitbox(mesh);
+    // Nếu mục tiêu đã được dán nhãn là Đồng Đội (Sẽ dán ở Bước 2)
+    if (mesh && mesh.userData && mesh.userData.isAlly) {
+        // Đẩy tâm ngực ra ngoài Hệ Mặt Trời để không bao giờ bị khóa trúng!
+        hit.tamNguc = new THREE.Vector3(999999, 999999, 999999);
+    }
+    return hit;
+};
+
+// 2. Chặn hiển thị số -0 khi dính đạn AoE của anh em
+setInterval(() => {
+    if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
+        const oldTaoSo = window.taoSoSatThuong;
+        window.taoSoSatThuong = function(pos3D, satThuong, mauSac) {
+            // Nếu sát thương < 0.5 (vi hạt) thì tàng hình luôn, không in ra số -0
+            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return; 
+            oldTaoSo(pos3D, satThuong, mauSac);
+        };
+        window.daBocThepTaoSo = true;
+    }
+}, 1000);
