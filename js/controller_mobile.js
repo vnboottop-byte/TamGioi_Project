@@ -72,14 +72,14 @@
     const mJoyStick = document.getElementById('mJoyStick');
     const mZoneCam = document.getElementById('mZoneCam');
     
-    // 1. JOYSTICK DI CHUYỂN (BẢN VÁ: CHỐNG TÀNG HÌNH & CHỐNG KẸT ZOOM CAMERA)
+    
+
+    // 1. JOYSTICK DI CHUYỂN (BẢN VÁ: CHỐNG TÀNG HÌNH NÚT)
     let joyId = null; let joyCenter = { x: 0, y: 0 }; let joyR = 50; 
 
     if (mZoneLeft && mJoyBase) {
         mZoneLeft.addEventListener('touchstart', (e) => {
             e.preventDefault(); 
-            e.stopPropagation(); // 🌟 LÁ CHẮN 1: Giấu ngón tay trái đi để Camera không bị nhầm là Zoom!
-            
             let t = e.changedTouches[0]; joyId = t.identifier; joyCenter = { x: t.clientX, y: t.clientY };
             mJoyBase.style.left = joyCenter.x + 'px'; 
             mJoyBase.style.top = joyCenter.y + 'px'; 
@@ -88,40 +88,57 @@
         }, {passive: false});
 
         mZoneLeft.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
-            e.stopPropagation(); // 🌟 LÁ CHẮN 2: Ngăn lỗi Zoom khi đang vừa chạy vừa liếc Camera
-            
-            if (joyId === null) return;
+            e.preventDefault(); if (joyId === null) return;
             let t = Array.from(e.touches).find(x => x.identifier === joyId); if (!t) return;
             
             let dx = t.clientX - joyCenter.x; let dy = t.clientY - joyCenter.y; let dist = Math.hypot(dx, dy);
             if (dist > joyR) { dx = (dx / dist) * joyR; dy = (dy / dist) * joyR; }
             mJoyStick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
             
-            // Giả lập phím bấm
             window.keys.w = dy < -10; window.keys.s = dy > 10; window.keys.a = dx < -10; window.keys.d = dx > 10;
             window.isKeyboardMoving = window.keys.w || window.keys.s || window.keys.a || window.keys.d;
         }, {passive: false});
 
         function resetJoy(e) {
-            e.stopPropagation(); // 🌟 LÁ CHẮN 3
             if (Array.from(e.changedTouches).some(t => t.identifier === joyId) || e.type === 'touchcancel') {
                 joyId = null; 
-                
-                // 🌟 BẢN VÁ: Trả Joystick về tọa độ gốc và độ mờ 50% (Không gán bằng 0 nữa)
+                // 🌟 BẢN VÁ: Trả núm về vị trí cũ và để độ mờ 50%, cấm tàng hình!
                 mJoyBase.style.left = '80px'; 
                 mJoyBase.style.top = 'auto'; 
                 mJoyBase.style.bottom = '60px';
                 mJoyBase.style.opacity = '0.5'; 
                 mJoyStick.style.transform = `translate(-50%, -50%)`;
-                
+
                 window.keys.w = window.keys.s = window.keys.a = window.keys.d = false; window.isKeyboardMoving = false;
             }
         }
         mZoneLeft.addEventListener('touchend', resetJoy); mZoneLeft.addEventListener('touchcancel', resetJoy);
     }
 
-
+    // ==========================================
+    // 🌟 BẢN VÁ TỐI THƯỢNG: ĐÁNH LỪA CAMERA 3D (CHỐNG KẸT ZOOM)
+    // ==========================================
+    const theCanvas = document.querySelector('canvas');
+    if (theCanvas) {
+        ['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(evtName => {
+            theCanvas.addEventListener(evtName, function(e) {
+                // Lọc ra: Chỉ lấy những ngón tay đang bấm thẳng vào Màn hình Game (Canvas)
+                let ngonHopLe = [];
+                for (let i = 0; i < e.touches.length; i++) {
+                    if (e.touches[i].target === theCanvas) {
+                        ngonHopLe.push(e.touches[i]);
+                    }
+                }
+                
+                // Tráo đổi mảng ngón tay để che mắt Camera 3D
+                // Camera sẽ không hề biết Sếp đang bấm Joystick hay nút Skill
+                if (ngonHopLe.length !== e.touches.length) {
+                    Object.defineProperty(e, 'touches', { get: function() { return ngonHopLe; } });
+                    Object.defineProperty(e, 'targetTouches', { get: function() { return ngonHopLe; } });
+                }
+            }, true); // Bắt buộc dùng true để chạy trước engine 3D
+        });
+    }
 
 
 
