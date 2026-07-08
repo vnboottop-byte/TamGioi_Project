@@ -1,7 +1,7 @@
 // ==========================================
-// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V4 - FIX LỖI TỰ ĐÁNH MÌNH)
+// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V5 - BẤT TỬ CHỐNG CRASH)
 // ==========================================
-console.log("🚀 Khởi động Bộ Não Quản Lý Toàn Cục...");
+console.log("🚀 Khởi động Bộ Không Gian & Thời Gian...");
 
 window.danhSachChieuThucToanMap = []; 
 
@@ -77,7 +77,7 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG 
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA 
 // ==========================================
 window.layHitbox = function (mesh) {
     if (!mesh || !mesh.position) return { tamNguc: new THREE.Vector3(0,0,0), banKinh: 2.0, chieuCao: 2.5 };
@@ -112,7 +112,7 @@ window.layHitbox = function (mesh) {
 
     let tamNguc = footPos.add(upV.multiplyScalar(chieuCao / 2));
 
-    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX ĐỒNG ĐỘI CHỐNG AUTO-AIM
+    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX ĐỒNG ĐỘI
     if (mesh.userData && mesh.userData.isAlly) {
         tamNguc.set(999999, 999999, 999999);
     }
@@ -120,6 +120,9 @@ window.layHitbox = function (mesh) {
     return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
 };
 
+// ==========================================
+// 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE 
+// ==========================================
 if (window.isMobile && !window.daCaiBoLocDOM) {
     const originalAppendChild = document.body.appendChild;
     document.body.appendChild = function (element) {
@@ -175,35 +178,30 @@ setInterval(() => {
 }, 1000);
 
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI TỰ ĐÁNH MÌNH)
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (BỌC THÉP CHỐNG CRASH V5)
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     let targetPos = null; 
     let minD = 80;
 
     function checkHopLe(hit) {
-        if (!hit) return false;
+        if (!hit || !hit.tamNguc) return false;
         let d = viTriGoc.distanceTo(hit.tamNguc);
         
-        // Cự ly không được nhỏ hơn 0.1m để tránh lỗi chia cho 0
+        // Bắt buộc cự ly > 0.1m để chống sập chia cho 0 và tự đánh bản thân!
         if (d < 0.1 || d > minD) return false;
 
-        // 🌟 NÂNG CẤP: RADAR HÌNH NÓN
-        // Bắt buộc mục tiêu phải nằm ở "Phía trước mặt" (Góc quét 144 độ)
-        if (huongMat && huongMat.lengthSq() > 0.1) {
+        // 🌟 BẢO HIỂM 1: Cảm biến góc (Tránh mục tiêu sau lưng)
+        if (huongMat && typeof huongMat.angleTo === 'function' && huongMat.lengthSq() > 0.1) {
             let dirToTarget = hit.tamNguc.clone().sub(viTriGoc).normalize();
             let angle = huongMat.angleTo(dirToTarget);
-            // Nếu kẻ địch nằm ở phía sau lưng (Góc lớn hơn 72 độ x 2) -> Bỏ qua!
             if (angle > Math.PI / 2.5) return false; 
         }
 
         minD = d; targetPos = hit.tamNguc; return true;
     }
 
-    // 🛑 QUAN TRỌNG: TUYỆT ĐỐI KHÔNG QUÉT BẢN THÂN VÀO ĐÂY!
-    // Sếp tung chiêu thì cấm tự đưa Sếp vào danh sách mục tiêu!
-    
-    // 1. Quét người chơi khác (PVP - Đã lọc anh em PT)
+    // A. Quét người chơi khác (ĐỊCH - Đã bỏ qua anh em PT)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
@@ -212,7 +210,7 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
         }
     }
 
-    // 2. Quét Quái/Boss (PVE)
+    // B. Quét Quái/Boss
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
             if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
@@ -222,12 +220,18 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     return targetPos;
 };
 
+// 🦠 BÍ THUẬT KÝ SINH (CÓ BẢO HIỂM CHỐNG THIẾU BIẾN)
 setInterval(() => {
     for (let key in window) {
         if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
             window[key] = function(viTriGoc, huongMat) {
-                let t = window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat);
-                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50)); 
+                // 🌟 BẢO HIỂM 2: Nếu File Kỹ năng viết thiếu biến, AI tự động chêm vào, CHỐNG CRASH!
+                if (!viTriGoc || typeof viTriGoc.clone !== 'function') return null;
+                
+                let hMatChuan = (huongMat && typeof huongMat.clone === 'function') ? huongMat : new THREE.Vector3(0, 0, 1);
+                
+                let t = window.layMucTieuGanNhatThongMinh(viTriGoc, hMatChuan);
+                return t ? t : viTriGoc.clone().add(hMatChuan.clone().multiplyScalar(50)); 
             };
         }
     }
