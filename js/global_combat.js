@@ -1,5 +1,5 @@
 // ==========================================
-// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V5 - BẤT TỬ CHỐNG CRASH)
+// 🌐 MODULE: QUẢN LÝ CHIẾU THỨC & SINH TỬ TOÀN CỤC (BẢN V6 - TỐI THƯỢNG AAA)
 // ==========================================
 console.log("🚀 Khởi động Bộ Không Gian & Thời Gian...");
 
@@ -77,12 +77,13 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
 };
 
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA 
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (PHỤC HỒI HOÀN TOÀN BỘ NHỚ)
 // ==========================================
 window.layHitbox = function (mesh) {
+    // 🛡️ CHỐNG CRASH TẦNG SÂU: Chặn các Object rỗng hoặc Vật thể giả (Mock)
     if (!mesh || !mesh.position) return { tamNguc: new THREE.Vector3(0,0,0), banKinh: 2.0, chieuCao: 2.5 };
-
     let isMockObject = !(typeof mesh.traverse === 'function' && mesh.isObject3D);
+
     let footPos = typeof mesh.position.clone === 'function' ? mesh.position.clone() : new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z);
     let upV = (mesh.up && typeof mesh.up.clone === 'function') ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
 
@@ -112,7 +113,7 @@ window.layHitbox = function (mesh) {
 
     let tamNguc = footPos.add(upV.multiplyScalar(chieuCao / 2));
 
-    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX ĐỒNG ĐỘI
+    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: Nếu là đồng đội, giấu Hitbox ra ngoài hệ mặt trời
     if (mesh.userData && mesh.userData.isAlly) {
         tamNguc.set(999999, 999999, 999999);
     }
@@ -165,7 +166,7 @@ window.batDauHoiChieuUI = function(phim) {
     }, 50); 
 };
 
-// 🛡️ CHẶN HIỂN THỊ SỐ -0 
+// 🛡️ CHẶN HIỂN THỊ SỐ -0 (Tàng hình sát thương vi hạt của đồng đội)
 setInterval(() => {
     if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
         const oldTaoSo = window.taoSoSatThuong;
@@ -178,7 +179,7 @@ setInterval(() => {
 }, 1000);
 
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (BỌC THÉP CHỐNG CRASH V5)
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI TỰ ĐÁNH MÌNH)
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     let targetPos = null; 
@@ -188,20 +189,26 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
         if (!hit || !hit.tamNguc) return false;
         let d = viTriGoc.distanceTo(hit.tamNguc);
         
-        // Bắt buộc cự ly > 0.1m để chống sập chia cho 0 và tự đánh bản thân!
-        if (d < 0.1 || d > minD) return false;
+        // 🌟 BẢO HIỂM 1: Cự ly phải > 0.5m để Sếp KHÔNG BAO GIỜ tự khóa vào ngực mình!
+        if (d < 0.5 || d > minD) return false;
 
-        // 🌟 BẢO HIỂM 1: Cảm biến góc (Tránh mục tiêu sau lưng)
-        if (huongMat && typeof huongMat.angleTo === 'function' && huongMat.lengthSq() > 0.1) {
-            let dirToTarget = hit.tamNguc.clone().sub(viTriGoc).normalize();
-            let angle = huongMat.angleTo(dirToTarget);
-            if (angle > Math.PI / 2.5) return false; 
+        // 🌟 BẢO HIỂM 2: RADAR HÌNH NÓN (Góc quét 180 độ phía trước mặt)
+        // Kẻ địch đứng sau lưng sẽ bị bỏ qua, chống đạn bay ngược ra đằng sau!
+        if (huongMat && typeof huongMat.clone === 'function') {
+            let dirToTargetXZ = new THREE.Vector3(hit.tamNguc.x - viTriGoc.x, 0, hit.tamNguc.z - viTriGoc.z);
+            let huongMatXZ = new THREE.Vector3(huongMat.x, 0, huongMat.z);
+            if (dirToTargetXZ.lengthSq() > 0.01 && huongMatXZ.lengthSq() > 0.01) {
+                dirToTargetXZ.normalize();
+                huongMatXZ.normalize();
+                let angle = huongMatXZ.angleTo(dirToTargetXZ);
+                if (angle > Math.PI / 2) return false; // Nằm ngoài vùng mặt -> Bỏ qua
+            }
         }
 
         minD = d; targetPos = hit.tamNguc; return true;
     }
 
-    // A. Quét người chơi khác (ĐỊCH - Đã bỏ qua anh em PT)
+    // 1. Quét Địch (Đã bỏ qua anh em PT)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
@@ -210,28 +217,34 @@ window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
         }
     }
 
-    // B. Quét Quái/Boss
+    // 2. Quét Quái/Boss (Luôn ưu tiên đánh quái trước mặt)
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
             if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
         });
     }
 
-    return targetPos;
+    // 3. Quét Bản thân Sếp (DÀNH RIÊNG CHO BOSS KHÓA MỤC TIÊU SẾP)
+    // Nếu viTriGoc (điểm tung chiêu của Boss) cách xa Sếp > 0.5m, Sếp hợp lệ để bị cắn!
+    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) {
+        checkHopLe(window.layHitbox(window.playerModel));
+    }
+
+    // 🛑 CHÌA KHÓA VÀNG: TUYỆT ĐỐI TRẢ VỀ NULL NẾU KHÔNG CÓ ĐỊCH.
+    // Việc này cho phép phai_bansung.js tự động xử lý bắn thẳng ra vô cực theo Logic nguyên gốc!
+    return targetPos; 
 };
 
-// 🦠 BÍ THUẬT KÝ SINH (CÓ BẢO HIỂM CHỐNG THIẾU BIẾN)
+// 🦠 BÍ THUẬT KÝ SINH AI THÔNG MINH CHO 100+ PHÁI (CÓ BẢO HIỂM LỖI CODE CŨ)
 setInterval(() => {
     for (let key in window) {
         if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
             window[key] = function(viTriGoc, huongMat) {
-                // 🌟 BẢO HIỂM 2: Nếu File Kỹ năng viết thiếu biến, AI tự động chêm vào, CHỐNG CRASH!
+                // 🛡️ CHỐNG CRASH TẦNG SÂU: Kẻ nào gọi hàm lởm thiếu tọa độ gốc thì bị từ chối
                 if (!viTriGoc || typeof viTriGoc.clone !== 'function') return null;
                 
-                let hMatChuan = (huongMat && typeof huongMat.clone === 'function') ? huongMat : new THREE.Vector3(0, 0, 1);
-                
-                let t = window.layMucTieuGanNhatThongMinh(viTriGoc, hMatChuan);
-                return t ? t : viTriGoc.clone().add(hMatChuan.clone().multiplyScalar(50)); 
+                // Trả về duy nhất tọa độ chuẩn hoặc Null, Game không bao giờ bị Crash!
+                return window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat); 
             };
         }
     }
