@@ -541,13 +541,14 @@ livekitScript.onload = async () => {
                                 let tenHam = 'tungCombo' + data.className;
 
                                 // ========================================================
-                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP DAME CỦA TẤT CẢ ĐẠN BAY VỀ 0.000001
+                                // 🛡️ BÍ THUẬT HẠT TIÊU: ÉP DAME ĐỒNG ĐỘI VỀ VI HẠT
                                 // ========================================================
                                 function runSkill() {
                                     let origDmg = null;
-                                    // Ép sát thương của TẤT CẢ người chơi khác (Địch lẫn Ta) về mức Vi hạt
-                                    // Dame thật sự sẽ chỉ được nhận qua đường truyền 'BI_CHEM'
-                                    if (window.remotePlayers[senderId]) {
+                                    // 🌟 CHỈ BÓP DAME NẾU NGƯỜI BẮN LÀ ĐỒNG ĐỘI (So sánh chữ thường)
+                                    let isAlly = window.danhSachDongDoi && senderId && window.danhSachDongDoi.includes(senderId.toLowerCase());
+
+                                    if (isAlly && window.remotePlayers[senderId]) {
                                         origDmg = window.remotePlayers[senderId].damage;
                                         window.remotePlayers[senderId].damage = 0.000001;
                                     }
@@ -556,8 +557,9 @@ livekitScript.onload = async () => {
                                         window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                     }
 
-                                    if (window.remotePlayers[senderId] && origDmg !== null) {
-                                        window.remotePlayers[senderId].damage = origDmg; // Trả lại sức mạnh ngay sau khi xuất chiêu
+                                    // Trả lại dame gốc ngay sau khi gọi hàm
+                                    if (origDmg !== null && window.remotePlayers[senderId]) {
+                                        window.remotePlayers[senderId].damage = origDmg;
                                     }
                                 }
 
@@ -590,8 +592,8 @@ livekitScript.onload = async () => {
                             }
 
                             else if (data.type === 'BI_CHEM') {
-                                // 🛡️ CHỐT CHẶN CỬA BẢO HỘ: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI THÌ HỦY BỎ TẤT CẢ TÁC ĐỘNG!
-                                if (typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(senderId)) {
+                                // 🛡️ CHỐT CHẶN CỬA BẢO HỘ: NẾU NGƯỜI CHÉM LÀ ĐỒNG ĐỘI (Lọc chữ thường) THÌ HỦY BỎ!
+                                if (senderId && typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(senderId.toLowerCase())) {
                                     return;
                                 }
 
@@ -883,150 +885,89 @@ window.traLoiPT = function (nguoiMoi, isAccept) {
     }
 };
 
+
+
 // ==========================================
-// 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN
+// 🛡️ HỆ THỐNG LÁ CHẮN ĐỒNG ĐỘI & RADAR NHẬN DIỆN (ĐÃ FIX HOA/THƯỜNG)
 // ==========================================
 window.danhSachDongDoi = [];
 window.MY_PARTY_ID = 0;
 window.MY_GUILD_ID = 0;
 
-
-
-
-
-
-
-
-// 1. MÁY QUÉT ĐỒNG ĐỘI & BƠM MÃ CHO KHUNG CHAT (SỬA LỖI CHAT)
-window.quetDongDoi = function() {
-    fetch('api/get_allies.php').then(r=>r.json()).then(data => {
-        if(data.status === 'success') {
-            window.danhSachDongDoi = data.allies || [];
+// 1. MÁY QUÉT ĐỒNG ĐỘI (Bơm mã vào kênh Chat và ép thành CHỮ THƯỜNG để dễ kiểm tra)
+window.quetDongDoi = function () {
+    fetch('api/get_allies.php').then(r => r.json()).then(data => {
+        if (data.status === 'success') {
+            // 🌟 CHÌA KHÓA: Ép tất cả tên anh em thành chữ thường để không bị trượt
+            window.danhSachDongDoi = (data.allies || []).map(name => name.toLowerCase());
             window.MY_PARTY_ID = data.party_id;
             window.MY_GUILD_ID = data.guild_id;
 
-            // 🌟 CHÌA KHÓA FIX CHAT LÀ Ở ĐÂY: Truyền ID Nhóm vào Kênh Chat!
             if (window.kenhChatHienTai === 'PARTY') window.idKenhHienTai = window.MY_PARTY_ID;
             if (window.kenhChatHienTai === 'GUILD') window.idKenhHienTai = window.MY_GUILD_ID;
         }
-    }).catch(e=>{});
+    }).catch(e => { });
 };
 setInterval(window.quetDongDoi, 3000);
 setTimeout(window.quetDongDoi, 1000);
 
-// 2. GẮN LÁ CHẮN VÀO LƯỠI KIẾM (Chặn sát thương đồng đội)
+// 2. GẮN LÁ CHẮN VÀO LƯỠI KIẾM (Cận chiến)
 if (!window.daBocThepChemNguoi) {
     const oldChemTrung = window.chemTrungNguoiChoi;
-    window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
-        if (window.danhSachDongDoi.includes(victimId)) {
+    window.chemTrungNguoiChoi = function (victimId, dame, hitPos) {
+        if (!victimId) return;
+
+        // 🌟 KIỂM TRA BẰNG CHỮ THƯỜNG
+        if (window.danhSachDongDoi.includes(victimId.toLowerCase())) {
             if (typeof taoSoSatThuong === 'function' && hitPos && Math.random() < 0.1) taoSoSatThuong(hitPos, "Đồng đội", '#2ecc71');
-            return; 
+            return;
         }
         if (oldChemTrung) oldChemTrung(victimId, dame, hitPos);
     };
     window.daBocThepChemNguoi = true;
 }
 
-// 3. ĐỔI MÀU BẢNG TÊN, CẤY CHIP 3D & CẬP NHẬT GIAO DIỆN TỔ ĐỘI VLTK
+// 3. Đổi màu Bảng Tên và Cấy Chip 3D (Địch / Ta)
 setInterval(() => {
-    // A. Cấy Chip 3D
     if (typeof window.remotePlayers !== 'undefined') {
         for (let id in window.remotePlayers) {
             let rp = window.remotePlayers[id];
             if (rp && rp.mesh) {
                 let nameDiv = rp.tag ? rp.tag.querySelector('div:first-child') : null;
-                if (window.danhSachDongDoi.includes(id)) {
-                    rp.mesh.userData.isAlly = true; 
-                    if(rp.meshChar) rp.meshChar.userData.isAlly = true; 
-                    if(nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
+
+                // 🌟 KIỂM TRA BẰNG CHỮ THƯỜNG
+                if (id && window.danhSachDongDoi.includes(id.toLowerCase())) {
+                    rp.mesh.userData.isAlly = true;
+                    if (rp.meshChar) rp.meshChar.userData.isAlly = true;
+                    if (nameDiv) { nameDiv.style.color = '#2ecc71'; nameDiv.style.textShadow = '0 0 5px #2ecc71, 1px 1px 0 #000'; }
                 } else {
                     rp.mesh.userData.isAlly = false;
-                    if(rp.meshChar) rp.meshChar.userData.isAlly = false;
-                    if(nameDiv) { nameDiv.style.color = '#e74c3c'; nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000'; }
+                    if (rp.meshChar) rp.meshChar.userData.isAlly = false;
+                    if (nameDiv) { nameDiv.style.color = '#e74c3c'; nameDiv.style.textShadow = '0 0 5px #e74c3c, 1px 1px 0 #000'; }
                 }
             }
         }
     }
-
-    // B. Đổ Dữ Liệu Lên Khung HUD Võ Lâm Bên Trái
-    let hud = document.getElementById('vltkPartyHUD');
-    let list = document.getElementById('vltkPartyList');
-    if (!hud || !list) return;
-
-    if (window.MY_PARTY_ID == 0 || window.danhSachDongDoi.length === 0) {
-        hud.style.display = 'none'; // Giấu đi nếu không có nhóm
-        return;
-    }
-
-    hud.style.display = 'flex';
-    let html = '';
-
-    // Bản thân mình (Luôn đứng đầu)
-    let myHpPct = (window.mauBanThan / window.MAU_TOI_DA) * 100;
-    html += `
-    <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid rgba(46,204,113,0.5); cursor:pointer;">
-        <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:#2ecc71; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px; font-weight:bold;">ME</div>
-        <div style="flex:1;">
-            <div class="pt-card-name" style="color:#fff; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${window.myUsername}</div>
-            <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
-                <div style="width:${Math.max(0, myHpPct)}%; height:100%; background:linear-gradient(90deg, #27ae60, #2ecc71); transition:0.2s;"></div>
-            </div>
-        </div>
-    </div>`;
-
-    // Quét dàn Đồng Đội
-    window.danhSachDongDoi.forEach(name => {
-        // 🌟 FIX LỖI 2: Chặn triệt để việc clone tên chính mình (Xử lý cả vụ in hoa/thường)
-        if (name.toLowerCase() === window.myUsername.toLowerCase()) return; 
-
-        let rp = window.remotePlayers[name];
-        let hpPct = 100; 
-        let isOffline = true;
-
-        if (rp && rp.status === 'ready') {
-            isOffline = false; 
-            let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
-            if (hpBar) hpPct = parseFloat(hpBar.style.width) || 0;
-        }
-
-        let avtColor = isOffline ? '#555' : '#3498db';
-        let barColor = isOffline ? '#555' : 'linear-gradient(90deg, #2980b9, #3498db)';
-        let textColor = isOffline ? '#aaa' : '#fff';
-        let borderColor = isOffline ? 'rgba(85,85,85,0.5)' : 'rgba(52,152,219,0.5)';
-
-        // 🌟 FIX LỖI 3: Đổi onclick từ Mời PT sang Mở Bảng Xem
-        html += `
-        <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid ${borderColor}; cursor:pointer; opacity:${isOffline ? 0.7 : 1};">
-            <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:${avtColor}; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px;">👤</div>
-            <div style="flex:1;">
-                <div class="pt-card-name" style="color:${textColor}; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${name}</div>
-                <div style="width:100%; height:4px; background:#222; border-radius:2px; margin-top:2px; overflow:hidden; border:1px solid #000;">
-                    <div style="width:${hpPct}%; height:100%; background:${barColor}; transition:0.2s;"></div>
-                </div>
-            </div>
-        </div>`;
-    });
-
-    list.innerHTML = html;
 }, 1000);
 
-// 4. API BÁO ĐỊCH DÀNH CHO AUTO-AIM
-window.laKeDich = function(id) {
-    if (!id || id === window.myUsername) return false;
-    if (window.danhSachDongDoi.includes(id)) return false; 
-    return true; 
+// 4. API BÁO ĐỊCH DÀNH CHO AUTO-AIM (Sử dụng bởi global_combat.js)
+window.laKeDich = function (id) {
+    if (!id) return false;
+    let targetId = id.toLowerCase();
+    let myId = (window.myUsername || "").toLowerCase();
+
+    if (targetId === myId) return false; // Không tự khóa mục tiêu bản thân
+
+    // 🌟 KẺ NÀY CÓ TRONG DANH SÁCH ANH EM KHÔNG?
+    if (window.danhSachDongDoi.includes(targetId)) return false;
+
+    return true; // Không phải bạn thì chắc chắn là Địch -> KHÓA MỤC TIÊU!
 };
 
-// =======================================================
-// 🚪 HỆ THỐNG AUTO LEAVE CHỐNG KẸT NICK (GHOST PARTY)
-// =======================================================
-// Giải pháp: Gắn kíp nổ vào sự kiện Đóng Trình Duyệt / Tắt Game. 
-// Chỉ cần Sếp tắt Web, game sẽ bắn tia laser ngầm lên Server để gạch tên Sếp khỏi PT ngay lập tức!
+// Thoát game thì rời nhóm
 window.addEventListener('beforeunload', () => {
     if (window.MY_PARTY_ID > 0) {
-        let fd = new FormData(); 
-        fd.append('action', 'leave');
-        // sendBeacon là siêu vũ khí bắn ngầm kể cả khi Tab đã đóng
-        navigator.sendBeacon('api/party.php', fd); 
+        let fd = new FormData(); fd.append('action', 'leave');
+        navigator.sendBeacon('api/party.php', fd);
     }
 });
