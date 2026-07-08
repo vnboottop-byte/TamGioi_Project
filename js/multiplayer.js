@@ -976,13 +976,15 @@ setInterval(() => {
 
     // Quét dàn Đồng Đội
     window.danhSachDongDoi.forEach(name => {
+        // 🌟 FIX LỖI 2: Chặn triệt để việc clone tên chính mình (Xử lý cả vụ in hoa/thường)
+        if (name.toLowerCase() === window.myUsername.toLowerCase()) return; 
+
         let rp = window.remotePlayers[name];
         let hpPct = 100; 
         let isOffline = true;
 
         if (rp && rp.status === 'ready') {
-            isOffline = false; // Ở chung Map, hiện sáng lên!
-            // Rút trộm % Máu từ thanh máu trên đầu nhân vật đó
+            isOffline = false; 
             let hpBar = rp.tag ? rp.tag.querySelector('.hp-bar') : null;
             if (hpBar) hpPct = parseFloat(hpBar.style.width) || 0;
         }
@@ -992,8 +994,9 @@ setInterval(() => {
         let textColor = isOffline ? '#aaa' : '#fff';
         let borderColor = isOffline ? 'rgba(85,85,85,0.5)' : 'rgba(52,152,219,0.5)';
 
+        // 🌟 FIX LỖI 3: Đổi onclick từ Mời PT sang Mở Bảng Xem
         html += `
-        <div class="pt-card-hud" onclick="guiLoiMoiPT('${name}')" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid ${borderColor}; cursor:pointer; opacity:${isOffline ? 0.7 : 1};">
+        <div class="pt-card-hud" onclick="xemToDoiCuaToi(); toggleRadarTab();" style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.6); padding:4px 6px; border-radius:20px 5px 5px 20px; width:150px; border:1px solid ${borderColor}; cursor:pointer; opacity:${isOffline ? 0.7 : 1};">
             <div class="pt-card-avt" style="width:26px; height:26px; border-radius:50%; background:${avtColor}; border:1px solid #fff; display:flex; justify-content:center; align-items:center; font-size:12px;">👤</div>
             <div style="flex:1;">
                 <div class="pt-card-name" style="color:${textColor}; font-size:11px; font-weight:bold; text-shadow:1px 1px 0 #000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:110px;">${name}</div>
