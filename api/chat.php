@@ -1,4 +1,5 @@
 <?php
+// FILE: api/chat.php
 session_start();
 header('Content-Type: application/json');
 require_once '../db.php';
@@ -8,6 +9,10 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 $username = $_SESSION['user'];
+
+// 🌟 BẢN VÁ TỐI THƯỢNG: Trả tự do cho Session ngay lập tức để Game không bị giật lag!
+session_write_close();
+
 $action = isset($_GET['action']) ? $_GET['action'] : '';
 
 if ($action === 'send') {
@@ -19,11 +24,10 @@ if ($action === 'send') {
         echo json_encode(['status' => 'error', 'msg' => 'Tin nhắn trống']); exit;
     }
     
-    // Lọc thô tục (XSS)
+    // Lọc XSS chống hack
     $message = htmlspecialchars($message, ENT_QUOTES, 'UTF-8');
 
-    // Nếu gửi kênh Bang hoặc Party thì kiểm tra xem người chơi có Bang/Party đó không (Đề phòng Hack)
-    // Sẽ ráp điều kiện này chặt hơn khi chúng ta làm Database cho Bang & Party
+    // Chặn chat bậy bạ nếu không có Bang / Party
     if ($channel === 'GUILD' && $channel_id == 0) {
          echo json_encode(['status' => 'error', 'msg' => 'Sếp chưa gia nhập Bang Hội nào!']); exit;
     }
@@ -31,20 +35,23 @@ if ($action === 'send') {
          echo json_encode(['status' => 'error', 'msg' => 'Sếp đang không ở trong Tổ đội nào!']); exit;
     }
 
+    // Ghi vào Database
     $stmt = $conn->prepare("INSERT INTO chat_messages (sender, channel, channel_id, message) VALUES (?, ?, ?, ?)");
-    $stmt->bind_param("ssis", $username, $channel, $channel_id, $message);
-    
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success']);
+    if ($stmt) {
+        $stmt->bind_param("ssis", $username, $channel, $channel_id, $message);
+        if ($stmt->execute()) {
+            echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error', 'msg' => 'Lỗi hệ thống khi lưu tin.']);
+        }
     } else {
-        echo json_encode(['status' => 'error', 'msg' => 'Lỗi gửi tin']);
+        echo json_encode(['status' => 'error', 'msg' => 'Không tìm thấy bảng chat_messages trong SQL!']);
     }
 } 
 elseif ($action === 'get') {
     $channel = isset($_GET['channel']) ? $conn->real_escape_string($_GET['channel']) : 'WORLD';
     $channel_id = isset($_GET['channel_id']) ? (int)$_GET['channel_id'] : 0;
     
-    // Lấy 30 tin nhắn gần nhất của kênh đó
     $sql = "SELECT sender, message FROM chat_messages WHERE channel = '$channel' AND channel_id = $channel_id ORDER BY id DESC LIMIT 30";
     $res = $conn->query($sql);
     
@@ -55,7 +62,6 @@ elseif ($action === 'get') {
         }
     }
     
-    // Đảo ngược mảng để tin cũ nằm trên, tin mới nằm dưới
     $messages = array_reverse($messages);
     echo json_encode(['status' => 'success', 'data' => $messages]);
 }
