@@ -76,34 +76,43 @@ window.globalHandleBossDeath = function (boss) {
 
 
 // ==========================================
-// 🏆 HỆ THỐNG VINH DANH ĐỒ SÁT (PVP)
+// 🏆 HỆ THỐNG VINH DANH ĐỒ SÁT (PVP) - BẢN VÁ TÍCH HỢP NHIỆM VỤ
 // ==========================================
-window.vinhDanhDoSat = function(victimName, victimLevel) {
-    let expCuopDuoc = (victimLevel || 1) * 20; 
-    
+window.vinhDanhDoSat = function (victimName, victimLevel) {
+    let expCuopDuoc = (victimLevel || 1) * 20;
+
     // 1. Bơm EXP vào Server
     if (typeof window.congKinhNghiem === 'function') {
-        window.congKinhNghiem(expCuopDuoc, victimLevel); 
+        window.congKinhNghiem(expCuopDuoc, victimLevel);
     }
+
+    // 🌟 BẢN VÁ: GỬI BÁO CÁO CHIẾN CÔNG ĐỂ TÍNH TIẾN ĐỘ NHIỆM VỤ PK
+    let fd = new FormData();
+    fd.append('victim', victimName);
+    fetch('api/update_pk_quest.php', { method: 'POST', body: fd })
+        .then(res => res.json())
+        .then(data => {
+            // Nếu hoàn thành nhiệm vụ, hệ thống sẽ tự động gửi thư, ta có thể bỏ qua việc xử lý kết quả ở đây
+            // vì Bảng Radar bên trái màn hình sẽ tự động cập nhật sau 5 giây.
+        }).catch(err => console.error("Lỗi cập nhật nhiệm vụ PK:", err));
 
     // 2. Hiển thị UI Vinh Danh
     const killNoti = document.getElementById('killNotification');
     const victimDisplay = document.getElementById('victimNameDisplay');
     const expDisplay = document.getElementById('killExpDisplay'); // Ô hiện EXP mới
-    
+
     if (killNoti && victimDisplay && expDisplay) {
         victimDisplay.innerText = victimName;
         expDisplay.innerText = expCuopDuoc.toLocaleString(); // Hiện số EXP
-        
+
         killNoti.style.display = 'block';
         killNoti.style.animation = 'none';
-        void killNoti.offsetWidth; 
+        void killNoti.offsetWidth;
         killNoti.style.animation = 'hienRaThuNho 0.5s ease-out forwards';
-        
+
         setTimeout(() => { killNoti.style.display = 'none'; }, 4000);
     }
 };
-
 
 // ==========================================
 // 🩸 CỔNG SÁT THƯƠNG: BOSS -> NGƯỜI CHƠI
