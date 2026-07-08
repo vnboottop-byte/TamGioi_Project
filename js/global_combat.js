@@ -74,7 +74,6 @@ window.globalHandleBossDeath = function (boss) {
     }, 30000);
 };
 
-
 // ==========================================
 // 🏆 HỆ THỐNG VINH DANH ĐỒ SÁT (PVP) - BẢN VÁ TÍCH HỢP NHIỆM VỤ
 // ==========================================
@@ -140,8 +139,6 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     }
 };
 
-
-
 // ==========================================
 // 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4)
 // ==========================================
@@ -176,7 +173,6 @@ window.layHitbox = function (mesh) {
     return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
 };
 
-
 // ==========================================
 // 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
 // ==========================================
@@ -204,11 +200,6 @@ if (window.isMobile) {
         return originalAppendChild.call(this, element);
     };
 }
-
-
-
-
-
 
 // ==========================================
 // ⏳ HỆ THỐNG ĐỒNG HỒ ĐẾM NGƯỢC SKILL UI
@@ -251,28 +242,25 @@ window.batDauHoiChieuUI = function(phim) {
 
 
 
+// ==========================================
+// 🛡️ BÍ THUẬT TẨY NÃO AUTO-AIM & LÁ CHẮN TỔ ĐỘI (BẢN VÁ CHUẨN AAA)
+// ==========================================
 
-// ==========================================
-// 🛡️ BÍ THUẬT TẨY NÃO AUTO-AIM & ẨN SÁT THƯƠNG ĐỒNG ĐỘI
-// ==========================================
-// 1. Che mắt Khóa Mục Tiêu (Auto-aim) của 100+ môn phái
-const oldLayHitbox = window.layHitbox;
+// 1. Che mắt Khóa Mục Tiêu (Auto-aim) của 100+ môn phái (Chống khóa Đồng đội)
+if (!window.oldLayHitboxGoc) window.oldLayHitboxGoc = window.layHitbox;
 window.layHitbox = function (mesh) {
-    let hit = oldLayHitbox(mesh);
-    // Nếu mục tiêu đã được dán nhãn là Đồng Đội (Sẽ dán ở Bước 2)
+    let hit = window.oldLayHitboxGoc(mesh);
     if (mesh && mesh.userData && mesh.userData.isAlly) {
-        // Đẩy tâm ngực ra ngoài Hệ Mặt Trời để không bao giờ bị khóa trúng!
         hit.tamNguc = new THREE.Vector3(999999, 999999, 999999);
     }
     return hit;
 };
 
-// 2. Chặn hiển thị số -0 khi dính đạn AoE của anh em
+// 2. Chặn hiển thị số -0 khi dính đạn AoE vi hạt của người chơi khác
 setInterval(() => {
     if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
         const oldTaoSo = window.taoSoSatThuong;
         window.taoSoSatThuong = function(pos3D, satThuong, mauSac) {
-            // Nếu sát thương < 0.5 (vi hạt) thì tàng hình luôn, không in ra số -0
             if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return; 
             oldTaoSo(pos3D, satThuong, mauSac);
         };
@@ -280,59 +268,45 @@ setInterval(() => {
     }
 }, 1000);
 
-
-
-
-
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (BẢN VÁ LỖI BOSS MÙ)
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC 
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
     let targetPos = null; 
     let minD = 80;
 
-    // Hàm hỗ trợ kiểm tra khoảng cách ngang (Bảo vệ để người chơi không tự bắn vào chân mình)
     function checkHopLe(hit) {
         if (!hit) return false;
         let dXZ = Math.hypot(viTriGoc.x - hit.tamNguc.x, viTriGoc.z - hit.tamNguc.z);
         let d = viTriGoc.distanceTo(hit.tamNguc);
-        // 🌟 Nếu trùng khớp 100% tọa độ đứng -> Đó chính là Caster (Người tung chiêu), phải bỏ qua!
-        if (dXZ > 1.0 && d < minD) {
-            minD = d; targetPos = hit.tamNguc; return true;
-        }
+        
+        // 🌟 CỐT LÕI: dXZ > 0.1 để phân biệt "Bản thân người tung chiêu" (Khoảng cách = 0) và "Mục tiêu áp sát"
+        if (dXZ > 0.1 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
         return false;
     }
 
-    // 1. Quét Bản Thân (🌟 CỰC KỲ QUAN TRỌNG ĐỂ BOSS NHÌN THẤY SẾP VÀ CẮN)
-    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) {
-        checkHopLe(window.layHitbox(window.playerModel));
-    }
+    // A. Quét Bản Thân (Để Boss cắn Sếp)
+    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) checkHopLe(window.layHitbox(window.playerModel));
 
-    // 2. Quét người chơi khác (BỎ QUA ĐỒNG ĐỘI NHƯNG GIỮ LẠI ĐỊCH)
+    // B. Quét người chơi khác (BỎ QUA ĐỒNG ĐỘI)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
             if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
-            
             let rp = remotePlayers[id];
-            if (rp.status === 'ready' && rp.mesh) {
-                checkHopLe(window.layHitbox(rp.mesh));
-            }
+            if (rp.status === 'ready' && rp.mesh) checkHopLe(window.layHitbox(rp.mesh));
         }
     }
 
-    // 3. Quét Quái/Boss (Luôn luôn ưu tiên khóa mục tiêu)
+    // C. Quét Quái/Boss
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
-            if (!quai.isDead && quai.mesh) {
-                checkHopLe(window.layHitbox(quai.mesh));
-            }
+            if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
         });
     }
-
     return targetPos;
 };
 
-// 🦠 BÍ THUẬT KÝ SINH: Tự động lây nhiễm và ghi đè TẤT CẢ các hàm khóa mục tiêu của mọi môn phái!
+// Ký sinh tẩy não các hàm khóa mục tiêu của mọi phái
 setInterval(() => {
     for (let key in window) {
         if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
