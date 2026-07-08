@@ -40,6 +40,15 @@ try {
         if ($stmt) {
             $stmt->bind_param("ssis", $username, $channel, $channel_id, $message);
             $stmt->execute();
+            
+            // 🌟 THUẬT TOÁN TỰ ĐỘNG DỌN RÁC (CHỈ GIỮ LẠI 100 TIN MỚI NHẤT CỦA KÊNH NÀY)
+            $cleanup_sql = "DELETE FROM tamgioi_chat WHERE channel = '$channel' AND channel_id = $channel_id AND id <= (
+                SELECT id FROM (
+                    SELECT id FROM tamgioi_chat WHERE channel = '$channel' AND channel_id = $channel_id ORDER BY id DESC LIMIT 1 OFFSET 99
+                ) tmp
+            )";
+            $conn->query($cleanup_sql);
+
             echo json_encode(['status' => 'success']);
         } else {
             echo json_encode(['status' => 'error', 'msg' => 'Lỗi SQL: Bảng tamgioi_chat chưa tồn tại!']);
