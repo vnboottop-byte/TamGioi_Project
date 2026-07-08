@@ -140,36 +140,42 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     }
 };
 
+
+
 // ==========================================
-// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4 - THEO Ý SẾP)
+// 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4)
 // ==========================================
 window.layHitbox = function (mesh) {
     if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 2.5 };
-    
-    // 🌟 Lấy đúng tọa độ lòng bàn chân của Model! Cấm xài Box3 gây lệch tâm!
+
     let footPos = mesh.position.clone();
     let upV = mesh.up ? mesh.up.clone().normalize() : new THREE.Vector3(0, 1, 0);
-    
-    // Chiều cao mặc định cho Người đi bộ
-    let chieuCao = 2.5; 
-    let chieuRong = 4.0; // Chốt cứng bán kính va chạm là 2m để chống đánh lan quá lố
-    
-    // Nếu là Remote Player đang cưỡi thú (Dò tìm yên ngựa)
+
+    let chieuCao = 2.5;
+    let chieuRong = 4.0;
+
     let isMount = false;
     mesh.traverse(c => { if (c.name && c.name.toUpperCase().includes('YENNGUA')) isMount = true; });
     if (isMount) chieuCao = 4.5;
 
-    // Nếu là Quái/Boss (Đã được Engine bơm chiều cao thực tế lúc đẻ ra)
     if (mesh.userData && mesh.userData.chieuCaoThuc) {
         chieuCao = mesh.userData.chieuCaoThuc;
-        chieuRong = chieuCao * 1.5; // Boss bự thì vòng bụng bự theo
+        chieuRong = chieuCao * 1.5;
     }
-    
-    // 🌟 Tâm Ngực = Từ lòng bàn chân đẩy thẳng lên 1/2 chiều cao
+
     let tamNguc = footPos.clone().add(upV.multiplyScalar(chieuCao / 2));
-    
+
+    // =======================================================
+    // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX CỦA ĐỒNG ĐỘI (CHỐNG AUTO-AIM)
+    // =======================================================
+    if (mesh.userData && mesh.userData.isAlly) {
+        // Đẩy tâm ngực đi tít mù khơi, không một chiêu thức nào khóa trúng hoặc nổ trúng!
+        tamNguc.set(999999, 999999, 999999);
+    }
+
     return { tamNguc: tamNguc, banKinh: chieuRong / 2, chieuCao: chieuCao };
 };
+
 
 // ==========================================
 // 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
