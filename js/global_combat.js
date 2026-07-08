@@ -279,3 +279,67 @@ setInterval(() => {
         window.daBocThepTaoSo = true;
     }
 }, 1000);
+
+
+
+
+
+// ==========================================
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (BẢN VÁ LỖI BOSS MÙ)
+// ==========================================
+window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
+    let targetPos = null; 
+    let minD = 80;
+
+    // Hàm hỗ trợ kiểm tra khoảng cách ngang (Bảo vệ để người chơi không tự bắn vào chân mình)
+    function checkHopLe(hit) {
+        if (!hit) return false;
+        let dXZ = Math.hypot(viTriGoc.x - hit.tamNguc.x, viTriGoc.z - hit.tamNguc.z);
+        let d = viTriGoc.distanceTo(hit.tamNguc);
+        // 🌟 Nếu trùng khớp 100% tọa độ đứng -> Đó chính là Caster (Người tung chiêu), phải bỏ qua!
+        if (dXZ > 1.0 && d < minD) {
+            minD = d; targetPos = hit.tamNguc; return true;
+        }
+        return false;
+    }
+
+    // 1. Quét Bản Thân (🌟 CỰC KỲ QUAN TRỌNG ĐỂ BOSS NHÌN THẤY SẾP VÀ CẮN)
+    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) {
+        checkHopLe(window.layHitbox(window.playerModel));
+    }
+
+    // 2. Quét người chơi khác (BỎ QUA ĐỒNG ĐỘI NHƯNG GIỮ LẠI ĐỊCH)
+    if (typeof remotePlayers !== 'undefined') {
+        for (let id in remotePlayers) {
+            if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
+            
+            let rp = remotePlayers[id];
+            if (rp.status === 'ready' && rp.mesh) {
+                checkHopLe(window.layHitbox(rp.mesh));
+            }
+        }
+    }
+
+    // 3. Quét Quái/Boss (Luôn luôn ưu tiên khóa mục tiêu)
+    if (typeof window.danhSachQuaiVat !== 'undefined') {
+        window.danhSachQuaiVat.forEach(quai => {
+            if (!quai.isDead && quai.mesh) {
+                checkHopLe(window.layHitbox(quai.mesh));
+            }
+        });
+    }
+
+    return targetPos;
+};
+
+// 🦠 BÍ THUẬT KÝ SINH: Tự động lây nhiễm và ghi đè TẤT CẢ các hàm khóa mục tiêu của mọi môn phái!
+setInterval(() => {
+    for (let key in window) {
+        if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
+            window[key] = function(viTriGoc, huongMat) {
+                let t = window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat);
+                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50)); 
+            };
+        }
+    }
+}, 2000);
