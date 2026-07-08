@@ -139,10 +139,12 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     }
 };
 
+
 // ==========================================
 // 📡 MÁY QUÉT X-QUANG CHUẨN AAA (TÌM NGỰC & HITBOX V4)
 // ==========================================
 window.layHitbox = function (mesh) {
+    // 🌟 ĐÃ PHỤC HỒI RUỘT X-QUANG CHUẨN: Lấy chính xác tọa độ thực tế của Quái và Người!
     if (!mesh) return { tamNguc: new THREE.Vector3(), banKinh: 2.0, chieuCao: 2.5 };
 
     let footPos = mesh.position.clone();
@@ -162,11 +164,8 @@ window.layHitbox = function (mesh) {
 
     let tamNguc = footPos.clone().add(upV.multiplyScalar(chieuCao / 2));
 
-    // =======================================================
     // 🛡️ BẢN VÁ LÁ CHẮN TỔ ĐỘI: GIẤU HITBOX CỦA ĐỒNG ĐỘI (CHỐNG AUTO-AIM)
-    // =======================================================
     if (mesh.userData && mesh.userData.isAlly) {
-        // Đẩy tâm ngực đi tít mù khơi, không một chiêu thức nào khóa trúng hoặc nổ trúng!
         tamNguc.set(999999, 999999, 999999);
     }
 
@@ -176,10 +175,9 @@ window.layHitbox = function (mesh) {
 // ==========================================
 // 🛡️ BỘ LỌC RÁC DOM TỐI THƯỢNG CHO MOBILE (CỨU CPU)
 // ==========================================
-if (window.isMobile) {
+if (window.isMobile && !window.daCaiBoLocDOM) {
     const originalAppendChild = document.body.appendChild;
     document.body.appendChild = function (element) {
-        // Nhận diện thẻ Div hiển thị sát thương (Có dấu trừ và có hiệu ứng bóng chữ)
         if (element.tagName === 'DIV' && element.innerText && element.innerText.startsWith('-') && element.style.textShadow) {
             let soLuongChuNoi = 0;
             if (typeof danhSachSoBay !== 'undefined') soLuongChuNoi += danhSachSoBay.length;
@@ -189,16 +187,12 @@ if (window.isMobile) {
             if (typeof danhSachSoBayLT !== 'undefined') soLuongChuNoi += danhSachSoBayLT.length;
             if (typeof danhSachSoBayPS !== 'undefined') soLuongChuNoi += danhSachSoBayPS.length;
 
-            // Nếu trên màn hình đã có 5 số nhảy, chặn ngay không cho vẽ thêm nữa!
-            if (soLuongChuNoi > 5) {
-                return element; 
-            }
-            
-            // Giảm độ gắt của bóng chữ để GPU Mobile render mượt hơn
+            if (soLuongChuNoi > 5) return element;
             element.style.textShadow = '1px 1px 0px #000';
         }
         return originalAppendChild.call(this, element);
     };
+    window.daCaiBoLocDOM = true;
 }
 
 // ==========================================
@@ -207,61 +201,35 @@ if (window.isMobile) {
 window.batDauHoiChieuUI = function(phim) {
     const slot = document.getElementById('slot-' + phim);
     if (!slot) return;
-    
-    // Gỡ bỏ CSS Transition cũ (nếu có) để nhường chỗ cho Text đếm ngược
     const overlay = slot.querySelector('.cd-overlay');
     if (overlay) { overlay.style.transition = 'none'; overlay.style.height = '100%'; }
-    
     const text = slot.querySelector('.cd-text');
     if (text) text.style.display = 'block';
-    
     let tgHoi = window.thoiGianHoiChieu[phim] || 1500;
     let tgBatDau = Date.now();
-    
-    // Dọn nhịp tim cũ nếu Sếp spam nút
     if (slot.cdInterval) clearInterval(slot.cdInterval);
-    
     slot.cdInterval = setInterval(() => {
         let conLai = tgHoi - (Date.now() - tgBatDau);
         if (conLai <= 0) {
-            clearInterval(slot.cdInterval); 
-            if (overlay) overlay.style.height = '0%'; 
+            clearInterval(slot.cdInterval);
+            if (overlay) overlay.style.height = '0%';
             if (text) text.style.display = 'none';
         } else {
             if (overlay) overlay.style.height = (conLai / tgHoi * 100) + '%';
-            if (text) text.innerText = (conLai / 1000).toFixed(1); 
+            if (text) text.innerText = (conLai / 1000).toFixed(1);
         }
-    }, 50); 
+    }, 50);
 };
 
-
-
-
-
-
-
-
-
 // ==========================================
-// 🛡️ BÍ THUẬT TẨY NÃO AUTO-AIM & LÁ CHẮN TỔ ĐỘI (BẢN VÁ CHUẨN AAA)
+// 🛡️ CHẶN HIỂN THỊ SỐ -0 (TÀNG HÌNH SÁT THƯƠNG VI HẠT CỦA ANH EM)
 // ==========================================
-
-// 1. Che mắt Khóa Mục Tiêu (Auto-aim) của 100+ môn phái (Chống khóa Đồng đội)
-if (!window.oldLayHitboxGoc) window.oldLayHitboxGoc = window.layHitbox;
-window.layHitbox = function (mesh) {
-    let hit = window.oldLayHitboxGoc(mesh);
-    if (mesh && mesh.userData && mesh.userData.isAlly) {
-        hit.tamNguc = new THREE.Vector3(999999, 999999, 999999);
-    }
-    return hit;
-};
-
-// 2. Chặn hiển thị số -0 khi dính đạn AoE vi hạt của người chơi khác
 setInterval(() => {
     if (!window.daBocThepTaoSo && typeof window.taoSoSatThuong === 'function') {
         const oldTaoSo = window.taoSoSatThuong;
         window.taoSoSatThuong = function(pos3D, satThuong, mauSac) {
-            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return; 
+            // NẾU SÁT THƯƠNG = 0 (Đạn đồng đội) -> Ẩn luôn số!
+            if (typeof satThuong === 'number' && Math.round(satThuong) <= 0) return;
             oldTaoSo(pos3D, satThuong, mauSac);
         };
         window.daBocThepTaoSo = true;
@@ -269,40 +237,35 @@ setInterval(() => {
 }, 1000);
 
 // ==========================================
-// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC 
+// 🧠 AI KHÓA MỤC TIÊU THÔNG MINH TOÀN CỤC (FIX LỖI CHỈ ĐÁNH ĐỊCH VÀ BOSS)
 // ==========================================
 window.layMucTieuGanNhatThongMinh = function(viTriGoc, huongMat) {
-    let targetPos = null; 
+    let targetPos = null;
     let minD = 80;
 
     function checkHopLe(hit) {
         if (!hit) return false;
-        let dXZ = Math.hypot(viTriGoc.x - hit.tamNguc.x, viTriGoc.z - hit.tamNguc.z);
         let d = viTriGoc.distanceTo(hit.tamNguc);
-        
-        // 🌟 CỐT LÕI: dXZ > 0.1 để phân biệt "Bản thân người tung chiêu" (Khoảng cách = 0) và "Mục tiêu áp sát"
-        if (dXZ > 0.1 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
+        if (d > 0.1 && d < minD) { minD = d; targetPos = hit.tamNguc; return true; }
         return false;
     }
 
-    // A. Quét Bản Thân (Để Boss cắn Sếp)
-    if (window.playerModel && window.mauBanThan > 0 && !window.isDead) checkHopLe(window.layHitbox(window.playerModel));
-
-    // B. Quét người chơi khác (BỎ QUA ĐỒNG ĐỘI)
+    // 1. Quét người chơi khác (CHỈ QUÉT ĐỊCH, BỎ QUA ANH EM PT)
     if (typeof remotePlayers !== 'undefined') {
         for (let id in remotePlayers) {
-            if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue; 
+            if (typeof window.laKeDich === 'function' && !window.laKeDich(id)) continue;
             let rp = remotePlayers[id];
             if (rp.status === 'ready' && rp.mesh) checkHopLe(window.layHitbox(rp.mesh));
         }
     }
 
-    // C. Quét Quái/Boss
+    // 2. Quét Quái/Boss
     if (typeof window.danhSachQuaiVat !== 'undefined') {
         window.danhSachQuaiVat.forEach(quai => {
             if (!quai.isDead && quai.mesh) checkHopLe(window.layHitbox(quai.mesh));
         });
     }
+
     return targetPos;
 };
 
@@ -312,7 +275,7 @@ setInterval(() => {
         if (typeof window[key] === 'function' && key.startsWith('layMucTieuGanNhat') && key !== 'layMucTieuGanNhatThongMinh') {
             window[key] = function(viTriGoc, huongMat) {
                 let t = window.layMucTieuGanNhatThongMinh(viTriGoc, huongMat);
-                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50)); 
+                return t ? t : viTriGoc.clone().add(huongMat.clone().multiplyScalar(50));
             };
         }
     }
