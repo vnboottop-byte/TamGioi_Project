@@ -375,6 +375,32 @@ livekitScript.onload = async () => {
                             // ==========================================
                             // 👥 CẢM BIẾN TỔ ĐỘI (PARTY)
                             // ==========================================
+                            // 💰 HỆ THỐNG PT: ĐỒNG ĐỘI Ở XA NHẬN ĐƯỢC VÀNG VÀ EXP
+                            if (data.type === 'CHIA_LOI_TUC_PT') {
+                                if (window.MY_PARTY_ID > 0 && window.MY_PARTY_ID === data.party_id && data.picker !== window.myUsername) {
+                                    
+                                    // 1. Nảy số ảo diệu trên đỉnh đầu đồng đội
+                                    if (typeof window.taoSoSatThuong === 'function' && window.playerModel) {
+                                        let p = window.playerModel.position.clone(); p.y += 5;
+                                        window.taoSoSatThuong(p, `+${data.gold} Vàng`, '#f1c40f'); 
+                                        setTimeout(() => window.taoSoSatThuong(p.clone().add(new THREE.Vector3(0, 1, 0)), `+${data.exp} EXP`, '#2ecc71'), 300);
+                                    }
+                                    
+                                    // 2. Kích hoạt tăng EXP và Update Tiền UI cho máy của đồng đội
+                                    if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(data.exp, data.bossLevel);
+                                    let goldUI = document.getElementById('gameGoldUI');
+                                    if (goldUI) {
+                                        let cG = parseInt(goldUI.innerText.replace(/,/g, '')) || 0;
+                                        goldUI.innerText = (cG + data.gold).toLocaleString();
+                                    }
+
+                                    // 3. Hiện dòng trạng thái góc màn hình
+                                    if (typeof window.hienThongBaoGame === 'function') {
+                                        window.hienThongBaoGame(`Đồng đội [${data.picker}] tiêu diệt Boss! Đội được chia: +${data.gold} Vàng, +${data.exp} EXP`, true);
+                                    }
+                                }
+                            } else
+                            
                             if (data.type === 'PT_INVITE' && data.target === window.myUsername) {
                                 let box = document.getElementById('ptInviteBox');
                                 if (!box) {
