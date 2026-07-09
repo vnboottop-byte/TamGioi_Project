@@ -2782,21 +2782,9 @@ function animate() {
 
 animate();
 
-setInterval(() => {
-    if (typeof playerModel !== 'undefined' && playerModel && !window.isDead) {
-        let fd = new FormData();
-        fd.append('x', playerModel.position.x.toFixed(2));
-        fd.append('y', playerModel.position.y.toFixed(2));
-        fd.append('z', playerModel.position.z.toFixed(2));
-        // 🌟 BÁO CÁO LUÔN KHU VỰC ĐANG ĐỨNG ĐỂ CHỐNG KẸT MAP KHI F5
-        fd.append('zone_id', window.ZONE_ID || 'TRUNG_CHAU');
-
-        fetch('api/save_pos.php', { method: 'POST', body: fd }).catch(err => { });
-    }
-}, 5000);
 
 // ==========================================
-// 🌍 ĐỘNG CƠ STREAMING BẢN ĐỒ AAA (BÁN KÍNH 140.000M)
+// 🌍 ĐỘNG CƠ STREAMING BẢN ĐỒ AAA  
 // ==========================================
 window.MAP_MIXERS = [];
 window.THONG_TIN_CAC_MAP = []; // Kho chứa tọa độ, không tốn RAM
@@ -3687,6 +3675,30 @@ window.thucHienTruyenTong = function (congData) {
         window.KIEU_TRONG_LUC = 'PHANG';
         window.toaDoMatDat = viTriAnToan.y;
         if (typeof window.kiemSoatHanhTinhGoc === 'function') window.kiemSoatHanhTinhGoc();
+
+
+
+
+        // ========================================================
+        // 🌟 THÊM MỚI VÀO ĐÂY: CHỐT LƯU TỌA ĐỘ VÀ ZONE LÀM ĐIỂM HỒI SINH TẠI MAP MỚI
+        // ========================================================
+        // 1. Cập nhật thẳng vào RAM để nếu chết ở Session này thì hồi sinh ngay tại Cổng
+        window.SPAWN_X = viTriAnToan.x;
+        window.SPAWN_Y = viTriAnToan.y;
+        window.SPAWN_Z = viTriAnToan.z;
+        window.ZONE_ID = congData.zone_dich_den || 'TRUNG_CHAU';
+
+        // 2. Gửi Cấp báo lên SQL để lần sau F5 vào game cũng xuất hiện ngay tại Cổng này
+        let fd = new FormData();
+        fd.append('x', viTriAnToan.x.toFixed(2));
+        fd.append('y', viTriAnToan.y.toFixed(2));
+        fd.append('z', viTriAnToan.z.toFixed(2));
+        fd.append('zone_id', window.ZONE_ID);
+        fetch('api/save_pos.php', { method: 'POST', body: fd }).catch(e => {});
+        // ========================================================
+
+
+
 
         // ========================================================
         // 🧨 THIÊU RỤI HOÀN TOÀN THẾ GIỚI CŨ (Rút ống thở VRAM)
