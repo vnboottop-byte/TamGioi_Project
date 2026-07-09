@@ -45,18 +45,42 @@ window.globalHandleBossDeath = function (boss) {
     }, 30000);
 };
 
+// ==========================================
+// 🛡️ LÁ CHẮN CHỐNG NHẬN VƠ 2 LẦN (KHÓA OVERKILL)
+// ==========================================
+window.boNhoDoSat = window.boNhoDoSat || {}; 
+
 window.vinhDanhDoSat = function (victimName, victimLevel) {
+    let bayGio = Date.now();
+    
+    // Kiểm tra xem trong 10 giây qua đã ăn mạng của tên này chưa?
+    // 10000ms = 10 giây (Khớp đúng thời gian đếm ngược hồi sinh của nạn nhân)
+    if (window.boNhoDoSat[victimName] && (bayGio - window.boNhoDoSat[victimName] < 10000)) {
+        console.log("🛡️ Bỏ qua gói tin báo tử rác từ thi thể: " + victimName);
+        return; // Đã húp mạng này rồi, cấm húp đúp!
+    }
+    
+    // Ghi vào sổ Nam Tào: Vừa giết tên này lúc 'bayGio'
+    window.boNhoDoSat[victimName] = bayGio;
+
+    // --- BẮT ĐẦU CỘNG EXP VÀ GỌI API NHIỆM VỤ NHƯ BÌNH THƯỜNG ---
     let expCuopDuoc = (victimLevel || 1) * 20;
     if (typeof window.congKinhNghiem === 'function') window.congKinhNghiem(expCuopDuoc, victimLevel);
-    let fd = new FormData(); fd.append('victim', victimName);
+    
+    let fd = new FormData(); 
+    fd.append('victim', victimName);
     fetch('api/update_pk_quest.php', { method: 'POST', body: fd }).then(res => res.json()).catch(err => {});
 
+    // Hiện bảng thông báo trên màn hình
     const killNoti = document.getElementById('killNotification');
     const victimDisplay = document.getElementById('victimNameDisplay');
     const expDisplay = document.getElementById('killExpDisplay');
     if (killNoti && victimDisplay && expDisplay) {
-        victimDisplay.innerText = victimName; expDisplay.innerText = expCuopDuoc.toLocaleString();
-        killNoti.style.display = 'block'; killNoti.style.animation = 'none'; void killNoti.offsetWidth;
+        victimDisplay.innerText = victimName; 
+        expDisplay.innerText = expCuopDuoc.toLocaleString();
+        killNoti.style.display = 'block'; 
+        killNoti.style.animation = 'none'; 
+        void killNoti.offsetWidth;
         killNoti.style.animation = 'hienRaThuNho 0.5s ease-out forwards';
         setTimeout(() => { killNoti.style.display = 'none'; }, 4000);
     }
