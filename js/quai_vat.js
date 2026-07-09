@@ -150,21 +150,25 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
         }
     }
 
-    // 2. CHỈ NHẬN EXP VÀ ĐỒ KHI SERVER ĐÃ CHỐT SỔ TỬ! (isServerConfirmed = true)
+
+
+
+
+    // 2. CHỈ NHẬN QUÀ KHI SERVER ĐÃ CHỐT SỔ TỬ! (isServerConfirmed = true)
     if (isServerConfirmed && !boss.daNhanExp) {
-        boss.daNhanExp = true;      // Đóng dấu xác nhận đã nhận quà
+        boss.daNhanExp = true;      // Đóng dấu xác nhận
 
-        let bossLevel = boss.level || 1;
-        let expNhanDuoc = bossLevel * 20;
-        if (typeof window.congKinhNghiem === 'function') {
-            window.congKinhNghiem(expNhanDuoc, bossLevel);
-        }
-
+        // Đã xóa gọi EXP cứng ở đây, nhường quyền tính toán cho Lò Loot_Monster!
+        
         if (typeof window.taoHieuUngLootVang === 'function') {
-            // 🌟 ĐÃ NỐI DÂY CHUẨN XÁC: Gọi Server nhả đồ sau khi nó đã biết Boss chết!
+            // Gọi Server xử lý rơi đồ cho Kẻ kết liễu
             window.taoHieuUngLootVang(boss.mesh.position, boss.id);
         }
 
+
+
+
+  
         // Dọn xác sau 3 giây kể từ khi chốt sổ
         setTimeout(() => {
             window.danhSachQuaiVat = window.danhSachQuaiVat.filter(q => q.id !== boss.id);
