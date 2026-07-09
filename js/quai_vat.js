@@ -1624,3 +1624,134 @@ setInterval(() => {
     if (botGanToi < 1) window.mayPhatHanhBotGia();
 
 }, 600000); // 600.000 mili-giây = 10 phút!
+
+
+
+
+// ==================================================
+// 💎 ĐỘNG CƠ ĐỒ HỌA 3D HÚT NGỌC VÀO NGƯỜI (TÁI SỬ DỤNG CHO TOÀN PT)
+// ==================================================
+window.hieuUngBayVaoNguoi = function (viTriXac, gold, exp, bossLevel, itemModelUrl, itemName, isKiller) {
+    if (!window.playerModel) return;
+    let tamXac = viTriXac.clone().add(new THREE.Vector3(0, 3, 0));
+    let mangLinhThach = [];
+
+    // 1. ĐÚC 3D TINH THỂ THẠCH ANH (Linh Thạch)
+    let soLuongLinhThach = 5 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < soLuongLinhThach; i++) {
+        let cumNgocGroup = new THREE.Group();
+        let ngocMat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, wireframe: false, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+        for (let j = 0; j < 3; j++) {
+            let ngocGeo = new THREE.IcosahedronGeometry(0.2 + (Math.random() * 0.3));
+            let vienNgoc = new THREE.Mesh(ngocGeo, ngocMat);
+            vienNgoc.position.set((Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5);
+            vienNgoc.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            cumNgocGroup.add(vienNgoc);
+        }
+        cumNgocGroup.position.copy(tamXac);
+        let vecVang = new THREE.Vector3((Math.random() - 0.5) * 8, 4 + Math.random() * 4, (Math.random() - 0.5) * 8);
+        if (typeof window.scene !== 'undefined') window.scene.add(cumNgocGroup);
+        mangLinhThach.push({ group: cumNgocGroup, vel: vecVang });
+    }
+
+    // 2. NẶN 3D VẬT PHẨM (CHỈ KẺ LAST HIT MỚI THẤY ĐỒ RỚT RA)
+    let itemHolder = null;
+    if (itemModelUrl && isKiller) {
+        itemHolder = new THREE.Group();
+        itemHolder.position.copy(tamXac).add(new THREE.Vector3(0, 2, 0));
+        let halo = new THREE.Mesh(
+            new THREE.SphereGeometry(2.5, 16, 16),
+            new THREE.MeshBasicMaterial({ color: 0xf1c40f, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false })
+        );
+        itemHolder.add(halo);
+
+        if (typeof window.taiHoacNhanBanAsset === 'function') {
+            window.taiHoacNhanBanAsset(itemModelUrl, (model) => {
+                model.updateMatrixWorld(true);
+                const maxDim = Math.max(new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3()).y, 1);
+                model.scale.setScalar(6.0 / maxDim);
+                let pivot = new THREE.Group(); pivot.add(model);
+                itemHolder.add(pivot); itemHolder.pivot = pivot;
+            });
+        }
+        if (typeof window.scene !== 'undefined') window.scene.add(itemHolder);
+    }
+
+    let phase = 1; let tick = 0;
+    let loop = setInterval(() => {
+        tick++;
+        if (phase === 1) { // 🚀 NỔ TUNG LÊN TRỜI
+            mangLinhThach.forEach(lt => {
+                lt.group.position.add(lt.vel.clone().multiplyScalar(0.03));
+                if (lt.group.position.y > viTriXac.y + 0.5) { lt.vel.y -= 0.3; } else { lt.vel.y = 0; lt.vel.x *= 0.85; lt.vel.z *= 0.85; lt.group.rotation.y += 0.05; }
+            });
+            if (itemHolder) { itemHolder.position.y += Math.sin(tick * 0.1) * 0.02; if (itemHolder.pivot) itemHolder.pivot.rotation.y += 0.05; }
+            if (tick > 60) { phase = 2; tick = 0; }
+        }
+        else if (phase === 2) { // 🧲 HÚT VÀO NGƯỜI
+            let t = tick / 40;
+            if (t >= 1) {
+                clearInterval(loop);
+                mangLinhThach.forEach(lt => { if (typeof window.donRac3D === 'function') window.donRac3D(lt.group); });
+                if (itemHolder) { if (typeof window.donRac3D === 'function') window.donRac3D(itemHolder); else if (typeof window.scene !== 'undefined') window.scene.remove(itemHolder); }
+
+                // 🌟 BƠM VÀNG, EXP VÀ CHỮ LÊN GIAO DIỆN
+                if (window.playerModel && typeof window.taoChuNoiGacha === 'function') {
+                    let msgGold = isKiller ? `+${gold} VÀNG` : `CHIA ĐỀU: +${gold} VÀNG`;
+                    window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 5, 0)), msgGold, "#00ffcc");
+                    setTimeout(() => { window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 6, 0)), `+${exp} EXP`, "#2ecc71"); }, 200);
+
+                    // Báo tên Item chỉ cho Kẻ Last Hit
+                    if (itemName && isKiller) {
+                        setTimeout(() => { window.taoChuNoiGacha(window.playerModel.position.clone().add(new THREE.Vector3(0, 7, 0)), `🎁 ĐẠT ĐƯỢC: ${itemName}`, "gold"); }, 400);
+                    }
+                }
+                
+                // GỌI HÀM CỘNG KINH NGHIỆM ĐỂ LÊN LEVEL
+                if (typeof window.congKinhNghiem === 'function') { window.congKinhNghiem(exp, bossLevel); }
+
+                // CẬP NHẬT GIAO DIỆN VÀNG TRONG TÚI (NẾU SẾP ĐANG MỞ TÚI)
+                let currentGoldEl = document.getElementById('gameGoldUI');
+                if (currentGoldEl) {
+                    let cGold = parseInt(currentGoldEl.innerText.replace(/,/g, '')) || 0;
+                    currentGoldEl.innerText = (cGold + gold).toLocaleString();
+                }
+                return;
+            }
+
+            // Hút vào tâm người chơi
+            if (window.playerModel) {
+                let diemHut = window.playerModel.position.clone().add(new THREE.Vector3(0, 2.5, 0));
+                mangLinhThach.forEach(lt => { lt.group.position.lerp(diemHut, 0.15); lt.group.rotation.x += 0.2; lt.group.scale.setScalar(1 - t); });
+                if (itemHolder) { itemHolder.position.lerp(diemHut, 0.1); if (itemHolder.pivot) itemHolder.pivot.rotation.y += 0.3; itemHolder.scale.setScalar(1 - t); }
+            }
+        }
+    }, 30);
+};
+
+// ==================================================
+// 📡 MÁY GỌI API: AUTO-LOOT DÀNH CHO KẺ KẾT LIỄU
+// ==================================================
+window.taoHieuUngLootVang = function (viTriXac, bossId) {
+    let fd = new FormData();
+    fd.append('monster_id', bossId); 
+
+    fetch('api/loot_monster.php', { method: 'POST', body: fd }).then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 1. Máy của kẻ kết liễu tự phát hiệu ứng 3D và húp Đồ vật
+                window.hieuUngBayVaoNguoi(viTriXac, data.gold_chia, data.exp_chia, data.boss_level, data.item_model, data.item_name, true);
+
+                // 2. 📡 NẾU CÓ PT -> PHÁT SÓNG MẠNG CHO ĐỒNG ĐỘI
+                if (data.is_party && window.room && window.room.state === 'connected') {
+                    let syncData = {
+                        type: 'CHIA_LOI_TUC_PT',
+                        gold: data.gold_chia, exp: data.exp_chia, bossLevel: data.boss_level,
+                        party_id: window.MY_PARTY_ID, picker: window.myUsername,
+                        x: viTriXac.x, y: viTriXac.y, z: viTriXac.z
+                    };
+                    window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify(syncData)), { reliable: true });
+                }
+            }
+        }).catch(e => { });
+};
