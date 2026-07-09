@@ -1,5 +1,5 @@
 <?php
-// FILE: api/loot_monster.php (CHỈNH SỬA: CHIA VÀNG & EXP CHO PT, LAST HIT ĂN ĐỒ)
+// FILE: api/loot_monster.php (BẢN VÁ: CHIA VÀNG/EXP CHO PT, LAST HIT ĂN ĐỒ)
 session_start();
 header('Content-Type: application/json');
 require_once '../db.php';
@@ -42,7 +42,7 @@ try {
     
     $exp = $lvl * 20;
 
-    // KIỂM TRA TỔ ĐỘI ĐỂ CHIA ĐỀU VÀNG & EXP
+    // KIỂM TRA TỔ ĐỘI ĐỂ CHIA ĐỀU VÀNG
     $stmtInfo = $conn->prepare("SELECT party_id, zone_id FROM game_characters WHERE username = ?");
     $stmtInfo->bind_param("s", $user);
     $stmtInfo->execute();
@@ -65,14 +65,14 @@ try {
             $exp_chia = floor($exp / $soNguoi);
             $is_party = true;
 
-            // Bơm Vàng vào DB cho cả đội (EXP sẽ do Client tự gọi hàm để nhảy hiệu ứng)
+            // Chỉ cộng Vàng vào DB (EXP để Client tự nảy số và cập nhật)
             $conn->query("UPDATE game_characters SET game_gold = game_gold + $gold_chia WHERE party_id=$pid AND zone_id='$zone'");
         } else {
             $conn->query("UPDATE game_characters SET game_gold = game_gold + $gold_chia WHERE username = '$user'");
         }
     }
 
-    // XỬ LÝ RỚT VẬT PHẨM (CHỈ KẺ KẾT LIỄU MỚI ĐƯỢC THÊM VÀO TÚI ĐỒ)
+    // XỬ LÝ RỚT VẬT PHẨM (CHỈ KẺ LAST HIT MỚI GỌI API NÀY NÊN NÓ SẼ HÚP TRỌN)
     $item_dropped_name = null; $item_dropped_type = null; $item_dropped_model = null;
 
     if (rand(1, 100) <= 15) {
