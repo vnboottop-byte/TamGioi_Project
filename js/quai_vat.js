@@ -950,10 +950,16 @@ window.capNhatAIQuaiVat = function (delta) {
 
 
 
-                        
+
+
                         if (window.room && window.room.state === 'connected') {
-                            try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: quai.classCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
+                            try { window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'BOSS_SKILL', bossId: quai.id, target: { x: pTarget.x, y: pTarget.y, z: pTarget.z }, phai: phaiCode, chieu: chieu, dmg: dmgBoss })), { reliable: true }); } catch (e) { }
                         }
+
+
+
+                        
+                        
                     }
                 }
             }
