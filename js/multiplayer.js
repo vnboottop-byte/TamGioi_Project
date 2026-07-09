@@ -565,16 +565,35 @@ livekitScript.onload = async () => {
                             else if (data.type === 'BI_CHEM') {
                                 // 🛡️ CHỐT CHẶN TỔ ĐỘI: TỪ CHỐI NHẬN MÁU NẾU KẺ ĐÁNH LÀ ANH EM!
                                 if (senderId && typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(String(senderId).toLowerCase())) {
-                                    return; 
+                                    return;
                                 }
 
-                                if (data.victimId === window.myUsername && !window.isDead && typeof window.mauBanThan !== 'undefined') {
-                                    window.mauBanThan -= Math.round(data.damage);
-                                    if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
-                                    const uiThanhMau = document.getElementById('thanhMauHienTai'); 
-                                    if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
-                                    
-                                    if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat(senderId);
+                                if (data.victimId === window.myUsername && typeof window.mauBanThan !== 'undefined') {
+                                    if (!window.isDead) {
+                                        window.mauBanThan -= Math.round(data.damage);
+                                        if (typeof taoSoSatThuong === 'function') taoSoSatThuong(new THREE.Vector3(data.posX, data.posY, data.posZ), Math.round(data.damage), '#ff0000');
+                                        const uiThanhMau = document.getElementById('thanhMauHienTai');
+                                        if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
+
+                                        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
+                                            window.thoiDiemTuTran = Date.now(); // Ghi nhận thời gian tử trận
+                                            window.xuLyCaiChetNhanVat(senderId);
+                                        }
+                                    } else {
+                                        // 🌟 BẢN VÁ LỖI MẤT MẠNG 1V1 (ĐÍNH CHÍNH KẺ SÁT NHÂN)
+                                        // Nếu đã chết rồi mà vẫn nhận được BI_CHEM trong vòng 1.5 giây
+                                        // Chứng tỏ đạn 3D bay tới trước làm chết lãng xẹt do "Boss/Quái Vật"
+                                        // Ta gọi hồn đính chính lại lịch sử và gửi báo tử cho Sếp để húp EXP!
+                                        if (window.thoiDiemTuTran && Date.now() - window.thoiDiemTuTran < 1500) {
+                                            if (window.room && senderId) {
+                                                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                                                    type: 'XAC_NHAN_GUC_NGA',
+                                                    killerId: senderId,
+                                                    victimLevel: window.LEVEL_CUA_TOI || 1
+                                                })), { reliable: true });
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
