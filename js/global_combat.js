@@ -71,7 +71,12 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
         const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
         if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
-        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') window.xuLyCaiChetNhanVat("Boss/Quái Vật");
+        
+        // 🌟 BẢN VÁ: GHI NHẬN THỜI GIAN TỬ TRẬN
+        if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
+            window.thoiDiemTuTran = Date.now(); 
+            window.xuLyCaiChetNhanVat("Boss/Quái Vật");
+        }
     }
 };
 
