@@ -135,11 +135,11 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
 
 
 
-    function thucHienCaiChetCuaBoss(boss, isServerConfirmed = false) {
+    function thucHienCaiChetCuaBoss(boss, isServerConfirmed = false, isKiller = false) {
     // 1. CHỈ CHẠY ANIMATION CHẾT 1 LẦN DỰA THEO CLIENT (Cho game mượt)
     if (!boss.isDeadVisual) {
         boss.isDeadVisual = true; 
-        boss.isDead = true; // 🌟 BẢN VÁ: Khóa mõm AI ngay lập tức, cấm gọi lệnh chạy nhảy!
+        boss.isDead = true; 
         boss.hp = 0; 
         boss.state = 'DEAD';
         boss.mesh.userData.ignore = true; 
@@ -150,25 +150,15 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
         }
     }
 
-
-
-
-
     // 2. CHỈ NHẬN QUÀ KHI SERVER ĐÃ CHỐT SỔ TỬ! (isServerConfirmed = true)
     if (isServerConfirmed && !boss.daNhanExp) {
-        boss.daNhanExp = true;      // Đóng dấu xác nhận
+        boss.daNhanExp = true;      // Đóng dấu xác nhận đã nhận quà
 
-        // Đã xóa gọi EXP cứng ở đây, nhường quyền tính toán cho Lò Loot_Monster!
-        
-        if (typeof window.taoHieuUngLootVang === 'function') {
-            // Gọi Server xử lý rơi đồ cho Kẻ kết liễu
+        // 🌟 CHỈ KẺ CÓ LAST HIT MỚI GỌI HÀM RỚT ĐỒ API
+        if (isKiller && typeof window.taoHieuUngLootVang === 'function') {
             window.taoHieuUngLootVang(boss.mesh.position, boss.id);
         }
 
-
-
-
-  
         // Dọn xác sau 3 giây kể từ khi chốt sổ
         setTimeout(() => {
             window.danhSachQuaiVat = window.danhSachQuaiVat.filter(q => q.id !== boss.id);
@@ -190,6 +180,7 @@ window.danhSachQuaiVatDangTai = window.danhSachQuaiVatDangTai || {};
 
 window.dameGomChoBoss = window.dameGomChoBoss || {};
 window.bossSyncTimer = window.bossSyncTimer || {};
+
 
 
 window.chemTrungBoss = function (bossId, dame) {
@@ -220,10 +211,11 @@ window.chemTrungBoss = function (bossId, dame) {
             fetch('api/danh_boss.php', { method: 'POST', body: fd }).then(res => res.json()).then(data => {
                 if (data.status === 'success') { 
                     boss.hp = data.hp;  
-                    // 🌟 MẤU CHỐT LÀ ĐÂY: Báo cho Client biết Server đã duyệt tử hình (isServerConfirmed = true)
-                    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss, true); 
+                    // 👑 MẤU CHỐT: Máy này nhận Status Success -> Nghĩa là nó đấm đòn Last Hit (isKiller = true)
+                    if (boss.hp <= 0) thucHienCaiChetCuaBoss(boss, true, true); 
                 } else if (data.status === 'dead') {
-                    thucHienCaiChetCuaBoss(boss, true);
+                    // Boss đã bị thằng khác đấm chết trước đó (isKiller = false)
+                    thucHienCaiChetCuaBoss(boss, true, false);
                 }
             }).catch(e => { });
 
