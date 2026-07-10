@@ -3,11 +3,28 @@
 // ==========================================
 console.log("🚀 Khởi động Bộ Không Gian & Thời Gian...");
 
+
+
 window.danhSachChieuThucToanMap = []; // Thùng chứa mọi chiêu thức đang bay
 
 window.dangKyChieuThuc = function (mesh, lifetime = 3000, onUpdate = null) {
-    window.danhSachChieuThucToanMap.push({ mesh: mesh, deathTime: Date.now() + lifetime, update: onUpdate });
+    // 🧬 CẤY DNA CỦA KẺ BẮN VÀO VIÊN ĐẠN
+    let ownerDNA = window.currentSkillSender || null;
+    let wrappedUpdate = null;
+    
+    if (onUpdate) {
+        wrappedUpdate = function() {
+            // Trích xuất DNA khi viên đạn đang bay và phát nổ
+            let prevDNA = window.currentSkillSender;
+            window.currentSkillSender = ownerDNA;
+            onUpdate(); // Chạy logic của các môn phái
+            window.currentSkillSender = prevDNA;
+        };
+    }
+    window.danhSachChieuThucToanMap.push({ mesh: mesh, deathTime: Date.now() + lifetime, update: wrappedUpdate });
 };
+
+
 
 function loopQuanLyToanCuc() {
     requestAnimationFrame(loopQuanLyToanCuc);
@@ -86,7 +103,7 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
     }
 };
 
-// 🌟 BIẾN LƯU TÊN KẺ CHIẾM ĐOẠT MẠNG ĐỘC QUYỀN (CHỐNG ĂN HÔI)
+// 🌟 BIẾN LƯU TÊN KẺ CHIẾM ĐOẠT MẠNG ĐỘC QUYỀN
 window.nguoiChotMangCuaToi = null; 
 
 window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
@@ -104,27 +121,13 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
             window.thoiDiemTuTran = Date.now(); 
             
-            // ========================================================
-            // 🌟 MÁY QUÉT CẢM BIẾN KHÔNG GIAN VÀ THỜI GIAN (BẮT SÁT THỦ ZORO/GOKU)
-            // ========================================================
-            let keThuChinhXac = "Boss/Quái Vật";
-            
-            if (window.lastSkillAttacker && window.lastSkillTarget) {
-                let thoiGianDaQua = Date.now() - (window.lastSkillTime || 0);
-                let khoangCachToaDo = tamNo.distanceTo(window.lastSkillTarget);
-                
-                // Nếu ai đó vừa tung chiêu trong 3 giây qua, VÀ viên đạn nổ ở ngay tọa độ nó nhắm tới (Sai số 30m)
-                // -> CHẮC CHẮN VIÊN ĐẠN NÀY LÀ CỦA NÓ!
-                if (thoiGianDaQua < 3000 && khoangCachToaDo < 30) {
-                    keThuChinhXac = window.lastSkillAttacker;
-                    console.log("🎯 Cảm biến đã bắt được kẻ sát nhân bằng Đạn 3D: " + keThuChinhXac);
-                }
-            }
+            // 🧬 XÉT NGHIỆM DNA: Truy xuất thẳng tên kẻ đã sinh ra viên đạn này!
+            let keThuChinhXac = window.currentSkillSender || "Boss/Quái Vật";
 
             window.nguoiChotMangCuaToi = keThuChinhXac; 
             window.xuLyCaiChetNhanVat(keThuChinhXac);
             
-            // Báo tử ngay lập tức cho chủ nhân viên đạn húp EXP
+            // Lập tức gửi thư báo tử cho kẻ giết người
             if (keThuChinhXac !== "Boss/Quái Vật" && window.room) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'XAC_NHAN_GUC_NGA',
