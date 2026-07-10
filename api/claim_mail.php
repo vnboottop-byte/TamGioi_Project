@@ -63,7 +63,6 @@ try {
 
 
     echo json_encode(['status' => 'success', 'msg' => $msg]);
-
 } catch (Exception $e) {
     $conn->rollback();
     echo json_encode(['status' => 'error', 'msg' => 'Lỗi hệ thống!']);
