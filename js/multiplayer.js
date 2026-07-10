@@ -538,6 +538,13 @@ livekitScript.onload = async () => {
 
                             // 🌟 TRẢ LẠI LOGIC GỐC CHO CHIÊU THỨC BAY
                             else if (data.type === 'TUNG_CHIEU') {
+                                // 🌟 BẢN VÁ AAA: GHI NHỚ LẠI KẺ VỪA TUNG CHIÊU VÀ TỌA ĐỘ ĐÍCH CỦA CHIÊU THỨC!
+                                window.lastSkillAttacker = senderId;
+                                window.lastSkillTime = Date.now();
+                                if (data.target) {
+                                    window.lastSkillTarget = new THREE.Vector3(data.target.x, data.target.y, data.target.z);
+                                }
+
                                 let tenHam = 'tungCombo' + data.className;
 
                                 if (typeof window[tenHam] === 'function') {
@@ -545,12 +552,12 @@ livekitScript.onload = async () => {
                                     window[tenHam](data.skillType, true, data.origin, data.target, data.dir, senderId, data.weaponUrl);
                                 } else {
                                     if (!window.dangTaiVoCong) window.dangTaiVoCong = {};
-                                    if (window.dangTaiVoCong[data.className]) return; 
+                                    if (window.dangTaiVoCong[data.className]) return;
                                     window.dangTaiVoCong[data.className] = true;
 
                                     let backupHePhai = window.HePhaiHienTai; let backupIdle = window.KHO_ANIM_NHANROI ? [...window.KHO_ANIM_NHANROI] : []; let backupAtk = window.KHO_ANIM_TANCONG ? [...window.KHO_ANIM_TANCONG] : []; let backupAnimNhanRoi = window.animationsMap ? window.animationsMap['NHANROI'] : null;
                                     let theScript = document.createElement('script');
-                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now(); 
+                                    theScript.src = 'js/' + data.className.toLowerCase() + '.js?v=' + Date.now();
 
                                     theScript.onload = function () {
                                         window.HePhaiHienTai = backupHePhai; window.KHO_ANIM_NHANROI = backupIdle; window.KHO_ANIM_TANCONG = backupAtk; if (window.animationsMap && backupAnimNhanRoi) window.animationsMap['NHANROI'] = backupAnimNhanRoi;
