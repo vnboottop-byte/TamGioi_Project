@@ -585,7 +585,7 @@ livekitScript.onload = async () => {
 
                                         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
                                             window.thoiDiemTuTran = Date.now();
-                                            // 🌟 TÌNH HUỐNG 1: CHẾT TRỰC TIẾP DO GÓI TIN (CHỐT MẠNG CHO SENDER)
+                                            // 🌟 TÌNH HUỐNG 1: CHẾT TRỰC TIẾP DO GÓI TIN MẠNG (CHỐT SỔ TỬ CHO SENDER)
                                             window.nguoiChotMangCuaToi = senderId;
                                             window.xuLyCaiChetNhanVat(senderId);
 
@@ -605,7 +605,7 @@ livekitScript.onload = async () => {
 
                                             // ⚔️ TÒA ÁN PHÂN XỬ: CHỈ ĐÍNH CHÍNH NẾU MẠNG NÀY ĐANG BỊ GÁN OAN CHO QUÁI VẬT!
                                             if (window.nguoiChotMangCuaToi === "Boss/Quái Vật") {
-                                                // Trao sổ đỏ cho kẻ đến sớm nhất
+                                                // Trao sổ đỏ cho kẻ có gói tin đến sớm nhất
                                                 window.nguoiChotMangCuaToi = senderId;
 
                                                 if (window.room) {
@@ -617,7 +617,7 @@ livekitScript.onload = async () => {
                                                     })), { reliable: true });
                                                 }
                                             }
-                                            // NẾU MẠNG NÀY ĐÃ ĐƯỢC TRAO CHO 1 NGƯỜI CHƠI KHÁC RỒI -> BỎ QUA GÓI TIN CỦA KẺ ĐẾN SAU!
+                                            // NẾU "nguoiChotMangCuaToi" ĐÃ ĐƯỢC TRAO CHO 1 NGƯỜI CHƠI KHÁC RỒI -> TỪ CHỐI GÓI TIN CỦA KẺ ĐẾN SAU!
                                         }
                                     }
                                 }
