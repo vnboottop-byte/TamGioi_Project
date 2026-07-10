@@ -64,21 +64,30 @@ try {
                 $res_random = $conn->query($sql_random);
                 $shop_item_id = 0;
                 
-                if ($res_random && $row_item = $res_random->fetch_assoc()) {
-                    $shop_item_id = $row_item['id'];
-                    $item_name = $row_item['name'];
-                    $content = "Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ Săn Boss (Vòng " . $quest['quest_index'] . ")! Hệ thống gửi tặng bạn [ $item_name ] và 5.000 Vàng.";
-                } else {
-                    $content = "Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ Săn Boss (Vòng " . $quest['quest_index'] . ")! Kho đồ hiện hết vật phẩm phù hợp, hệ thống gửi đền bù 5.000 Vàng.";
-                }
 
-                $title = "🎁 Thưởng Nhiệm Vụ Vòng " . $quest['quest_index'];
-                $game_gold_reward = 5000; // 🌟 CHUẨN VÀNG TRONG GAME (game_gold)
-                
-                // Gửi vào bưu điện
-                $stmt_mail = $conn->prepare("INSERT INTO user_mailbox (username, title, content, item_id, game_gold) VALUES (?, ?, ?, ?, ?)");
-                $stmt_mail->bind_param("sssii", $username, $title, $content, $shop_item_id, $game_gold_reward);
-                $stmt_mail->execute();
+
+                // ==========================================
+                    // 🌟 THÊM MỚI: TẶNG 2000 EXP CỐ ĐỊNH
+                    // ==========================================
+                    $game_exp_reward = 2000; 
+
+                    if ($res_random && $row_item = $res_random->fetch_assoc()) {
+                        $shop_item_id = $row_item['id'];
+                        $item_name = $row_item['name'];
+                        $content = "Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ Săn Boss (Vòng " . $quest['quest_index'] . ")! Hệ thống gửi tặng bạn [ $item_name ], 5.000 Vàng và " . number_format($game_exp_reward) . " EXP.";
+                    } else {
+                        $content = "Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ Săn Boss (Vòng " . $quest['quest_index'] . ")! Kho đồ hiện hết vật phẩm phù hợp, hệ thống gửi đền bù 5.000 Vàng và " . number_format($game_exp_reward) . " EXP.";
+                    }
+
+                    $title = "🎁 Thưởng Nhiệm Vụ Ngày " . $quest['quest_index'];
+                    $game_gold_reward = 5000; // 🌟 CHUẨN VÀNG TRONG GAME (game_gold)
+                    
+                    // Gửi vào bưu điện (Đã sửa câu SQL để thêm cột game_exp)
+                    $stmt_mail = $conn->prepare("INSERT INTO user_mailbox (username, title, content, item_id, game_gold, game_exp) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt_mail->bind_param("sssiii", $username, $title, $content, $shop_item_id, $game_gold_reward, $game_exp_reward);
+                    $stmt_mail->execute();
+
+
             } else {
                 // CHƯA XONG -> CHỈ TĂNG ĐIỂM TIẾN ĐỘ
                 $conn->query("UPDATE user_quests SET current_amount = $new_amount WHERE id = $quest_id");
