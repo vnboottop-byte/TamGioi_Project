@@ -562,6 +562,14 @@ livekitScript.onload = async () => {
                                 }
                             }
 
+
+
+
+
+
+
+
+
                             else if (data.type === 'BI_CHEM') {
                                 // 🛡️ CHỐT CHẶN TỔ ĐỘI: TỪ CHỐI NHẬN MÁU NẾU KẺ ĐÁNH LÀ ANH EM!
                                 if (senderId && typeof window.danhSachDongDoi !== 'undefined' && window.danhSachDongDoi.includes(String(senderId).toLowerCase())) {
@@ -576,22 +584,40 @@ livekitScript.onload = async () => {
                                         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
 
                                         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
-                                            window.thoiDiemTuTran = Date.now(); // Ghi nhận thời gian tử trận
+                                            window.thoiDiemTuTran = Date.now();
+                                            // 🌟 TÌNH HUỐNG 1: CHẾT TRỰC TIẾP DO GÓI TIN (CHỐT MẠNG CHO SENDER)
+                                            window.nguoiChotMangCuaToi = senderId;
                                             window.xuLyCaiChetNhanVat(senderId);
-                                        }
-                                    } else {
-                                        // 🌟 BẢN VÁ LỖI MẤT MẠNG 1V1 (ĐÍNH CHÍNH KẺ SÁT NHÂN)
-                                        // Nếu đã chết rồi mà vẫn nhận được BI_CHEM trong vòng 1.5 giây
-                                        // Chứng tỏ đạn 3D bay tới trước làm chết lãng xẹt do "Boss/Quái Vật"
-                                        // Ta gọi hồn đính chính lại lịch sử và gửi báo tử cho Sếp để húp EXP!
-                                        if (window.thoiDiemTuTran && Date.now() - window.thoiDiemTuTran < 1500) {
-                                            if (window.room && senderId) {
+
+                                            // Báo tử cho kẻ giết
+                                            if (window.room) {
                                                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                                                     type: 'XAC_NHAN_GUC_NGA',
                                                     killerId: senderId,
+                                                    victimName: window.myUsername,
                                                     victimLevel: window.LEVEL_CUA_TOI || 1
                                                 })), { reliable: true });
                                             }
+                                        }
+                                    } else {
+                                        // 🌟 TÌNH HUỐNG 2: ĐÃ CHẾT RỒI NHƯNG VẪN BỊ ĐÁNH HỘI ĐỒNG (TRONG VÒNG 1.5S)
+                                        if (window.thoiDiemTuTran && Date.now() - window.thoiDiemTuTran < 1500) {
+
+                                            // ⚔️ TÒA ÁN PHÂN XỬ: CHỈ ĐÍNH CHÍNH NẾU MẠNG NÀY ĐANG BỊ GÁN OAN CHO QUÁI VẬT!
+                                            if (window.nguoiChotMangCuaToi === "Boss/Quái Vật") {
+                                                // Trao sổ đỏ cho kẻ đến sớm nhất
+                                                window.nguoiChotMangCuaToi = senderId;
+
+                                                if (window.room) {
+                                                    window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                                                        type: 'XAC_NHAN_GUC_NGA',
+                                                        killerId: senderId,
+                                                        victimName: window.myUsername,
+                                                        victimLevel: window.LEVEL_CUA_TOI || 1
+                                                    })), { reliable: true });
+                                                }
+                                            }
+                                            // NẾU MẠNG NÀY ĐÃ ĐƯỢC TRAO CHO 1 NGƯỜI CHƠI KHÁC RỒI -> BỎ QUA GÓI TIN CỦA KẺ ĐẾN SAU!
                                         }
                                     }
                                 }
