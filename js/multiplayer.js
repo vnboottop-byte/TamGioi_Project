@@ -750,9 +750,17 @@ micBtn.addEventListener('touchcancel', tatMic);
 window.dameGomChoNguoi = window.dameGomChoNguoi || {};
 window.nguoiSyncTimer = window.nguoiSyncTimer || {};
 
+// 🌟 BIẾN THEO DÕI SÁT NHÂN CHUẨN XÁC ĐẾN TỪNG MILI-GIÂY
+window.idKeSatNhanGanNhat = null;
+window.thoiDiemSatNhanGanNhat = 0;
+
 window.chemTrungNguoiChoi = function(victimId, dame, hitPos) {
     // Không tự chém mình hoặc chém hư vô
     if (!victimId || victimId === window.myUsername) return; 
+    
+    // 🌟 GHI NHỚ KẺ VỪA GÂY SÁT THƯƠNG LÊN MÌNH (CHỐNG LỖI CÁC PHÁI ĐOẠT XÁ)
+    window.idKeSatNhanGanNhat = victimId;
+    window.thoiDiemSatNhanGanNhat = Date.now();
 
     // Nhỏ giọt sát thương của bất kỳ hệ phái nào vào Phễu của nạn nhân này
     window.dameGomChoNguoi[victimId] = (window.dameGomChoNguoi[victimId] || 0) + dame;
