@@ -48,22 +48,18 @@ try {
     }
 
     // ========================================================
-    // 🌟 THÊM MỚI: RÚT EXP TỪ THƯ VÀ CỘNG VÀO BẢNG NHÂN VẬT
+    // 🌟 RÚT EXP VÀ TRẢ VỀ CHO CLIENT (ĐỂ BỘ NÃO GAME TỰ CỘNG VÀ XÉT LÊN CẤP)
     // ========================================================
+    $exp_thuong = 0;
     if (isset($mail['game_exp']) && $mail['game_exp'] > 0) {
-        $stmt_exp = $conn->prepare("UPDATE game_characters SET exp = exp + ? WHERE username = ?");
-        $stmt_exp->bind_param("is", $mail['game_exp'], $username);
-        $stmt_exp->execute();
-        $msg .= " và " . number_format($mail['game_exp']) . " EXP";
+        $exp_thuong = (int)$mail['game_exp'];
+        $msg .= " và " . number_format($exp_thuong) . " EXP";
     }
     // ========================================================
 
     $conn->commit();
-
-
-
-
-    echo json_encode(['status' => 'success', 'msg' => $msg]);
+    // Bơm thêm biến exp_gained vào JSON trả về để rom.php bắt lấy
+    echo json_encode(['status' => 'success', 'msg' => $msg, 'exp_gained' => $exp_thuong]);
 } catch (Exception $e) {
     $conn->rollback();
     echo json_encode(['status' => 'error', 'msg' => 'Lỗi hệ thống!']);
