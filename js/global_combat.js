@@ -86,7 +86,7 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
     }
 };
 
-// 🌟 BIẾN LƯU TÊN KẺ CHIẾM ĐOẠT MẠNG ĐỘC QUYỀN
+// 🌟 BIẾN LƯU TÊN KẺ CHIẾM ĐOẠT MẠNG ĐỘC QUYỀN (CHỐNG ĂN HÔI)
 window.nguoiChotMangCuaToi = null; 
 
 window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
