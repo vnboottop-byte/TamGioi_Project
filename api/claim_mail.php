@@ -36,13 +36,32 @@ try {
         }
     }
 
+
+
     // 🌟 ĐÃ SỬA THÀNH 'game_gold'
     if (isset($mail['game_gold']) && $mail['game_gold'] > 0) {
-        $conn->query("UPDATE users SET balance = balance + " . $mail['game_gold'] . " WHERE username = '$username'");
-        $msg = "Đã cất " . number_format($mail['game_gold']) . " Linh thạch vào ví!";
+        $stmt_gold = $conn->prepare("UPDATE game_characters SET gold = gold + ? WHERE username = ?");
+        $stmt_gold->bind_param("is", $mail['game_gold'], $username);
+        $stmt_gold->execute();
+        $msg .= " và " . number_format($mail['game_gold']) . " Vàng";
     }
 
+    // ========================================================
+    // 🌟 THÊM MỚI: RÚT EXP TỪ THƯ VÀ CỘNG VÀO BẢNG NHÂN VẬT
+    // ========================================================
+    if (isset($mail['game_exp']) && $mail['game_exp'] > 0) {
+        $stmt_exp = $conn->prepare("UPDATE game_characters SET exp = exp + ? WHERE username = ?");
+        $stmt_exp->bind_param("is", $mail['game_exp'], $username);
+        $stmt_exp->execute();
+        $msg .= " và " . number_format($mail['game_exp']) . " EXP";
+    }
+    // ========================================================
+
     $conn->commit();
+
+
+
+
     echo json_encode(['status' => 'success', 'msg' => $msg]);
 
 } catch (Exception $e) {
