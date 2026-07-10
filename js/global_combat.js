@@ -121,13 +121,41 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
             window.thoiDiemTuTran = Date.now(); 
             
-            // 🧬 XÉT NGHIỆM DNA: Truy xuất thẳng tên kẻ đã sinh ra viên đạn này!
-            let keThuChinhXac = window.currentSkillSender || "Boss/Quái Vật";
+            // ========================================================
+            // 🌟 MÁY QUÉT RADAR TOÁN HỌC: BẮT ĐÚNG KẺ BẮN DỰA VÀO QUỸ ĐẠO
+            // ========================================================
+            let keThuChinhXac = "Boss/Quái Vật";
+            
+            if (window.recentIncomingSkills && window.recentIncomingSkills.length > 0) {
+                let minDist = 150; // Bán kính sai số tối đa để bọc lót các đòn AoE khổng lồ
+                let now = Date.now();
+                
+                for (let i = 0; i < window.recentIncomingSkills.length; i++) {
+                    let s = window.recentIncomingSkills[i];
+                    if (now - s.time > 8000) continue; // Bỏ qua các chiêu thức đã tung ra quá 8 giây
+                    
+                    // 1. Kiểm tra tâm nổ có gần Đích Nhắm ban đầu không? (Dành cho Lazer, Phép thuật)
+                    let distToTarget = s.target.distanceTo(tamNo);
+                    
+                    // 2. Kiểm tra tâm nổ có nằm dọc theo Đường Bay không? (Dành cho Cung/Súng đụng người nổ sớm)
+                    let line = new THREE.Line3(s.origin, s.target);
+                    let closestPoint = new THREE.Vector3();
+                    line.closestPointToPoint(tamNo, true, closestPoint);
+                    let distToLine = closestPoint.distanceTo(tamNo);
+                    
+                    let actualDist = Math.min(distToTarget, distToLine);
+                    
+                    if (actualDist < minDist) {
+                        minDist = actualDist;
+                        keThuChinhXac = s.senderId;
+                    }
+                }
+            }
 
             window.nguoiChotMangCuaToi = keThuChinhXac; 
             window.xuLyCaiChetNhanVat(keThuChinhXac);
             
-            // Lập tức gửi thư báo tử cho kẻ giết người
+            // Báo tử ngay lập tức cho chủ nhân của đường bay húp EXP
             if (keThuChinhXac !== "Boss/Quái Vật" && window.room) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'XAC_NHAN_GUC_NGA',

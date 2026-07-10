@@ -539,15 +539,16 @@ livekitScript.onload = async () => {
                             // 🌟 TRẢ LẠI LOGIC GỐC CHO CHIÊU THỨC BAY
                             else if (data.type === 'TUNG_CHIEU') {
                                 
-                                // 🧬 BỘ MÁY BẢO TOÀN DNA: Đảm bảo DNA không bị mất khi đạn dùng Hàm Thời Gian
-                                window.thucThiGiuDNA = function(ownerId, callback) {
-                                    let prevOwner = window.currentSkillSender;
-                                    window.currentSkillSender = ownerId;
-                                    let orgSetTimeout = window.setTimeout; let orgSetInterval = window.setInterval;
-                                    window.setTimeout = function(cb, d, ...args) { let o = window.currentSkillSender; return orgSetTimeout(function(...a) { let p = window.currentSkillSender; window.currentSkillSender = o; cb(...a); window.currentSkillSender = p; }, d, ...args); };
-                                    window.setInterval = function(cb, d, ...args) { let o = window.currentSkillSender; return orgSetInterval(function(...a) { let p = window.currentSkillSender; window.currentSkillSender = o; cb(...a); window.currentSkillSender = p; }, d, ...args); };
-                                    try { callback(); } finally { window.setTimeout = orgSetTimeout; window.setInterval = orgSetInterval; window.currentSkillSender = prevOwner; }
-                                };
+                                // 🌟 BỘ MÁY GHI NHỚ QUỸ ĐẠO ĐẠN ĐẠO TOÀN CẦU (BẮT SÁT THỦ 100%)
+                                window.recentIncomingSkills = window.recentIncomingSkills || [];
+                                window.recentIncomingSkills.push({
+                                    senderId: senderId,
+                                    origin: new THREE.Vector3(data.origin.x, data.origin.y, data.origin.z),
+                                    target: new THREE.Vector3(data.target.x, data.target.y, data.target.z),
+                                    time: Date.now()
+                                });
+                                // Chỉ giữ lại 50 chiêu gần nhất để không tốn RAM
+                                if (window.recentIncomingSkills.length > 50) window.recentIncomingSkills.shift();
 
                                 let tenHam = 'tungCombo' + data.className;
 
