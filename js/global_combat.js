@@ -86,19 +86,25 @@ window.vinhDanhDoSat = function (victimName, victimLevel) {
     }
 };
 
+// 🌟 BIẾN LƯU TÊN KẺ CHIẾM ĐOẠT MẠNG ĐỘC QUYỀN
+window.nguoiChotMangCuaToi = null; 
+
 window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
     if (!window.playerModel || window.isDead || window.IS_IN_SAFE_ZONE) return;
     let tamNguc = window.playerModel.position.clone(); tamNguc.y += 5;
+    
     if (tamNo.distanceTo(tamNguc) <= banKinh) {
         window.mauBanThan -= luongDame;
         if (typeof taoSoSatThuong === 'function') taoSoSatThuong(tamNguc, luongDame, '#ff0000');
-        const uiThanhMau = document.getElementById('thanhMauHienTai'); const uiSoMau = document.getElementById('soMauHienTai');
+        const uiThanhMau = document.getElementById('thanhMauHienTai'); 
+        const uiSoMau = document.getElementById('soMauHienTai');
         if (uiThanhMau) uiThanhMau.style.width = Math.max(0, (window.mauBanThan / window.MAU_TOI_DA) * 100) + '%';
         if (uiSoMau) uiSoMau.innerText = Math.max(0, Math.round(window.mauBanThan)).toLocaleString() + " / " + window.MAU_TOI_DA.toLocaleString() + " HP";
         
-        // 🌟 BẢN VÁ: GHI NHẬN THỜI GIAN TỬ TRẬN
         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
             window.thoiDiemTuTran = Date.now(); 
+            // 🌟 CHỈ GHI NHẬN TẠM THỜI LÀ BOSS, CHỜ GÓI TIN MẠNG TỚI ĐÍNH CHÍNH
+            window.nguoiChotMangCuaToi = "Boss/Quái Vật"; 
             window.xuLyCaiChetNhanVat("Boss/Quái Vật");
         }
     }
