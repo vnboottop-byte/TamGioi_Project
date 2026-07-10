@@ -103,9 +103,26 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
         
         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
             window.thoiDiemTuTran = Date.now(); 
-            // 🌟 CHỈ GHI NHẬN TẠM THỜI LÀ BOSS, CHỜ GÓI TIN MẠNG TỚI ĐÍNH CHÍNH
-            window.nguoiChotMangCuaToi = "Boss/Quái Vật"; 
-            window.xuLyCaiChetNhanVat("Boss/Quái Vật");
+            
+            // 🌟 TRÍCH XUẤT CAMERA HỘP ĐEN: TÌM KẺ VỪA GÂY SÁT THƯƠNG GẦN NHẤT
+            let keThuChinhXac = "Boss/Quái Vật";
+            // Nếu có ai đó vừa gây dame lên mình trong vòng 200 mili-giây (0.2s) qua -> Chắc chắn viên đạn 3D này là của nó!
+            if (window.idKeSatNhanGanNhat && Date.now() - window.thoiDiemSatNhanGanNhat < 200) {
+                keThuChinhXac = window.idKeSatNhanGanNhat;
+            }
+
+            window.nguoiChotMangCuaToi = keThuChinhXac; 
+            window.xuLyCaiChetNhanVat(keThuChinhXac);
+            
+            // Báo tử ngay lập tức cho chủ nhân viên đạn húp EXP (Chữa bệnh Zoro / Cung Thủ / Kizaru / Mọi phái mới)
+            if (keThuChinhXac !== "Boss/Quái Vật" && window.room) {
+                window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
+                    type: 'XAC_NHAN_GUC_NGA',
+                    killerId: keThuChinhXac,
+                    victimName: window.myUsername,
+                    victimLevel: window.LEVEL_CUA_TOI || 1
+                })), { reliable: true });
+            }
         }
     }
 };
