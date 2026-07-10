@@ -40,7 +40,8 @@ try {
 
     // 🌟 ĐÃ SỬA THÀNH 'game_gold'
     if (isset($mail['game_gold']) && $mail['game_gold'] > 0) {
-        $stmt_gold = $conn->prepare("UPDATE game_characters SET gold = gold + ? WHERE username = ?");
+        // Đã đổi SET gold = gold + ?  THÀNH  SET game_gold = game_gold + ?
+        $stmt_gold = $conn->prepare("UPDATE game_characters SET game_gold = game_gold + ? WHERE username = ?");
         $stmt_gold->bind_param("is", $mail['game_gold'], $username);
         $stmt_gold->execute();
         $msg .= " và " . number_format($mail['game_gold']) . " Vàng";
