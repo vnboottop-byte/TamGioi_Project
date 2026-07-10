@@ -104,17 +104,27 @@ window.gaySatThuongBossToPlayer = function (tamNo, luongDame, banKinh) {
         if (window.mauBanThan <= 0 && typeof window.xuLyCaiChetNhanVat === 'function') {
             window.thoiDiemTuTran = Date.now(); 
             
-            // 🌟 TRÍCH XUẤT CAMERA HỘP ĐEN: TÌM KẺ VỪA GÂY SÁT THƯƠNG GẦN NHẤT
+            // ========================================================
+            // 🌟 MÁY QUÉT CẢM BIẾN KHÔNG GIAN VÀ THỜI GIAN (BẮT SÁT THỦ ZORO/GOKU)
+            // ========================================================
             let keThuChinhXac = "Boss/Quái Vật";
-            // Nếu có ai đó vừa gây dame lên mình trong vòng 200 mili-giây (0.2s) qua -> Chắc chắn viên đạn 3D này là của nó!
-            if (window.idKeSatNhanGanNhat && Date.now() - window.thoiDiemSatNhanGanNhat < 200) {
-                keThuChinhXac = window.idKeSatNhanGanNhat;
+            
+            if (window.lastSkillAttacker && window.lastSkillTarget) {
+                let thoiGianDaQua = Date.now() - (window.lastSkillTime || 0);
+                let khoangCachToaDo = tamNo.distanceTo(window.lastSkillTarget);
+                
+                // Nếu ai đó vừa tung chiêu trong 3 giây qua, VÀ viên đạn nổ ở ngay tọa độ nó nhắm tới (Sai số 30m)
+                // -> CHẮC CHẮN VIÊN ĐẠN NÀY LÀ CỦA NÓ!
+                if (thoiGianDaQua < 3000 && khoangCachToaDo < 30) {
+                    keThuChinhXac = window.lastSkillAttacker;
+                    console.log("🎯 Cảm biến đã bắt được kẻ sát nhân bằng Đạn 3D: " + keThuChinhXac);
+                }
             }
 
             window.nguoiChotMangCuaToi = keThuChinhXac; 
             window.xuLyCaiChetNhanVat(keThuChinhXac);
             
-            // Báo tử ngay lập tức cho chủ nhân viên đạn húp EXP (Chữa bệnh Zoro / Cung Thủ / Kizaru / Mọi phái mới)
+            // Báo tử ngay lập tức cho chủ nhân viên đạn húp EXP
             if (keThuChinhXac !== "Boss/Quái Vật" && window.room) {
                 window.room.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({
                     type: 'XAC_NHAN_GUC_NGA',
