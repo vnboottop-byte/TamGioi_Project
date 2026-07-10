@@ -92,20 +92,29 @@ try {
                     $res_random = $conn->query($sql_random);
                     $shop_item_id = 0;
                     
+
+                    // ==========================================
+                    // 🌟 THÊM MỚI: TÍNH EXP ĐỘNG (1 Mạng = 1000 EXP)
+                    // ==========================================
+                    $game_exp_reward = intval($quest['required_amount']) * 1000;
+
                     if ($res_random && $row_item = $res_random->fetch_assoc()) {
                         $shop_item_id = $row_item['id'];
                         $item_name = $row_item['name'];
-                        $content = "Hảo thủ đoạn! Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Hệ thống gửi tặng bạn [ $item_name ] và 5.000 Vàng.";
+                        $content = "Hảo thủ đoạn! Chúc mừng đạo hữu đã hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Hệ thống gửi tặng bạn [ $item_name ], 5.000 Vàng và " . number_format($game_exp_reward) . " EXP.";
                     } else {
-                        $content = "Hảo thủ đoạn! Chúc mừng đạo hữu hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Kho đồ hiện trống, gửi đền bù 5.000 Vàng.";
+                        $content = "Hảo thủ đoạn! Chúc mừng đạo hữu hoàn thành Nhiệm vụ PK (Vòng " . $quest['quest_index'] . ")! Kho đồ hiện trống, gửi đền bù 5.000 Vàng và " . number_format($game_exp_reward) . " EXP.";
                     }
 
                     $title = "🎁 Thưởng Nhiệm Vụ Vòng " . $quest['quest_index'];
                     $game_gold_reward = 5000; 
                     
-                    $stmt_mail = $conn->prepare("INSERT INTO user_mailbox (username, title, content, item_id, game_gold) VALUES (?, ?, ?, ?, ?)");
-                    $stmt_mail->bind_param("sssii", $attacker, $title, $content, $shop_item_id, $game_gold_reward);
+                    // Gửi vào bưu điện (Đã sửa câu SQL để thêm cột game_exp)
+                    $stmt_mail = $conn->prepare("INSERT INTO user_mailbox (username, title, content, item_id, game_gold, game_exp) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt_mail->bind_param("sssiii", $attacker, $title, $content, $shop_item_id, $game_gold_reward, $game_exp_reward);
                     $stmt_mail->execute();
+
+
                 } else {
                     // CHƯA XONG -> TĂNG TIẾN ĐỘ
                     $conn->query("UPDATE user_quests SET current_amount = $new_amount WHERE id = $quest_id");
