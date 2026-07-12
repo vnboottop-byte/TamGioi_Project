@@ -15,7 +15,7 @@ window.renderer = new THREE.WebGLRenderer({
     powerPreference: "high-performance"
 });
 // ========================================================
-// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (CHỐNG TRÀN RAM MOBILE) - BẢN MẠNH TAY
+// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN AN TOÀN CHỐNG CRASH SAFARI)
 // ========================================================
 window.GameSensor = {
     fps: 60,
@@ -37,13 +37,13 @@ window.GameSensor = {
             if (window.isMobile && this.fps < 25) {
                 if (!this.isOverloaded) {
                     this.isOverloaded = true;
-                    console.warn("⚠️ CẢM BIẾN: Điện thoại quá tải! Kích hoạt chế độ SINH TỒN MẠNH TAY!");
+                    console.warn("⚠️ CẢM BIẾN: Quá tải! Bật khiên sinh tồn (Giảm tầm nhìn)!");
                     this.emergencyCleanUp(true);
                 }
             } else if (this.fps >= 40) {
                 if (this.isOverloaded) {
-                    this.isOverloaded = false; // Máy khỏe lại thì tắt báo động
-                    console.log("🟢 CẢM BIẾN: Máy đã mát, phục hồi độ phân giải!");
+                    this.isOverloaded = false; 
+                    console.log("🟢 CẢM BIẾN: Máy mát, phục hồi tầm nhìn!");
                     this.emergencyCleanUp(false);
                 }
             }
@@ -52,31 +52,31 @@ window.GameSensor = {
 
     // Giao thức dọn dẹp khẩn cấp khi tràn RAM
     emergencyCleanUp: function (isDanger) {
-        if (!window.scene || !window.renderer) return;
+        if (!window.scene || !window.camera) return;
         
         let p = window.playerModel;
         if (!p) return;
 
+        // TUYỆT ĐỐI KHÔNG CHẠM VÀO THÔNG SỐ ĐỔ BÓNG VÀ PIXEL RATIO ĐỂ CHỐNG CRASH IOS!
+
         if (isDanger) {
-            // 1. ÉP HẠ ĐỘ PHÂN GIẢI MÀN HÌNH (CỨU VRAM MẠNH NHẤT - TRỊ DỨT ĐIỂM F5)
-            // Giảm độ nét xuống 75%, đánh đổi chút độ sắc nét để game không bao giờ sập!
-            window.renderer.setPixelRatio(0.75); 
-            window.renderer.shadowMap.enabled = false;
+            // 1. KÉO MÀN SƯƠNG LẠI GẦN (CỰC KỲ AN TOÀN CHO GPU)
+            // Camera chỉ nhìn được xa 600m, xa hơn sẽ bị tàng hình lập tức!
+            window.camera.far = 600;
+            window.camera.updateProjectionMatrix();
 
-            // 2. QUÉT RÁC TẦM GẦN (1000m) CHO CẢ BOSS LẪN NGƯỜI CHƠI
-            let maxDist = 1000; 
+            // 2. TÀNG HÌNH QUÁI VÀ NGƯỜI CHƠI BẰNG LOGIC ĐỂ TRÁNH QUÉT THỪA
+            let maxDist = 500; 
 
-            // 💥 Trảm Boss ở xa (Kẻ thù chính gây tràn RAM)
             if (typeof window.danhSachQuaiVat !== 'undefined') {
                 window.danhSachQuaiVat.forEach(quai => {
                     if (quai.mesh && quai.mesh.position.distanceTo(p.position) > maxDist) {
                         quai.mesh.visible = false;
-                        if (quai.tagEl) quai.tagEl.style.display = 'none'; // Ẩn luôn thanh máu DOM
+                        if (quai.tagEl) quai.tagEl.style.display = 'none';
                     }
                 });
             }
 
-            // Trảm Người chơi ở xa
             if (typeof window.remotePlayers !== 'undefined') {
                 for (let id in window.remotePlayers) {
                     let rp = window.remotePlayers[id];
@@ -87,14 +87,12 @@ window.GameSensor = {
                 }
             }
             
-            // Xả kho Texture trong bộ đệm ngay lập tức
-            if (window.renderer.info) window.renderer.info.reset();
-            
         } else {
-            // 🌟 PHỤC HỒI KHI MÁY KHỎE LẠI
-            window.renderer.setPixelRatio(1.0); // Trả lại độ nét căng cực
+            // 🌟 PHỤC HỒI NHÃN LỰC KHI MÁY MẠNH LẠI
+            window.camera.far = 2000; 
+            window.camera.updateProjectionMatrix();
             
-            let safeDist = 1500; // Tầm nhìn an toàn khi máy rảnh rỗi
+            let safeDist = 1500; 
             if (typeof window.danhSachQuaiVat !== 'undefined') {
                 window.danhSachQuaiVat.forEach(quai => {
                     if (quai.mesh && !quai.isDead && quai.mesh.position.distanceTo(p.position) <= safeDist) {
