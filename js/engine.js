@@ -15,7 +15,7 @@ window.renderer = new THREE.WebGLRenderer({
     powerPreference: "high-performance"
 });
 // ========================================================
-// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (CHỐNG TRÀN RAM MOBILE)
+// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (CHỐNG TRÀN RAM MOBILE) - BẢN MẠNH TAY
 // ========================================================
 window.GameSensor = {
     fps: 60,
@@ -37,32 +37,80 @@ window.GameSensor = {
             if (window.isMobile && this.fps < 25) {
                 if (!this.isOverloaded) {
                     this.isOverloaded = true;
-                    console.warn("⚠️ CẢM BIẾN: Điện thoại quá tải! Kích hoạt chế độ sinh tồn!");
-                    this.emergencyCleanUp();
+                    console.warn("⚠️ CẢM BIẾN: Điện thoại quá tải! Kích hoạt chế độ SINH TỒN MẠNH TAY!");
+                    this.emergencyCleanUp(true);
                 }
             } else if (this.fps >= 40) {
-                this.isOverloaded = false; // Máy khỏe lại thì tắt báo động
+                if (this.isOverloaded) {
+                    this.isOverloaded = false; // Máy khỏe lại thì tắt báo động
+                    console.log("🟢 CẢM BIẾN: Máy đã mát, phục hồi độ phân giải!");
+                    this.emergencyCleanUp(false);
+                }
             }
         }
     },
 
     // Giao thức dọn dẹp khẩn cấp khi tràn RAM
-    emergencyCleanUp: function () {
-        if (!window.scene) return;
-
-        // 1. Tắt đổ bóng toàn bản đồ để cứu GPU
-        window.renderer.shadowMap.enabled = false;
-
-        // 2. Ép trình duyệt xả rác bộ nhớ Texture (Rất quan trọng)
-        window.renderer.info.reset();
-
-        // 3. Quét và dọn sạch bóng ma Boss/Người chơi ở xa trên 1500m
+    emergencyCleanUp: function (isDanger) {
+        if (!window.scene || !window.renderer) return;
+        
         let p = window.playerModel;
-        if (p && typeof window.remotePlayers !== 'undefined') {
-            for (let id in window.remotePlayers) {
-                let rp = window.remotePlayers[id];
-                if (rp.mesh && rp.mesh.position.distanceTo(p.position) > 1500) {
-                    rp.mesh.visible = false; // Tàng hình để GPU khỏi phải vẽ
+        if (!p) return;
+
+        if (isDanger) {
+            // 1. ÉP HẠ ĐỘ PHÂN GIẢI MÀN HÌNH (CỨU VRAM MẠNH NHẤT - TRỊ DỨT ĐIỂM F5)
+            // Giảm độ nét xuống 75%, đánh đổi chút độ sắc nét để game không bao giờ sập!
+            window.renderer.setPixelRatio(0.75); 
+            window.renderer.shadowMap.enabled = false;
+
+            // 2. QUÉT RÁC TẦM GẦN (1000m) CHO CẢ BOSS LẪN NGƯỜI CHƠI
+            let maxDist = 1000; 
+
+            // 💥 Trảm Boss ở xa (Kẻ thù chính gây tràn RAM)
+            if (typeof window.danhSachQuaiVat !== 'undefined') {
+                window.danhSachQuaiVat.forEach(quai => {
+                    if (quai.mesh && quai.mesh.position.distanceTo(p.position) > maxDist) {
+                        quai.mesh.visible = false;
+                        if (quai.tagEl) quai.tagEl.style.display = 'none'; // Ẩn luôn thanh máu DOM
+                    }
+                });
+            }
+
+            // Trảm Người chơi ở xa
+            if (typeof window.remotePlayers !== 'undefined') {
+                for (let id in window.remotePlayers) {
+                    let rp = window.remotePlayers[id];
+                    if (rp.mesh && rp.mesh.position.distanceTo(p.position) > maxDist) {
+                        rp.mesh.visible = false;
+                        if (rp.tag) rp.tag.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Xả kho Texture trong bộ đệm ngay lập tức
+            if (window.renderer.info) window.renderer.info.reset();
+            
+        } else {
+            // 🌟 PHỤC HỒI KHI MÁY KHỎE LẠI
+            window.renderer.setPixelRatio(1.0); // Trả lại độ nét căng cực
+            
+            let safeDist = 1500; // Tầm nhìn an toàn khi máy rảnh rỗi
+            if (typeof window.danhSachQuaiVat !== 'undefined') {
+                window.danhSachQuaiVat.forEach(quai => {
+                    if (quai.mesh && !quai.isDead && quai.mesh.position.distanceTo(p.position) <= safeDist) {
+                        quai.mesh.visible = true;
+                        if (quai.tagEl) quai.tagEl.style.display = 'block';
+                    }
+                });
+            }
+
+            if (typeof window.remotePlayers !== 'undefined') {
+                for (let id in window.remotePlayers) {
+                    let rp = window.remotePlayers[id];
+                    if (rp.mesh && rp.mesh.position.distanceTo(p.position) <= safeDist) {
+                        rp.mesh.visible = true;
+                        if (rp.tag) rp.tag.style.display = 'block';
+                    }
                 }
             }
         }
