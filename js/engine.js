@@ -14,6 +14,60 @@ window.renderer = new THREE.WebGLRenderer({
     logarithmicDepthBuffer: !window.isMobile,
     powerPreference: "high-performance"
 });
+// ========================================================
+// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (CHỐNG TRÀN RAM MOBILE)
+// ========================================================
+window.GameSensor = {
+    fps: 60,
+    lastTime: performance.now(),
+    frameCount: 0,
+    isOverloaded: false,
+
+    // Hàm quét sức khỏe điện thoại mỗi giây
+    checkHealth: function () {
+        let now = performance.now();
+        this.frameCount++;
+
+        if (now - this.lastTime >= 1000) {
+            this.fps = this.frameCount;
+            this.frameCount = 0;
+            this.lastTime = now;
+
+            // 🚨 BÁO ĐỘNG ĐỎ: Nếu FPS tụt dưới 25 trên Mobile, kích hoạt Giảm Tải!
+            if (window.isMobile && this.fps < 25) {
+                if (!this.isOverloaded) {
+                    this.isOverloaded = true;
+                    console.warn("⚠️ CẢM BIẾN: Điện thoại quá tải! Kích hoạt chế độ sinh tồn!");
+                    this.emergencyCleanUp();
+                }
+            } else if (this.fps >= 40) {
+                this.isOverloaded = false; // Máy khỏe lại thì tắt báo động
+            }
+        }
+    },
+
+    // Giao thức dọn dẹp khẩn cấp khi tràn RAM
+    emergencyCleanUp: function () {
+        if (!window.scene) return;
+
+        // 1. Tắt đổ bóng toàn bản đồ để cứu GPU
+        window.renderer.shadowMap.enabled = false;
+
+        // 2. Ép trình duyệt xả rác bộ nhớ Texture (Rất quan trọng)
+        window.renderer.info.reset();
+
+        // 3. Quét và dọn sạch bóng ma Boss/Người chơi ở xa trên 1500m
+        let p = window.playerModel;
+        if (p && typeof window.remotePlayers !== 'undefined') {
+            for (let id in window.remotePlayers) {
+                let rp = window.remotePlayers[id];
+                if (rp.mesh && rp.mesh.position.distanceTo(p.position) > 1500) {
+                    rp.mesh.visible = false; // Tàng hình để GPU khỏi phải vẽ
+                }
+            }
+        }
+    }
+};
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
 renderer.shadowMap.enabled = !window.isMobile;
