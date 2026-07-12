@@ -15,17 +15,25 @@ window.renderer = new THREE.WebGLRenderer({
     powerPreference: "high-performance"
 });
 // ========================================================
-// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN AN TOÀN CHỐNG CRASH SAFARI)
+// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN V3 - CÓ KIM BÀI MIỄN TỬ KHI LOAD GAME)
 // ========================================================
 window.GameSensor = {
     fps: 60,
     lastTime: performance.now(),
     frameCount: 0,
     isOverloaded: false,
+    startTime: performance.now(), // 🌟 Ghi nhớ thời điểm Sếp vừa vào game
 
     // Hàm quét sức khỏe điện thoại mỗi giây
     checkHealth: function () {
         let now = performance.now();
+
+        // 🛑 KIM BÀI MIỄN TỬ: 10 giây đầu tiên đang load Map, cấm Cảm biến hoạt động!
+        if (now - this.startTime < 10000) {
+            this.lastTime = now;
+            return; 
+        }
+
         this.frameCount++;
 
         if (now - this.lastTime >= 1000) {
@@ -33,17 +41,17 @@ window.GameSensor = {
             this.frameCount = 0;
             this.lastTime = now;
 
-            // 🚨 BÁO ĐỘNG ĐỎ: Nếu FPS tụt dưới 25 trên Mobile, kích hoạt Giảm Tải!
-            if (window.isMobile && this.fps < 25) {
+            // 🚨 BÁO ĐỘNG ĐỎ: Ép ngưỡng xuống 20 FPS cho đỡ nhạy
+            if (window.isMobile && this.fps < 20) {
                 if (!this.isOverloaded) {
                     this.isOverloaded = true;
-                    console.warn("⚠️ CẢM BIẾN: Quá tải! Bật khiên sinh tồn (Giảm tầm nhìn)!");
+                    console.warn("⚠️ CẢM BIẾN: Quá tải! Đang tàng hình quái ở xa...");
                     this.emergencyCleanUp(true);
                 }
-            } else if (this.fps >= 40) {
+            } else if (this.fps >= 35) {
                 if (this.isOverloaded) {
                     this.isOverloaded = false; 
-                    console.log("🟢 CẢM BIẾN: Máy mát, phục hồi tầm nhìn!");
+                    console.log("🟢 CẢM BIẾN: Máy mát, hiển thị lại toàn bộ!");
                     this.emergencyCleanUp(false);
                 }
             }
@@ -52,62 +60,41 @@ window.GameSensor = {
 
     // Giao thức dọn dẹp khẩn cấp khi tràn RAM
     emergencyCleanUp: function (isDanger) {
-        if (!window.scene || !window.camera) return;
-        
+        if (!window.scene) return;
         let p = window.playerModel;
         if (!p) return;
 
-        // TUYỆT ĐỐI KHÔNG CHẠM VÀO THÔNG SỐ ĐỔ BÓNG VÀ PIXEL RATIO ĐỂ CHỐNG CRASH IOS!
+        // Bỏ lệnh camera.far để không bị đen màn hình. Chỉ dùng logic tàng hình Meshes.
+        
+        let maxDist = isDanger ? 800 : 2000; // Nguy hiểm thì chỉ vẽ trong 800m, An toàn thì vẽ tới 2000m
 
-        if (isDanger) {
-            // 1. KÉO MÀN SƯƠNG LẠI GẦN (CỰC KỲ AN TOÀN CHO GPU)
-            // Camera chỉ nhìn được xa 600m, xa hơn sẽ bị tàng hình lập tức!
-            window.camera.far = 600;
-            window.camera.updateProjectionMatrix();
-
-            // 2. TÀNG HÌNH QUÁI VÀ NGƯỜI CHƠI BẰNG LOGIC ĐỂ TRÁNH QUÉT THỪA
-            let maxDist = 500; 
-
-            if (typeof window.danhSachQuaiVat !== 'undefined') {
-                window.danhSachQuaiVat.forEach(quai => {
-                    if (quai.mesh && quai.mesh.position.distanceTo(p.position) > maxDist) {
-                        quai.mesh.visible = false;
-                        if (quai.tagEl) quai.tagEl.style.display = 'none';
-                    }
-                });
-            }
-
-            if (typeof window.remotePlayers !== 'undefined') {
-                for (let id in window.remotePlayers) {
-                    let rp = window.remotePlayers[id];
-                    if (rp.mesh && rp.mesh.position.distanceTo(p.position) > maxDist) {
-                        rp.mesh.visible = false;
-                        if (rp.tag) rp.tag.style.display = 'none';
+        // 💥 DỌN DẸP QUÁI VẬT TẦM XA
+        if (typeof window.danhSachQuaiVat !== 'undefined') {
+            window.danhSachQuaiVat.forEach(quai => {
+                if (quai && quai.mesh && typeof quai.isDead !== 'undefined' && !quai.isDead) {
+                    let dist = quai.mesh.position.distanceTo(p.position);
+                    let shouldShow = dist <= maxDist;
+                    
+                    // Chỉ cập nhật nếu trạng thái hiện tại khác với trạng thái mong muốn (Tránh gọi lệnh dư thừa gây lag)
+                    if (quai.mesh.visible !== shouldShow) {
+                        quai.mesh.visible = shouldShow;
+                        if (quai.tagEl) quai.tagEl.style.display = shouldShow ? 'block' : 'none';
                     }
                 }
-            }
-            
-        } else {
-            // 🌟 PHỤC HỒI NHÃN LỰC KHI MÁY MẠNH LẠI
-            window.camera.far = 2000; 
-            window.camera.updateProjectionMatrix();
-            
-            let safeDist = 1500; 
-            if (typeof window.danhSachQuaiVat !== 'undefined') {
-                window.danhSachQuaiVat.forEach(quai => {
-                    if (quai.mesh && !quai.isDead && quai.mesh.position.distanceTo(p.position) <= safeDist) {
-                        quai.mesh.visible = true;
-                        if (quai.tagEl) quai.tagEl.style.display = 'block';
-                    }
-                });
-            }
+            });
+        }
 
-            if (typeof window.remotePlayers !== 'undefined') {
-                for (let id in window.remotePlayers) {
-                    let rp = window.remotePlayers[id];
-                    if (rp.mesh && rp.mesh.position.distanceTo(p.position) <= safeDist) {
-                        rp.mesh.visible = true;
-                        if (rp.tag) rp.tag.style.display = 'block';
+        // 💥 DỌN DẸP NGƯỜI CHƠI KHÁC Ở TẦM XA
+        if (typeof window.remotePlayers !== 'undefined') {
+            for (let id in window.remotePlayers) {
+                let rp = window.remotePlayers[id];
+                if (rp && rp.mesh) {
+                    let dist = rp.mesh.position.distanceTo(p.position);
+                    let shouldShow = dist <= maxDist;
+                    
+                    if (rp.mesh.visible !== shouldShow) {
+                        rp.mesh.visible = shouldShow;
+                        if (rp.tag) rp.tag.style.display = shouldShow ? 'block' : 'none';
                     }
                 }
             }
