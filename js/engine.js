@@ -2153,6 +2153,10 @@ const bayHud = document.createElement('div');
 bayHud.id = 'bay-hud'; bayHud.style.cssText = 'position:fixed; bottom:20px; right:20px; background:rgba(0,15,30,0.8); border:2px solid #00ffff; box-shadow:0 0 10px #00ffff; padding:10px 15px; color:#00ffff; font-family:monospace; font-size:16px; border-radius:8px; z-index:9999; pointer-events:none; text-shadow:0 0 5px #00ffff;';
 document.body.appendChild(bayHud);
 
+
+
+
+
 window.lastFrameTime = performance.now();
 window.mainGameLoopId = null; // 🛑 BỔ SUNG: Khai báo biến khóa vòng lặp
 
@@ -2170,8 +2174,17 @@ function animate() {
         window.lastFrameTime = now - (elapsed % 33);
     }
     window.CPU_START_TIME = performance.now();
+
+    // ========================================================
+    // 🧠 BƯỚC 2: KÍCH HOẠT CẢM BIẾN (ĐO FPS SAU KHI ĐÃ BỊ KHÓA)
+    // Nằm ở vị trí này thì Cảm biến sẽ hoạt động chuẩn xác 100%!
+    // ========================================================
+    if (window.GameSensor) window.GameSensor.checkHealth();
+
     // 🌟 KIỂM TRA ĐẠP CHÂN VÀO SAFE ZONE & CỔNG DỊCH CHUYỂN
     if (typeof playerModel !== 'undefined' && playerModel) {
+
+
         let inSafe = false;
         if (typeof window.kiemTraSafeZone === 'function') {
             inSafe = window.kiemTraSafeZone(playerModel.position);
