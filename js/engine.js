@@ -15,7 +15,7 @@ window.renderer = new THREE.WebGLRenderer({
     powerPreference: "high-performance"
 });
 // ========================================================
-// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN V3 - CÓ KIM BÀI MIỄN TỬ KHI LOAD GAME)
+// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN V4 - TỐI ƯU CỰC ĐẠI MOBILE)
 // ========================================================
 window.GameSensor = {
     fps: 60,
@@ -31,7 +31,7 @@ window.GameSensor = {
         // 🛑 KIM BÀI MIỄN TỬ: 10 giây đầu tiên đang load Map, cấm Cảm biến hoạt động!
         if (now - this.startTime < 10000) {
             this.lastTime = now;
-            return; 
+            return;
         }
 
         this.frameCount++;
@@ -45,12 +45,12 @@ window.GameSensor = {
             if (window.isMobile && this.fps < 20) {
                 if (!this.isOverloaded) {
                     this.isOverloaded = true;
-                    console.warn("⚠️ CẢM BIẾN: Quá tải! Đang tàng hình quái ở xa...");
+                    console.warn("⚠️ CẢM BIẾN: Quá tải! Đang tàng hình quái ở xa và dọn rác trang trí...");
                     this.emergencyCleanUp(true);
                 }
             } else if (this.fps >= 35) {
                 if (this.isOverloaded) {
-                    this.isOverloaded = false; 
+                    this.isOverloaded = false;
                     console.log("🟢 CẢM BIẾN: Máy mát, hiển thị lại toàn bộ!");
                     this.emergencyCleanUp(false);
                 }
@@ -64,18 +64,21 @@ window.GameSensor = {
         let p = window.playerModel;
         if (!p) return;
 
-        // Bỏ lệnh camera.far để không bị đen màn hình. Chỉ dùng logic tàng hình Meshes.
-        
-        let maxDist = isDanger ? 800 : 2000; // Nguy hiểm thì chỉ vẽ trong 800m, An toàn thì vẽ tới 2000m
+        let maxDist = isDanger ? 800 : 2000;
 
-        // 💥 DỌN DẸP QUÁI VẬT TẦM XA
+        // 💥 DỌN DẸP QUÁI VẬT & TÀNG HÌNH RÁC TRANG TRÍ (DÀNH CHO MOBILE)
         if (typeof window.danhSachQuaiVat !== 'undefined') {
             window.danhSachQuaiVat.forEach(quai => {
                 if (quai && quai.mesh && typeof quai.isDead !== 'undefined' && !quai.isDead) {
                     let dist = quai.mesh.position.distanceTo(p.position);
                     let shouldShow = dist <= maxDist;
-                    
-                    // Chỉ cập nhật nếu trạng thái hiện tại khác với trạng thái mong muốn (Tránh gọi lệnh dư thừa gây lag)
+
+                    // 🌟 LƯỚI LỌC TRANG TRÍ: NẾU ĐANG DÙNG MOBILE -> ẨN LUÔN BỌN LƯỢN LỜ CHO NHẸ MÁY!
+                    if (window.isMobile && quai.class_code === 'TRANG_TRI') {
+                        shouldShow = false; // Phán án tử hình (Tàng hình vĩnh viễn trên Mobile)
+                    }
+
+                    // Chỉ cập nhật nếu trạng thái hiện tại khác với trạng thái mong muốn
                     if (quai.mesh.visible !== shouldShow) {
                         quai.mesh.visible = shouldShow;
                         if (quai.tagEl) quai.tagEl.style.display = shouldShow ? 'block' : 'none';
@@ -91,7 +94,7 @@ window.GameSensor = {
                 if (rp && rp.mesh) {
                     let dist = rp.mesh.position.distanceTo(p.position);
                     let shouldShow = dist <= maxDist;
-                    
+
                     if (rp.mesh.visible !== shouldShow) {
                         rp.mesh.visible = shouldShow;
                         if (rp.tag) rp.tag.style.display = shouldShow ? 'block' : 'none';
