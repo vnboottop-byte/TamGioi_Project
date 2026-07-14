@@ -1268,92 +1268,124 @@ function hoanTatTaiModels() {
     if (window.HePhaiHienTai && typeof window.HePhaiHienTai.khoiTao === 'function') window.HePhaiHienTai.khoiTao();
 
     // ==========================================
-    // 🌟 BẢN VÁ LOADING THỦY LỰC: CHẠY TỪ TỪ THEO Ý SẾP
-    // ==========================================
-    let manHinhLoading = document.getElementById('manHinhLoadingGame');
-    let thanhTienTrinh = document.getElementById('thanhTienTrinhGame');
-    let textTienTrinh = document.getElementById('textTienTrinhGame');
-    let soPhanTram = document.getElementById('soPhanTramLoading'); // 🌟 KHAI BÁO SỐ %
+        // 🌟 BẢN VÁ LOADING THỦY LỰC & CHỐNG TRÀN VRAM MAP
+        // ==========================================
+        let manHinhLoading = document.getElementById('manHinhLoadingGame');
+        let thanhTienTrinh = document.getElementById('thanhTienTrinhGame');
+        let textTienTrinh = document.getElementById('textTienTrinhGame');
+        let soPhanTram = document.getElementById('soPhanTramLoading'); 
 
-    window.loadTatCaMapTuSQL();
-    window.loadSafeZonesVaTeleports();
+        window.loadTatCaMapTuSQL();
+        window.loadSafeZonesVaTeleports();
 
-    let thoiGianChoInit = 0;
-    let phanTramAo = 0; // 🌟 Biến chạy tịnh tiến
+        // 🛡️ TƯỜNG LỬA CHỐNG TẢI CHỒNG CHẤT BẢN ĐỒ (MAP CHUNK)
+        window.dangBanTaiMap = false;
+        
+        // 🌟 TÁCH RADAR MAP RA KHỎI VÒNG LẶP LOADING ĐỂ NÓ CHẠY VĨNH VIỄN SUỐT GAME
+        setInterval(() => {
+            if (!window.THONG_TIN_CAC_MAP || !window.playerModel) return;
 
-    let vongLapChoVaoGame = setInterval(() => {
-        thoiGianChoInit += 500;
+            let pPos = window.playerModel.position;
+            // 🌟 BÓP TẦM NHÌN: Mobile chỉ tải Map trong 300m, xa hơn 500m thì thiêu rụi!
+            let rLoad = window.isMobile ? 300 : 2000; 
+            let rUnload = window.isMobile ? 500 : 3000;
 
-        // --- A. THUẬT TOÁN CHẠY % GIẢ LẬP (SMOOTH PROGRESS) ---
-        if (thoiGianChoInit <= 10000) {
-            // 🚀 Giây 0 đến 10: Tăng tốc 6% mỗi giây (3% mỗi nhịp check)
-            phanTramAo += 3;
-            if (textTienTrinh) textTienTrinh.innerText = "Đang kết nối Vũ Trụ và Đúc Khuôn Vật Lý (BVH)...";
-        } else {
-            // 🐢 Giây 11 đến 30: Chạy lừ đừ mỗi nhịp 1% cho người chơi sốt ruột chơi
-            phanTramAo += 1;
-            if (textTienTrinh) textTienTrinh.innerText = "Đang uốn nắn Địa hình và Ổn định Không gian...";
-        }
-
-        // Khóa ở 99%, không cho lên 100% nếu chưa xong thật
-        if (phanTramAo > 99) phanTramAo = 99;
-        if (thanhTienTrinh) thanhTienTrinh.style.width = phanTramAo + '%';
-        if (soPhanTram) soPhanTram.innerText = phanTramAo + '%'; // 🌟 ÉP SỐ NHẢY THEO THANH!
-
-        // --- B. KIỂM TRA TRẠNG THÁI MAP THẬT ---
-        if (!window.daNhanDanhSachMap) return; // Đợi SQL trả data
-
-
-        // 🌟 TỐI ƯU MOBILE RAM: Chống tải song song nhiều Map cùng lúc gây nổ RAM (OOM)
-        let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
-
-        if (window.THONG_TIN_CAC_MAP && !coMapDangLoad) {
-            // Chỉ Load đúng 1 Map duy nhất tại 1 thời điểm! (Tải Tuần Tự)
-            let rLoad = window.isMobile ? 3000 : 10000; // Khớp với bán kính Radar Mobile mới
-            let mapCanLoad = window.THONG_TIN_CAC_MAP.find(mapData => {
+            // 1. DỌN RÁC (UNLOAD MAP CŨ)
+            window.THONG_TIN_CAC_MAP.forEach(mapData => {
                 let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
-                return playerModel.position.distanceTo(mPos) < rLoad && !mapData.isLoaded && !mapData.isLoading;
+                let dist = pPos.distanceTo(mPos);
+
+                if (dist > rUnload && mapData.isLoaded && mapData.mesh) {
+                    if (typeof window.donRac3D === 'function') window.donRac3D(mapData.mesh);
+                    else window.scene.remove(mapData.mesh);
+                    
+                    mapData.isLoaded = false;
+                    mapData.isLoading = false;
+                    mapData.mesh = null;
+                    console.log("🧹 Đã dọn rác giải phóng RAM Map: " + mapData.id);
+                }
             });
 
-            if (mapCanLoad) {
-                window.xuLyLoadMapChunk(mapCanLoad);
-            }
-        }
+            // 2. TẢI MAP MỚI (STRICT QUEUE - 1 MAP MỖI LẦN)
+            let coMapDangLoad = window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
+            
+            if (!coMapDangLoad && !window.dangBanTaiMap) {
+                let mapCanLoad = window.THONG_TIN_CAC_MAP.find(mapData => {
+                    let mPos = new THREE.Vector3(parseFloat(mapData.pos_x), parseFloat(mapData.pos_y), parseFloat(mapData.pos_z));
+                    return pPos.distanceTo(mPos) <= rLoad && !mapData.isLoaded && !mapData.isLoading;
+                });
 
-        let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
-        let vungDatNayCoMap = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0;
+                if (mapCanLoad) {
+                    window.dangBanTaiMap = true; // Khóa mõm hệ thống
+                    mapCanLoad.isLoading = true; // Cắm cờ lập tức
 
-        let daXongXuoiThatSu = false;
-        if (vungDatNayCoMap) {
-            // Xong khi: Đã đúc ít nhất 1 map và không còn cái nào đang hì hục load
-            if (!coMapDangLoad && coMapDaLoad) daXongXuoiThatSu = true;
-        } else {
-            daXongXuoiThatSu = true; // Map trống (Bắc Cực/Nam Cực) thì cho vào luôn
-        }
-
-        // --- C. CHỐT HẠ: NHẢY VỌT LÊN 100% ---
-        if (daXongXuoiThatSu || thoiGianChoInit >= 30000) {
-            clearInterval(vongLapChoVaoGame);
-
-            if (thanhTienTrinh) thanhTienTrinh.style.width = '100%';
-            if (soPhanTram) soPhanTram.innerText = '100%'; // 🌟 CHỐT SỐ 100%
-            if (textTienTrinh) textTienTrinh.innerText = "THẾ GIỚI ĐÃ SẴN SÀNG! VÀO THÔI SẾP!";
-            console.log("🟢 [LOADING] Thành công! Đã mở cửa thiên đình.");
-
-            setTimeout(() => {
-                if (manHinhLoading) {
-                    manHinhLoading.style.opacity = '0';
+                    // Trì hoãn 200ms để CPU xả hơi trước khi Parse GLB nặng
                     setTimeout(() => {
-                        manHinhLoading.style.display = 'none';
-                        // 🌟 TỐI ƯU MOBILE RAM: Vắt kiệt bộ nhớ đệm rác sau khi vào game!
-                        if (window.isMobile) THREE.Cache.clear();
-                    }, 1500);
+                        if (typeof window.xuLyLoadMapChunk === 'function') {
+                            window.xuLyLoadMapChunk(mapCanLoad);
+                            // Chỉ nhả khóa radar sau 3 giây để đảm bảo Map trước đã kịp lên hình
+                            setTimeout(() => { window.dangBanTaiMap = false; }, 3000);
+                        } else {
+                            window.dangBanTaiMap = false;
+                        }
+                    }, 200);
                 }
-            }, 500);
-        }
+            }
+        }, 1000); // 1 Giây quét 1 lần, tuyệt đối không gây giật lag!
 
+        let thoiGianChoInit = 0;
+        let phanTramAo = 0; 
 
-    }, 500);
+        let vongLapChoVaoGame = setInterval(() => {
+            thoiGianChoInit += 500;
+
+            // --- A. THUẬT TOÁN CHẠY % GIẢ LẬP (SMOOTH PROGRESS) ---
+            if (thoiGianChoInit <= 10000) {
+                phanTramAo += 3;
+                if (textTienTrinh) textTienTrinh.innerText = "Đang kết nối Vũ Trụ và Đúc Khuôn Vật Lý (BVH)...";
+            } else {
+                phanTramAo += 1;
+                if (textTienTrinh) textTienTrinh.innerText = "Đang uốn nắn Địa hình và Ổn định Không gian...";
+            }
+
+            if (phanTramAo > 99) phanTramAo = 99;
+            if (thanhTienTrinh) thanhTienTrinh.style.width = phanTramAo + '%';
+            if (soPhanTram) soPhanTram.innerText = phanTramAo + '%'; 
+
+            // --- B. KIỂM TRA TRẠNG THÁI MAP THẬT ---
+            if (!window.daNhanDanhSachMap) return;
+
+            let coMapDangLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoading);
+            let coMapDaLoad = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.some(m => m.isLoaded);
+            let vungDatNayCoMap = window.THONG_TIN_CAC_MAP && window.THONG_TIN_CAC_MAP.length > 0;
+
+            let daXongXuoiThatSu = false;
+            if (vungDatNayCoMap) {
+                if (!coMapDangLoad && coMapDaLoad) daXongXuoiThatSu = true;
+            } else {
+                daXongXuoiThatSu = true; 
+            }
+
+            // --- C. CHỐT HẠ: NHẢY VỌT LÊN 100% ---
+            if (daXongXuoiThatSu || thoiGianChoInit >= 30000) {
+                clearInterval(vongLapChoVaoGame);
+
+                if (thanhTienTrinh) thanhTienTrinh.style.width = '100%';
+                if (soPhanTram) soPhanTram.innerText = '100%'; 
+                if (textTienTrinh) textTienTrinh.innerText = "THẾ GIỚI ĐÃ SẴN SÀNG! VÀO THÔI SẾP!";
+                console.log("🟢 [LOADING] Thành công! Đã mở cửa thiên đình.");
+
+                setTimeout(() => {
+                    if (manHinhLoading) {
+                        manHinhLoading.style.opacity = '0';
+                        setTimeout(() => {
+                            manHinhLoading.style.display = 'none';
+                            if (window.isMobile) THREE.Cache.clear();
+                        }, 1500);
+                    }
+                }, 500);
+            }
+        }, 500);
 }
 
 function cayMatAdmin(modelGoc) {
