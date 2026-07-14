@@ -740,6 +740,10 @@ camera.position.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 1, TOA_DO_SPAWN.z + 85);
 controls.target.set(TOA_DO_SPAWN.x, TOA_DO_SPAWN.y + 2, TOA_DO_SPAWN.z);
 controls.update();
 
+
+
+
+
 const loader = new THREE.GLTFLoader();
 
 // Cỗ máy nén Xương & Đỉnh (Draco)
@@ -747,8 +751,64 @@ const dracoLoader = new THREE.DRACOLoader();
 dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.4.3/');
 loader.setDRACOLoader(dracoLoader);
 
+// ========================================================
+// ⚔️ MÁY CHÉM VRAM TOÀN CẦU (BẢO VỆ IOS SAFARI TUYỆT ĐỐI)
+// ========================================================
+const originalGLTFLoad = THREE.GLTFLoader.prototype.load;
+THREE.GLTFLoader.prototype.load = function (url, onLoad, onProgress, onError) {
+    originalGLTFLoad.call(this, url, function (gltf) {
+        // 🎯 ĐÁNH CHẶN: Chỉ kích hoạt cỗ máy chém khi chơi trên Điện thoại
+        if (window.isMobile && gltf.scene) {
+            gltf.scene.traverse(function (child) {
+                if (child.isMesh && child.material) {
+                    let mats = Array.isArray(child.material) ? child.material : [child.material];
+                    mats.forEach(mat => {
+                        if (!mat) return;
+
+                        // 1. 🗑️ CHÉM BỎ 75% DUNG LƯỢNG RÁC: 
+                        // Mobile không cần nhìn độ lồi lõm (Normal), độ nhám (Roughness), kim loại (Metalness)
+                        let cacMapVoDung = ['normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'bumpMap', 'displacementMap'];
+                        cacMapVoDung.forEach(mapType => {
+                            if (mat[mapType]) {
+                                mat[mapType].dispose(); // Vứt thẳng vào sọt rác GPU
+                                mat[mapType] = null;
+                            }
+                        });
+
+                        // 2. ⚡ ÉP TẮT MIPMAP TỐI ĐA (Tiết kiệm thêm 33% VRAM cho hình ảnh chính)
+                        if (mat.map) {
+                            mat.map.generateMipmaps = false;
+                            mat.map.minFilter = THREE.LinearFilter;
+                            mat.map.anisotropy = 1;
+                            mat.map.needsUpdate = true;
+                        }
+                        if (mat.emissiveMap) {
+                            mat.emissiveMap.generateMipmaps = false;
+                            mat.emissiveMap.minFilter = THREE.LinearFilter;
+                            mat.emissiveMap.anisotropy = 1;
+                            mat.emissiveMap.needsUpdate = true;
+                        }
+
+                        // 3. ❄️ LÀM MÁT CHIP ĐỒ HỌA (Tắt tính toán ánh sáng PBR)
+                        if (mat.isMeshStandardMaterial || mat.isMeshPhysicalMaterial) {
+                            mat.roughness = 1.0;
+                            mat.metalness = 0.0;
+                            mat.envMapIntensity = 0.0;
+                        }
+                    });
+                }
+            });
+        }
+        // Trả Hàng (đã được vặt sạch rác) cho Game load tiếp
+        if (onLoad) onLoad(gltf);
+    }, onProgress, onError);
+};
+
 // Game sẽ tự động nhận diện và giải nén siêu tốc ảnh WebP mà không cần KTX2Loader
 window.loaderSieuToc = loader;
+
+
+
 
 window.mixerNhanVatPhu = null;
 // 🌟 TẠO BIẾN MIXER ĐỂ CHẠY ANIMATION MÂY
