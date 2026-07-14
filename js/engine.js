@@ -9,116 +9,40 @@ if (window.ZONE_ID && window.ZONE_ID !== 'TRUNG_CHAU') {
 } else {
     window.KIEU_TRONG_LUC = 'CAU';
 }
+// ========================================================
+// 🛡️ LÕI ĐỒ HỌA BỌC THÉP (CHỐNG CRASH KHI XOAY CAMERA TRÊN IOS)
+// ========================================================
 window.renderer = new THREE.WebGLRenderer({
     antialias: !window.isMobile,
     logarithmicDepthBuffer: !window.isMobile,
-    powerPreference: "high-performance"
+    powerPreference: "high-performance",
+    precision: window.isMobile ? "mediump" : "highp" // 🌟 Ép giảm một nửa RAM màu sắc trên Mobile
 });
-// ========================================================
-// 🧠 BỘ CẢM BIẾN HIỆU NĂNG SINH TỒN (BẢN V4 - TỐI ƯU CỰC ĐẠI MOBILE)
-// ========================================================
-window.GameSensor = {
-    fps: 60,
-    lastTime: performance.now(),
-    frameCount: 0,
-    isOverloaded: false,
-    startTime: performance.now(), // 🌟 Ghi nhớ thời điểm Sếp vừa vào game
 
-    // Hàm quét sức khỏe điện thoại mỗi giây
-    checkHealth: function () {
-        let now = performance.now();
+// 🌟 PHỤC HỒI NHỮNG DÒNG QUAN TRỌNG ĐỂ GAME HIỂN THỊ TRỞ LẠI
+window.renderer.setSize(window.innerWidth, window.innerHeight);
+window.renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
 
-        // 🛑 KIM BÀI MIỄN TỬ: 10 giây đầu tiên đang load Map, cấm Cảm biến hoạt động!
-        if (now - this.startTime < 10000) {
-            this.lastTime = now;
-            return;
-        }
+// 🌟 KHÓA BÓNG ĐỔ TRÊN MOBILE ĐỂ TRÁNH CRASH GPU
+window.renderer.shadowMap.enabled = !window.isMobile;
+if (!window.isMobile) {
+    window.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+}
 
-        this.frameCount++;
+window.renderer.outputEncoding = THREE.sRGBEncoding;
+window.renderer.toneMapping = THREE.LinearToneMapping;
+window.renderer.toneMappingExposure = 1.0;
+document.body.appendChild(window.renderer.domElement);
 
-        if (now - this.lastTime >= 1000) {
-            this.fps = this.frameCount;
-            this.frameCount = 0;
-            this.lastTime = now;
-
-            // 🚨 BÁO ĐỘNG ĐỎ: Ép ngưỡng xuống 20 FPS cho đỡ nhạy
-            if (window.isMobile && this.fps < 20) {
-                if (!this.isOverloaded) {
-                    this.isOverloaded = true;
-                    console.warn("⚠️ CẢM BIẾN: Quá tải! Đang tàng hình quái ở xa và dọn rác trang trí...");
-                    this.emergencyCleanUp(true);
-                }
-            } else if (this.fps >= 35) {
-                if (this.isOverloaded) {
-                    this.isOverloaded = false;
-                    console.log("🟢 CẢM BIẾN: Máy mát, hiển thị lại toàn bộ!");
-                    this.emergencyCleanUp(false);
-                }
-            }
-        }
-    },
-
-    // Giao thức dọn dẹp khẩn cấp khi tràn RAM
-    emergencyCleanUp: function (isDanger) {
-        if (!window.scene) return;
-        let p = window.playerModel;
-        if (!p) return;
-
-        let maxDist = isDanger ? 800 : 2000;
-
-        // 💥 DỌN DẸP QUÁI VẬT & TÀNG HÌNH RÁC TRANG TRÍ (DÀNH CHO MOBILE)
-        if (typeof window.danhSachQuaiVat !== 'undefined') {
-            window.danhSachQuaiVat.forEach(quai => {
-                if (quai && quai.mesh && typeof quai.isDead !== 'undefined' && !quai.isDead) {
-                    let dist = quai.mesh.position.distanceTo(p.position);
-                    let shouldShow = dist <= maxDist;
-
-                    // 🌟 LƯỚI LỌC TRANG TRÍ: NẾU ĐANG DÙNG MOBILE -> ẨN LUÔN BỌN LƯỢN LỜ CHO NHẸ MÁY!
-                    if (window.isMobile && quai.class_code === 'TRANG_TRI') {
-                        shouldShow = false; // Phán án tử hình (Tàng hình vĩnh viễn trên Mobile)
-                    }
-
-                    // Chỉ cập nhật nếu trạng thái hiện tại khác với trạng thái mong muốn
-                    if (quai.mesh.visible !== shouldShow) {
-                        quai.mesh.visible = shouldShow;
-                        if (quai.tagEl) quai.tagEl.style.display = shouldShow ? 'block' : 'none';
-                    }
-                }
-            });
-        }
-
-        // 💥 DỌN DẸP NGƯỜI CHƠI KHÁC Ở TẦM XA
-        if (typeof window.remotePlayers !== 'undefined') {
-            for (let id in window.remotePlayers) {
-                let rp = window.remotePlayers[id];
-                if (rp && rp.mesh) {
-                    let dist = rp.mesh.position.distanceTo(p.position);
-                    let shouldShow = dist <= maxDist;
-
-                    if (rp.mesh.visible !== shouldShow) {
-                        rp.mesh.visible = shouldShow;
-                        if (rp.tag) rp.tag.style.display = shouldShow ? 'block' : 'none';
-                    }
-                }
-            }
-        }
-    }
-};
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.isMobile ? 1.0 : window.devicePixelRatio);
-renderer.shadowMap.enabled = !window.isMobile;
-renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.toneMapping = THREE.LinearToneMapping;
-renderer.toneMappingExposure = 1.0;
-document.body.appendChild(renderer.domElement);
-
-if (typeof THREE.RoomEnvironment !== 'undefined') {
-    const pmremGenerator = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+// 🌟 TẮT VĨNH VIỄN VÒM PHẢN QUANG TRÊN MOBILE (KẺ THÙ SỐ 1 GÂY CRASH KHI XOAY GÓC NHÌN)
+if (!window.isMobile && typeof THREE.RoomEnvironment !== 'undefined') {
+    const pmremGenerator = new THREE.PMREMGenerator(window.renderer);
+    window.scene.environment = pmremGenerator.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
     pmremGenerator.dispose();
 }
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+window.scene.add(new THREE.AmbientLight(0xffffff, 0.3));
+
 window.xuLyCaiChetNhanVat = function (killerId = "Không xác định") {
     if (window.isDead) return;
     window.isDead = true;
