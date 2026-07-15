@@ -3654,32 +3654,47 @@ window.huySetSafeZone = function () {
 };
 
 // 3. Hàm Chốt Lưu
-window.luuSafeZoneMoi = function () {
+window.luuSafeZoneMoi = function() {
     if (!window.playerModel) return;
     let p = window.playerModel;
-    let r = window.safeZoneRadius; // 🌟 Trích xuất biến đo đạc mới
-    let name = prompt("Nhập tên cho Vùng An Toàn này:", "Safe Zone " + Math.floor(Math.random() * 1000));
+    let r = window.safeZoneRadius; 
+    let name = prompt("Nhập tên cho Vùng An Toàn này:", "Safe Zone " + Math.floor(Math.random()*1000));
     if (!name) return;
+
+    // 🌟 BẢN VÁ LOGIC: GÌM TÂM SAFE ZONE CẮM SÁT MẶT ĐẤT
+    let tamSafeZone = new THREE.Vector3();
+    if (window.KIEU_MAP_HIENTAI === 'CAU') {
+        // Áp dụng cho Map Cầu: Giữ nguyên góc hướng, ép chiều dài (độ cao) về lại mặt đất
+        tamSafeZone.copy(p.position).normalize().multiplyScalar(window.szGocMatDat);
+    } else {
+        // Áp dụng cho Map Phẳng: Ép thẳng trục Y về lại mặt đất lúc vừa bấm nút
+        tamSafeZone.set(p.position.x, window.szGocMatDat, p.position.z);
+    }
 
     let fd = new FormData();
     fd.append('name', name);
-    fd.append('pos_x', p.position.x);
-    fd.append('pos_y', p.position.y);
-    fd.append('pos_z', p.position.z);
     fd.append('radius', r);
     fd.append('zone_id', window.ZONE_ID || 'TRUNG_CHAU');
+    
+    // 🌟 CHỐT BIẾN TỌA ĐỘ: Bơm luôn cả 2 kiểu x,y,z và pos_x,y,z để đảm bảo PHP nhận được 100%
+    fd.append('x', tamSafeZone.x);
+    fd.append('y', tamSafeZone.y);
+    fd.append('z', tamSafeZone.z);
+    fd.append('pos_x', tamSafeZone.x);
+    fd.append('pos_y', tamSafeZone.y);
+    fd.append('pos_z', tamSafeZone.z);
 
     fetch('api/save_safezone.php', { method: 'POST', body: fd })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                if (typeof window.hienThongBaoGame === 'function') window.hienThongBaoGame("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!", true);
-                else alert("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!");
-                window.huySetSafeZone();
-            } else {
-                alert("❌ Lỗi: " + data.msg);
-            }
-        }).catch(e => alert("❌ Lỗi mạng!"));
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            if(typeof window.hienThongBaoGame === 'function') window.hienThongBaoGame("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!", true);
+            else alert("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!");
+            window.huySetSafeZone(); 
+        } else {
+            alert("❌ Lỗi: " + data.msg);
+        }
+    }).catch(e => alert("❌ Lỗi mạng!"));
 };
 
 
