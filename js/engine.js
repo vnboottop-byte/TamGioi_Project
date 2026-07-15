@@ -3564,91 +3564,125 @@ setInterval(() => {
     }, 1000);
 })();
 
-// =======================================================
-// 🌟 HỆ THỐNG ĐO ĐẠC & VẼ SAFE ZONE CỦA SẾP
-// =======================================================
-window.isSettingSafeZone = false;
-window.vongTronSafeZone = null;
-window.banKinhĐangĐo = 100;
-window.toaDoTamĐangĐo = new THREE.Vector3();
 
-window.DANH_SACH_SAFE_ZONE = []; // Danh sách chuẩn
+
+
+// =========================================================================
+// 🛡️ HỆ THỐNG ĐO ĐẠC & VẼ SAFE ZONE CỦA SẾP (BẢN VÁ ỐNG TRỤ 3D)
+// =========================================================================
+window.isSettingSafeZone = false;
+window.adminSafeZoneMesh = null; // Thay thế cho vongTronSafeZone cũ
+window.safeZoneRadius = 100;
+window.DANH_SACH_SAFE_ZONE = [];
 window.IS_IN_SAFE_ZONE = false;
 
-// 1. Kích hoạt vẽ vòng tròn khi Sếp bấm nút
+// 1. Kích hoạt vẽ ống trụ khi Sếp bấm nút
 window.batDauSetSafeZone = function () {
-    if (!window.vongTronSafeZone) {
-        // Tạo một vòng sáng Neon màu lục lam dưới đất
-        let geo = new THREE.RingGeometry(0.95, 1, 64);
-        let mat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, side: THREE.DoubleSide, transparent: true, opacity: 0.8 });
-        window.vongTronSafeZone = new THREE.Mesh(geo, mat);
-        scene.add(window.vongTronSafeZone);
-    }
-    window.vongTronSafeZone.visible = true;
-    window.isSettingSafeZone = true;
     document.getElementById('panelSaveSafeZone').style.display = 'block';
-    document.getElementById('adminSubMenu').style.display = 'none';
+    document.getElementById('adminSubMenu').style.display = 'none'; // 🌟 Giữ lại thao tác ẩn menu của Sếp
+    window.isSettingSafeZone = true;
+    window.safeZoneRadius = 10;
+
+    let p = window.playerModel;
+    if (!p) return;
+
+    // Dọn dẹp tàn dư cũ nếu có
+    if (window.adminSafeZoneMesh) {
+        scene.remove(window.adminSafeZoneMesh);
+        if (window.adminSafeZoneMesh.geometry) window.adminSafeZoneMesh.geometry.dispose();
+    }
+
+    // 🌟 CẢM BIẾN MÔI TRƯỜNG & CHỐT ĐIỂM SỐ 0
+    window.KIEU_MAP_HIENTAI = (window.KIEU_TRONG_LUC === 'CAU' || p.position.length() > 5000) ? 'CAU' : 'PHANG';
+    window.szGocMatDat = (window.KIEU_MAP_HIENTAI === 'CAU') ? p.position.length() : p.position.y;
+
+    // 🌟 VẼ ỐNG HÌNH TRỤ CAO 5000 MÉT
+    let chieuCaoOng = 5000;
+    let geo = new THREE.CylinderGeometry(10, 10, chieuCaoOng, 32, 1, true); // true = Ống rỗng ruột
+    let mat = new THREE.MeshBasicMaterial({
+        color: 0x00ffcc,        // Màu xanh Neon nguyên bản của Sếp
+        transparent: true,
+        opacity: 0.3,           // Mờ 30% để nhìn xuyên thấu cảnh vật
+        side: THREE.DoubleSide,
+        depthWrite: false       // Lướt qua mọi chướng ngại vật, không bị đứt gãy
+    });
+
+    window.adminSafeZoneMesh = new THREE.Mesh(geo, mat);
+    scene.add(window.adminSafeZoneMesh);
+
+    // 🌟 ĐỘNG CƠ ĐO BÁN KÍNH LIÊN TỤC
+    if (window.szUpdateInterval) clearInterval(window.szUpdateInterval);
+    window.szUpdateInterval = setInterval(() => {
+        if (!window.isSettingSafeZone || !window.playerModel || !window.adminSafeZoneMesh) return;
+
+        let p = window.playerModel;
+        window.adminSafeZoneMesh.position.copy(p.position);
+
+        let banKinhMoi = 10;
+
+        if (window.KIEU_MAP_HIENTAI === 'CAU') {
+            let huongTam = p.position.clone().normalize();
+            window.adminSafeZoneMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), huongTam);
+            banKinhMoi = Math.max(10, Math.floor(p.position.length() - window.szGocMatDat + 10));
+        } else {
+            window.adminSafeZoneMesh.quaternion.identity();
+            banKinhMoi = Math.max(10, Math.floor(p.position.y - window.szGocMatDat + 10));
+        }
+
+        // 🌟 BÓP / PHÌNH ỐNG TRỤ THEO ĐỘ CAO
+        if (window.safeZoneRadius !== banKinhMoi) {
+            window.safeZoneRadius = banKinhMoi;
+            let displayEl = document.getElementById('szRadiusDisplay');
+            if (displayEl) displayEl.innerText = banKinhMoi;
+
+            window.adminSafeZoneMesh.geometry.dispose();
+            window.adminSafeZoneMesh.geometry = new THREE.CylinderGeometry(banKinhMoi, banKinhMoi, chieuCaoOng, 32, 1, true);
+        }
+    }, 50);
 };
 
 // 2. Hàm hủy bỏ
 window.huySetSafeZone = function () {
     window.isSettingSafeZone = false;
-    if (window.vongTronSafeZone) window.vongTronSafeZone.visible = false;
     document.getElementById('panelSaveSafeZone').style.display = 'none';
-};
-
-// 3. 🌟 HÀM TẠO BẢNG NEON 3D VÀ MŨI TÊN CHỈ XUỐNG (KHÔNG CẦN FONT)
-window.taoBienNeonSafeZone = function (x, y, z) {
-    let canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 512;
-    let ctx = canvas.getContext('2d');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-
-    // Đánh bóng Neon
-    ctx.shadowBlur = 30; ctx.shadowColor = '#00ffcc'; ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 120px sans-serif'; ctx.fillText('SAFE ZONE', 512, 180);
-
-    ctx.shadowColor = '#ffcc00'; ctx.fillStyle = '#ffcc00';
-    ctx.font = 'bold 180px sans-serif'; ctx.fillText('⬇', 512, 350);
-
-    let tex = new THREE.CanvasTexture(canvas);
-    let mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-    let sprite = new THREE.Sprite(mat);
-
-    // Treo bảng lên cao cách mặt đất 300 mét
-    let pos = new THREE.Vector3(x, y, z);
-    let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
-
-    let groundDir = new THREE.Vector3(0, 1, 0);
-    if (window.KIEU_TRONG_LUC !== 'PHANG') {
-        groundDir = pos.clone().sub(tam);
-        if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); else groundDir.normalize();
+    if (window.szUpdateInterval) clearInterval(window.szUpdateInterval);
+    if (window.adminSafeZoneMesh) {
+        scene.remove(window.adminSafeZoneMesh);
+        if (window.adminSafeZoneMesh.geometry) window.adminSafeZoneMesh.geometry.dispose();
+        window.adminSafeZoneMesh = null;
     }
-
-    sprite.position.copy(pos).add(groundDir.multiplyScalar(300));
-    sprite.scale.set(800, 400, 1); // Kích thước khổng lồ để nhìn từ xa
-    scene.add(sprite);
 };
 
-// 4. Hàm Lưu (Gửi lên Server)
+// 3. Hàm Chốt Lưu
 window.luuSafeZoneMoi = function () {
+    if (!window.playerModel) return;
+    let p = window.playerModel;
+    let r = window.safeZoneRadius; // 🌟 Trích xuất biến đo đạc mới
+    let name = prompt("Nhập tên cho Vùng An Toàn này:", "Safe Zone " + Math.floor(Math.random() * 1000));
+    if (!name) return;
+
     let fd = new FormData();
-    fd.append('x', window.toaDoTamĐangĐo.x);
-    fd.append('y', window.toaDoTamĐangĐo.y);
-    fd.append('z', window.toaDoTamĐangĐo.z);
-    fd.append('radius', window.banKinhĐangĐo);
-    // 🌟 THÊM DÒNG NÀY:
+    fd.append('name', name);
+    fd.append('pos_x', p.position.x);
+    fd.append('pos_y', p.position.y);
+    fd.append('pos_z', p.position.z);
+    fd.append('radius', r);
     fd.append('zone_id', window.ZONE_ID || 'TRUNG_CHAU');
+
     fetch('api/save_safezone.php', { method: 'POST', body: fd })
-        .then(res => res.json()).then(data => {
+        .then(res => res.json())
+        .then(data => {
             if (data.status === 'success') {
-                alert("✔️ Đã lập Safe Zone thành công!");
-                window.taoBienNeonSafeZone(window.toaDoTamĐangĐo.x, window.toaDoTamĐangĐo.y, window.toaDoTamĐangĐo.z);
-                window.DANH_SACH_SAFE_ZONE.push({ x: window.toaDoTamĐangĐo.x, y: window.toaDoTamĐangĐo.y, z: window.toaDoTamĐangĐo.z, radius: window.banKinhĐangĐo });
+                if (typeof window.hienThongBaoGame === 'function') window.hienThongBaoGame("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!", true);
+                else alert("✔️ Đã thiết lập Safe Zone bán kính " + r + "m!");
                 window.huySetSafeZone();
-            } else alert("Lỗi: " + data.msg);
-        });
+            } else {
+                alert("❌ Lỗi: " + data.msg);
+            }
+        }).catch(e => alert("❌ Lỗi mạng!"));
 };
+
+
 
 // 5. Hàm kiểm tra bảo vệ (Code chặn đánh nhau như ở đợt trước)
 window.kiemTraSafeZone = function (pos) {
@@ -3665,14 +3699,6 @@ window.kiemTraSafeZone = function (pos) {
 // =======================================================
 window.DANH_SACH_CONG = [];
 window.dangDichChuyen = false;
-
-
-
-
-
-
-
-
 // 1. Hàm vẽ bảng tên Neon lơ lửng trên Cổng
 window.taoBienTenCong = function (name, x, y, z) {
     let canvas = document.createElement('canvas');
