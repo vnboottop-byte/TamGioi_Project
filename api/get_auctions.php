@@ -11,7 +11,7 @@ $refunded_lt = 0;
 // 1. MÁY QUÉT AUTO-REFUND 
 // ==========================================
 // Đang đặt 3 MINUTE để test, Sếp nhớ đổi thành 1 DAY sau khi test xong nhé
-$sql_expired = "SELECT id, seller_name, item_id, item_type, upgrade_level, bonus_damage, bonus_hp, bonus_speed FROM auction_house WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 3 MINUTE)";
+$sql_expired = "SELECT id, seller_name, item_id, item_type, upgrade_level, bonus_damage, bonus_hp, bonus_speed FROM auction_house WHERE status = 'selling' AND created_at < (NOW() - INTERVAL 24 HOUR)";
 $res_expired = $conn->query($sql_expired);
 
 if ($res_expired && $res_expired->num_rows > 0) {
