@@ -25,15 +25,9 @@ try {
     // Lấy ra mã phái (VD: TU_TIEN, CUNG_TEN...). Nếu lỗi thì để rỗng.
     $phai_cua_toi = $res_phai ? $res_phai['faction_code'] : '';
 
-
-
-
     // 🌟 2. QUÉT KHO HÀNG (MỞ KHÓA TẤT CẢ VŨ KHÍ, NGOẠI TRANG, THÚ CƯỠI CHO MỌI HỆ PHÁI)
     $sql = "SELECT * FROM shop_items ORDER BY item_type DESC, price ASC";
     $stmt = $conn->prepare($sql);
-
-
-
 
     $stmt->execute();
     $res = $stmt->get_result();
