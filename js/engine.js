@@ -590,18 +590,64 @@ if (!window.isMobile) {
 let mixer, playerModel, currentAction;
 let currentAnimName = '';
 let animationsMap = {};
+
+
+
+
 window.isMoving = false;
 window.targetPosition = new THREE.Vector3();
-window.keys = { w: false, a: false, s: false, d: false, space: false, shift: false };
+
+// =======================================================
+// 🛡️ BẢN VÁ AAA: LÁ CHẮN TỪ TRƯỜNG CẤM BAY MÊ CUNG
+// =======================================================
+window.keys = { w: false, a: false, s: false, d: false, _space: false, _shift: false };
+
+Object.defineProperty(window.keys, 'space', {
+    get: function () { return this._space; },
+    set: function (val) {
+        let isAdmin = (window.ROLE === 'admin' || window.ADMIN_NAME === 'Admin');
+        let isTrongMeCung = ['LV1', 'LV2', 'LV3', 'LV4', 'LV5'].includes(window.ZONE_ID);
+
+        // Cố tình bấm nút Bay VÀ là Dân thường VÀ đang ở Mê Cung -> Tịch thu lệnh!
+        if (val === true && !isAdmin && isTrongMeCung) {
+            if (!window.daCanhBaoBay) {
+                window.daCanhBaoBay = true;
+                if (typeof window.hienThongBaoBoGoc === 'function') {
+                    window.hienThongBaoBoGoc("❌ TỪ TRƯỜNG ÁP CHẾ: Mê Cung cấm bay lượn!", "#e74c3c");
+                }
+                setTimeout(() => window.daCanhBaoBay = false, 2000);
+            }
+            this._space = false;
+        } else {
+            this._space = val;
+        }
+    }
+});
+
+Object.defineProperty(window.keys, 'shift', {
+    get: function () { return this._shift; },
+    set: function (val) {
+        let isAdmin = (window.ROLE === 'admin' || window.ADMIN_NAME === 'Admin');
+        let isTrongMeCung = ['LV1', 'LV2', 'LV3', 'LV4', 'LV5'].includes(window.ZONE_ID);
+
+        if (val === true && !isAdmin && isTrongMeCung) {
+            this._shift = false; // Tịch thu luôn lệnh hạ độ cao!
+        } else {
+            this._shift = val;
+        }
+    }
+});
+
 const keys = window.keys;
 window.isKeyboardMoving = false;
-// 🌟 Đã xóa bỏ các biến Cooldown toàn cục gây lỗi tịt ngòi cho các phái đánh xa
+
 document.addEventListener('keydown', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
     if (['w', 'a', 's', 'd', 'space', 'shift'].includes(k)) keys[k] = true;
-
-    // 🌟 Lệnh xả Skill (Q, E, R, F) đã được chuyển giao 100% cho bộ não controller.js xử lý!
 });
+
+
+
 
 document.addEventListener('keyup', (e) => {
     let k = (e.code || "").replace('Key', '').toLowerCase();
