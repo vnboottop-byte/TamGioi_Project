@@ -4108,35 +4108,65 @@ window.taoBienNeonSafeZone = function (x, y, z) {
 
 
 // =======================================================
-// 🚀 HÀM TẠO BIỂN BÁO TRUYỀN TỐNG TRẬN KHỔNG LỒ (CHUẨN SAFE ZONE)
+// 🚀 HÀM TẠO BIỂN BÁO TRUYỀN TỐNG TRẬN (BẢN KÉP - TO TRÊN MÂY & NHỎ DƯỚI ĐẤT)
 // =======================================================
 window.taoBienTenCong = function (name, x, y, z) {
-    let canvas = document.createElement('canvas');
-    canvas.width = 1024; canvas.height = 512;
-    let ctx = canvas.getContext('2d');
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    let groupBienBao = new THREE.Group(); // Gom 2 biển vào chung 1 nhóm để dễ dọn rác
+
+    // ---------------------------------------------------
+    // 1. BIỂN KHỔNG LỒ TRÊN MÂY (CAO 150M)
+    // ---------------------------------------------------
+    let canvasCao = document.createElement('canvas');
+    canvasCao.width = 1024; canvasCao.height = 512;
+    let ctxCao = canvasCao.getContext('2d');
+    ctxCao.textAlign = 'center'; ctxCao.textBaseline = 'middle';
     
-    // 1. Chữ TRUYỀN TỐNG TRẬN (Màu Tím Phát Sáng)
-    ctx.shadowBlur = 30; ctx.shadowColor = '#9b59b6'; ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 90px sans-serif'; 
-    ctx.fillText('TRUYỀN TỐNG TRẬN', 512, 120);
+    ctxCao.shadowBlur = 30; ctxCao.shadowColor = '#9b59b6'; ctxCao.fillStyle = '#ffffff';
+    ctxCao.font = '900 90px "Arial Black", sans-serif'; 
+    ctxCao.fillText('TRUYỀN TỐNG TRẬN', 512, 120);
 
-    // 2. Chữ hiển thị đích đến (Tên Map)
-    ctx.shadowBlur = 20; ctx.shadowColor = '#00ffff'; ctx.fillStyle = '#00ffff';
-    ctx.font = 'bold 60px sans-serif'; 
-    ctx.fillText('✈ ' + (name || 'MAP KẾ TIẾP'), 512, 230);
+    ctxCao.shadowBlur = 20; ctxCao.shadowColor = '#00ffff'; ctxCao.fillStyle = '#00ffff';
+    ctxCao.font = 'bold 60px sans-serif'; 
+    ctxCao.fillText('✈ ' + (name || 'MAP KẾ TIẾP'), 512, 230);
 
-    // 3. Mũi tên Vàng khổng lồ chỉ xuống Cổng
-    ctx.shadowColor = '#ffcc00'; ctx.fillStyle = '#ffcc00';
-    ctx.font = 'bold 150px sans-serif'; 
-    ctx.fillText('⬇', 512, 400);
+    ctxCao.shadowColor = '#ffcc00'; ctxCao.fillStyle = '#ffcc00';
+    ctxCao.font = 'bold 150px sans-serif'; 
+    ctxCao.fillText('⬇', 512, 400);
 
-    let tex = new THREE.CanvasTexture(canvas);
-    // 🛑 ĐÃ LỘT BỎ depthTest: false ĐỂ BIỂN BÁO BỊ KHUẤT TỰ NHIÊN KHI ĐI XA
-    let mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
-    let sprite = new THREE.Sprite(mat);
+    let texCao = new THREE.CanvasTexture(canvasCao);
+    let matCao = new THREE.SpriteMaterial({ map: texCao, transparent: true });
+    let spriteCao = new THREE.Sprite(matCao);
+    spriteCao.scale.set(400, 200, 1);
 
-    // Đo đạc tọa độ y hệt Safe Zone
+    // ---------------------------------------------------
+    // 2. BIỂN CHỈ ĐƯỜNG DƯỚI ĐẤT (CAO 2.5M)
+    // ---------------------------------------------------
+    let canvasThap = document.createElement('canvas');
+    canvasThap.width = 512; canvasThap.height = 128;
+    let ctxThap = canvasThap.getContext('2d');
+    ctxThap.textAlign = 'center'; ctxThap.textBaseline = 'middle';
+    
+    // Vẽ viền đen dày để chữ hiển thị rõ trên mọi bối cảnh nền
+    ctxThap.miterLimit = 2;
+    ctxThap.lineJoin = 'round';
+    ctxThap.lineWidth = 6;
+    ctxThap.strokeStyle = '#000000';
+    ctxThap.font = '900 45px sans-serif'; 
+    ctxThap.strokeText('✈ ' + (name || 'MAP KẾ TIẾP'), 256, 64);
+    
+    // Đổ ruột chữ màu Xanh Ngọc phát sáng
+    ctxThap.shadowBlur = 10; ctxThap.shadowColor = '#00ffff'; 
+    ctxThap.fillStyle = '#00ffff';
+    ctxThap.fillText('✈ ' + (name || 'MAP KẾ TIẾP'), 256, 64);
+
+    let texThap = new THREE.CanvasTexture(canvasThap);
+    let matThap = new THREE.SpriteMaterial({ map: texThap, transparent: true });
+    let spriteThap = new THREE.Sprite(matThap);
+    spriteThap.scale.set(20, 5, 1); // Kích thước gọn gàng vừa tầm mắt
+
+    // ---------------------------------------------------
+    // 3. ĐỊNH VỊ VÀ GẮN VÀO BẢN ĐỒ
+    // ---------------------------------------------------
     let pos = new THREE.Vector3(x, y, z);
     let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
     let groundDir = new THREE.Vector3(0, 1, 0);
@@ -4147,13 +4177,15 @@ window.taoBienTenCong = function (name, x, y, z) {
         else groundDir.normalize();
     }
     
-    // 🌟 Đẩy lên cao 150 mét (Vừa đủ to, không quá cao tít trên mây như Safe Zone)
-    sprite.position.copy(pos).add(groundDir.multiplyScalar(150));
-    // 🌟 Kích thước khổng lồ để nhìn rõ từ xa
-    sprite.scale.set(400, 200, 1);
-    scene.add(sprite);
+    spriteCao.position.copy(pos).add(groundDir.clone().multiplyScalar(150)); // Đẩy lên 150m
+    spriteThap.position.copy(pos).add(groundDir.clone().multiplyScalar(2.5)); // Đẩy lên 2.5m ngay trên đầu Cổng
 
-    return sprite; // Bắt buộc phải trả về để hàm dọn rác bắt được nó
+    groupBienBao.add(spriteCao);
+    groupBienBao.add(spriteThap);
+    scene.add(groupBienBao);
+
+    // Trả về cả cụm Group để hàm dọn rác xóa sạch không để lại tàn dư
+    return groupBienBao; 
 };
 
 
