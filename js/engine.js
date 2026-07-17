@@ -4107,7 +4107,58 @@ window.taoBienNeonSafeZone = function (x, y, z) {
 
 
 
+// =======================================================
+// 🚀 HÀM TẠO BIỂN BÁO TRUYỀN TỐNG TRẬN KHỔNG LỒ
+// Giống hệt Safe Zone nhưng đổi Màu và Nội dung!
+// =======================================================
+window.taoBienTenCong = function (name, x, y, z) {
+    let canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 512;
+    let ctx = canvas.getContext('2d');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    
+    // 1. Chữ TRUYỀN TỐNG TRẬN (Màu Tím Phát Sáng)
+    ctx.shadowBlur = 30; ctx.shadowColor = '#9b59b6'; ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 90px sans-serif'; 
+    ctx.fillText('TRUYỀN TỐNG TRẬN', 512, 100);
 
+    // 2. Chữ hiển thị đích đến (Tên Map)
+    ctx.shadowBlur = 20; ctx.shadowColor = '#00ffff'; ctx.fillStyle = '#00ffff';
+    ctx.font = 'bold 60px sans-serif'; 
+    ctx.fillText('✈ ' + (name || 'MAP KẾ TIẾP'), 512, 220);
+
+    // 3. Mũi tên khổng lồ chỉ xuống Cổng
+    ctx.shadowColor = '#3498db'; ctx.fillStyle = '#3498db';
+    ctx.font = 'bold 150px sans-serif'; 
+    ctx.fillText('⬇', 512, 380);
+
+    let tex = new THREE.CanvasTexture(canvas);
+    let mat = new THREE.SpriteMaterial({ 
+        map: tex, 
+        transparent: true,
+        depthTest: false // Chống bị núi đè mất chữ
+    });
+    
+    let sprite = new THREE.Sprite(mat);
+
+    // Định vị giống y hệt thuật toán của Safe Zone
+    let pos = new THREE.Vector3(x, y, z);
+    let tam = window.TAM_HANH_TINH_HIEN_TAI || new THREE.Vector3(0, 0, 0);
+    let groundDir = new THREE.Vector3(0, 1, 0);
+    
+    if (window.KIEU_TRONG_LUC !== 'PHANG') {
+        groundDir = pos.clone().sub(tam);
+        if (groundDir.lengthSq() < 0.001) groundDir.set(0, 1, 0); 
+        else groundDir.normalize();
+    }
+    
+    // Bắn lên trời 300 mét giống Safe Zone để không bị lấp
+    sprite.position.copy(pos).add(groundDir.multiplyScalar(300));
+    sprite.scale.set(800, 400, 1);
+    scene.add(sprite);
+
+    return sprite; // Bắt buộc phải trả về để hàm dọn rác bắt được nó
+};
 
 
 // ==========================================
