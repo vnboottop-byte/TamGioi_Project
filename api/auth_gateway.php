@@ -79,7 +79,7 @@ try {
 
         // C. Lưu vào Game_characters
         // C. Lưu vào Game_characters (ÉP THẲNG TỌA ĐỘ TÂN THỦ VÀO NAM DU)
-        $stmtChar = $conn->prepare("INSERT INTO game_characters (username, char_name, class_id, hp_max, hp_current, mana_current, damage, current_model_url, current_weapon_url, current_mount_url, zone_id, last_pos_x, last_pos_y, last_pos_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', 'NAM_DU', -784, 1390, -240)");
+        $stmtChar = $conn->prepare("INSERT INTO game_characters (username, char_name, class_id, hp_max, hp_current, mana_current, damage, current_model_url, current_weapon_url, current_mount_url, zone_id, last_pos_x, last_pos_y, last_pos_z) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', 'ENIES_LOBBY', 0, 90, -49)");
         $stmtChar->bind_param("ssiiiiiss", $user, $char_name, $class_id, $classData['base_hp'], $classData['base_hp'], $classData['base_mana'], $classData['base_damage'], $classData['default_model'], $classData['default_weapon']);
         $stmtChar->execute();
 
